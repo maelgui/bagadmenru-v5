@@ -13,6 +13,6 @@ COPY . .
 
 RUN yarn build
 
-FROM nginx AS prod
+FROM nginx:alpine AS prod
 
 COPY --from=node-build /project/dist /usr/share/nginx/html

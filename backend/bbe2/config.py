@@ -1,11 +1,8 @@
-from typing import Any, Optional
-
-import requests
-from pydantic import AnyHttpUrl, BaseSettings, HttpUrl
+from pydantic import AnyHttpUrl, BaseSettings
 
 
 class Settings(BaseSettings):
-    s3_endpoint: HttpUrl
+    s3_endpoint: AnyHttpUrl
     s3_access_key_id: str
     s3_secret_access_key: str
 
@@ -20,5 +17,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
 
 settings = Settings()
