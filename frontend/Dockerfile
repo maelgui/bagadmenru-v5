@@ -1,8 +1,18 @@
-FROM node
+FROM node AS node-env
 
 WORKDIR /project
 COPY package.json yarn.lock ./
 
-RUN yarn
+RUN yarn install
 
 CMD [ "yarn", "dev", "--host", "0.0.0.0" ]
+
+FROM node-env AS node-build
+
+COPY . .
+
+RUN yarn build
+
+FROM nginx AS prod
+
+COPY --from=node-build /project/dist /usr/share/nginx/html

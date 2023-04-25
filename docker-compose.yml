@@ -42,7 +42,9 @@ services:
       - OIDC_JWKS_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/certs
 
   frontend:
-    build: frontend
+    build:
+      context: frontend
+      target: node-env
     volumes:
       - ./frontend:/project
     ports:
