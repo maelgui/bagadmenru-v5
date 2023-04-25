@@ -10,8 +10,12 @@ updates:
     schedule: 
       interval: "daily" 
     open-pull-requests-limit: 15
+    assignees:
+      - maelgui
  - package-ecosystem: "pip" # See documentation for possible values 
     directory: "/backend" # Location of package manifests 
     schedule: 
       interval: "daily" 
     open-pull-requests-limit: 15
+    assignees:
+      - maelgui
