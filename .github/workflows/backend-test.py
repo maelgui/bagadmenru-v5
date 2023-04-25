@@ -1,4 +1,4 @@
-name: CI
+name: backend-test
 on: pull_request
 
 jobs:
