@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  storage:
+    image: minio/minio
+    command: server /data --console-address :9090
+    ports:
+      - 9090:9090
+    volumes:
+      - s3data:/data
+
+  db:
+    image: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=kcwRzG4coiE
+
+  keycloak:
+    image: quay.io/keycloak/keycloak
+    command: --verbose start-dev --import-realm --features=account3,declarative-user-profile
+    ports:
+      - 8080:8080
+    volumes:
+      - ./realm:/opt/keycloak/data/import
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_FEATURES=account3,declarative-user-profile
+      - KC_HEALTH_ENABLED=true
+  backend:
+    build: backend
+    volumes:
+      - ./backend:/project
+    ports:
+      - 8000:8000
+    environment:
+      - JWT_AUDIENCE=bbe2
+      - JWT_ISSUER=http://localhost:8080/realms/bagadmenru
+      - OIDC_AUTHORIZATION_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/auth
+      - OIDC_TOKEN_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/token
+      - OIDC_JWKS_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/certs
+
+  frontend:
+    build: frontend
+    volumes:
+      - ./frontend:/project
+    ports:
+      - 5173:5173
+
+volumes:
+  s3data:
+  pgdata:

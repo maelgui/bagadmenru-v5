@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+.coverage
+
+# Environment file
+.env
+
+# Virtualenv
+.venv
+venv
+
+# IDE
+.vscode
+
+# DB
+sql_app.db
