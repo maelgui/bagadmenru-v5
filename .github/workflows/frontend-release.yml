@@ -33,4 +33,5 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           build-args: |
-            VITE_BBE2_API_URL=https://api.beta.bagadmenru.bzh
+            VITE_BBE2_API_URL=${{ env.VITE_BBE2_API_URL }}
+            VITE_OIDC_PROVIDER_URL=${{ env.VITE_OIDC_PROVIDER_URL }}

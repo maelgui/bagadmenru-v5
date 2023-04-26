@@ -1,18 +1,16 @@
-import { OidcProvider } from '@axa-fr/react-oidc';
+import { OidcProvider, OidcSecure } from '@axa-fr/react-oidc';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import App from './App';
 import {
   EventsService, FilesService,
   OpenAPI,
-  UsersService,
 } from './client';
 import './index.css';
 import Debug from './pages/debug';
 import HomePage from './pages/home';
 import MyProfile from './pages/profile';
-import Secure from './pages/secure';
 
 // This configuration use the ServiceWorker mode only
 // "access_token" will be provided automaticaly to the urls and
@@ -22,7 +20,7 @@ const configuration = {
   redirect_uri: `${window.location.origin}/authentication/callback`,
   silent_redirect_uri: `${window.location.origin}/authentication/silent-callback`, // Optional activate silent-signin that use cookies between OIDC server and client javascript to restore the session
   scope: 'openid profile email offline_access',
-  authority: 'http://localhost:8080/realms/bagadmenru',
+  authority: import.meta.env.VITE_OIDC_PROVIDER_URL,
   service_worker_relative_url: '/OidcServiceWorker.js',
   service_worker_only: true,
 };
@@ -39,12 +37,11 @@ const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        element: <Secure />,
+        element: <OidcSecure><Outlet /></OidcSecure>,
         children: [
           {
             path: '/profile',
             element: <MyProfile />,
-            loader: UsersService.getMyProfileApiV1ProfilesMeGet,
           },
           {
             path: '/files',

@@ -1,10 +1,13 @@
 import { useOidcIdToken } from '@axa-fr/react-oidc';
-import { useLoaderData } from 'react-router-dom';
-import { Profile } from '../client';
+import { useEffect, useState } from 'react';
+import { Profile, UsersService } from '../client';
 
 export default function MyProfile() {
   const { idTokenPayload } = useOidcIdToken();
-  const profile = useLoaderData() as Profile;
+  const [profile, setProfile] = useState<Profile>();
+  useEffect(() => {
+    UsersService.getMyProfileApiV1ProfilesMeGet().then((data) => setProfile(data));
+  }, []);
 
   return (
     <>
