@@ -3,7 +3,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import App from './App';
-import { EventsService, FilesService, UsersService } from './client';
+import {
+  EventsService, FilesService,
+  OpenAPI,
+  UsersService,
+} from './client';
 import './index.css';
 import Debug from './pages/debug';
 import HomePage from './pages/home';
@@ -22,6 +26,8 @@ const configuration = {
   service_worker_relative_url: '/OidcServiceWorker.js',
   service_worker_only: true,
 };
+
+OpenAPI.BASE = import.meta.env.VITE_BBE2_API_URL;
 
 const router = createBrowserRouter([
   {
