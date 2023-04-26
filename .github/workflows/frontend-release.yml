@@ -32,3 +32,5 @@ jobs:
           context: frontend
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            VITE_BBE2_API_URL=https://api.beta.bagadmenru.bzh
