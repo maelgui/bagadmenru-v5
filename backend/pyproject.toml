@@ -20,7 +20,7 @@ pydantic = {extras = ["dotenv"], version = "^1.10.2"}
 httpx = "^0.24.0"
 pylint = "^2.14.3"
 pytest = "^7.1.2"
-autopep8 = "^1.7.0"
+autopep8 = "^2.0.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
