@@ -1,3 +1,3 @@
 const trustedDomains = {
-    default: ["http://localhost:8000", "http://localhost:8080", "http://localhost:5173"],
-  };
+  default: [import.meta.env.VITE_OIDC_PROVIDER_URL, import.meta.env.VITE_BBE2_API_URL],
+};
