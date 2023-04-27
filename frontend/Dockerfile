@@ -17,6 +17,6 @@ RUN yarn build
 
 FROM nginx:alpine AS prod
 
-COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY .docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 COPY --from=node-build /project/dist /usr/share/nginx/html
