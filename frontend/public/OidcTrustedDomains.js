@@ -1,3 +1,3 @@
 const trustedDomains = {
-  default: [import.meta.env.VITE_OIDC_PROVIDER_URL, import.meta.env.VITE_BBE2_API_URL],
+  default: ["https://api.beta.bagadmenru.bzh", "https://auth.beta.bagadmenru.bzh", "http://localhost:8080", "http://localhost:8000"],
 };
