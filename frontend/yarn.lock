@@ -20,10 +20,10 @@
     call-me-maybe "^1.0.1"
     js-yaml "^4.1.0"
 
-"@axa-fr/react-oidc@^6.16.14":
-  version "6.16.14"
-  resolved "https://registry.yarnpkg.com/@axa-fr/react-oidc/-/react-oidc-6.16.14.tgz#61fac9e3928a834a21a7fcb1cf77ff9919c2d99c"
-  integrity sha512-HyT2c/3giRxCLzHqCaJKWZUJJntFFg70v+ze9nNh1nIUD1nEmBbuRE6jslp6+QoFguwvSwErzrIucMnhWjCo3A==
+"@axa-fr/react-oidc@^6.17.1":
+  version "6.17.1"
+  resolved "https://registry.yarnpkg.com/@axa-fr/react-oidc/-/react-oidc-6.17.1.tgz#1bbe87310b81f0aa7e8f60fd495847fd6655e8ad"
+  integrity sha512-zKoo8r/TMdpM1sTxBrvv1+BygdWfjKnqboSpAwy9Ght1ANSL+OW9VuaAx3k6f3UV8E6OE3j0yBbbmShIaKClNw==
   dependencies:
     base64-js "1.5.1"
 
