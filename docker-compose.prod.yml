@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio
+    command: server /data --console-address :9090
+    volumes:
+      - s3data:/data
+
+  keycloak-postgres:
+    image: postgres
+    volumes:
+      - keycloak-pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=hed0r3EpS_o
+    restart: unless-stopped
+    networks:
+      - default
+
+  keycloak:
+    image: quay.io/keycloak/keycloak
+    command: start --features=account3,declarative-user-profile --proxy edge
+    expose:
+      - 8080
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_FEATURES=account3,declarative-user-profile
+      - KC_HEALTH_ENABLED=true
+      - KEYCLOAK_PRODUCTION=true
+      - KC_DB=postgres
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=hed0r3EpS_o
+      - KC_DB_URL_HOST=keycloak-postgres
+      - KC_DB_URL_DATABASE=keycloak
+      - KC_PROXY=edge
+      - KC_HOSTNAME=auth.beta.bagadmenru.bzh
+    networks:
+      - default
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bagadmenru-keycloak.rule=Host(`auth.beta.bagadmenru.bzh`)"
+      - "traefik.http.routers.bagadmenru-keycloak.tls.certresolver=myresolver"
+    restart: unless-stopped
+
+  backend-postgres:
+    image: postgres
+    volumes:
+      - backend-pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=bagadmenru
+      - POSTGRES_PASSWORD=kcwRzG4coiE
+    restart: unless-stopped
+    networks:
+      - default
+
+  backend:
+    image: ghcr.io/maelgui/bagadmenru-v5/backend
+    expose:
+      - 8000
+    environment:
+      - JWT_AUDIENCE=bbe2
+      - JWT_ISSUER=https://auth.beta.bagadmenru.bzh/realms/bagadmenru
+      - OIDC_AUTHORIZATION_URL=https://auth.beta.bagadmenru.bzh/realms/bagadmenru/protocol/openid-connect/auth
+      - OIDC_TOKEN_URL=https://auth.beta.bagadmenru.bzh/realms/bagadmenru/protocol/openid-connect/token
+      - OIDC_JWKS_URL=https://auth.beta.bagadmenru.bzh/realms/bagadmenru/protocol/openid-connect/certs
+      - S3_ACCESS_KEY_ID=minioadmin
+      - S3_SECRET_ACCESS_KEY=minioadmin
+      - S3_ENDPOINT=http://minio:9000
+      - CORS_ALLOWED_ORIGINS=["https://beta.bagadmenru.bzh"]
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bagadmenru-backend.rule=Host(`api.beta.bagadmenru.bzh`)"
+      - "traefik.http.routers.bagadmenru-backend.tls.certresolver=myresolver"
+
+  frontend:
+    image: ghcr.io/maelgui/bagadmenru-v5/frontend
+    expose:
+      - 80
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bagadmenru-frontend.rule=Host(`beta.bagadmenru.bzh`)"
+      - "traefik.http.routers.bagadmenru-frontend.tls.certresolver=myresolver"
+    restart: unless-stopped
+
+volumes:
+  s3data:
+  keycloak-pgdata:
+  backend-pgdata:
+
+
+networks:
+  traefik:
+    external: true
