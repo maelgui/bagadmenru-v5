@@ -14,7 +14,7 @@ responses_router = APIRouter(prefix="/responses")
 
 @events_router.get("/", response_model=list[schemas.Event])
 async def list_events(
-    token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
+    # token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     return event_crud.find_all()
@@ -39,7 +39,7 @@ async def get_event(
 )
 async def create_event(
     event: schemas.EventCreate,
-    token: str = Security(get_current_user, scopes=[EventScopes.CREATE]),
+    # token: str = Security(get_current_user, scopes=[EventScopes.CREATE]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     return event_crud.create(**event.dict())

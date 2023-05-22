@@ -5,6 +5,7 @@ import MainLayout from '../layout/main';
 import Debug from '../pages/debug';
 import HomePage from '../pages/home';
 import MyProfile from '../pages/profile';
+import EventsPage from '../pages/events';
 
 export default createBrowserRouter([
   {
@@ -29,7 +30,7 @@ export default createBrowserRouter([
           },
           {
             path: '/events',
-            Component: Debug,
+            Component: EventsPage,
             loader: EventsService.listEventsApiV1EventsGet,
           },
         ],
