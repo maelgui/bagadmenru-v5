@@ -1,8 +1,12 @@
 import { Link, NavLink } from 'react-router-dom';
 
+import { useOidc, useOidcIdToken } from '@axa-fr/react-oidc';
 import logo from '../assets/logo.svg';
 
 export default function Navbar() {
+  const { idTokenPayload } = useOidcIdToken();
+  const { login, logout, isAuthenticated } = useOidc();
+
   return (
     <header className="shadow-md">
       <div className="flex h-16 items-center justify-between container m-auto">
@@ -63,10 +67,25 @@ export default function Navbar() {
             </li>
           </ul>
         </nav>
-        <div>
-          <Link to="/profile">
-            <img className="h-10 w-10 m-8 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" />
-          </Link>
+        <div className="flex items-center">
+          {isAuthenticated
+            ? (
+              <>
+                <div className="text-right">
+                  <span>
+                    {idTokenPayload.given_name}
+                    {' '}
+                  </span>
+                  <span>{idTokenPayload.family_name}</span>
+                  <br />
+                  <button type="button" className="btn btn-primary" onClick={() => logout()}>logout</button>
+                </div>
+                <Link to="/profile">
+                  <img className="h-10 w-10 m-8 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" />
+                </Link>
+              </>
+            )
+            : null}
         </div>
       </div>
     </header>

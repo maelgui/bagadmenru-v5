@@ -1,11 +1,12 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { EventsService, FilesService } from '../client';
+import { EventsService, FilesService, UsersService } from '../client';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
 import Debug from '../pages/debug';
+import EventsPage from '../pages/events';
 import HomePage from '../pages/home';
 import MyProfile from '../pages/profile';
-import EventsPage from '../pages/events';
+import ProfilesPage from '../pages/trombi';
 
 export default createBrowserRouter([
   {
@@ -32,6 +33,11 @@ export default createBrowserRouter([
             path: '/events',
             Component: EventsPage,
             loader: EventsService.listEventsApiV1EventsGet,
+          },
+          {
+            path: '/users',
+            Component: ProfilesPage,
+            loader: UsersService.listProfilesApiV1ProfilesGet,
           },
         ],
       },

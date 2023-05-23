@@ -28,6 +28,9 @@ export default {
       red: colors.red,
       emerald: colors.emerald,
     },
+    fontFamily: {
+      'sans': ["Montserrat"]
+    },
   },
   plugins: [],
 }
