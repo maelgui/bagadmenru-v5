@@ -2,14 +2,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { Event } from './Event';
-import type { Profile } from './Profile';
-
 export type Response = {
     value: boolean;
-    user: Profile;
-    event: Event;
+    user_id: string;
+    event_id: number;
     date: string;
-    id: number;
 };
 

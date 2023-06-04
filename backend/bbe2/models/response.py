@@ -7,12 +7,10 @@ from bbe2.database import Base
 class Response(Base):
     __tablename__ = "responses"
 
-    id = Column(Integer, primary_key=True)
-
     value = Column(Boolean, nullable=True)
     date = Column(DateTime)
 
-    event_id = Column(Integer, ForeignKey("events.id"))
+    event_id = Column(Integer, ForeignKey("events.id"), primary_key=True)
     event = relationship("Event", back_populates="responses")
-    user_id = Column(String, ForeignKey("profiles.id"))
+    user_id = Column(String, ForeignKey("profiles.id"), primary_key=True)
     user = relationship("Profile")

@@ -1,9 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { EventsService, FilesService, UsersService } from '../client';
+import { FilesService, UsersService } from '../client';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
 import Debug from '../pages/debug';
-import EventsPage from '../pages/events';
+import CalendarPage, { eventsLoader } from '../pages/events/calendar';
+import DoodlePage, { doodleAction, doodleDataLoader } from '../pages/events/doodle';
 import HomePage from '../pages/home';
 import MyProfile from '../pages/profile';
 import ProfilesPage from '../pages/trombi';
@@ -31,8 +32,14 @@ export default createBrowserRouter([
           },
           {
             path: '/events',
-            Component: EventsPage,
-            loader: EventsService.listEventsApiV1EventsGet,
+            Component: CalendarPage,
+            loader: eventsLoader,
+          },
+          {
+            path: '/events/doodle',
+            Component: DoodlePage,
+            loader: doodleDataLoader,
+            action: doodleAction,
           },
           {
             path: '/users',

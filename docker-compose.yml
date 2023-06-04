@@ -18,7 +18,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak
-    command: --verbose start --proxy=edge --import-realm --features=account3,declarative-user-profile --hostname-url https://maelgui-expert-sniffle-6vgxqgx97r357p4-8080.preview.app.github.dev/
+    command: --verbose start-dev --import-realm --features=account3,declarative-user-profile
     ports:
       - 8080:8080
     volumes:
@@ -28,7 +28,6 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KC_FEATURES=account3,declarative-user-profile
       - KC_HEALTH_ENABLED=true
-      - KC_HOSTNAME_ADMIN_URL=https://maelgui-expert-sniffle-6vgxqgx97r357p4-8080.preview.app.github.dev/
 
   backend:
     build: backend
@@ -38,7 +37,7 @@ services:
       - 8000:8000
     environment:
       - JWT_AUDIENCE=bbe2
-      - JWT_ISSUER=http://localhost:8080/realms/bagadmenru
+      - JWT_ISSUER=http://keycloak:8080/realms/bagadmenru
       - OIDC_AUTHORIZATION_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/auth
       - OIDC_TOKEN_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/token
       - OIDC_JWKS_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/certs
@@ -56,8 +55,8 @@ services:
     ports:
       - 5173:5173
     environment:
-      - VITE_BBE2_API_URL=https://maelgui-expert-sniffle-6vgxqgx97r357p4-8000.preview.app.github.dev
-      - VITE_OIDC_PROVIDER_URL=https://maelgui-expert-sniffle-6vgxqgx97r357p4-8080.preview.app.github.dev/realms/bagadmenru
+      - VITE_BBE2_API_URL=http://localhost:8000
+      - VITE_OIDC_PROVIDER_URL=http://keycloak:8080/realms/bagadmenru
 
 volumes:
   s3data:

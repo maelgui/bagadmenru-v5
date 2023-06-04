@@ -27,6 +27,7 @@ export default {
       gray: colors.gray,
       red: colors.red,
       emerald: colors.emerald,
+      sky: colors.sky,
     },
     fontFamily: {
       'sans': ["Montserrat"]

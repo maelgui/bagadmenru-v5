@@ -1,7 +1,7 @@
 import { useLoaderData } from 'react-router-dom';
-import { Event } from '../client';
+import { Event } from '../../client';
 
-export default function EventsPage() {
+export default function AgendaPage() {
   const data = useLoaderData() as Array<Event>;
   return (
     <div>
