@@ -5,11 +5,8 @@ export default function MainLayout() {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto px-4">
-        <h1>Espace Membre</h1>
-        <div className="card">
-          <Outlet />
-        </div>
+      <div className="container mx-auto p-4">
+        <Outlet />
       </div>
     </>
   );

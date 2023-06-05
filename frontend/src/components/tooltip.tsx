@@ -15,7 +15,7 @@ import {
 import { ElementType, ReactNode, useState } from 'react';
 
 export default function Tooltip(
-  { children, content, as }: { children: ReactNode, content: ReactNode, as: ElementType },
+  { children, content, as = 'span' }: { children: ReactNode, content: ReactNode, as?: ElementType },
 ) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -52,7 +52,7 @@ export default function Tooltip(
   const Component = as || 'span';
 
   if (!content) {
-    return children;
+    return <Component>{children}</Component>;
   }
 
   return (

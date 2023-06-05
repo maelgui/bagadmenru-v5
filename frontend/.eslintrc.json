@@ -9,8 +9,7 @@
     "plugin:react/recommended",
     "plugin:react/jsx-runtime"
   ],
-  "overrides": [
-  ],
+  "overrides": [],
   "parserOptions": {
     "project": "./tsconfig.json"
   },
@@ -18,5 +17,11 @@
     "react"
   ],
   "rules": {
+    "react/require-default-props": [
+      "error",
+      {
+        "functions": "defaultArguments"
+      }
+    ]
   }
 }

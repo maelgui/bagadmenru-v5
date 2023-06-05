@@ -27,7 +27,7 @@ async def list_events(
 @events_router.get("/{event_id}", response_model=schemas.Event)
 async def get_event(
     event_id: str,
-    token: str = Security(get_current_user, scopes=[EventScopes.VIEW]),
+    token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -43,7 +43,7 @@ async def get_event(
 )
 async def create_event(
     event: schemas.EventCreate,
-    # token: str = Security(get_current_user, scopes=[EventScopes.CREATE]),
+    token: str = Security(get_current_user, scopes=[EventScopes.CREATE.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     return event_crud.create(**event.dict())
@@ -53,7 +53,7 @@ async def create_event(
 async def update_event(
     event_id: str,
     event: schemas.EventCreate,
-    token: str = Security(get_current_user, scopes=[EventScopes.UPDATE]),
+    token: str = Security(get_current_user, scopes=[EventScopes.UPDATE.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)

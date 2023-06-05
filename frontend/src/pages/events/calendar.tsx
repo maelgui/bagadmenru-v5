@@ -1,11 +1,13 @@
-import moment from 'moment';
+import { faCalendar, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
-import { useLoaderData } from 'react-router-dom';
+import { useLoaderData, useNavigate } from 'react-router-dom';
 import { Configuration, Event, EventsApi } from '../../client2';
+import Button from '../../components/button';
+import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
 import groupBy from '../../utils/groupby';
 
-moment.locale('fr');
 function* generator(monthOffset: number, dayOffset = 1) {
   const today = new Date();
   const currentMonth = today.getMonth() + monthOffset;
@@ -41,19 +43,43 @@ export async function eventsLoader(): Promise<EventsData> {
   };
 }
 export default function CalendarPage() {
+  const navigate = useNavigate();
+
   const { eventsByMonth, eventsByDate } = useLoaderData() as EventsData;
   const [monthOffset, setMonthOffset] = useState(0);
   const today = new Date();
 
   return (
     <>
-      <h1 className="text-xl">Calendrier</h1>
-      <h3 className="text-lg">{(new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long' })}</h3>
-      <button type="button" onClick={() => setMonthOffset(monthOffset - 1)}>Mois précédent</button>
-      <button type="button" onClick={() => setMonthOffset(monthOffset + 1)}>Mois suivant</button>
-      <button type="button" onClick={() => setMonthOffset(0)}>Reset</button>
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="basis-2/3">
+      <Header
+        title="Calendrier"
+        subtitle={(new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' })}
+        actions={[
+          <Header.Action outline key="add-event" onClick={() => setMonthOffset(monthOffset - 1)}>
+            <FontAwesomeIcon icon={faPlusCircle} />
+            {' '}
+            Ajouter
+          </Header.Action>,
+          <Header.Action key="doodle-nav" onClick={() => navigate('/events/doodle')}>
+            <FontAwesomeIcon icon={faCalendar} />
+            {' '}
+            Mes Présences
+          </Header.Action>,
+        ]}
+      />
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="basis-3/4">
+          <div className="flex justify-between items-center">
+            <div>
+              <Button outline onClick={() => setMonthOffset(monthOffset - 1)}>précédent</Button>
+              <Button outline onClick={() => setMonthOffset(monthOffset + 1)}>suivant</Button>
+            </div>
+            <div>
+              <Button size="sm" outline onClick={() => setMonthOffset(0)}>Reset</Button>
+
+            </div>
+          </div>
+
           <div className="grid grid-cols-7">
             {days.map((day) => <div key={day} className="font-bold uppercase text-center">{day}</div>)}
           </div>
@@ -63,31 +89,38 @@ export default function CalendarPage() {
                 key={day.getTime()}
                 content={
                   eventsByDate.get(day.toLocaleDateString())?.map((event) => (
-                    <span key={event.id} className="block">{event.title}</span>
+                    <div key={event.id} className="py-1">
+                      <div className="font-bold">{event.title}</div>
+                      <div className="1">{event.description ? event.description : 'Pas de description'}</div>
+                    </div>
                   ))
                 }
                 as="div"
               >
                 <div
-                  className={`bg-white md:h-24 flex flex-col items-center p-1 ${isCurrentMonth ? '' : 'opacity-50'}`}
+                  className={`bg-white md:h-32 flex flex-col items-center p-1 ${isCurrentMonth ? '' : 'opacity-50'}`}
                 >
-                  <span className={`inline-flex justify-center items-center h-8 w-8 m-1 rounded-full ${isToday ? ' bg-pourpre-400 text-white' : ''} ${eventsByDate.get(day.toLocaleDateString())?.length ? 'border border-pourpre-400' : ''}`}>
+                  <div className={`inline-flex justify-center items-center h-8 w-8 m-1 rounded-full ${isToday ? ' bg-pourpre-400 text-white' : ''} ${eventsByDate.get(day.toLocaleDateString())?.length ? 'border border-pourpre-400' : ''}`}>
                     {day.getDate()}
-                  </span>
-                  {eventsByDate.get(day.toLocaleDateString())?.map((event) => (
-                    <span key={event.id} className="hidden md:block rounded-sm truncate border border-pourpre-400 text-sm p-1 w-full">{event.title}</span>
-                  ))}
+                  </div>
+                  <div className="hidden md:block w-full">
+                    {eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map((event) => (
+                      <div key={event.id} className="border border-pourpre-400 rounded-sm truncate text-xs p-1 mb-px">{event.title}</div>
+                    ))}
+                    <div className="text-center text-sm">
+                      {eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
+                    </div>
+                  </div>
                 </div>
               </Tooltip>
             ))}
           </div>
         </div>
-        <div className="basis-1/3">
-          <h3 className="text-lg">Prochains évènements</h3>
+        <div className="basis-1/4">
           <div>
             {Array.from(eventsByMonth).map(([month, events]) => (
               <div key={month} className="mb-4">
-                <h3 className="capitalize font-bold">{(new Date(today.getFullYear(), month)).toLocaleString('fr', { month: 'long' })}</h3>
+                <h3 className="capitalize font-bold text-center">{(new Date(today.getFullYear(), month)).toLocaleString('fr', { month: 'long' })}</h3>
                 {events.map((event) => (
                   <div key={event.id} className="flex items-center">
                     <div>

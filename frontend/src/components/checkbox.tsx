@@ -1,8 +1,16 @@
-import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faQuestion, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useFetcher } from 'react-router-dom';
 
-export default function Checkbox({ value, eventId, disabled = false }: { disabled: boolean, eventId: number, value: boolean | undefined }) {
+export default function Checkbox({
+  value,
+  eventId,
+  disabled = false,
+}: {
+  disabled: boolean,
+  eventId: number,
+  value: boolean | undefined,
+}) {
   const fetcher = useFetcher();
 
   const state = fetcher.formData ? (fetcher.formData.get('value') === 'true') : value;

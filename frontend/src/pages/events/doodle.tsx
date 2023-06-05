@@ -3,6 +3,7 @@ import { useOidcIdToken } from '@axa-fr/react-oidc';
 import {
   faFloppyDisk,
   faPen,
+  faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
@@ -15,6 +16,7 @@ import {
   UsersService,
 } from '../../client';
 import Checkbox from '../../components/checkbox';
+import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
 
 function groupByUserAndEvents(list: Response[]) {
@@ -69,7 +71,18 @@ export default function DoodlePage() {
 
   return (
     <>
-      <h1>Doodle</h1>
+      <Header
+        title="Doodle"
+        subtitle="Mes présences aux évènements du groupe"
+        actions={[
+          <Header.Action key="add-event">
+            <FontAwesomeIcon icon={faPlusCircle} />
+            {' '}
+            Ajouter
+          </Header.Action>,
+        ]}
+      />
+
       <table className="table-auto min-w-full">
         <thead className="divide-y">
           <tr className="divide-x">
