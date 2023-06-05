@@ -107,7 +107,7 @@ export default function CalendarPage() {
                     {eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map((event) => (
                       <div key={event.id} className="border border-pourpre-400 rounded-sm truncate text-xs p-1 mb-px">{event.title}</div>
                     ))}
-                    <div className="text-center text-sm">
+                    <div className="pl-2 pt-1 text-sm">
                       {eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
                     </div>
                   </div>

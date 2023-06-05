@@ -49,7 +49,7 @@ services:
   frontend:
     build:
       context: frontend
-      target: prod
+      target: node-env
     volumes:
       - ./frontend:/project
     ports:

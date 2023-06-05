@@ -15,12 +15,12 @@ export default createBrowserRouter([
     Component: MainLayout,
     children: [
       {
-        index: true,
-        Component: HomePage,
-      },
-      {
         Component: AuthGuard,
         children: [
+          {
+            index: true,
+            Component: HomePage,
+          },
           {
             path: '/profile',
             Component: MyProfile,
