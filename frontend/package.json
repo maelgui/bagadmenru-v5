@@ -11,7 +11,8 @@
     "generate-client": "openapi-generator-cli generate -i http://backend:8000/openapi.json -g typescript-fetch -o ./lib/ --additional-properties=supportsES6=true,npmName=bagad-client",
     "build:lib": "yarn workspace bagad-client build",
     "build:app": "yarn workspace bagad-frontend build",
-    "build": "yarn build:lib && yarn build:app"
+    "build": "yarn build:lib && yarn build:app",
+    "dev": "yarn build:lib && yarn workspace bagad-frontend dev"
   },
   "dependencies": {
     "@openapitools/openapi-generator-cli": "^2.6.0"
