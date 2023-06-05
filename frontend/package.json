@@ -11,7 +11,7 @@
     "generate-client": "openapi --input http://backend:8000/openapi.json --output ./src/client --client axios --type-mappings=DateTime=Date"
   },
   "dependencies": {
-    "@axa-fr/react-oidc": "^6.16.14",
+    "@axa-fr/react-oidc": "^6.19.2",
     "axios": "^1.3.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
