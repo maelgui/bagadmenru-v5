@@ -58,9 +58,9 @@ export async function doodleDataLoader(): Promise<DoodleData> {
   };
 }
 
-export async function doodleAction({ request, params }) {
+export async function doodleAction({ request }: { request: Request }) {
   const formData = await request.formData();
-  await EventsService.createResponseApiV1EventsEventIdResponsesPut(formData.get('eventId'), { value: formData.get('value') });
+  await EventsService.createResponseApiV1EventsEventIdResponsesPut(formData.get('eventId')!.toString(), { value: formData.get('value') === 'true' });
   return null;
 }
 

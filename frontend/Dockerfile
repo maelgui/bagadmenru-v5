@@ -4,6 +4,7 @@ WORKDIR /project
 
 RUN apt-get update && apt-get install -y default-jre-headless && rm -rf /var/lib/apt/lists/*
 
+COPY lib ./lib/
 COPY package.json yarn.lock ./
 
 RUN yarn install

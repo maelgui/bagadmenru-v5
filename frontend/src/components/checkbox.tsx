@@ -36,8 +36,12 @@ export default function Checkbox({
     <td className={`${className} px-4 py-2 text-center border-4 border-white`}>
       <fetcher.Form>
         <span
+          role="checkbox"
+          aria-checked={value}
+          tabIndex={0}
           className="inline-block h-6 w-6 cursor-pointer bg-white m-auto"
-          onClick={() => fetcher.submit({ eventId: eventId.toString(), value: state === undefined ? false : !state }, { method: 'post', action: '/events/doodle' })}
+          onClick={() => fetcher.submit({ eventId: eventId.toString(), value: String(state === undefined ? false : !state) }, { method: 'post', action: '/events/doodle' })}
+          onKeyDown={() => fetcher.submit({ eventId: eventId.toString(), value: String(state === undefined ? false : !state) }, { method: 'post', action: '/events/doodle' })}
         >
           {content}
         </span>
