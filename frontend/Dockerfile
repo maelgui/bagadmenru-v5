@@ -4,8 +4,9 @@ WORKDIR /project
 
 RUN apt-get update && apt-get install -y default-jre-headless && rm -rf /var/lib/apt/lists/*
 
-COPY lib ./lib/
 COPY package.json yarn.lock ./
+COPY lib/package.json ./lib/
+COPY app/package.json app/yarn.lock ./app/
 
 RUN yarn install
 
@@ -23,4 +24,4 @@ FROM nginx:alpine AS prod
 
 COPY .docker/nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=node-build /project/dist /usr/share/nginx/html
+COPY --from=node-build /project/app/dist /usr/share/nginx/html
