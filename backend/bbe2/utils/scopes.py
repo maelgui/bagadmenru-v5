@@ -7,18 +7,21 @@ class AlbumScopes(Enum):
     DELETE = "delete_album"
     UPDATE = "update_album"
 
+
 class EventScopes(Enum):
     VIEW = "view-events"
-    CREATE = "create_event"
+    CREATE = "create-events"
     DELETE = "delete_event"
-    UPDATE = "update_event"
+    UPDATE = "edit-events"
     REPLY = "reply_to_event"
+
 
 class FileScopes(Enum):
     VIEW = "view_file"
     CREATE = "create_file"
     DELETE = "delete_file"
     UPDATE = "update_file"
+
 
 class ProfilesScopes(Enum):
     VIEW = "view-profiles"

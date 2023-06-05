@@ -17,5 +17,9 @@
         "source.organizeImports": true,
         "source.fixAll": true,
     },
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "isort.args": [
+        "--src",
+        "backend"
+    ]
 }

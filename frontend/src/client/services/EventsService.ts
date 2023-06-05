@@ -115,15 +115,15 @@ export class EventsService {
      * Create Response
      * @param eventId
      * @param requestBody
-     * @returns Response Successful Response
+     * @returns void
      * @throws ApiError
      */
-    public static createResponseApiV1EventsEventIdResponsesPost(
+    public static createResponseApiV1EventsEventIdResponsesPut(
         eventId: string,
         requestBody: ResponseCreate,
-    ): CancelablePromise<Response> {
+    ): CancelablePromise<void> {
         return __request(OpenAPI, {
-            method: 'POST',
+            method: 'PUT',
             url: '/api/v1/events/{event_id}/responses',
             path: {
                 'event_id': eventId,

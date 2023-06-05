@@ -31,6 +31,7 @@ async def get_current_user(
         logging.error(exp)
         raise credentials_exception from exp
     # Token scopes contains intersection of requested scopes and user's permissions (auth0 specific)
+    print(security_scopes.scopes, token_roles)
     for scope in security_scopes.scopes:
         if scope not in token_roles:
             raise HTTPException(

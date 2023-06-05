@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type ProfileUpdate = {
-    name: string;
+    name?: string;
     picture?: string;
 };
 

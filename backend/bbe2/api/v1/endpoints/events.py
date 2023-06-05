@@ -1,10 +1,14 @@
 from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Security, status
+from sqlalchemy.orm import Session
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent, CRUDResponse
 from bbe2.dependencies.auth import get_current_user
+from bbe2.dependencies.db import get_db
 from bbe2.utils.scopes import EventScopes
-from fastapi import APIRouter, Depends, HTTPException, Security, status
 
 events_router = APIRouter(prefix="/events")
 responses_router = APIRouter(prefix="/responses")
@@ -15,15 +19,15 @@ responses_router = APIRouter(prefix="/responses")
 @events_router.get("/", response_model=list[schemas.Event])
 async def list_events(
     token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
-    event_crud: CRUDEvent = Depends(CRUDEvent),
+    session: Session = Depends(get_db),
 ):
-    return event_crud.find_all()
+    return session.query(models.Event).order_by(models.Event.date).all()
 
 
 @events_router.get("/{event_id}", response_model=schemas.Event)
 async def get_event(
     event_id: str,
-    token: str = Security(get_current_user, scopes=[EventScopes.VIEW]),
+    token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -39,7 +43,7 @@ async def get_event(
 )
 async def create_event(
     event: schemas.EventCreate,
-    token: str = Security(get_current_user, scopes=[EventScopes.CREATE]),
+    token: str = Security(get_current_user, scopes=[EventScopes.CREATE.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     return event_crud.create(**event.dict())
@@ -49,7 +53,7 @@ async def create_event(
 async def update_event(
     event_id: str,
     event: schemas.EventCreate,
-    token: str = Security(get_current_user, scopes=[EventScopes.UPDATE]),
+    token: str = Security(get_current_user, scopes=[EventScopes.UPDATE.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -78,20 +82,22 @@ async def delete_event(
 ## Responses
 
 
-@responses_router.get("/", response_model=list[schemas.Response])
+@responses_router.get("/")
 async def list_responses(
-    token: str = Security(get_current_user, scopes=[EventScopes.VIEW]),
+    token: str = Security(get_current_user, scopes=[]),
     response_crud: CRUDResponse = Depends(CRUDResponse),
-):
+) -> list[schemas.Response]:
     return response_crud.find_all()
 
 
-@events_router.post("/{event_id}/responses", response_model=schemas.Response)
+@events_router.put("/{event_id}/responses", status_code=status.HTTP_204_NO_CONTENT)
 async def create_response(
     event_id: str,
     response: schemas.ResponseCreate,
-    token: str = Security(get_current_user, scopes=[EventScopes.VIEW]),
-    response_crud: CRUDResponse = Depends(CRUDResponse),
+    token: dict[str, Any] = Security(
+        get_current_user, scopes=["manage-own-poll-answers"]
+    ),
+    db: Session = Depends(get_db),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -100,12 +106,13 @@ async def create_response(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
 
-    return response_crud.create(
-        value=response.value,
-        date=datetime.now(),
-        user_id=token,
-        event_id=event_id,
+    db_object = models.Response(
+        event_id=event_id, user_id=token["sub"], date=datetime.now(), **response.dict()
     )
+    print(response, db_object)
+    db.merge(db_object)
+    db.commit()
+    return db_object
 
 
 router = APIRouter()
