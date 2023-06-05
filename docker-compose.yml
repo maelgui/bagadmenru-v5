@@ -49,9 +49,9 @@ services:
   frontend:
     build:
       context: frontend
-      target: node-env
-    volumes:
-      - ./frontend:/project
+      target: node-build
+      # volumes:
+      #   - ./frontend:/project
     ports:
       - 5173:5173
     environment:

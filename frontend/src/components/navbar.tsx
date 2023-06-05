@@ -5,7 +5,7 @@ import logo from '../assets/logo.svg';
 
 export default function Navbar() {
   const { idTokenPayload } = useOidcIdToken();
-  const { login, logout, isAuthenticated } = useOidc();
+  const { logout, isAuthenticated } = useOidc();
 
   return (
     <header className="shadow-md">

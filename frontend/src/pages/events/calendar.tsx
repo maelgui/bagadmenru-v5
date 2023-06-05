@@ -1,8 +1,8 @@
 import { faCalendar, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Configuration, Event, EventsApi } from 'bagad-client';
 import { useState } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom';
-import { Configuration, Event, EventsApi } from '../../client2';
 import Button from '../../components/button';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
