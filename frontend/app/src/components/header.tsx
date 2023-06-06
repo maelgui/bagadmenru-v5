@@ -33,7 +33,7 @@ export default function Header({
         <h2 className="text-4xl">{title}</h2>
         <h4 className="text-lg text-gray-500">{subtitle}</h4>
       </div>
-      <div className="m-l-auto">
+      <div className="m-l-auto text-right">
         {actions.map((action) => action)}
       </div>
     </div>
