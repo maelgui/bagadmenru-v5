@@ -4,7 +4,7 @@ import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
 import Debug from '../pages/debug';
 import CalendarPage, { eventsLoader } from '../pages/events/calendar';
-import DoodlePage, { doodleAction, doodleDataLoader } from '../pages/events/doodle';
+import DoodlePage, { doodleAction } from '../pages/events/doodle';
 import HomePage from '../pages/home';
 import MyProfile from '../pages/profile';
 import ProfilesPage from '../pages/trombi';
@@ -38,7 +38,6 @@ export default createBrowserRouter([
           {
             path: '/events/doodle',
             Component: DoodlePage,
-            loader: doodleDataLoader,
             action: doodleAction,
           },
           {

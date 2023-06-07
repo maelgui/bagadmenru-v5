@@ -7,7 +7,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
-import { useLoaderData } from 'react-router-dom';
+import { useQuery } from 'react-query';
 import {
   Costume,
   Event,
@@ -66,8 +66,12 @@ export async function doodleAction({ request }: { request: Request }) {
 
 export default function DoodlePage() {
   const [editing, setEditing] = useState<boolean>(false);
-  const data = useLoaderData() as DoodleData;
+  const { data, isFetching } = useQuery('doodle', doodleDataLoader);
   const { idTokenPayload } = useOidcIdToken();
+
+  if (!data) {
+    return null;
+  }
 
   return (
     <>
@@ -82,6 +86,8 @@ export default function DoodlePage() {
           </Header.Action>,
         ]}
       />
+
+      {isFetching ? <div>Refreshing...</div> : null}
 
       <table className="table-auto min-w-full">
         <thead className="divide-y">
