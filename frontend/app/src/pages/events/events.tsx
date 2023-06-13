@@ -1,11 +1,12 @@
-import { useLoaderData } from 'react-router-dom';
-import { Event } from '../../client';
+import { useQuery } from 'react-query';
+import { eventsApi } from '../../client';
 
 export default function AgendaPage() {
-  const data = useLoaderData() as Array<Event>;
+  const { data: events } = useQuery('events', eventsApi.listEventsApiV1EventsGet);
+
   return (
     <div>
-      {data.map((event) => (
+      {events && events.map((event) => (
         <div key={event.id} className="p-4 m-4 rounded-lg shadow-md ">
           <h2 className=" text-xl ">{event.title}</h2>
           <span>{event.description}</span>

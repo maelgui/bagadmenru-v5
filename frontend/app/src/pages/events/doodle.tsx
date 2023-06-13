@@ -6,72 +6,75 @@ import {
   faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Costume, Response, ResponseCreate } from 'bagad-client';
 import { useState } from 'react';
-import { useQuery } from 'react-query';
-import {
-  Costume,
-  Event,
-  EventsService, Profile,
-  Response,
-  UsersService,
-} from '../../client';
+import { useMutation, useQuery } from 'react-query';
+import { eventsApi, queryClient, usersApi } from '../../client';
 import Checkbox from '../../components/checkbox';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
-
-function groupByUserAndEvents(list: Response[]) {
-  const map = new Map<string, Map<number, Response>>();
-  list.forEach((item) => {
-    const key = item.user_id;
-    if (!map.has(key)) {
-      map.set(key, new Map<number, Response>());
-    }
-    map.get(key)?.set(item.event_id, item);
-  });
-  return map;
-}
+import groupby from '../../utils/groupby';
 
 function sumByEvents(list: Response[]) {
   const map = new Map<number, number>();
   list.forEach((item) => {
-    const key = item.event_id;
+    const key = item.eventId;
     map.set(key, (map.get(key) ?? 0) + (item.value ? 1 : 0));
   });
   return map;
 }
 
-interface DoodleData {
-  events: Event[]
-  profiles: Profile[]
-  responsesByUserAndEvent: Map<string, Map<number, Response>>
-  responsesSumByEvent: Map<number, number>
+function keyFunc(eventId: number, userId: string) {
+  return `userId:${userId}|eventId:${eventId}`;
 }
 
-export async function doodleDataLoader(): Promise<DoodleData> {
-  const events = await EventsService.listEventsApiV1EventsGet();
-  const responses = await EventsService.listResponsesApiV1ResponsesGet();
-  const profiles = await UsersService.listProfilesApiV1ProfilesGet();
-  const responsesByUserAndEvent = groupByUserAndEvents(responses);
+async function responsesQuery() {
+  const responses = await eventsApi.listResponsesApiV1ResponsesGet();
+  const responsesByUserAndEvent = groupby(responses, (r) => keyFunc(r.eventId, r.userId));
   const responsesSumByEvent = sumByEvents(responses);
   return {
-    events, profiles, responsesByUserAndEvent, responsesSumByEvent,
+    responsesByUserAndEvent, responsesSumByEvent,
   };
 }
 
-export async function doodleAction({ request }: { request: Request }) {
-  const formData = await request.formData();
-  await EventsService.createResponseApiV1EventsEventIdResponsesPut(formData.get('eventId')!.toString(), { value: formData.get('value') === 'true' });
-  return null;
-}
-
 export default function DoodlePage() {
-  const [editing, setEditing] = useState<boolean>(false);
-  const { data, isFetching } = useQuery('doodle', doodleDataLoader);
   const { idTokenPayload } = useOidcIdToken();
 
-  if (!data) {
-    return null;
-  }
+  const [editing, setEditing] = useState<boolean>(false);
+
+  const { data: events } = useQuery('events', () => eventsApi.listEventsApiV1EventsGet());
+  const { data: profiles } = useQuery('profiles', () => usersApi.listProfilesApiV1ProfilesGet());
+  const { data: responses } = useQuery('responses', responsesQuery);
+
+  const mutation = useMutation({
+    mutationFn: ({ eventId, response }: { eventId: number, response: ResponseCreate }) => {
+      const params = { eventId: eventId.toString(), responseCreate: response };
+      return eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
+    },
+    onMutate: async (newTodo) => {
+      // Cancel any outgoing refetches
+      // (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['responses'] });
+
+      // Snapshot the previous value
+      const previousResponses = queryClient.getQueryData(['responses']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['responses'], (old: Response[]) => [...old, newTodo]);
+
+      // Return a context object with the snapshotted value
+      return { previousTodos: previousResponses };
+    },
+    // If the mutation fails,
+    // use the context returned from onMutate to roll back
+    onError: (err, newTodo, context) => {
+      queryClient.setQueryData(['todos'], context.previousTodos);
+    },
+    // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
 
   return (
     <>
@@ -87,22 +90,20 @@ export default function DoodlePage() {
         ]}
       />
 
-      {isFetching ? <div>Refreshing...</div> : null}
-
       <table className="table-auto min-w-full">
         <thead className="divide-y">
           <tr className="divide-x">
             <td />
-            {data.events.map((event) => (
+            {events && events.map((event) => (
               <td key={event.id} className="text-center px-4">
                 <Tooltip
                   content={(
                     <span>
                       {event.description !== '' ? event.description : 'Pas de description'}
-                      {event.costume !== Costume.NONE && (
+                      {event.costume !== Costume.None && (
                         <span>
                           <br />
-                          {event.costume === Costume.POLO ? 'En costume !' : 'En polo !'}
+                          {event.costume === Costume.Polo ? 'En costume !' : 'En polo !'}
                         </span>
                       )}
                     </span>
@@ -122,10 +123,10 @@ export default function DoodlePage() {
           </tr>
           <tr className="divide-x">
             <td />
-            {data.events.map((event) => (
+            {events && events.map((event) => (
               <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
                 <span className="rounded-full bg-gray-400 text-white px-2">
-                  {data.responsesSumByEvent.get(event.id) ?? 0}
+                  {(responses && responses.responsesSumByEvent.get(event.id)) ?? 0}
                   {' '}
                   présents
 
@@ -135,17 +136,20 @@ export default function DoodlePage() {
           </tr>
         </thead>
         <tbody>
-          {data.profiles.map((user) => (
+          {profiles && profiles.map((user) => (
             <tr key={user.id}>
               <th className={`text-right ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'}`}>{user.name}</th>
-              {data.events.map((event) => (
-                <Checkbox
-                  key={`${user.id}-${event.id}`}
-                  disabled={idTokenPayload.sub === user.id ? !editing : true}
-                  value={data.responsesByUserAndEvent.get(user.id)?.get(event.id)?.value}
-                  eventId={event.id}
-                />
-              ))}
+              {events && events.map((event) => {
+                const value = responses?.responsesByUserAndEvent.get(keyFunc(event.id, user.id))?.at(0)?.value;
+                return (
+                  <Checkbox
+                    key={`${user.id}-${event.id}`}
+                    disabled={idTokenPayload.sub === user.id ? !editing : true}
+                    value={value}
+                    onClick={() => mutation.mutate({ eventId: event.id, response: { value: !value } })}
+                  />
+                );
+              })}
 
             </tr>
           ))}

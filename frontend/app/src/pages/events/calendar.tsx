@@ -1,8 +1,9 @@
 import { faCalendar, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Configuration, Event, EventsApi } from 'bagad-client';
 import { useState } from 'react';
-import { useLoaderData, useNavigate } from 'react-router-dom';
+import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
+import { eventsApi } from '../../client';
 import Button from '../../components/button';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
@@ -29,23 +30,16 @@ function* generator(monthOffset: number, dayOffset = 1) {
 
 const days = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 
-interface EventsData {
-  eventsByMonth: Map<number, Event[]>
-  eventsByDate: Map<string, Event[]>
-}
-
-export async function eventsLoader(): Promise<EventsData> {
-  const api = new EventsApi(new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL }));
-  const events = await api.listEventsApiV1EventsGet();
-  return {
-    eventsByMonth: groupBy(events, (item) => item.date.getMonth()),
-    eventsByDate: groupBy(events, (item) => item.date.toLocaleDateString()),
-  };
-}
 export default function CalendarPage() {
   const navigate = useNavigate();
 
-  const { eventsByMonth, eventsByDate } = useLoaderData() as EventsData;
+  const { data } = useQuery('events', () => eventsApi.listEventsApiV1EventsGet(), {
+    select: (res) => ({
+      eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
+      eventsByDate: groupBy(res, (item) => item.date.toLocaleDateString()),
+    }),
+  });
+
   const [monthOffset, setMonthOffset] = useState(0);
   const today = new Date();
 
@@ -88,7 +82,7 @@ export default function CalendarPage() {
               <Tooltip
                 key={day.getTime()}
                 content={
-                  eventsByDate.get(day.toLocaleDateString())?.map((event) => (
+                  data?.eventsByDate.get(day.toLocaleDateString())?.map((event) => (
                     <div key={event.id} className="py-1">
                       <div className="font-bold">{event.title}</div>
                       <div className="1">{event.description ? event.description : 'Pas de description'}</div>
@@ -100,15 +94,15 @@ export default function CalendarPage() {
                 <div
                   className={`bg-white md:h-32 flex flex-col items-center p-1 ${isCurrentMonth ? '' : 'opacity-50'}`}
                 >
-                  <div className={`inline-flex justify-center items-center h-8 w-8 m-1 rounded-full ${isToday ? ' bg-pourpre-400 text-white' : ''} ${eventsByDate.get(day.toLocaleDateString())?.length ? 'border border-pourpre-400' : ''}`}>
+                  <div className={`inline-flex justify-center items-center h-8 w-8 m-1 rounded-full ${isToday ? ' bg-pourpre-400 text-white' : ''} ${data?.eventsByDate.get(day.toLocaleDateString())?.length ? 'border border-pourpre-400' : ''}`}>
                     {day.getDate()}
                   </div>
                   <div className="hidden md:block w-full">
-                    {eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map((event) => (
+                    {data?.eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map((event) => (
                       <div key={event.id} className="border border-pourpre-400 rounded-sm truncate text-xs p-1 mb-px">{event.title}</div>
                     ))}
                     <div className="pl-2 pt-1 text-sm">
-                      {eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
+                      {data?.eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
                     </div>
                   </div>
                 </div>
@@ -118,7 +112,7 @@ export default function CalendarPage() {
         </div>
         <div className="basis-1/4">
           <div>
-            {Array.from(eventsByMonth).map(([month, events]) => (
+            {Array.from(data?.eventsByMonth ?? []).map(([month, events]) => (
               <div key={month} className="mb-4">
                 <h3 className="capitalize font-bold text-center">{(new Date(today.getFullYear(), month)).toLocaleString('fr', { month: 'long' })}</h3>
                 {events.map((event) => (

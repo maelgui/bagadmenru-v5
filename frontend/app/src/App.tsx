@@ -1,4 +1,5 @@
 import { OidcProvider } from '@axa-fr/react-oidc';
+import { Configuration, DefaultConfig } from 'bagad-client';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { RouterProvider } from 'react-router-dom';
 import './App.css';
@@ -6,6 +7,8 @@ import oidcConfiguration from './config/oidc';
 import router from './config/router';
 
 const queryClient = new QueryClient();
+
+DefaultConfig.config = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL });
 
 function App() {
   return (

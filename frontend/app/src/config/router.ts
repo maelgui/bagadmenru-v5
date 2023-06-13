@@ -1,10 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { FilesService, UsersService } from '../client';
+import { usersApi } from '../client';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
 import Debug from '../pages/debug';
-import CalendarPage, { eventsLoader } from '../pages/events/calendar';
-import DoodlePage, { doodleAction } from '../pages/events/doodle';
+import CalendarPage from '../pages/events/calendar';
+import DoodlePage from '../pages/events/doodle';
 import HomePage from '../pages/home';
 import MyProfile from '../pages/profile';
 import ProfilesPage from '../pages/trombi';
@@ -28,22 +28,19 @@ export default createBrowserRouter([
           {
             path: '/files',
             Component: Debug,
-            loader: FilesService.getRootApiV1FilesGet,
           },
           {
             path: '/events',
             Component: CalendarPage,
-            loader: eventsLoader,
           },
           {
             path: '/events/doodle',
             Component: DoodlePage,
-            action: doodleAction,
           },
           {
             path: '/users',
             Component: ProfilesPage,
-            loader: UsersService.listProfilesApiV1ProfilesGet,
+            loader: () => usersApi.listProfilesApiV1ProfilesGet(),
           },
         ],
       },
