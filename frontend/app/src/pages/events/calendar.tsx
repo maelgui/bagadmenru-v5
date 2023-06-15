@@ -1,7 +1,7 @@
 import { faCalendar, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { eventsApi } from '../../client';
 import Button from '../../components/button';
@@ -33,7 +33,9 @@ const days = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 export default function CalendarPage() {
   const navigate = useNavigate();
 
-  const { data } = useQuery('events', () => eventsApi.listEventsApiV1EventsGet(), {
+  const { data } = useQuery({
+    queryKey: ['events'],
+    queryFn: () => eventsApi.listEventsApiV1EventsGet(),
     select: (res) => ({
       eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
       eventsByDate: groupBy(res, (item) => item.date.toLocaleDateString()),
@@ -49,7 +51,7 @@ export default function CalendarPage() {
         title="Calendrier"
         subtitle={(new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' })}
         actions={[
-          <Header.Action outline key="add-event" onClick={() => setMonthOffset(monthOffset - 1)}>
+          <Header.Action outline key="add-event" onClick={() => navigate('/events/add')}>
             <FontAwesomeIcon icon={faPlusCircle} />
             {' '}
             Ajouter

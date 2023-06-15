@@ -3,6 +3,7 @@ import { usersApi } from '../client';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
 import Debug from '../pages/debug';
+import AddEventPage from '../pages/events/add';
 import CalendarPage from '../pages/events/calendar';
 import DoodlePage from '../pages/events/doodle';
 import HomePage from '../pages/home';
@@ -36,6 +37,10 @@ export default createBrowserRouter([
           {
             path: '/events/doodle',
             Component: DoodlePage,
+          },
+          {
+            path: '/events/add',
+            Component: AddEventPage,
           },
           {
             path: '/users',

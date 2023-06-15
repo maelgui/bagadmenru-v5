@@ -6,9 +6,10 @@ import {
   faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Costume, Response, ResponseCreate } from 'bagad-client';
 import { useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { eventsApi, queryClient, usersApi } from '../../client';
 import Checkbox from '../../components/checkbox';
 import Header from '../../components/header';
@@ -28,7 +29,12 @@ function keyFunc(eventId: number, userId: string) {
   return `userId:${userId}|eventId:${eventId}`;
 }
 
-async function responsesQuery() {
+interface ResponsesData {
+  responsesByUserAndEvent: Map<string, Response[]>;
+  responsesSumByEvent: Map<number, number>;
+}
+
+async function responsesQuery(): Promise<ResponsesData> {
   const responses = await eventsApi.listResponsesApiV1ResponsesGet();
   const responsesByUserAndEvent = groupby(responses, (r) => keyFunc(r.eventId, r.userId));
   const responsesSumByEvent = sumByEvents(responses);
@@ -39,40 +45,55 @@ async function responsesQuery() {
 
 export default function DoodlePage() {
   const { idTokenPayload } = useOidcIdToken();
+  const navigate = useNavigate();
 
   const [editing, setEditing] = useState<boolean>(false);
 
-  const { data: events } = useQuery('events', () => eventsApi.listEventsApiV1EventsGet());
-  const { data: profiles } = useQuery('profiles', () => usersApi.listProfilesApiV1ProfilesGet());
-  const { data: responses } = useQuery('responses', responsesQuery);
+  const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
+  const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: () => usersApi.listProfilesApiV1ProfilesGet() });
+  const { data: responses } = useQuery({ queryKey: ['responses'], queryFn: responsesQuery });
 
+  console.log(queryClient.getQueryCache());
   const mutation = useMutation({
     mutationFn: ({ eventId, response }: { eventId: number, response: ResponseCreate }) => {
       const params = { eventId: eventId.toString(), responseCreate: response };
       return eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
     },
-    onMutate: async (newTodo) => {
+    onMutate: async ({ eventId, response }) => {
       // Cancel any outgoing refetches
       // (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: ['responses'] });
 
       // Snapshot the previous value
-      const previousResponses = queryClient.getQueryData(['responses']);
+      const previousResponses = queryClient.getQueryData<ResponsesData>(['responses']);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(['responses'], (old: Response[]) => [...old, newTodo]);
+      queryClient.setQueryData(['responses'], (data: ResponsesData | undefined) => {
+        let data2 = data;
+        if (data2) {
+          data2.responsesByUserAndEvent.set(keyFunc(eventId, idTokenPayload.sub), [{
+            eventId,
+            userId: idTokenPayload.sub,
+            value: response.value,
+            date: new Date(),
+          }]);
+        } else {
+          data2 = { responsesByUserAndEvent: new Map<string, Response[]>(), responsesSumByEvent: new Map<number, number>() };
+        }
+        return data2;
+      });
 
       // Return a context object with the snapshotted value
-      return { previousTodos: previousResponses };
+      return { previousResponses };
     },
     // If the mutation fails,
     // use the context returned from onMutate to roll back
     onError: (err, newTodo, context) => {
-      queryClient.setQueryData(['todos'], context.previousTodos);
+      queryClient.setQueryData(['responses'], context?.previousResponses);
     },
     // Always refetch after error or success:
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['responses'] });
     },
   });
 
@@ -82,7 +103,7 @@ export default function DoodlePage() {
         title="Doodle"
         subtitle="Mes présences aux évènements du groupe"
         actions={[
-          <Header.Action key="add-event">
+          <Header.Action key="add-event" onClick={() => navigate('/events/add')}>
             <FontAwesomeIcon icon={faPlusCircle} />
             {' '}
             Ajouter

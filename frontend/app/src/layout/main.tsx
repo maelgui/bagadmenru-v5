@@ -1,6 +1,6 @@
+import { useIsFetching } from '@tanstack/react-query';
 import nprogress from 'nprogress';
 import { useEffect } from 'react';
-import { useIsFetching } from 'react-query';
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/navbar';
 

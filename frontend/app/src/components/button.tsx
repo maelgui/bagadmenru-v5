@@ -1,11 +1,12 @@
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode
+  type?: 'submit' | 'reset' | 'button' | undefined,
   size?: 'sm' | 'md' | 'lg' | 'll'
   outline?: boolean
 }
 
 export default function Button({
-  children, size = 'md', outline = false, ...rest
+  children, size = 'md', outline = false, type = 'button', ...rest
 }: ButtonProps) {
   const classList = [];
   switch (size) {
@@ -29,7 +30,7 @@ export default function Button({
   }
   return (
     <button
-      type="button"
+      type={type}
       className={`${classList.join(' ')} border border-pourpre-500 uppercase transition m-1 font-bold text-sm`}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}

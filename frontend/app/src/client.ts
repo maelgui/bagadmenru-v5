@@ -1,5 +1,5 @@
+import { QueryClient } from '@tanstack/react-query';
 import { Configuration, EventsApi, UsersApi } from 'bagad-client';
-import { QueryClient } from 'react-query';
 
 export const queryClient = new QueryClient();
 

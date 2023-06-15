@@ -1,4 +1,4 @@
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { eventsApi } from '../../client';
 
 export default function AgendaPage() {
