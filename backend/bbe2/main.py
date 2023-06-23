@@ -1,3 +1,4 @@
+import random
 import time
 
 from fastapi import FastAPI, Request
@@ -39,7 +40,7 @@ app.add_middleware(
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start_time = time.time()
-    time.sleep(1)
+    # time.sleep(random.randint(0, 3))
     response = await call_next(request)
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)

@@ -1,13 +1,14 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { FilesService, UsersService } from '../client';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
-import Debug from '../pages/debug';
-import CalendarPage, { eventsLoader } from '../pages/events/calendar';
-import DoodlePage, { doodleAction } from '../pages/events/doodle';
+import AddEventPage from '../pages/events/add';
+import CalendarPage from '../pages/events/calendar';
+import DoodlePage from '../pages/events/doodle';
+import ListFilesPage from '../pages/files/list';
 import HomePage from '../pages/home';
 import MyProfile from '../pages/profile';
 import ProfilesPage from '../pages/trombi';
+import { usersApi } from './client';
 
 export default createBrowserRouter([
   {
@@ -26,24 +27,25 @@ export default createBrowserRouter([
             Component: MyProfile,
           },
           {
-            path: '/files',
-            Component: Debug,
-            loader: FilesService.getRootApiV1FilesGet,
-          },
-          {
             path: '/events',
             Component: CalendarPage,
-            loader: eventsLoader,
           },
           {
             path: '/events/doodle',
             Component: DoodlePage,
-            action: doodleAction,
+          },
+          {
+            path: '/events/add',
+            Component: AddEventPage,
+          },
+          {
+            path: '/files/:folderId?',
+            Component: ListFilesPage,
           },
           {
             path: '/users',
             Component: ProfilesPage,
-            loader: UsersService.listProfilesApiV1ProfilesGet,
+            loader: () => usersApi.listProfilesApiV1ProfilesGet(),
           },
         ],
       },

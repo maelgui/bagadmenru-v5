@@ -1,28 +1,32 @@
-
 from enum import Enum
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel
 
 
-class FileType(Enum):
-    DIRECTORY = 'DIR'
-    FILE = 'FILE'
+class FileOrFolderType(Enum):
+    DIRECTORY = "DIR"
+    FILE = "FILE"
 
 
-class _FileBase(BaseModel):
-    type: FileType
+class _FileOrFolderBase(BaseModel):
     name: str
 
-class FileCreate(_FileBase):
-    url: Optional[str] = None
 
-class FileUpdate(BaseModel):
+class FolderCreate(_FileOrFolderBase):
+    pass
+
+
+class FileOrFolderUpdate(_FileOrFolderBase):
     name: Optional[str] = None
+    parent_id: Optional[int] = None
 
-class File(FileCreate):
+
+class FileOrFolder(_FileOrFolderBase):
+    type: FileOrFolderType
     id: int
-    is_root: bool
+    parent_id: Optional[int] = None
+    url: Optional[str] = None
 
     class Config:
         orm_mode = True

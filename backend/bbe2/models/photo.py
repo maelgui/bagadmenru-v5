@@ -12,7 +12,7 @@ class Photo(Base):
     name = Column(String)
     url = Column(String)
     is_root = Column(Boolean)
-    type = Column(Enum(schemas.FileType))
+    type = Column(Enum(schemas.FileOrFolderType))
 
     album_id = Column(Integer, ForeignKey("albums.id"))
     album = relationship("Album")

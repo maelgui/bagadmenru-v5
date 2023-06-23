@@ -1,6 +1,5 @@
 .gitignore
 .npmignore
-.openapi-generator-ignore
 README.md
 package.json
 src/apis/DefaultApi.ts
@@ -15,11 +14,12 @@ src/models/AlbumCreate.ts
 src/models/Costume.ts
 src/models/Event.ts
 src/models/EventCreate.ts
-src/models/FileType.ts
-src/models/FileUpdate.ts
+src/models/FileOrFolder.ts
+src/models/FileOrFolderType.ts
+src/models/FileOrFolderUpdate.ts
+src/models/FolderCreate.ts
 src/models/HTTPValidationError.ts
 src/models/LocationInner.ts
-src/models/ModelFile.ts
 src/models/Photo.ts
 src/models/Profile.ts
 src/models/ProfileUpdate.ts

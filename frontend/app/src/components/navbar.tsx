@@ -17,8 +17,11 @@ export default function Navbar() {
     <header className="shadow-md">
       <div className="block md:flex items-center container m-auto transition">
         <div className="flex items-center h-16">
-          <img src={logo} className="h-10 w-10 mx-8" alt="Vite logo" />
-          <NavLink to="/">
+          <div className="h-10 w-10 mx-8 ">
+            <img src={logo} alt="Vite logo" />
+
+          </div>
+          <NavLink to="/" className="before:absolute">
             <span className="text-gray-950 font-semibold">Bagad Men Ru</span>
             <br />
             <span className="text-gray-700">Espace membres</span>

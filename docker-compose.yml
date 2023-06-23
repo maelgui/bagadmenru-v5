@@ -42,7 +42,7 @@ services:
       - OIDC_TOKEN_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/token
       - OIDC_JWKS_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/certs
       - CORS_ALLOWED_ORIGINS=["http://localhost:5173"]
-      - S3_ENDPOINT=http://storage
+      - S3_ENDPOINT=http://storage:9000
       - S3_ACCESS_KEY_ID=minioadmin
       - S3_SECRET_ACCESS_KEY=minioadmin
 

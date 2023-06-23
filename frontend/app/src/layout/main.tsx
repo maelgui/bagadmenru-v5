@@ -1,13 +1,24 @@
+import { useIsFetching } from '@tanstack/react-query';
+import nprogress from 'nprogress';
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
-import LoadingBar from '../components/loadingbar';
 import Navbar from '../components/navbar';
 
 export default function MainLayout() {
+  const isFetching = useIsFetching();
+
+  useEffect(() => {
+    if (isFetching) {
+      nprogress.inc();
+    } else {
+      nprogress.done();
+    }
+  }, [isFetching]);
+
   return (
     <>
-      <LoadingBar />
       <Navbar />
-      <div className="container mx-auto p-4">
+      <div className={`container mx-auto p-4 ${isFetching ? 'loading' : ''}`}>
         <Outlet />
       </div>
     </>
