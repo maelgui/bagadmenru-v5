@@ -1,13 +1,13 @@
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export type ButtonProps<T extends React.ElementType> = {
   children: React.ReactNode
-  type?: 'submit' | 'reset' | 'button' | undefined,
   size?: 'sm' | 'md' | 'lg' | 'll'
   outline?: boolean
-}
+  as?: T
+} & React.ComponentPropsWithoutRef<T>;
 
-export default function Button({
-  children, size = 'md', outline = false, type = 'button', ...rest
-}: ButtonProps) {
+export default function Button<T extends React.ElementType = 'button'>({
+  children, size = 'md', outline = false, as = undefined, ...rest
+}: ButtonProps<T>) {
   const classList = [];
   switch (size) {
     case 'sm':
@@ -28,14 +28,14 @@ export default function Button({
   } else {
     classList.push('bg-pourpre-500', 'text-white', 'hover:border-pourpre-200', 'hover:bg-white', 'hover:text-pourpre-600');
   }
+  const Component = as || 'button';
   return (
-    <button
-      type={type}
-      className={`${classList.join(' ')} border border-pourpre-500 uppercase transition m-1 font-bold text-sm`}
+    <Component
+      className={`${classList.join(' ')} inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm`}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}
     >
       {children}
-    </button>
+    </Component>
   );
 }

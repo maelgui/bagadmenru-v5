@@ -17,8 +17,8 @@ class EventScopes(Enum):
 
 
 class FileScopes(Enum):
-    VIEW = "view_file"
-    CREATE = "create_file"
+    VIEW = "view-files"
+    CREATE = "create-files"
     DELETE = "delete_file"
     UPDATE = "update_file"
 

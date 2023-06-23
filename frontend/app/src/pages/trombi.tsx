@@ -1,5 +1,5 @@
+import { Profile } from 'bagad-client';
 import { useLoaderData } from 'react-router-dom';
-import { Profile } from '../client';
 
 export default function ProfilesPage() {
   const data = useLoaderData() as Array<Profile>;

@@ -1,6 +1,7 @@
 import { useOidcIdToken } from '@axa-fr/react-oidc';
+import { Profile } from 'bagad-client';
 import { useEffect, useState } from 'react';
-import { usersApi } from '../client';
+import { usersApi } from '../config/client';
 
 export default function MyProfile() {
   const { idTokenPayload } = useOidcIdToken();

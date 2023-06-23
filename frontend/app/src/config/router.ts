@@ -1,14 +1,14 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { usersApi } from '../client';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
-import Debug from '../pages/debug';
 import AddEventPage from '../pages/events/add';
 import CalendarPage from '../pages/events/calendar';
 import DoodlePage from '../pages/events/doodle';
+import ListFilesPage from '../pages/files/list';
 import HomePage from '../pages/home';
 import MyProfile from '../pages/profile';
 import ProfilesPage from '../pages/trombi';
+import { usersApi } from './client';
 
 export default createBrowserRouter([
   {
@@ -27,10 +27,6 @@ export default createBrowserRouter([
             Component: MyProfile,
           },
           {
-            path: '/files',
-            Component: Debug,
-          },
-          {
             path: '/events',
             Component: CalendarPage,
           },
@@ -41,6 +37,10 @@ export default createBrowserRouter([
           {
             path: '/events/add',
             Component: AddEventPage,
+          },
+          {
+            path: '/files/:folderId?',
+            Component: ListFilesPage,
           },
           {
             path: '/users',

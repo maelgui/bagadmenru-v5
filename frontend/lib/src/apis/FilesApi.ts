@@ -15,35 +15,51 @@
 
 import * as runtime from '../runtime';
 import type {
-  FileUpdate,
+  FileOrFolder,
+  FileOrFolderUpdate,
+  FolderCreate,
   HTTPValidationError,
 } from '../models';
 import {
-    FileUpdateFromJSON,
-    FileUpdateToJSON,
+    FileOrFolderFromJSON,
+    FileOrFolderToJSON,
+    FileOrFolderUpdateFromJSON,
+    FileOrFolderUpdateToJSON,
+    FolderCreateFromJSON,
+    FolderCreateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
 } from '../models';
 
-export interface CreateFileApiV1FilesPostRequest {
-    file: Blob;
+export interface CreateFolderApiV1FilesFolderIdPostRequest {
+    folderId: number;
+    folderCreate: FolderCreate;
 }
 
 export interface DeleteFileApiV1FilesFileIdDeleteRequest {
     fileId: string;
 }
 
-export interface GetFileApiV1FilesFileIdGetRequest {
-    fileId: string;
+export interface DownloadFileApiV1FilesFileIdDownloadGetRequest {
+    fileId: number;
 }
 
-export interface ListChildrenApiV1FilesFileIdChildrenGetRequest {
-    fileId: string;
+export interface GetFileApiV1FilesFileIdGetRequest {
+    fileId: number;
+}
+
+export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
+    folderId: number;
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
     fileId: string;
-    fileUpdate: FileUpdate;
+    fileOrFolderUpdate: FileOrFolderUpdate;
+}
+
+export interface UploadFileApiV1FilesFolderIdUploadPostRequest {
+    folderId: number;
+    file: Blob;
 }
 
 /**
@@ -52,62 +68,44 @@ export interface UpdateFileApiV1FilesFileIdPutRequest {
 export class FilesApi extends runtime.BaseAPI {
 
     /**
-     * Create File
+     * Create Folder
      */
-    async createFileApiV1FilesPostRaw(requestParameters: CreateFileApiV1FilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
-        if (requestParameters.file === null || requestParameters.file === undefined) {
-            throw new runtime.RequiredError('file','Required parameter requestParameters.file was null or undefined when calling createFileApiV1FilesPost.');
+    async createFolderApiV1FilesFolderIdPostRaw(requestParameters: CreateFolderApiV1FilesFolderIdPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+        if (requestParameters.folderId === null || requestParameters.folderId === undefined) {
+            throw new runtime.RequiredError('folderId','Required parameter requestParameters.folderId was null or undefined when calling createFolderApiV1FilesFolderIdPost.');
+        }
+
+        if (requestParameters.folderCreate === null || requestParameters.folderCreate === undefined) {
+            throw new runtime.RequiredError('folderCreate','Required parameter requestParameters.folderCreate was null or undefined when calling createFolderApiV1FilesFolderIdPost.');
         }
 
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        headerParameters['Content-Type'] = 'application/json';
+
         if (this.configuration && this.configuration.accessToken) {
             // oauth required
             headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
         }
 
-        const consumes: runtime.Consume[] = [
-            { contentType: 'multipart/form-data' },
-        ];
-        // @ts-ignore: canConsumeForm may be unused
-        const canConsumeForm = runtime.canConsumeForm(consumes);
-
-        let formParams: { append(param: string, value: any): any };
-        let useForm = false;
-        // use FormData to transmit files using content-type "multipart/form-data"
-        useForm = canConsumeForm;
-        if (useForm) {
-            formParams = new FormData();
-        } else {
-            formParams = new URLSearchParams();
-        }
-
-        if (requestParameters.file !== undefined) {
-            formParams.append('file', requestParameters.file as any);
-        }
-
         const response = await this.request({
-            path: `/api/v1/files/`,
+            path: `/api/v1/files/{folder_id}`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters.folderId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: formParams,
+            body: FolderCreateToJSON(requestParameters.folderCreate),
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }
 
     /**
-     * Create File
+     * Create Folder
      */
-    async createFileApiV1FilesPost(requestParameters: CreateFileApiV1FilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.createFileApiV1FilesPostRaw(requestParameters, initOverrides);
+    async createFolderApiV1FilesFolderIdPost(requestParameters: CreateFolderApiV1FilesFolderIdPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
+        const response = await this.createFolderApiV1FilesFolderIdPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -146,9 +144,48 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Download File
+     */
+    async downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
+            throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling downloadFileApiV1FilesFileIdDownloadGet.');
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/files/{file_id}/download`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters.fileId))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Download File
+     */
+    async downloadFileApiV1FilesFileIdDownloadGet(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Get File
      */
-    async getFileApiV1FilesFileIdGetRaw(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async getFileApiV1FilesFileIdGetRaw(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
         if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
             throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling getFileApiV1FilesFileIdGet.');
         }
@@ -169,17 +206,13 @@ export class FilesApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }
 
     /**
      * Get File
      */
-    async getFileApiV1FilesFileIdGet(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async getFileApiV1FilesFileIdGet(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
         const response = await this.getFileApiV1FilesFileIdGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -187,7 +220,7 @@ export class FilesApi extends runtime.BaseAPI {
     /**
      * Get Root
      */
-    async getRootApiV1FilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async getRootApiV1FilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -204,17 +237,13 @@ export class FilesApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }
 
     /**
      * Get Root
      */
-    async getRootApiV1FilesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async getRootApiV1FilesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
         const response = await this.getRootApiV1FilesGetRaw(initOverrides);
         return await response.value();
     }
@@ -222,9 +251,9 @@ export class FilesApi extends runtime.BaseAPI {
     /**
      * List Children
      */
-    async listChildrenApiV1FilesFileIdChildrenGetRaw(requestParameters: ListChildrenApiV1FilesFileIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<any>>> {
-        if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
-            throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling listChildrenApiV1FilesFileIdChildrenGet.');
+    async listChildrenApiV1FilesFolderIdChildrenGetRaw(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+        if (requestParameters.folderId === null || requestParameters.folderId === undefined) {
+            throw new runtime.RequiredError('folderId','Required parameter requestParameters.folderId was null or undefined when calling listChildrenApiV1FilesFolderIdChildrenGet.');
         }
 
         const queryParameters: any = {};
@@ -237,33 +266,33 @@ export class FilesApi extends runtime.BaseAPI {
         }
 
         const response = await this.request({
-            path: `/api/v1/files/{file_id}/children`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters.fileId))),
+            path: `/api/v1/files/{folder_id}/children`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters.folderId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(FileOrFolderFromJSON));
     }
 
     /**
      * List Children
      */
-    async listChildrenApiV1FilesFileIdChildrenGet(requestParameters: ListChildrenApiV1FilesFileIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<any>> {
-        const response = await this.listChildrenApiV1FilesFileIdChildrenGetRaw(requestParameters, initOverrides);
+    async listChildrenApiV1FilesFolderIdChildrenGet(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
+        const response = await this.listChildrenApiV1FilesFolderIdChildrenGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      * Update File
      */
-    async updateFileApiV1FilesFileIdPutRaw(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async updateFileApiV1FilesFileIdPutRaw(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
         if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
             throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling updateFileApiV1FilesFileIdPut.');
         }
 
-        if (requestParameters.fileUpdate === null || requestParameters.fileUpdate === undefined) {
-            throw new runtime.RequiredError('fileUpdate','Required parameter requestParameters.fileUpdate was null or undefined when calling updateFileApiV1FilesFileIdPut.');
+        if (requestParameters.fileOrFolderUpdate === null || requestParameters.fileOrFolderUpdate === undefined) {
+            throw new runtime.RequiredError('fileOrFolderUpdate','Required parameter requestParameters.fileOrFolderUpdate was null or undefined when calling updateFileApiV1FilesFileIdPut.');
         }
 
         const queryParameters: any = {};
@@ -282,21 +311,77 @@ export class FilesApi extends runtime.BaseAPI {
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: FileUpdateToJSON(requestParameters.fileUpdate),
+            body: FileOrFolderUpdateToJSON(requestParameters.fileOrFolderUpdate),
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }
 
     /**
      * Update File
      */
-    async updateFileApiV1FilesFileIdPut(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async updateFileApiV1FilesFileIdPut(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
         const response = await this.updateFileApiV1FilesFileIdPutRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Upload File
+     */
+    async uploadFileApiV1FilesFolderIdUploadPostRaw(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+        if (requestParameters.folderId === null || requestParameters.folderId === undefined) {
+            throw new runtime.RequiredError('folderId','Required parameter requestParameters.folderId was null or undefined when calling uploadFileApiV1FilesFolderIdUploadPost.');
+        }
+
+        if (requestParameters.file === null || requestParameters.file === undefined) {
+            throw new runtime.RequiredError('file','Required parameter requestParameters.file was null or undefined when calling uploadFileApiV1FilesFolderIdUploadPost.');
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const consumes: runtime.Consume[] = [
+            { contentType: 'multipart/form-data' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        // use FormData to transmit files using content-type "multipart/form-data"
+        useForm = canConsumeForm;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters.file !== undefined) {
+            formParams.append('file', requestParameters.file as any);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/files/{folder_id}/upload`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters.folderId))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
+    }
+
+    /**
+     * Upload File
+     */
+    async uploadFileApiV1FilesFolderIdUploadPost(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
+        const response = await this.uploadFileApiV1FilesFolderIdUploadPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

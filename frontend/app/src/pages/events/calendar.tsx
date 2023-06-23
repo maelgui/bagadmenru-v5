@@ -3,10 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { eventsApi } from '../../client';
+import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
+import { eventsApi } from '../../config/client';
 import groupBy from '../../utils/groupby';
 
 function* generator(monthOffset: number, dayOffset = 1) {
@@ -37,6 +38,7 @@ export default function CalendarPage() {
     queryKey: ['events'],
     queryFn: () => eventsApi.listEventsApiV1EventsGet(),
     select: (res) => ({
+      events: res,
       eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
       eventsByDate: groupBy(res, (item) => item.date.toLocaleDateString()),
     }),
@@ -63,6 +65,9 @@ export default function CalendarPage() {
           </Header.Action>,
         ]}
       />
+      {!data?.events ? (
+        <Alert type="warning">Aucun évèvement prochainement.</Alert>
+      ) : null}
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="basis-3/4">
           <div className="flex justify-between items-center">

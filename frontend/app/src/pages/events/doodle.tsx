@@ -10,10 +10,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Costume, Response, ResponseCreate } from 'bagad-client';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { eventsApi, queryClient, usersApi } from '../../client';
+import Alert from '../../components/alert';
 import Checkbox from '../../components/checkbox';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
+import { eventsApi, queryClient, usersApi } from '../../config/client';
 import groupby from '../../utils/groupby';
 
 function sumByEvents(list: Response[]) {
@@ -53,7 +54,6 @@ export default function DoodlePage() {
   const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: () => usersApi.listProfilesApiV1ProfilesGet() });
   const { data: responses } = useQuery({ queryKey: ['responses'], queryFn: responsesQuery });
 
-  console.log(queryClient.getQueryCache());
   const mutation = useMutation({
     mutationFn: ({ eventId, response }: { eventId: number, response: ResponseCreate }) => {
       const params = { eventId: eventId.toString(), responseCreate: response };
@@ -111,78 +111,84 @@ export default function DoodlePage() {
         ]}
       />
 
-      <table className="table-auto min-w-full">
-        <thead className="divide-y">
-          <tr className="divide-x">
-            <td />
-            {events && events.map((event) => (
-              <td key={event.id} className="text-center px-4">
-                <Tooltip
-                  content={(
-                    <span>
-                      {event.description !== '' ? event.description : 'Pas de description'}
-                      {event.costume !== Costume.None && (
+      {!events ? (
+        <Alert type="error">Aucun évèvement prochainement.</Alert>
+      ) : (
+        <>
+          <table className="table-auto min-w-full">
+            <thead className="divide-y">
+              <tr className="divide-x">
+                <td />
+                {events && events.map((event) => (
+                  <td key={event.id} className="text-center px-4">
+                    <Tooltip
+                      content={(
                         <span>
-                          <br />
-                          {event.costume === Costume.Polo ? 'En costume !' : 'En polo !'}
+                          {event.description !== '' ? event.description : 'Pas de description'}
+                          {event.costume !== Costume.None && (
+                            <span>
+                              <br />
+                              {event.costume === Costume.Polo ? 'En costume !' : 'En polo !'}
+                            </span>
+                          )}
                         </span>
                       )}
+                    >
+                      <strong>{event.title}</strong>
+                      <br />
+                      <span className="text-sm">
+                        {(new Date(event.date)).toLocaleDateString('fr-FR', {
+                          weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
+                        })}
+                      </span>
+                    </Tooltip>
+
+                  </td>
+                ))}
+              </tr>
+              <tr className="divide-x">
+                <td />
+                {events && events.map((event) => (
+                  <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
+                    <span className="rounded-full bg-gray-400 text-white px-2">
+                      {(responses && responses.responsesSumByEvent.get(event.id)) ?? 0}
+                      {' '}
+                      présents
+
                     </span>
-                  )}
-                >
-                  <strong>{event.title}</strong>
-                  <br />
-                  <span className="text-sm">
-                    {(new Date(event.date)).toLocaleDateString('fr-FR', {
-                      weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
-                    })}
-                  </span>
-                </Tooltip>
+                  </td>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {profiles && profiles.map((user) => (
+                <tr key={user.id}>
+                  <th className={`text-right ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'}`}>{user.name}</th>
+                  {events && events.map((event) => {
+                    const value = responses?.responsesByUserAndEvent.get(keyFunc(event.id, user.id))?.at(0)?.value;
+                    return (
+                      <Checkbox
+                        key={`${user.id}-${event.id}`}
+                        disabled={idTokenPayload.sub === user.id ? !editing : true}
+                        value={value}
+                        onClick={() => mutation.mutate({ eventId: event.id, response: { value: !value } })}
+                      />
+                    );
+                  })}
 
-              </td>
-            ))}
-          </tr>
-          <tr className="divide-x">
-            <td />
-            {events && events.map((event) => (
-              <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
-                <span className="rounded-full bg-gray-400 text-white px-2">
-                  {(responses && responses.responsesSumByEvent.get(event.id)) ?? 0}
-                  {' '}
-                  présents
-
-                </span>
-              </td>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {profiles && profiles.map((user) => (
-            <tr key={user.id}>
-              <th className={`text-right ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'}`}>{user.name}</th>
-              {events && events.map((event) => {
-                const value = responses?.responsesByUserAndEvent.get(keyFunc(event.id, user.id))?.at(0)?.value;
-                return (
-                  <Checkbox
-                    key={`${user.id}-${event.id}`}
-                    disabled={idTokenPayload.sub === user.id ? !editing : true}
-                    value={value}
-                    onClick={() => mutation.mutate({ eventId: event.id, response: { value: !value } })}
-                  />
-                );
-              })}
-
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button
-        type="button"
-        className="w-16 h-16 shadow-md shadow-white text-white bg-pourpre-500 rounded-full absolute right-8 bottom-8"
-        onClick={() => setEditing(!editing)}
-      >
-        {editing ? <FontAwesomeIcon icon={faFloppyDisk} /> : <FontAwesomeIcon icon={faPen} />}
-      </button>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button
+            type="button"
+            className="w-16 h-16 shadow-md shadow-white text-white bg-pourpre-500 rounded-full absolute right-8 bottom-8"
+            onClick={() => setEditing(!editing)}
+          >
+            {editing ? <FontAwesomeIcon icon={faFloppyDisk} /> : <FontAwesomeIcon icon={faPen} />}
+          </button>
+        </>
+      )}
     </>
   );
 }
