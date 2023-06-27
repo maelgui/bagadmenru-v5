@@ -6,7 +6,7 @@ interface HeaderProps {
   actions?: React.ReactElement<HeaderActionProps>[]
 }
 
-interface HeaderActionProps extends ButtonProps {
+interface HeaderActionProps extends ButtonProps<'button'> {
   children: React.ReactNode
 }
 

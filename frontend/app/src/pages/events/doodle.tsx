@@ -89,6 +89,7 @@ export default function DoodlePage() {
     // If the mutation fails,
     // use the context returned from onMutate to roll back
     onError: (err, newTodo, context) => {
+      console.error(err, newTodo);
       queryClient.setQueryData(['responses'], context?.previousResponses);
     },
     // Always refetch after error or success:
