@@ -64,7 +64,7 @@ async def download_file(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
-    url = s3.create_presigned_url("files", db_file.url)
+    url = s3.create_presigned_url(db_file.url)
     return url
 
 
@@ -98,8 +98,8 @@ async def upload_file(
     file_crud: CRUDFile = Depends(),
 ):
     """Upload a file."""
-    filename = str(uuid.uuid4())
-    s3.upload_file(file.file, "files", filename)
+    filename = "files/" + str(uuid.uuid4())
+    s3.upload_file(file.file, filename)
     return file_crud.create(
         type=FileOrFolderType.FILE,
         name=file.filename,
