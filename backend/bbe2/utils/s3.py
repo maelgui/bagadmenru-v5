@@ -13,18 +13,24 @@ class S3Helper:
             endpoint_url=settings.s3_endpoint,
             aws_access_key_id=settings.s3_access_key_id,
             aws_secret_access_key=settings.s3_secret_access_key,
-            config=Config(s3={"addressing_style": settings.s3_addressing_style}),
         )
         self.bucket_name = settings.s3_bucket_name
 
-    def upload_file(self, file_obj: BinaryIO, object_name: str):
+    def upload_file(
+        self, file_obj: BinaryIO, object_name: str, content_type: str = None
+    ):
         """Upload a file to an S3 bucket
 
         :param file_name: File to upload
         :param object_name: S3 object name. If not specified then file_name is used
         :return: True if file was uploaded, else False
         """
-        response = self.client.upload_fileobj(file_obj, self.bucket_name, object_name)
+        response = self.client.upload_fileobj(
+            Fileobj=file_obj,
+            Bucket=self.bucket_name,
+            Key=object_name,
+            ExtraArgs={"ContentType": content_type},
+        )
         return response
 
     def create_presigned_url(self, object_name, expiration=3600):

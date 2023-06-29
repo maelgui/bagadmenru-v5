@@ -9,7 +9,6 @@ class Settings(BaseSettings):
     s3_endpoint: AnyHttpUrl
     s3_access_key_id: str
     s3_secret_access_key: str
-    s3_addressing_style: str = "path"
     s3_bucket_name: Optional[str]
 
     jwt_audience: str = "bbe2"
