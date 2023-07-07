@@ -1,4 +1,4 @@
-from typing import BinaryIO
+from typing import BinaryIO, Optional
 
 import boto3
 from botocore.client import Config
@@ -7,6 +7,8 @@ from bbe2.config import settings
 
 
 class S3Helper:
+    """Regroup S3 utilility functions."""
+
     def __init__(self):
         self.client = boto3.client(
             service_name="s3",
@@ -15,9 +17,10 @@ class S3Helper:
             aws_secret_access_key=settings.s3_secret_access_key,
         )
         self.bucket_name = settings.s3_bucket_name
+        self.client.head_bucket(Bucket=self.bucket_name)
 
     def upload_file(
-        self, file_obj: BinaryIO, object_name: str, content_type: str = None
+        self, file_obj: BinaryIO, object_name: str, content_type: Optional[str] = None
     ):
         """Upload a file to an S3 bucket
 
@@ -25,11 +28,14 @@ class S3Helper:
         :param object_name: S3 object name. If not specified then file_name is used
         :return: True if file was uploaded, else False
         """
+        extra_args = {}
+        if content_type:
+            extra_args["ContentType"] = content_type
         response = self.client.upload_fileobj(
             Fileobj=file_obj,
             Bucket=self.bucket_name,
             Key=object_name,
-            ExtraArgs={"ContentType": content_type},
+            ExtraArgs=extra_args,
         )
         return response
 

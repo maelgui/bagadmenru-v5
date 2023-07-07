@@ -1,7 +1,8 @@
 """File system API."""
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
+from fastapi import (APIRouter, Depends, HTTPException, Security, UploadFile,
+                     status)
 
 from bbe2 import models, schemas
 from bbe2.crud.crud_file import CRUDFile
@@ -99,7 +100,7 @@ async def upload_file(
 ):
     """Upload a file."""
     filename = "files/" + str(uuid.uuid4())
-    s3.upload_file(file.file, filename)
+    s3.upload_file(file.file, filename, content_type=file.content_type)
     return file_crud.create(
         type=FileOrFolderType.FILE,
         name=file.filename,

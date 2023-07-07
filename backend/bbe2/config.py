@@ -4,12 +4,12 @@ from pydantic import AnyHttpUrl, BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "sqlite:///./sql_app.db"
+    database_url: str
 
     s3_endpoint: AnyHttpUrl
     s3_access_key_id: str
     s3_secret_access_key: str
-    s3_bucket_name: Optional[str]
+    s3_bucket_name: str
 
     jwt_audience: str = "bbe2"
     jwt_issuer: AnyHttpUrl

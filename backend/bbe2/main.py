@@ -1,4 +1,4 @@
-import random
+import logging
 import time
 
 from fastapi import FastAPI, Request
@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from bbe2.api.v1.api import api_router
 from bbe2.config import settings
 from bbe2.database import Base, engine
+
+logging.basicConfig(level=logging.INFO)
 
 Base.metadata.create_all(bind=engine)
 

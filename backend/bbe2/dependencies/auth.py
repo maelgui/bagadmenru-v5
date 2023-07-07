@@ -1,10 +1,11 @@
 import logging
 
-from bbe2.config import settings
-from bbe2.utils.jwt import JWTVerifier
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2AuthorizationCodeBearer, SecurityScopes
 from jose import JWTError
+
+from bbe2.config import settings
+from bbe2.utils.jwt import JWTVerifier
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     tokenUrl=settings.oidc_token_url,
@@ -30,8 +31,8 @@ async def get_current_user(
     except JWTError as exp:
         logging.error(exp)
         raise credentials_exception from exp
-    # Token scopes contains intersection of requested scopes and user's permissions (auth0 specific)
-    print(security_scopes.scopes, token_roles)
+
+    logging.info("userId=%s, userName=%s, requiredScopes=%s, userScopes=%s", payload.get("sub"), payload.get("preferred_username"), security_scopes.scopes, token_roles)
     for scope in security_scopes.scopes:
         if scope not in token_roles:
             raise HTTPException(
