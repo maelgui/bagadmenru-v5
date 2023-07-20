@@ -112,7 +112,7 @@ export default function DoodlePage() {
         ]}
       />
 
-      {!events ? (
+      {!events?.length ? (
         <Alert type="error">Aucun évèvement prochainement.</Alert>
       ) : (
         <>

@@ -18,7 +18,7 @@ async def get_my_profile(
     db_profile = profile_crud.find_one_by(models.Profile.id == token["sub"])
     if not db_profile:
         db_profile = profile_crud.create(id=token["sub"], name=token["name"])
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+        # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
     return db_profile
 
 @router.put("/me", response_model=schemas.Profile)
