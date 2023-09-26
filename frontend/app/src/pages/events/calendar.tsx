@@ -1,4 +1,3 @@
-import { useOidcIdToken } from '@axa-fr/react-oidc';
 import { faCalendar, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
@@ -113,9 +112,11 @@ export default function CalendarPage() {
                       {day.getDate()}
                     </div>
                     <div className="hidden md:block w-full">
-                      {data?.eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map((event) => (
-                        <div key={event.id} className="border border-pourpre-400 rounded-sm truncate text-xs p-1 mb-px">{event.title}</div>
-                      ))}
+                      {data?.eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map(
+                        (event) => (
+                          <div key={event.id} className="border border-pourpre-400 rounded-sm truncate text-xs p-1 mb-px">{event.title}</div>
+                        ),
+                      )}
                       <div className="pl-2 pt-1 text-sm">
                         {data?.eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
                       </div>

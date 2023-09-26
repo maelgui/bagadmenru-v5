@@ -4,7 +4,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import Button from '../../components/button';
 import Container from '../../components/container';
-import Error from '../../components/error';
+import ErrorComponent from '../../components/error';
 import Header from '../../components/header';
 import { filesApi, queryClient } from '../../config/client';
 import FileItem from './components/file-item';
@@ -80,7 +80,7 @@ export default function ListFilesPage() {
   });
 
   if (status === 'error') {
-    return <Error error={error?.message} />;
+    return <ErrorComponent error={error?.message} />;
   }
   if (status === 'pending') {
     return <div>Loading</div>;
@@ -97,7 +97,7 @@ export default function ListFilesPage() {
           ...(breadcrumb?.slice(-1).map((item) => ({ title: item.name })) ?? []),
         ] : [{ title: 'Fichiers' }]}
         actions={[
-          <Button as="label" htmlFor="upload-file" key="upload-file" variant="outline">
+          <Button key="upload-file" variant="outline">
             Ajouter un fichier
             <input key="upload-file" type="file" id="upload-file" className="hidden" multiple onChange={uploadFileMutation.mutate} />
           </Button>,

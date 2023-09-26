@@ -2808,6 +2808,13 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-file-icon@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/react-file-icon/-/react-file-icon-1.0.1.tgz#7cd0d667c62b5bf6ad179811d853a86058a7ea1d"
+  integrity sha512-QTdYCkYXzh/PfKEIwcPxRdaPQkii5R4Ke7fcO+KB++IDPbYAG1jj+ulEcTA7pRf0gZ5jAvjWcTXBJJRtfYHjlw==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react@*":
   version "18.2.8"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-18.2.8.tgz#a77dcffe4e9af148ca4aa8000c51a1e8ed99e2c8"

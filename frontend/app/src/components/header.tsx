@@ -16,7 +16,7 @@ interface HeaderProps {
   breadcrumb?: BreadcrumbItem[]
 }
 
-interface HeaderActionProps extends ButtonProps<'button'> {
+interface HeaderActionProps extends ButtonProps {
   children: React.ReactNode
 }
 
