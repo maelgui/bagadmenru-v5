@@ -3,9 +3,21 @@ import { Link, NavLink } from 'react-router-dom';
 import { useOidc, useOidcIdToken } from '@axa-fr/react-oidc';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import logo from '../assets/logov2.svg';
 import Button from './button';
+
+function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) => `px-4 py-3 font-semibold text-gray-800 underline-offset-8 hover:underline hover:decoration-2 ${isActive ? 'text-pourpre-500 underline' : ''}`}
+    >
+      {children}
+    </NavLink>
+
+  );
+}
 
 export default function Navbar() {
   const { idTokenPayload } = useOidcIdToken();
@@ -39,49 +51,19 @@ export default function Navbar() {
           <nav className="py-4 md:py-0">
             <ul className="flex flex-col lg:flex-row">
               <li className="px-3 py-2">
-                <NavLink
-                  to="/"
-                  className={({ isActive }) => `px-4 py-3 font-semibold text-gray-800 ${isActive ? 'text-pourpre-500' : ''}`}
-                >
-                  Dashboard
-                </NavLink>
-
+                <CustomNavLink to="/">Dashboard</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
-                <NavLink
-                  className={({ isActive }) => `px-4 py-3 font-semibold text-gray-800 ${isActive ? 'text-pourpre-500' : ''}`}
-                  to="/events"
-                >
-                  Calendrier
-                </NavLink>
-
+                <CustomNavLink to="/events">Calendrier</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
-                <NavLink
-                  className={({ isActive }) => `px-4 py-3 font-semibold text-gray-800 ${isActive ? 'text-pourpre-500' : ''}`}
-                  to="/files"
-                >
-                  Fichiers
-                </NavLink>
-
+                <CustomNavLink to="/files">Fichiers</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
-                <NavLink
-                  className={({ isActive }) => `px-4 py-3 font-semibold text-gray-800 ${isActive ? 'text-pourpre-500' : ''}`}
-                  to="/albums"
-                >
-                  Photos
-                </NavLink>
-
+                <CustomNavLink to="/albums">Photos</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
-                <NavLink
-                  className={({ isActive }) => `px-4 py-3 font-semibold text-gray-800 ${isActive ? 'text-pourpre-500' : ''}`}
-                  to="/users"
-                >
-                  Trombinoscope
-                </NavLink>
-
+                <CustomNavLink to="/users">Trombinoscope</CustomNavLink>
               </li>
             </ul>
           </nav>
@@ -107,7 +89,7 @@ export default function Navbar() {
               )
               : null}
           </div>
-          
+
         </div>
       </div>
     </header>
