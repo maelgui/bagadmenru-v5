@@ -9,20 +9,20 @@ class AlbumScopes(Enum):
 
 
 class EventScopes(Enum):
-    VIEW = "view-events"
-    CREATE = "create-events"
-    DELETE = "delete_event"
-    UPDATE = "edit-events"
-    REPLY = "reply_to_event"
+    VIEW = "events:view"
+    CREATE = "events:create"
+    DELETE = "events:delete"
+    UPDATE = "events:edit"
+    REPLY = "answers:manage-own"
 
 
 class FileScopes(Enum):
-    VIEW = "view-files"
-    CREATE = "create-files"
-    DELETE = "delete_file"
-    UPDATE = "update_file"
+    VIEW = "files:view"
+    CREATE = "files:create"
+    DELETE = "files:delete"
+    UPDATE = "files:edit"
 
 
 class ProfilesScopes(Enum):
-    VIEW = "view-profiles"
-    UPDATE = "update_profile"
+    VIEW = "profiles:view"
+    UPDATE = "profiles:edit"

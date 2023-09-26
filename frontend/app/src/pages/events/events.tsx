@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import Container from '../../components/container';
 import { eventsApi } from '../../config/client';
 
 export default function AgendaPage() {
   const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
 
   return (
-    <div>
+    <Container>
       {events && events.map((event) => (
         <div key={event.id} className="p-4 m-4 rounded-lg shadow-md ">
           <h2 className=" text-xl ">{event.title}</h2>
@@ -25,6 +26,6 @@ export default function AgendaPage() {
           </div>
         </div>
       ))}
-    </div>
+    </Container>
   );
 }

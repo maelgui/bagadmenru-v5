@@ -1,19 +1,22 @@
-import { faFile, faFolder } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { FileOrFolderType } from 'bagad-client';
-import { Link, useParams } from 'react-router-dom';
+import React from 'react';
+import { useParams } from 'react-router-dom';
 import Button from '../../components/button';
+import Container from '../../components/container';
+import Error from '../../components/error';
 import Header from '../../components/header';
 import { filesApi, queryClient } from '../../config/client';
+import FileItem from './components/file-item';
+import FolderItem from './components/folder-item';
 
 export default function ListFilesPage() {
   const params = useParams();
-  const { data: folder } = useQuery({
+  const { data: folder, error, status } = useQuery({
     queryKey: ['files', params.folderId ?? 'root'],
     queryFn: async ({ queryKey }) => (
       queryKey[1] === 'root'
-        ? filesApi.getRootApiV1FilesGet()
+        ? filesApi.getRootApiV1FilesRootGet()
         : filesApi.getFileApiV1FilesFileIdGet({ fileId: parseInt(queryKey[1], 10) })
     ),
   });
@@ -27,7 +30,24 @@ export default function ListFilesPage() {
         ? Promise.reject(new Error('Invalid id'))
         : filesApi.listChildrenApiV1FilesFolderIdChildrenGet({ folderId: queryKey[2] })
     ),
-    // The query will not execute until the userId exists
+    select: (data) => ({
+      folders: data.filter((value) => value.type === FileOrFolderType.Dir),
+      files: data.filter((value) => value.type === FileOrFolderType.File),
+    }),
+    // The query will not execute until the folder id exists
+    enabled: !!folder?.id,
+  });
+
+  const {
+    data: breadcrumb,
+  } = useQuery({
+    queryKey: ['files', 'breadcrumb', folder?.id],
+    queryFn: async ({ queryKey }) => (
+      typeof queryKey[2] !== 'number'
+        ? Promise.reject(new Error('Invalid id'))
+        : filesApi.getBreadcrumbApiV1FilesFileIdBreadcrumbGet({ fileId: queryKey[2] })
+    ),
+    // The query will not execute until the folder id exists
     enabled: !!folder?.id,
   });
 
@@ -59,24 +79,25 @@ export default function ListFilesPage() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] }),
   });
 
-  const downloadMutation = useMutation({
-    mutationFn: (fileId: number) => filesApi.downloadFileApiV1FilesFileIdDownloadGet({ fileId }),
-    onSuccess(url) {
-      window.open(url, '_blank');
-    },
-  });
-
-  if (!folder?.id) {
-    return null;
+  if (status === 'error') {
+    return <Error error={error?.message} />;
+  }
+  if (status === 'pending') {
+    return <div>Loading</div>;
   }
 
   return (
-    <div>
+    <>
       <Header
         title="Fichiers"
-        subtitle={folder?.name}
+        subtitle={params.folderId ? folder.name : undefined}
+        breadcrumb={params.folderId ? [
+          { title: 'Fichiers', link: '/files' },
+          ...(breadcrumb?.slice(1, -1).map((item) => ({ title: item.name, link: `/files/${item.id}` })) ?? []),
+          ...(breadcrumb?.slice(-1).map((item) => ({ title: item.name })) ?? []),
+        ] : [{ title: 'Fichiers' }]}
         actions={[
-          <Button as="label" htmlFor="upload-file" key="upload-file" outline>
+          <Button as="label" htmlFor="upload-file" key="upload-file" variant="outline">
             Ajouter un fichier
             <input key="upload-file" type="file" id="upload-file" className="hidden" multiple onChange={uploadFileMutation.mutate} />
           </Button>,
@@ -92,24 +113,19 @@ export default function ListFilesPage() {
           </Button>,
         ]}
       />
-      <div className="grid grid-cols-4 gap-4">
-        {children?.map((file) => (
-          file.type === FileOrFolderType.Dir ? (
-            <Link to={`/files/${file.id}`} key={file.id} className="truncate py-3 px-4 border rounded border-gray-200 hover:bg-gray-50">
-              <FontAwesomeIcon icon={faFolder} className="mr-4" />
-              {file.name}
-            </Link>
+      <Container>
+        <div className="grid grid-cols-4 gap-4">
+          {children?.folders.map((file) => (
+            <FolderItem key={file.id} folder={file} />
+          ))}
+        </div>
+        <div className="grid grid-cols-4 gap-4 mt-16">
+          {children?.files.map((file) => (
+            <FileItem key={file.id} file={file} />
+          ))}
 
-          ) : (
-            <button type="button" onClick={() => downloadMutation.mutate(file.id)} key={file.id} className="text-left truncate py-3 px-4 border rounded border-gray-200 hover:bg-gray-50">
-              <FontAwesomeIcon icon={faFile} className="mr-4" />
-              {file.name}
-            </button>
-
-          )
-        ))}
-
-      </div>
-    </div>
+        </div>
+      </Container>
+    </>
   );
 }

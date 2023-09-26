@@ -1,13 +1,17 @@
-export type ButtonProps<T extends React.ElementType> = {
+import { forwardRef } from 'react';
+
+export type ButtonProps = {
   children: React.ReactNode
   size?: 'sm' | 'md' | 'lg' | 'll'
-  outline?: boolean
-  as?: T
-} & React.ComponentPropsWithoutRef<T>;
+  variant?: 'solid' | 'outline' | 'ghost'
+} & React.ComponentPropsWithoutRef<'button'>;
 
-export default function Button<T extends React.ElementType = 'button'>({
-  children, size = 'md', outline = false, as = undefined, ...rest
-}: ButtonProps<T>) {
+function PrivateButton(
+  {
+    children, size = 'md', variant = 'solid', className, ...rest
+  }: ButtonProps,
+  ref: React.ForwardedRef<HTMLButtonElement>,
+) {
   const classList = [];
   switch (size) {
     case 'sm':
@@ -23,19 +27,34 @@ export default function Button<T extends React.ElementType = 'button'>({
     default:
       break;
   }
-  if (outline) {
-    classList.push('bg-white', 'text-pourpre-600', 'hover:border-pourpre-200', 'hover:bg-pourpre-400', 'hover:text-white');
-  } else {
-    classList.push('bg-pourpre-500', 'text-white', 'hover:border-pourpre-200', 'hover:bg-white', 'hover:text-pourpre-600');
+
+  switch (variant) {
+    case 'solid':
+      classList.push('bg-pourpre-500', 'text-white', 'hover:border-pourpre-200', 'hover:bg-white', 'hover:text-pourpre-600');
+      break;
+    case 'outline':
+      classList.push('text-pourpre-600', 'hover:border-pourpre-200', 'hover:bg-pourpre-400', 'hover:text-white');
+      break;
+    case 'ghost':
+      classList.push('border-none', 'text-gray-900', 'hover:bg-gray-100');
+      break;
+
+    default:
+      break;
   }
-  const Component = as || 'button';
+
   return (
-    <Component
-      className={`${classList.join(' ')} inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm`}
+    <button
+      ref={ref}
+      type="button"
+      className={`${classList.join(' ')} rounded inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm ${className}`}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}
     >
       {children}
-    </Component>
+    </button>
   );
 }
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(PrivateButton);
+export default Button;

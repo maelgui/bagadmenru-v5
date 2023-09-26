@@ -37,10 +37,14 @@ export interface CreateFolderApiV1FilesFolderIdPostRequest {
 }
 
 export interface DeleteFileApiV1FilesFileIdDeleteRequest {
-    fileId: string;
+    fileId: number;
 }
 
 export interface DownloadFileApiV1FilesFileIdDownloadGetRequest {
+    fileId: number;
+}
+
+export interface GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest {
     fileId: number;
 }
 
@@ -68,6 +72,7 @@ export interface UploadFileApiV1FilesFolderIdUploadPostRequest {
 export class FilesApi extends runtime.BaseAPI {
 
     /**
+     * Create a new folder.
      * Create Folder
      */
     async createFolderApiV1FilesFolderIdPostRaw(requestParameters: CreateFolderApiV1FilesFolderIdPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
@@ -102,6 +107,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Create a new folder.
      * Create Folder
      */
     async createFolderApiV1FilesFolderIdPost(requestParameters: CreateFolderApiV1FilesFolderIdPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
@@ -110,6 +116,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Delete an existing file or folder.
      * Delete File
      */
     async deleteFileApiV1FilesFileIdDeleteRaw(requestParameters: DeleteFileApiV1FilesFileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
@@ -137,6 +144,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Delete an existing file or folder.
      * Delete File
      */
     async deleteFileApiV1FilesFileIdDelete(requestParameters: DeleteFileApiV1FilesFileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
@@ -144,6 +152,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get s3 pre-signed url for a given file.
      * Download File
      */
     async downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
@@ -175,6 +184,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get s3 pre-signed url for a given file.
      * Download File
      */
     async downloadFileApiV1FilesFileIdDownloadGet(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
@@ -183,6 +193,44 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get a file or folder by id.
+     * Get Breadcrumb
+     */
+    async getBreadcrumbApiV1FilesFileIdBreadcrumbGetRaw(requestParameters: GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+        if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
+            throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling getBreadcrumbApiV1FilesFileIdBreadcrumbGet.');
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/files/{file_id}/breadcrumb`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters.fileId))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(FileOrFolderFromJSON));
+    }
+
+    /**
+     * Get a file or folder by id.
+     * Get Breadcrumb
+     */
+    async getBreadcrumbApiV1FilesFileIdBreadcrumbGet(requestParameters: GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
+        const response = await this.getBreadcrumbApiV1FilesFileIdBreadcrumbGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get a file or folder by id.
      * Get File
      */
     async getFileApiV1FilesFileIdGetRaw(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
@@ -210,6 +258,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get a file or folder by id.
      * Get File
      */
     async getFileApiV1FilesFileIdGet(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
@@ -218,9 +267,10 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get root folder entity.
      * Get Root
      */
-    async getRootApiV1FilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async getRootApiV1FilesRootGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -231,7 +281,7 @@ export class FilesApi extends runtime.BaseAPI {
         }
 
         const response = await this.request({
-            path: `/api/v1/files/`,
+            path: `/api/v1/files/root`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -241,14 +291,16 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get root folder entity.
      * Get Root
      */
-    async getRootApiV1FilesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
-        const response = await this.getRootApiV1FilesGetRaw(initOverrides);
+    async getRootApiV1FilesRootGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
+        const response = await this.getRootApiV1FilesRootGetRaw(initOverrides);
         return await response.value();
     }
 
     /**
+     * Get all chidren of a folder.
      * List Children
      */
     async listChildrenApiV1FilesFolderIdChildrenGetRaw(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
@@ -276,6 +328,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get all chidren of a folder.
      * List Children
      */
     async listChildrenApiV1FilesFolderIdChildrenGet(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
@@ -284,6 +337,40 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get root folder entity.
+     * List Files
+     */
+    async listFilesApiV1FilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/files/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(FileOrFolderFromJSON));
+    }
+
+    /**
+     * Get root folder entity.
+     * List Files
+     */
+    async listFilesApiV1FilesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
+        const response = await this.listFilesApiV1FilesGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Update an existing file or folder
      * Update File
      */
     async updateFileApiV1FilesFileIdPutRaw(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
@@ -318,6 +405,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Update an existing file or folder
      * Update File
      */
     async updateFileApiV1FilesFileIdPut(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
@@ -326,6 +414,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Upload a file.
      * Upload File
      */
     async uploadFileApiV1FilesFolderIdUploadPostRaw(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
@@ -378,6 +467,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Upload a file.
      * Upload File
      */
     async uploadFileApiV1FilesFolderIdUploadPost(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {

@@ -8,7 +8,6 @@ import ListFilesPage from '../pages/files/list';
 import HomePage from '../pages/home';
 import MyProfile from '../pages/profile';
 import ProfilesPage from '../pages/trombi';
-import { usersApi } from './client';
 
 export default createBrowserRouter([
   {
@@ -45,7 +44,6 @@ export default createBrowserRouter([
           {
             path: '/users',
             Component: ProfilesPage,
-            loader: () => usersApi.listProfilesApiV1ProfilesGet(),
           },
         ],
       },

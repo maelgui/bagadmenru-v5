@@ -1,8 +1,7 @@
 """File system API."""
 import uuid
 
-from fastapi import (APIRouter, Depends, HTTPException, Security, UploadFile,
-                     status)
+from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
 
 from bbe2 import models, schemas
 from bbe2.crud.crud_file import CRUDFile
@@ -16,6 +15,18 @@ router = APIRouter(prefix="/files")
 
 @router.get(
     "/",
+    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    response_model=list[schemas.FileOrFolder],
+)
+async def list_files(
+    file_crud: CRUDFile = Depends(),
+):
+    """List recent files."""
+    return file_crud.find_all(limit=10)
+
+
+@router.get(
+    "/root",
     dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
     response_model=schemas.FileOrFolder,
 )
@@ -49,6 +60,34 @@ async def get_file(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
     return db_file
+
+
+@router.get(
+    "/{file_id}/breadcrumb",
+    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    response_model=list[schemas.FileOrFolder],
+)
+async def get_breadcrumb(
+    file_id: int,
+    file_crud: CRUDFile = Depends(),
+):
+    """Get breadcrumb for a file."""
+    db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
+    if not db_file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        )
+    breadcrumb = [db_file]
+    while breadcrumb[-1].parent_id:
+        next_file = file_crud.find_one_by(
+            models.FileOrFolder.id == breadcrumb[-1].parent_id
+        )
+        if not next_file:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        breadcrumb.append(next_file)
+
+    breadcrumb.reverse()
+    return breadcrumb
 
 
 @router.get(
@@ -111,7 +150,7 @@ async def upload_file(
 
 @router.post(
     "/{folder_id}",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[FileScopes.CREATE.value])],
     response_model=schemas.FileOrFolder,
     status_code=status.HTTP_201_CREATED,
 )

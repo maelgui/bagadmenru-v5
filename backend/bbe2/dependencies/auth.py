@@ -27,16 +27,24 @@ async def get_current_user(
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_roles = payload.get("resource_access", {settings.jwt_audience: {"roles": []}})[settings.jwt_audience]["roles"]
+        token_roles = payload.get(
+            "resource_access", {settings.jwt_audience: {"roles": []}}
+        )[settings.jwt_audience]["roles"]
     except JWTError as exp:
         logging.error(exp)
         raise credentials_exception from exp
 
-    logging.info("userId=%s, userName=%s, requiredScopes=%s, userScopes=%s", payload.get("sub"), payload.get("preferred_username"), security_scopes.scopes, token_roles)
+    logging.info(
+        "userId=%s, userName=%s, requiredScopes=%s, userScopes=%s",
+        payload.get("sub"),
+        payload.get("preferred_username"),
+        security_scopes.scopes,
+        token_roles,
+    )
     for scope in security_scopes.scopes:
         if scope not in token_roles:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",
                 headers={"WWW-Authenticate": "Bearer"},
             )

@@ -92,10 +92,10 @@ async def list_responses(
 
 @events_router.put("/{event_id}/responses", status_code=status.HTTP_204_NO_CONTENT)
 async def create_response(
-    event_id: str,
+    event_id: int,
     response: schemas.ResponseCreate,
     token: dict[str, Any] = Security(
-        get_current_user, scopes=["manage-own-poll-answers"]
+        get_current_user, scopes=[EventScopes.REPLY.value]
     ),
     db: Session = Depends(get_db),
     event_crud: CRUDEvent = Depends(CRUDEvent),
