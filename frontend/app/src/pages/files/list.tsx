@@ -115,7 +115,7 @@ export default function ListFilesPage() {
         ]}
       />
       <Container>
-        {!children?.files.length && !children?.folders.length ? (
+        {children && !children?.files.length && !children?.folders.length ? (
           <Alert type="info">Dossier vide</Alert>
         ) : null}
         <div className="grid grid-cols-4 gap-4">
