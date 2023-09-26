@@ -128,6 +128,7 @@ export default function CalendarPage() {
           </div>
           <div className="basis-1/4">
             <div>
+              {data && !data.events.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
               {Array.from(data?.eventsByMonth ?? []).map(([month, events]) => (
                 <div key={month} className="mb-4">
                   <h3 className="capitalize font-bold text-center">{(new Date(today.getFullYear(), month)).toLocaleString('fr', { month: 'long' })}</h3>

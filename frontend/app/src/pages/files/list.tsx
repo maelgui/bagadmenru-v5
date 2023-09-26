@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { FileOrFolderType } from 'bagad-client';
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import ErrorComponent from '../../components/error';
@@ -114,6 +115,9 @@ export default function ListFilesPage() {
         ]}
       />
       <Container>
+        {!children?.files.length && !children?.folders.length ? (
+          <Alert type="info">Dossier vide</Alert>
+        ) : null}
         <div className="grid grid-cols-4 gap-4">
           {children?.folders.map((file) => (
             <FolderItem key={file.id} folder={file} />
@@ -123,7 +127,6 @@ export default function ListFilesPage() {
           {children?.files.map((file) => (
             <FileItem key={file.id} file={file} />
           ))}
-
         </div>
       </Container>
     </>
