@@ -118,12 +118,12 @@ export default function ListFilesPage() {
         {children && !children?.files.length && !children?.folders.length ? (
           <Alert type="info">Dossier vide</Alert>
         ) : null}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {children?.folders.map((file) => (
             <FolderItem key={file.id} folder={file} />
           ))}
         </div>
-        <div className="grid grid-cols-4 gap-4 mt-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
           {children?.files.map((file) => (
             <FileItem key={file.id} file={file} />
           ))}

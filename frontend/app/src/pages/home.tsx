@@ -20,9 +20,9 @@ export default function HomePage() {
       <Container>
         {events ? (
           <div className="border-2 border-gray-200 p-8 mb-8">
-            <div className="flex justify-between">
-              <h3 className="pb-4 tracking-tight font-semibold uppercase">Prochains évènements</h3>
-              <Link to="/events/doodle" className="underline underline-offset-4 hover:decoration-2">
+            <div className="flex flex-wrap gap-2 justify-between pb-4">
+              <h3 className="whitespace-nowrap tracking-tight font-semibold uppercase">Prochains évènements</h3>
+              <Link to="/events/doodle" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
                 Accéder au doodle
                 <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
               </Link>
@@ -43,9 +43,9 @@ export default function HomePage() {
         ) : null}
         {files ? (
           <div className="border-2 border-gray-200 p-8">
-            <div className="flex justify-between">
-              <h3 className="pb-4 tracking-tight font-semibold uppercase">Derniers fichiers ajoutés</h3>
-              <Link to="/files" className="underline underline-offset-4 hover:decoration-2">
+            <div className="flex flex-wrap gap-2 justify-between pb-4">
+              <h3 className="whitespace-nowraptracking-tight font-semibold uppercase">Derniers fichiers ajoutés</h3>
+              <Link to="/files" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
                 Parcourir
                 <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
               </Link>
