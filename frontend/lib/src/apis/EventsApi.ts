@@ -39,7 +39,7 @@ export interface CreateEventApiV1EventsPostRequest {
 }
 
 export interface CreateResponseApiV1EventsEventIdResponsesPutRequest {
-    eventId: string;
+    eventId: number;
     responseCreate: ResponseCreate;
 }
 

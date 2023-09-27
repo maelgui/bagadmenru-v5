@@ -1,5 +1,6 @@
 """File system API."""
 import uuid
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
 
@@ -20,8 +21,11 @@ router = APIRouter(prefix="/files")
 )
 async def list_files(
     file_crud: CRUDFile = Depends(),
+    t: Optional[FileOrFolderType] = None,
 ):
     """List recent files."""
+    if t:
+        return file_crud.find_by(models.FileOrFolder.type == t, limit=10)
     return file_crud.find_all(limit=10)
 
 

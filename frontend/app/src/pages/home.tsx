@@ -2,6 +2,7 @@ import { useOidcIdToken } from '@axa-fr/react-oidc';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
+import { FileOrFolderType } from 'bagad-client';
 import { Link, useNavigate } from 'react-router-dom';
 import Container from '../components/container';
 import Header from '../components/header';
@@ -12,8 +13,14 @@ import FileItem from './files/components/file-item';
 export default function HomePage() {
   const navigate = useNavigate();
   const { idTokenPayload } = useOidcIdToken();
-  const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
-  const { data: files } = useQuery({ queryKey: ['files'], queryFn: () => filesApi.listFilesApiV1FilesGet() });
+  const { data: events } = useQuery({
+    queryKey: ['events'],
+    queryFn: () => eventsApi.listEventsApiV1EventsGet(),
+  });
+  const { data: files } = useQuery({
+    queryKey: ['files'],
+    queryFn: () => filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File }),
+  });
   return (
     <>
       <Header title={`Hi ${idTokenPayload.name}`} />

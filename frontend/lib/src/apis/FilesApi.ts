@@ -16,6 +16,7 @@
 import * as runtime from '../runtime';
 import type {
   FileOrFolder,
+  FileOrFolderType,
   FileOrFolderUpdate,
   FolderCreate,
   HTTPValidationError,
@@ -23,6 +24,8 @@ import type {
 import {
     FileOrFolderFromJSON,
     FileOrFolderToJSON,
+    FileOrFolderTypeFromJSON,
+    FileOrFolderTypeToJSON,
     FileOrFolderUpdateFromJSON,
     FileOrFolderUpdateToJSON,
     FolderCreateFromJSON,
@@ -54,6 +57,10 @@ export interface GetFileApiV1FilesFileIdGetRequest {
 
 export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
     folderId: number;
+}
+
+export interface ListFilesApiV1FilesGetRequest {
+    t?: FileOrFolderType;
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
@@ -193,7 +200,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get a file or folder by id.
+     * Get breadcrumb for a file.
      * Get Breadcrumb
      */
     async getBreadcrumbApiV1FilesFileIdBreadcrumbGetRaw(requestParameters: GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
@@ -221,7 +228,7 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get a file or folder by id.
+     * Get breadcrumb for a file.
      * Get Breadcrumb
      */
     async getBreadcrumbApiV1FilesFileIdBreadcrumbGet(requestParameters: GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
@@ -337,11 +344,15 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get root folder entity.
+     * List recent files.
      * List Files
      */
-    async listFilesApiV1FilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+    async listFilesApiV1FilesGetRaw(requestParameters: ListFilesApiV1FilesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
         const queryParameters: any = {};
+
+        if (requestParameters.t !== undefined) {
+            queryParameters['t'] = requestParameters.t;
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -361,11 +372,11 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get root folder entity.
+     * List recent files.
      * List Files
      */
-    async listFilesApiV1FilesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
-        const response = await this.listFilesApiV1FilesGetRaw(initOverrides);
+    async listFilesApiV1FilesGet(requestParameters: ListFilesApiV1FilesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
+        const response = await this.listFilesApiV1FilesGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
