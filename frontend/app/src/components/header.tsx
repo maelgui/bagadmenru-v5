@@ -2,7 +2,7 @@ import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Button, { ButtonProps } from './button';
+import Button from './button';
 import Container from './container';
 
 interface BreadcrumbItem {
@@ -12,25 +12,11 @@ interface BreadcrumbItem {
 interface HeaderProps {
   title: React.ReactNode
   subtitle?: React.ReactNode | undefined
-  actions?: React.ReactElement<HeaderActionProps>[]
+  actions?: React.ReactElement<typeof HeaderAction>[]
   breadcrumb?: BreadcrumbItem[]
 }
 
-interface HeaderActionProps extends ButtonProps {
-  children: React.ReactNode
-}
-
-function HeaderAction({ children, ...rest }: HeaderActionProps) {
-  return (
-    <Button
-      type="button"
-      // eslint-disable-next-line react/jsx-props-no-spreading
-      {...rest}
-    >
-      {children}
-    </Button>
-  );
-}
+const HeaderAction = Button;
 
 export default function Header({
   title,
@@ -42,7 +28,7 @@ export default function Header({
     <>
       <div className="bg-pourpre-50 shadow-inner py-2">
         <Container>
-          <ul className="flex text-sm">
+          <ul className="flex flex-wrap text-sm">
             <li className="font-semibold mr-2">Navigation :</li>
             <li className="mx-2">{breadcrumb.length ? <Link to="/" className="underline underline-offset-4 hover:decoration-2">Accueil</Link> : 'Accueil'}</li>
             {breadcrumb.map((item) => (
@@ -58,15 +44,15 @@ export default function Header({
       </div>
       <div className="py-8">
         <Container>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-between md:items-center">
 
             <div>
               <h2 className="text-4xl">{title}</h2>
               <h4 className="text-lg text-gray-500">{subtitle}</h4>
             </div>
 
-            <div className="m-l-auto text-right">
-              {actions.map((action) => action)}
+            <div className="text-right">
+              {actions.map((action) => <span key={action.key}>{action}</span>)}
             </div>
           </div>
         </Container>

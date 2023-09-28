@@ -24,7 +24,19 @@ export interface Profile {
      * @type {string}
      * @memberof Profile
      */
-    name?: string;
+    firstName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Profile
+     */
+    lastName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Profile
+     */
+    email?: string;
     /**
      * 
      * @type {string}
@@ -44,6 +56,8 @@ export interface Profile {
  */
 export function instanceOfProfile(value: object): boolean {
     let isInstance = true;
+    isInstance = isInstance && "firstName" in value;
+    isInstance = isInstance && "lastName" in value;
     isInstance = isInstance && "id" in value;
 
     return isInstance;
@@ -59,7 +73,9 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
     }
     return {
         
-        'name': !exists(json, 'name') ? undefined : json['name'],
+        'firstName': json['first_name'],
+        'lastName': json['last_name'],
+        'email': !exists(json, 'email') ? undefined : json['email'],
         'picture': !exists(json, 'picture') ? undefined : json['picture'],
         'id': json['id'],
     };
@@ -74,7 +90,9 @@ export function ProfileToJSON(value?: Profile | null): any {
     }
     return {
         
-        'name': value.name,
+        'first_name': value.firstName,
+        'last_name': value.lastName,
+        'email': value.email,
         'picture': value.picture,
         'id': value.id,
     };

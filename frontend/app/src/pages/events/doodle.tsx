@@ -57,7 +57,7 @@ export default function DoodlePage() {
 
   const mutation = useMutation({
     mutationFn: ({ eventId, response }: { eventId: number, response: ResponseCreate }) => {
-      const params = { eventId: eventId.toString(), responseCreate: response };
+      const params = { eventId, responseCreate: response };
       return eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
     },
     onMutate: async ({ eventId, response }) => {
@@ -169,7 +169,7 @@ export default function DoodlePage() {
               <tbody>
                 {profiles && profiles.map((user) => (
                   <tr key={user.id}>
-                    <th className={`text-right ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'}`}>{user.name}</th>
+                    <th className={`text-right ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'}`}>{`${user.firstName} ${user.lastName}`}</th>
                     {events && events.map((event) => {
                       const value = responses?.responsesByUserAndEvent.get(keyFunc(event.id, user.id))?.at(0)?.value;
                       return (

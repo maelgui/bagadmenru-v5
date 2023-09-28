@@ -24,12 +24,6 @@ export interface ProfileUpdate {
      * @type {string}
      * @memberof ProfileUpdate
      */
-    name?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProfileUpdate
-     */
     picture?: string;
 }
 
@@ -52,7 +46,6 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
     }
     return {
         
-        'name': !exists(json, 'name') ? undefined : json['name'],
         'picture': !exists(json, 'picture') ? undefined : json['picture'],
     };
 }
@@ -66,7 +59,6 @@ export function ProfileUpdateToJSON(value?: ProfileUpdate | null): any {
     }
     return {
         
-        'name': value.name,
         'picture': value.picture,
     };
 }

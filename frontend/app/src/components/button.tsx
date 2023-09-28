@@ -1,17 +1,25 @@
+/* eslint-disable react/require-default-props */
 import { forwardRef } from 'react';
 
-export type ButtonProps = {
-  children: React.ReactNode
+type ButtonOwnProps<C extends React.ElementType> = {
+  as?: C
   size?: 'sm' | 'md' | 'lg' | 'll'
   variant?: 'solid' | 'outline' | 'ghost'
 } & React.ComponentPropsWithoutRef<'button'>;
 
-function PrivateButton(
+export type ButtonProps<C extends React.ElementType> =
+  ButtonOwnProps<C> & Omit<React.ComponentProps<C>, keyof ButtonOwnProps<C>>;
+
+type PolymorphicRef<C extends React.ElementType> =
+  React.ComponentPropsWithRef<C>['ref'];
+
+function PrivateButton<C extends React.ElementType = 'button'>(
   {
-    children, size = 'md', variant = 'solid', className, ...rest
-  }: ButtonProps,
-  ref: React.ForwardedRef<HTMLButtonElement>,
+    as, children, size = 'md', variant = 'solid', className, ...rest
+  }: ButtonProps<C>,
+  ref: PolymorphicRef<C>,
 ) {
+  const Component = as || 'button';
   const classList = [];
   switch (size) {
     case 'sm':
@@ -44,7 +52,7 @@ function PrivateButton(
   }
 
   return (
-    <button
+    <Component
       ref={ref}
       type="button"
       className={`${classList.join(' ')} rounded inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm ${className}`}
@@ -52,9 +60,9 @@ function PrivateButton(
       {...rest}
     >
       {children}
-    </button>
+    </Component>
   );
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(PrivateButton);
+const Button = forwardRef(PrivateButton) as typeof PrivateButton;
 export default Button;

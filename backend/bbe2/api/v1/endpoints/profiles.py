@@ -15,9 +15,14 @@ async def get_my_profile(
     profile_crud: CRUDProfile = Depends(),
     token: dict[str, Any] = Security(get_current_user, scopes=[]),
 ):
+    print(token)
     db_profile = profile_crud.find_one_by(models.Profile.id == token["sub"])
     if not db_profile:
-        db_profile = profile_crud.create(id=token["sub"], name=token["name"])
+        db_profile = profile_crud.create(
+            id=token["sub"],
+            first_name=token["given_name"],
+            last_name=token["family_name"],
+        )
     return db_profile
 
 

@@ -29,20 +29,22 @@ export default function Navbar() {
     <header className="shadow-md">
       <div className="block lg:flex items-center container m-auto transition">
         <div className="flex items-center h-24">
-          <div className=" w-12 mx-8 ">
-            <img src={logo} alt="Vite logo" />
-
-          </div>
-          <NavLink to="/" className="before:absolute">
-            <span className="text-gray-950 font-semibold whitespace-nowrap">Bagad Men Ru</span>
-            <br />
-            <span className="text-gray-700 whitespace-nowrap">Espace membres</span>
+          <NavLink to="/" className="flex items-center">
+            <div className=" w-12 mx-8 ">
+              <img src={logo} alt="Vite logo" />
+            </div>
+            <div>
+              <span className="text-gray-950 font-semibold whitespace-nowrap">Bagad Men Ru</span>
+              <br />
+              <span className="text-gray-700 whitespace-nowrap">Espace membres</span>
+            </div>
           </NavLink>
           <button
             type="button"
             className="ml-auto block lg:hidden"
             aria-label="open-menu"
             onClick={() => setShow(!show)}
+            onBlur={() => setTimeout(() => setShow(false), 200)}
           >
             <FontAwesomeIcon icon={faBars} size="xl" className="mx-8" />
           </button>

@@ -27,3 +27,11 @@ export const Date: Story = {
     type: 'date',
   },
 };
+
+export const Disabled: Story = {
+  args: {
+    type: 'text',
+    value: 'Mon text',
+    disabled: true,
+  },
+};

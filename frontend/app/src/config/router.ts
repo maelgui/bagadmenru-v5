@@ -6,8 +6,9 @@ import CalendarPage from '../pages/events/calendar';
 import DoodlePage from '../pages/events/doodle';
 import ListFilesPage from '../pages/files/list';
 import HomePage from '../pages/home';
-import MyProfile from '../pages/profile';
-import ProfilesPage from '../pages/trombi';
+import EditProfilePage from '../pages/profiles/edit';
+import MyProfile from '../pages/profiles/me';
+import ProfilesPage from '../pages/profiles/trombi';
 
 export default createBrowserRouter([
   {
@@ -20,10 +21,6 @@ export default createBrowserRouter([
           {
             index: true,
             Component: HomePage,
-          },
-          {
-            path: '/profile',
-            Component: MyProfile,
           },
           {
             path: '/events',
@@ -44,6 +41,14 @@ export default createBrowserRouter([
           {
             path: '/users',
             Component: ProfilesPage,
+          },
+          {
+            path: '/profile',
+            Component: MyProfile,
+          },
+          {
+            path: '/profile/edit',
+            Component: EditProfilePage,
           },
         ],
       },

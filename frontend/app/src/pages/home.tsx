@@ -26,9 +26,9 @@ export default function HomePage() {
       <Header title={`Hi ${idTokenPayload.name}`} />
       <Container>
         {events ? (
-          <div className="border-2 border-gray-200 p-8 mb-8">
-            <div className="flex flex-wrap gap-2 justify-between pb-4">
-              <h3 className="whitespace-nowrap tracking-tight font-semibold uppercase">Prochains évènements</h3>
+          <div className="p-8 mb-8">
+            <div className="flex flex-col md:flex-row gap-2 justify-between pb-8">
+              <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase">Prochains évènements</h3>
               <Link to="/events/doodle" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
                 Accéder au doodle
                 <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
@@ -49,9 +49,9 @@ export default function HomePage() {
           </div>
         ) : null}
         {files ? (
-          <div className="border-2 border-gray-200 p-8">
-            <div className="flex flex-wrap gap-2 justify-between pb-4">
-              <h3 className="whitespace-nowraptracking-tight font-semibold uppercase">Derniers fichiers ajoutés</h3>
+          <div className="p-8">
+            <div className="flex flex-col md:flex-row gap-2 justify-between pb-8">
+              <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase">Derniers fichiers ajoutés</h3>
               <Link to="/files" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
                 Parcourir
                 <FontAwesomeIcon icon={faArrowRight} className="pl-2" />

@@ -2,7 +2,7 @@ import { faCalendar, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Container from '../../components/container';
@@ -34,8 +34,6 @@ function* generator(monthOffset: number, dayOffset = 1) {
 const days = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 
 export default function CalendarPage() {
-  const navigate = useNavigate();
-
   const { data } = useQuery({
     queryKey: ['events'],
     queryFn: () => eventsApi.listEventsApiV1EventsGet(),
@@ -55,12 +53,12 @@ export default function CalendarPage() {
         title="Calendrier"
         subtitle={(new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' })}
         actions={[
-          <Header.Action variant="outline" key="add-event" onClick={() => navigate('/events/add')}>
+          <Header.Action variant="outline" key="add-event" as={Link} to="/events/add">
             <FontAwesomeIcon icon={faPlusCircle} />
             {' '}
             Ajouter
           </Header.Action>,
-          <Header.Action key="doodle-nav" onClick={() => navigate('/events/doodle')}>
+          <Header.Action key="doodle-nav" as={Link} to="/events/doodle">
             <FontAwesomeIcon icon={faCalendar} />
             {' '}
             Mes Présences

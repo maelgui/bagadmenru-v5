@@ -3,7 +3,6 @@ import { FileOrFolderType } from 'bagad-client';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import Alert from '../../components/alert';
-import Button from '../../components/button';
 import Container from '../../components/container';
 import ErrorComponent from '../../components/error';
 import Header from '../../components/header';
@@ -98,11 +97,11 @@ export default function ListFilesPage() {
           ...(breadcrumb?.slice(-1).map((item) => ({ title: item.name })) ?? []),
         ] : [{ title: 'Fichiers' }]}
         actions={[
-          <Button key="upload-file" variant="outline">
+          <Header.Action as="label" key="upload-file" variant="outline">
             Ajouter un fichier
             <input key="upload-file" type="file" id="upload-file" className="hidden" multiple onChange={uploadFileMutation.mutate} />
-          </Button>,
-          <Button
+          </Header.Action>,
+          <Header.Action
             key="add-folder"
             type="button"
             onClick={async () => {
@@ -111,7 +110,7 @@ export default function ListFilesPage() {
             }}
           >
             Créer un dossier
-          </Button>,
+          </Header.Action>,
         ]}
       />
       <Container>
