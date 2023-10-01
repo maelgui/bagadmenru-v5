@@ -1,3 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const trustedDomains = {
-  default: ["https://api.beta.bagadmenru.bzh", "https://auth.beta.bagadmenru.bzh", "http://localhost:8080", "http://keycloak:8080", "http://localhost:8000", "http://localhost:5173"],
+  default: {
+    oidcDomains: ['https://auth.beta.bagadmenru.bzh', 'http://keycloak:8080'],
+    accessTokenDomains: ['https://api.beta.bagadmenru.bzh', 'http://localhost:8000'],
+  },
 };
