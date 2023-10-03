@@ -13,10 +13,11 @@ python-multipart = "^0.0.5"
 boto3 = "^1.26.147"
 pytest-cov = "^4.1.0"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-pydantic = {extras = ["dotenv"], version = "^1.10.8"}
 sqlalchemy = "^2.0.18"
 psycopg = {extras = ["binary"], version = "^3.1.9"}
 ics = "^0.7.2"
+pydantic = "^2.4.2"
+pydantic-settings = "^2.0.3"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.24.1"

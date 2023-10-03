@@ -101,7 +101,7 @@ async def get_breadcrumb(
 async def download_file(
     file_id: int,
     file_crud: CRUDFile = Depends(),
-) -> S3PresignedPost:
+) -> str:
     """Get s3 pre-signed url for a given file."""
     db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
     if not db_file:

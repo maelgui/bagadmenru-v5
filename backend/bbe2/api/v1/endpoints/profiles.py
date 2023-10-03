@@ -24,6 +24,7 @@ async def get_my_profile(
             id=token["sub"],
             first_name=token["given_name"],
             last_name=token["family_name"],
+            email=token["email"]
         )
     return db_profile
 

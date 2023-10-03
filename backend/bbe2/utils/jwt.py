@@ -1,8 +1,9 @@
 import time
 
 import requests
-from bbe2.config import settings
 from jose import jwt
+
+from bbe2.config import settings
 
 
 class JWTVerifier:
@@ -18,7 +19,7 @@ class JWTVerifier:
 
     def load_keys(self):
         try:
-            req2 = requests.get(settings.oidc_jwks_url)
+            req2 = requests.get(str(settings.oidc_jwks_url))
             req2.raise_for_status()
             self.jwks = req2.json()["keys"]
             self.last_update = time.monotonic()
@@ -42,6 +43,6 @@ class JWTVerifier:
             token=token,
             key=self.get_keys(),
             audience=settings.jwt_audience,
-            issuer=settings.jwt_issuer,
+            issuer=str(settings.jwt_issuer),
         )
         return claims

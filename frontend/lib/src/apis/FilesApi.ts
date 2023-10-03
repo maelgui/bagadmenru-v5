@@ -20,7 +20,6 @@ import type {
   FileOrFolderUpdate,
   FolderCreate,
   HTTPValidationError,
-  S3PresignedPost,
 } from '../models/index';
 import {
     FileOrFolderFromJSON,
@@ -33,8 +32,6 @@ import {
     FolderCreateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
-    S3PresignedPostFromJSON,
-    S3PresignedPostToJSON,
 } from '../models/index';
 
 export interface CreateFolderApiV1FilesFolderIdPostRequest {
@@ -63,7 +60,7 @@ export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
 }
 
 export interface ListFilesApiV1FilesGetRequest {
-    t?: FileOrFolderType;
+    t?: FileOrFolderType | null;
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
@@ -165,7 +162,7 @@ export class FilesApi extends runtime.BaseAPI {
      * Get s3 pre-signed url for a given file.
      * Download File
      */
-    async downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<S3PresignedPost>> {
+    async downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
             throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling downloadFileApiV1FilesFileIdDownloadGet.');
         }
@@ -186,14 +183,18 @@ export class FilesApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => S3PresignedPostFromJSON(jsonValue));
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * Get s3 pre-signed url for a given file.
      * Download File
      */
-    async downloadFileApiV1FilesFileIdDownloadGet(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<S3PresignedPost> {
+    async downloadFileApiV1FilesFileIdDownloadGet(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters, initOverrides);
         return await response.value();
     }

@@ -49,13 +49,13 @@ export interface FileOrFolder {
      * @type {number}
      * @memberof FileOrFolder
      */
-    parentId?: number;
+    parentId?: number | null;
     /**
      * 
      * @type {string}
      * @memberof FileOrFolder
      */
-    url?: string;
+    url?: string | null;
 }
 
 /**

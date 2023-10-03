@@ -28,8 +28,8 @@ export default function ProfilesPage() {
           {data ? data.map((profile) => (
             <div key={profile.id}>
               <div className="rounded overflow-hidden shadow flex flex-col">
-                {profile.picture
-                  ? <img src={profile.picture} alt="profile" />
+                {profile.pictureUrl
+                  ? <img src={profile.pictureUrl} alt="profile" />
                   : <img src={defaultAvatar} alt="avatar par défaut" className="bg-pourpre-50" />}
                 <div className="p-4">
                   <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>

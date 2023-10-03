@@ -5,6 +5,7 @@ import { Profile, ProfileUpdate } from 'bagad-client';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
+import Avatar from '../../../components/avatar';
 import Button from '../../../components/button';
 import Input from '../../../components/input';
 import Select from '../../../components/select';
@@ -20,9 +21,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     register, handleSubmit, setValue,
   } = useForm<ProfileUpdate>({ defaultValues: profile });
 
-  const [pictureUrl, setPictureUrl] = useState<string | undefined>(profile.picture);
-
-  // const picture = watch('picture');
+  const [pictureUrl, setPictureUrl] = useState<string | undefined>(profile.pictureUrl);
 
   const onUploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     // Call API to BE to generate a pre-signed url to upload file object
@@ -31,13 +30,12 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       const formData = new FormData();
       Object.entries(presignedUploadUrl.fields ?? {}).map(([k, v]) => formData.append(k, v));
       formData.append('file', file);
-      const imageResponse = await axios.post(
+      await axios.post(
         `${presignedUploadUrl.url}`,
         formData,
       );
-      const url = imageResponse.headers.location;
       setPictureUrl(URL.createObjectURL(file));
-      setValue('picture', presignedUploadUrl.fields.key);
+      setValue('pictureKey', presignedUploadUrl.fields?.key ?? '');
     });
   };
 
@@ -46,7 +44,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       profileUpdate: data,
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] });
       toast.success('Profile modifié avec succès !');
     },
   });
@@ -91,11 +89,9 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       <div className="mb-6">
         <label className="mb-2 block font-semibold" htmlFor="picture">Avatar</label>
         <div className="flex items-center">
-          <img
-            className="h-24 w-24 mx-8 rounded-full bg-gray-300"
-            alt="profile"
-            src={pictureUrl}
-          />
+          <div>
+            <Avatar src={pictureUrl} size="md" />
+          </div>
           <Input
             type="file"
             id="picture"
@@ -105,7 +101,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
           <Input
             type="text"
             id="picture"
-            {...register('picture')}
+            {...register('pictureKey')}
             disabled
           />
         </div>

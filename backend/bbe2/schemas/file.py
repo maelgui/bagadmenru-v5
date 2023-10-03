@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class FileOrFolderType(Enum):
@@ -23,10 +23,9 @@ class FileOrFolderUpdate(_FileOrFolderBase):
 
 
 class FileOrFolder(_FileOrFolderBase):
+    model_config = ConfigDict(from_attributes=True)
+
     type: FileOrFolderType
     id: int
     parent_id: Optional[int] = None
     url: Optional[str] = None
-
-    class Config:
-        orm_mode = True

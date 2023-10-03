@@ -24,13 +24,13 @@ export interface ProfileUpdate {
      * @type {string}
      * @memberof ProfileUpdate
      */
-    picture?: string;
+    pictureKey: string | null;
     /**
      * 
      * @type {number}
      * @memberof ProfileUpdate
      */
-    instrumentId?: number;
+    instrumentId: number | null;
 }
 
 /**
@@ -38,6 +38,8 @@ export interface ProfileUpdate {
  */
 export function instanceOfProfileUpdate(value: object): boolean {
     let isInstance = true;
+    isInstance = isInstance && "pictureKey" in value;
+    isInstance = isInstance && "instrumentId" in value;
 
     return isInstance;
 }
@@ -52,8 +54,8 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
     }
     return {
         
-        'picture': !exists(json, 'picture') ? undefined : json['picture'],
-        'instrumentId': !exists(json, 'instrument_id') ? undefined : json['instrument_id'],
+        'pictureKey': json['picture_key'],
+        'instrumentId': json['instrument_id'],
     };
 }
 
@@ -66,7 +68,7 @@ export function ProfileUpdateToJSON(value?: ProfileUpdate | null): any {
     }
     return {
         
-        'picture': value.picture,
+        'picture_key': value.pictureKey,
         'instrument_id': value.instrumentId,
     };
 }

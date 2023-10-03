@@ -6,9 +6,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ReactNode, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
-import defaultAvatar from '../assets/default.svg';
 import logo from '../assets/logov2.svg';
 import { usersApi } from '../config/client';
+import Avatar from './avatar';
 import Button from './button';
 
 function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
@@ -82,7 +82,7 @@ export default function Navbar() {
               ? (
                 <>
                   <Link to="/profile" className="lg:order-last">
-                    <img className="h-10 w-10 mx-8 rounded-full bg-gray-300" src={profile.picture ?? defaultAvatar} alt="profile" />
+                    <Avatar src={profile.pictureUrl} size="xs" />
                   </Link>
                   <div className="lg:text-right lg:py-2">
                     <div className="whitespace-nowrap">

@@ -24,13 +24,13 @@ export interface Profile {
      * @type {string}
      * @memberof Profile
      */
-    picture?: string;
+    pictureKey: string | null;
     /**
      * 
      * @type {number}
      * @memberof Profile
      */
-    instrumentId?: number;
+    instrumentId: number | null;
     /**
      * 
      * @type {string}
@@ -48,13 +48,19 @@ export interface Profile {
      * @type {string}
      * @memberof Profile
      */
-    email?: string;
+    email: string;
     /**
      * 
      * @type {string}
      * @memberof Profile
      */
     id: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Profile
+     */
+    readonly pictureUrl: string;
 }
 
 /**
@@ -62,9 +68,13 @@ export interface Profile {
  */
 export function instanceOfProfile(value: object): boolean {
     let isInstance = true;
+    isInstance = isInstance && "pictureKey" in value;
+    isInstance = isInstance && "instrumentId" in value;
     isInstance = isInstance && "firstName" in value;
     isInstance = isInstance && "lastName" in value;
+    isInstance = isInstance && "email" in value;
     isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "pictureUrl" in value;
 
     return isInstance;
 }
@@ -79,12 +89,13 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
     }
     return {
         
-        'picture': !exists(json, 'picture') ? undefined : json['picture'],
-        'instrumentId': !exists(json, 'instrument_id') ? undefined : json['instrument_id'],
+        'pictureKey': json['picture_key'],
+        'instrumentId': json['instrument_id'],
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'email': !exists(json, 'email') ? undefined : json['email'],
+        'email': json['email'],
         'id': json['id'],
+        'pictureUrl': json['picture_url'],
     };
 }
 
@@ -97,7 +108,7 @@ export function ProfileToJSON(value?: Profile | null): any {
     }
     return {
         
-        'picture': value.picture,
+        'picture_key': value.pictureKey,
         'instrument_id': value.instrumentId,
         'first_name': value.firstName,
         'last_name': value.lastName,

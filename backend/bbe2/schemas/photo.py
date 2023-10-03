@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class _PhotoBase(BaseModel):
@@ -10,6 +10,4 @@ class PhotoCreate(_PhotoBase):
     pass
 
 class Photo(_PhotoBase):
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

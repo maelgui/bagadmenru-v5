@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from bbe2.schemas.event import Event
 from bbe2.schemas.profile import Profile
@@ -15,9 +15,8 @@ class ResponseCreate(ResponseBase):
 
 
 class Response(ResponseBase):
+    model_config = ConfigDict(from_attributes=True)
+
     user_id: str
     event_id: int
     date: date
-
-    class Config:
-        orm_mode = True

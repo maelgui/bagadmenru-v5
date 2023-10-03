@@ -19,7 +19,7 @@ class S3Helper:
     def __init__(self):
         self.client = boto3.client(
             service_name="s3",
-            endpoint_url=settings.s3_endpoint,
+            endpoint_url=str(settings.s3_endpoint),
             aws_access_key_id=settings.s3_access_key_id,
             aws_secret_access_key=settings.s3_secret_access_key,
         )

@@ -24,13 +24,13 @@ export interface FileOrFolderUpdate {
      * @type {string}
      * @memberof FileOrFolderUpdate
      */
-    name?: string;
+    name?: string | null;
     /**
      * 
      * @type {number}
      * @memberof FileOrFolderUpdate
      */
-    parentId?: number;
+    parentId?: number | null;
 }
 
 /**

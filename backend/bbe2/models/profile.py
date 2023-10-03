@@ -11,7 +11,7 @@ class Profile(Base):
     email = Column(String, unique=True, index=True)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
-    picture = Column(String, nullable=True)
+    picture_key = Column(String, nullable=True)
     instrument_id = Column(Integer, ForeignKey("instruments.id"))
     instrument = relationship("Instrument")
 

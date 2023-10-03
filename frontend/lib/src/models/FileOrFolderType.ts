@@ -14,7 +14,7 @@
 
 
 /**
- * An enumeration.
+ * 
  * @export
  */
 export const FileOrFolderType = {
