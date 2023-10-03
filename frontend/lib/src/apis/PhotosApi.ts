@@ -19,7 +19,7 @@ import type {
   AlbumCreate,
   HTTPValidationError,
   Photo,
-} from '../models';
+} from '../models/index';
 import {
     AlbumFromJSON,
     AlbumToJSON,
@@ -29,7 +29,7 @@ import {
     HTTPValidationErrorToJSON,
     PhotoFromJSON,
     PhotoToJSON,
-} from '../models';
+} from '../models/index';
 
 export interface CreateAlbumApiV1AlbumsPostRequest {
     albumCreate: AlbumCreate;

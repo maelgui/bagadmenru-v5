@@ -1,10 +1,14 @@
 import { Link, NavLink } from 'react-router-dom';
 
-import { useOidc, useOidcIdToken } from '@axa-fr/react-oidc';
+import { useOidc } from '@axa-fr/react-oidc';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ReactNode, useState } from 'react';
+
+import { useQuery } from '@tanstack/react-query';
+import defaultAvatar from '../assets/default.svg';
 import logo from '../assets/logov2.svg';
+import { usersApi } from '../config/client';
 import Button from './button';
 
 function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
@@ -20,8 +24,11 @@ function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
 }
 
 export default function Navbar() {
-  const { idTokenPayload } = useOidcIdToken();
   const { logout, isAuthenticated } = useOidc();
+  const { data: profile } = useQuery({
+    queryKey: ['profiles', 'me'],
+    queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
+  });
 
   const [show, setShow] = useState<boolean>();
 
@@ -71,19 +78,19 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center pb-4 lg:py-0">
-            {isAuthenticated
+            {isAuthenticated && profile
               ? (
                 <>
                   <Link to="/profile" className="lg:order-last">
-                    <img className="h-10 w-10 mx-8 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" />
+                    <img className="h-10 w-10 mx-8 rounded-full bg-gray-300" src={profile.picture ?? defaultAvatar} alt="profile" />
                   </Link>
                   <div className="lg:text-right lg:py-2">
                     <div className="whitespace-nowrap">
                       <span>
-                        {idTokenPayload.given_name}
+                        {profile.firstName}
                         {' '}
                       </span>
-                      <span>{idTokenPayload.family_name}</span>
+                      <span>{profile.lastName}</span>
                     </div>
                     <Button type="button" size="sm" variant="outline" onClick={() => logout()}>Déconnexion</Button>
                   </div>

@@ -6,7 +6,7 @@ authors = ["Mael Guillossou <mael.guillossou@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fastapi = "^0.98.0"
+fastapi = "^0.103.2"
 uvicorn = "^0.21.1"
 requests = "^2.31.0"
 python-multipart = "^0.0.5"
@@ -16,6 +16,7 @@ python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 pydantic = {extras = ["dotenv"], version = "^1.10.8"}
 sqlalchemy = "^2.0.18"
 psycopg = {extras = ["binary"], version = "^3.1.9"}
+ics = "^0.7.2"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.24.1"

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Security, status
+from ics import Calendar, Event
 from sqlalchemy.orm import Session
 
 from bbe2 import models, schemas
@@ -22,6 +23,23 @@ async def list_events(
     session: Session = Depends(get_db),
 ):
     return session.query(models.Event).order_by(models.Event.date).all()
+
+
+@events_router.get("/export/ics")
+async def export_ics(
+    token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
+    session: Session = Depends(get_db),
+) -> str:
+    events = session.query(models.Event).order_by(models.Event.date).all()
+    c = Calendar()
+    for event in events:
+        e = Event()
+        e.name = event.title
+        e.begin = event.date.isoformat()
+        c.events.add(e)
+    c.events
+
+    return c.serialize()
 
 
 @events_router.get("/{event_id}", response_model=schemas.Event)

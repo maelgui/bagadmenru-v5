@@ -1,14 +1,57 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { Profile } from 'bagad-client';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { Profile, ProfileUpdate } from 'bagad-client';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
 import Button from '../../../components/button';
 import Input from '../../../components/input';
+import Select from '../../../components/select';
+import { queryClient, usersApi } from '../../../config/client';
 
 export default function EditProfileForm({ profile }: { profile: Profile }) {
+  const { data: instruments } = useQuery({
+    queryKey: ['instruments'],
+    queryFn: () => usersApi.listInstrumentsApiV1InstrumentsGet(),
+  });
+
   const {
-    register, handleSubmit,
-  } = useForm<Profile>({ defaultValues: profile });
-  const onSubmit: SubmitHandler<Profile> = (data) => console.log(data);
+    register, handleSubmit, setValue,
+  } = useForm<ProfileUpdate>({ defaultValues: profile });
+
+  const [pictureUrl, setPictureUrl] = useState<string | undefined>(profile.picture);
+
+  // const picture = watch('picture');
+
+  const onUploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Call API to BE to generate a pre-signed url to upload file object
+    Array.from(event.target.files ?? [])?.map(async (file) => {
+      const presignedUploadUrl = await usersApi.uploadAvatarApiV1ProfilesMeAvatarPost();
+      const formData = new FormData();
+      Object.entries(presignedUploadUrl.fields ?? {}).map(([k, v]) => formData.append(k, v));
+      formData.append('file', file);
+      const imageResponse = await axios.post(
+        `${presignedUploadUrl.url}`,
+        formData,
+      );
+      const url = imageResponse.headers.location;
+      setPictureUrl(URL.createObjectURL(file));
+      setValue('picture', presignedUploadUrl.fields.key);
+    });
+  };
+
+  const { mutate } = useMutation({
+    mutationFn: (data: ProfileUpdate) => usersApi.updateMyProfileApiV1ProfilesMePut({
+      profileUpdate: data,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      toast.success('Profile modifié avec succès !');
+    },
+  });
+  const onSubmit = (data: ProfileUpdate) => mutate(data);
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="flex gap-4 mb-6">
@@ -18,7 +61,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
             type="text"
             id="first_name"
             disabled
-            {...register('firstName')}
+            value={profile.firstName}
           />
         </div>
         <div className="flex-1">
@@ -27,7 +70,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
             type="text"
             id="last_name"
             disabled
-            {...register('lastName')}
+            value={profile.lastName}
           />
         </div>
       </div>
@@ -38,7 +81,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
             type="email"
             id="email"
             disabled
-            {...register('email')}
+            value={profile.email}
           />
         </div>
         <div>
@@ -47,12 +90,45 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       </div>
       <div className="mb-6">
         <label className="mb-2 block font-semibold" htmlFor="picture">Avatar</label>
-        <Input
-          type="file"
-          id="picture"
-          {...register('picture')}
-        />
+        <div className="flex items-center">
+          <img
+            className="h-24 w-24 mx-8 rounded-full bg-gray-300"
+            alt="profile"
+            src={pictureUrl}
+          />
+          <Input
+            type="file"
+            id="picture"
+            accept="image/*"
+            onChange={onUploadAvatar}
+          />
+          <Input
+            type="text"
+            id="picture"
+            {...register('picture')}
+            disabled
+          />
+        </div>
+        <div className="mb-6">
+          <label className="mb-2 block font-semibold" htmlFor="picture">Avatar</label>
+          <div className="flex items-center">
+            {/* <AvatarInput control={control} name="picture" /> */}
+          </div>
+        </div>
+
       </div>
+      <div className="mb-6">
+        <label className="mb-2 block font-semibold" htmlFor="instrument">Instrument</label>
+        <Select
+          id="instrument"
+          {...register('instrumentId')}
+        >
+          {instruments ? instruments.map((instrument) => (
+            <option key={instrument.id} value={instrument.id}>{instrument.name}</option>
+          )) : null}
+        </Select>
+      </div>
+      <Button type="submit">Enregistrer</Button>
     </form>
   );
 }

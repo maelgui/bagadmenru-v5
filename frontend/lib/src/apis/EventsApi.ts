@@ -20,7 +20,7 @@ import type {
   HTTPValidationError,
   Response,
   ResponseCreate,
-} from '../models';
+} from '../models/index';
 import {
     EventFromJSON,
     EventToJSON,
@@ -32,7 +32,7 @@ import {
     ResponseToJSON,
     ResponseCreateFromJSON,
     ResponseCreateToJSON,
-} from '../models';
+} from '../models/index';
 
 export interface CreateEventApiV1EventsPostRequest {
     eventCreate: EventCreate;
@@ -172,6 +172,41 @@ export class EventsApi extends runtime.BaseAPI {
      */
     async deleteEventApiV1EventsEventIdDelete(requestParameters: DeleteEventApiV1EventsEventIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.deleteEventApiV1EventsEventIdDeleteRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Export Ics
+     */
+    async exportIcsApiV1EventsExportIcsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/events/export/ics`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Export Ics
+     */
+    async exportIcsApiV1EventsExportIcsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.exportIcsApiV1EventsExportIcsGetRaw(initOverrides);
+        return await response.value();
     }
 
     /**

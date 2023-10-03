@@ -23,7 +23,7 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Hello
      */
-    async helloGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async helloGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -35,19 +35,14 @@ export class DefaultApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.VoidApiResponse(response);
     }
 
     /**
      * Hello
      */
-    async helloGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.helloGetRaw(initOverrides);
-        return await response.value();
+    async helloGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.helloGetRaw(initOverrides);
     }
 
 }

@@ -1,9 +1,16 @@
-from typing import BinaryIO, Optional
+from typing import Any, BinaryIO, Optional
+from urllib.parse import urlencode
 
 import boto3
 from botocore.client import Config
+from pydantic import BaseModel
 
 from bbe2.config import settings
+
+
+class S3PresignedPost(BaseModel):
+    url: str
+    fields: dict[str, str]
 
 
 class S3Helper:
@@ -39,7 +46,7 @@ class S3Helper:
         )
         return response
 
-    def create_presigned_url(self, object_name, expiration=3600):
+    def generate_get_presigned_url(self, object_name, expiration=3600):
         """Generate a presigned URL to share an S3 object
 
         :param bucket_name: string
@@ -51,6 +58,15 @@ class S3Helper:
         return self.client.generate_presigned_url(
             "get_object",
             Params={"Bucket": self.bucket_name, "Key": object_name},
+            ExpiresIn=expiration,
+        )
+
+    def generate_post_presigned_url(
+        self, object_name: str, tags: dict[str, str], expiration=3600
+    ) -> S3PresignedPost:
+        return self.client.generate_presigned_post(
+            self.bucket_name,
+            object_name,
             ExpiresIn=expiration,
         )
 

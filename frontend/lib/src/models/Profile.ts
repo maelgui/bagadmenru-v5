@@ -24,6 +24,18 @@ export interface Profile {
      * @type {string}
      * @memberof Profile
      */
+    picture?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Profile
+     */
+    instrumentId?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Profile
+     */
     firstName: string;
     /**
      * 
@@ -37,12 +49,6 @@ export interface Profile {
      * @memberof Profile
      */
     email?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Profile
-     */
-    picture?: string;
     /**
      * 
      * @type {string}
@@ -73,10 +79,11 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
     }
     return {
         
+        'picture': !exists(json, 'picture') ? undefined : json['picture'],
+        'instrumentId': !exists(json, 'instrument_id') ? undefined : json['instrument_id'],
         'firstName': json['first_name'],
         'lastName': json['last_name'],
         'email': !exists(json, 'email') ? undefined : json['email'],
-        'picture': !exists(json, 'picture') ? undefined : json['picture'],
         'id': json['id'],
     };
 }
@@ -90,10 +97,11 @@ export function ProfileToJSON(value?: Profile | null): any {
     }
     return {
         
+        'picture': value.picture,
+        'instrument_id': value.instrumentId,
         'first_name': value.firstName,
         'last_name': value.lastName,
         'email': value.email,
-        'picture': value.picture,
         'id': value.id,
     };
 }

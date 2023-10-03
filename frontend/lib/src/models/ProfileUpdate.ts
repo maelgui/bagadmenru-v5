@@ -25,6 +25,12 @@ export interface ProfileUpdate {
      * @memberof ProfileUpdate
      */
     picture?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProfileUpdate
+     */
+    instrumentId?: number;
 }
 
 /**
@@ -47,6 +53,7 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
     return {
         
         'picture': !exists(json, 'picture') ? undefined : json['picture'],
+        'instrumentId': !exists(json, 'instrument_id') ? undefined : json['instrument_id'],
     };
 }
 
@@ -60,6 +67,7 @@ export function ProfileUpdateToJSON(value?: ProfileUpdate | null): any {
     return {
         
         'picture': value.picture,
+        'instrument_id': value.instrumentId,
     };
 }
 

@@ -16,17 +16,23 @@
 import * as runtime from '../runtime';
 import type {
   HTTPValidationError,
+  Instrument,
   Profile,
   ProfileUpdate,
-} from '../models';
+  S3PresignedPost,
+} from '../models/index';
 import {
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    InstrumentFromJSON,
+    InstrumentToJSON,
     ProfileFromJSON,
     ProfileToJSON,
     ProfileUpdateFromJSON,
     ProfileUpdateToJSON,
-} from '../models';
+    S3PresignedPostFromJSON,
+    S3PresignedPostToJSON,
+} from '../models/index';
 
 export interface GetProfileApiV1ProfilesProfileIdGetRequest {
     profileId: string;
@@ -108,6 +114,37 @@ export class UsersApi extends runtime.BaseAPI {
     }
 
     /**
+     * List Instruments
+     */
+    async listInstrumentsApiV1InstrumentsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Instrument>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/instruments/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(InstrumentFromJSON));
+    }
+
+    /**
+     * List Instruments
+     */
+    async listInstrumentsApiV1InstrumentsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Instrument>> {
+        const response = await this.listInstrumentsApiV1InstrumentsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * List Profiles
      */
     async listProfilesApiV1ProfilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
@@ -173,6 +210,37 @@ export class UsersApi extends runtime.BaseAPI {
      */
     async updateMyProfileApiV1ProfilesMePut(requestParameters: UpdateMyProfileApiV1ProfilesMePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
         const response = await this.updateMyProfileApiV1ProfilesMePutRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Upload Avatar
+     */
+    async uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<S3PresignedPost>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/profiles/me/avatar`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => S3PresignedPostFromJSON(jsonValue));
+    }
+
+    /**
+     * Upload Avatar
+     */
+    async uploadAvatarApiV1ProfilesMeAvatarPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<S3PresignedPost> {
+        const response = await this.uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides);
         return await response.value();
     }
 

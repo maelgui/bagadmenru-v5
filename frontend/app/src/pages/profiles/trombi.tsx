@@ -7,11 +7,11 @@ import { usersApi } from '../../config/client';
 import defaultAvatar from '../../assets/default.svg';
 
 export default function ProfilesPage() {
-  const { data } = useQuery({ queryKey: ['profiles'], queryFn: () => usersApi.listProfilesApiV1ProfilesGet() });
+  const { data } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: () => usersApi.listProfilesApiV1ProfilesGet(),
+  });
 
-  if (data === undefined) {
-    return null;
-  }
   return (
     <>
       <Header
@@ -25,7 +25,7 @@ export default function ProfilesPage() {
 
       <Container>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {data.map((profile) => (
+          {data ? data.map((profile) => (
             <div key={profile.id}>
               <div className="rounded overflow-hidden shadow flex flex-col">
                 {profile.picture
@@ -42,7 +42,7 @@ export default function ProfilesPage() {
 
               </div>
             </div>
-          ))}
+          )) : 'Loading'}
         </div>
       </Container>
 

@@ -16,58 +16,58 @@ import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface Album
+ * @interface Instrument
  */
-export interface Album {
-    /**
-     * 
-     * @type {string}
-     * @memberof Album
-     */
-    title: string;
-    /**
-     * 
-     * @type {Date}
-     * @memberof Album
-     */
-    date: Date;
+export interface Instrument {
     /**
      * 
      * @type {number}
-     * @memberof Album
+     * @memberof Instrument
      */
     id: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Instrument
+     */
+    name: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Instrument
+     */
+    color: string;
 }
 
 /**
- * Check if a given object implements the Album interface.
+ * Check if a given object implements the Instrument interface.
  */
-export function instanceOfAlbum(value: object): boolean {
+export function instanceOfInstrument(value: object): boolean {
     let isInstance = true;
-    isInstance = isInstance && "title" in value;
-    isInstance = isInstance && "date" in value;
     isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "color" in value;
 
     return isInstance;
 }
 
-export function AlbumFromJSON(json: any): Album {
-    return AlbumFromJSONTyped(json, false);
+export function InstrumentFromJSON(json: any): Instrument {
+    return InstrumentFromJSONTyped(json, false);
 }
 
-export function AlbumFromJSONTyped(json: any, ignoreDiscriminator: boolean): Album {
+export function InstrumentFromJSONTyped(json: any, ignoreDiscriminator: boolean): Instrument {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'title': json['title'],
-        'date': (new Date(json['date'])),
         'id': json['id'],
+        'name': json['name'],
+        'color': json['color'],
     };
 }
 
-export function AlbumToJSON(value?: Album | null): any {
+export function InstrumentToJSON(value?: Instrument | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -76,9 +76,9 @@ export function AlbumToJSON(value?: Album | null): any {
     }
     return {
         
-        'title': value.title,
-        'date': (value.date.toISOString().substring(0,10)),
         'id': value.id,
+        'name': value.name,
+        'color': value.color,
     };
 }
 

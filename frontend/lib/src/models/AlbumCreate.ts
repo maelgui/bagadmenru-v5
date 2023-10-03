@@ -69,7 +69,7 @@ export function AlbumCreateToJSON(value?: AlbumCreate | null): any {
     return {
         
         'title': value.title,
-        'date': (value.date.toISOString().substr(0,10)),
+        'date': (value.date.toISOString().substring(0,10)),
     };
 }
 

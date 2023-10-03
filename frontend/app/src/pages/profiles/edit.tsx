@@ -6,7 +6,10 @@ import { usersApi } from '../../config/client';
 import EditProfileForm from './components/form';
 
 export default function EditProfilePage() {
-  const { data: profile } = useQuery({ queryKey: ['profiles'], queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet() });
+  const { data: profile } = useQuery({
+    queryKey: ['profiles', 'me'],
+    queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
+  });
 
   return (
     <>

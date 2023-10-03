@@ -134,7 +134,7 @@ export default function DoodlePage() {
                             {event.costume !== Costume.None && (
                               <span>
                                 <br />
-                                {event.costume === Costume.Polo ? 'En costume !' : 'En polo !'}
+                                {event.costume === Costume.Costume ? 'En costume !' : 'En polo !'}
                               </span>
                             )}
                           </span>
@@ -169,7 +169,7 @@ export default function DoodlePage() {
               <tbody>
                 {profiles && profiles.map((user) => (
                   <tr key={user.id}>
-                    <th className={`text-right ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'}`}>{`${user.firstName} ${user.lastName}`}</th>
+                    <th className={`text-right whitespace-nowrap ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'}`}>{`${user.firstName} ${user.lastName}`}</th>
                     {events && events.map((event) => {
                       const value = responses?.responsesByUserAndEvent.get(keyFunc(event.id, user.id))?.at(0)?.value;
                       return (

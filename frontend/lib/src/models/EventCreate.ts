@@ -93,7 +93,7 @@ export function EventCreateToJSON(value?: EventCreate | null): any {
         
         'title': value.title,
         'description': value.description,
-        'date': (value.date.toISOString().substr(0,10)),
+        'date': (value.date.toISOString().substring(0,10)),
         'costume': CostumeToJSON(value.costume),
     };
 }
