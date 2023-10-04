@@ -15,13 +15,15 @@
 
 import * as runtime from '../runtime';
 import type {
+  GetUploadUrlResponse,
   HTTPValidationError,
   Instrument,
   Profile,
   ProfileUpdate,
-  S3PresignedPost,
 } from '../models/index';
 import {
+    GetUploadUrlResponseFromJSON,
+    GetUploadUrlResponseToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     InstrumentFromJSON,
@@ -30,8 +32,6 @@ import {
     ProfileToJSON,
     ProfileUpdateFromJSON,
     ProfileUpdateToJSON,
-    S3PresignedPostFromJSON,
-    S3PresignedPostToJSON,
 } from '../models/index';
 
 export interface GetProfileApiV1ProfilesProfileIdGetRequest {
@@ -216,7 +216,7 @@ export class UsersApi extends runtime.BaseAPI {
     /**
      * Upload Avatar
      */
-    async uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<S3PresignedPost>> {
+    async uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetUploadUrlResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -233,13 +233,13 @@ export class UsersApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => S3PresignedPostFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetUploadUrlResponseFromJSON(jsonValue));
     }
 
     /**
      * Upload Avatar
      */
-    async uploadAvatarApiV1ProfilesMeAvatarPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<S3PresignedPost> {
+    async uploadAvatarApiV1ProfilesMeAvatarPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetUploadUrlResponse> {
         const response = await this.uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides);
         return await response.value();
     }

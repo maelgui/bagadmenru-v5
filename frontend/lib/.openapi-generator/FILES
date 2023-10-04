@@ -18,6 +18,7 @@ src/models/FileOrFolder.ts
 src/models/FileOrFolderType.ts
 src/models/FileOrFolderUpdate.ts
 src/models/FolderCreate.ts
+src/models/GetUploadUrlResponse.ts
 src/models/HTTPValidationError.ts
 src/models/Instrument.ts
 src/models/Photo.ts
@@ -25,7 +26,6 @@ src/models/Profile.ts
 src/models/ProfileUpdate.ts
 src/models/Response.ts
 src/models/ResponseCreate.ts
-src/models/S3PresignedPost.ts
 src/models/ValidationError.ts
 src/models/ValidationErrorLocInner.ts
 src/models/index.ts

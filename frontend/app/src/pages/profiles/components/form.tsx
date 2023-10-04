@@ -27,15 +27,18 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     // Call API to BE to generate a pre-signed url to upload file object
     Array.from(event.target.files ?? [])?.map(async (file) => {
       const presignedUploadUrl = await usersApi.uploadAvatarApiV1ProfilesMeAvatarPost();
-      const formData = new FormData();
-      Object.entries(presignedUploadUrl.fields ?? {}).map(([k, v]) => formData.append(k, v));
-      formData.append('file', file);
-      await axios.post(
-        `${presignedUploadUrl.url}`,
-        formData,
+      await axios.put(
+        presignedUploadUrl.url,
+        file,
+        {
+          headers: {
+            'X-Amz-Tagging': new URLSearchParams({ user_id: profile.id, temp: 'true' }).toString(),
+            //             `temp=true&user=${users.id}`,
+          },
+        },
       );
       setPictureUrl(URL.createObjectURL(file));
-      setValue('pictureKey', presignedUploadUrl.fields?.key ?? '');
+      setValue('pictureKey', presignedUploadUrl.key);
     });
   };
 

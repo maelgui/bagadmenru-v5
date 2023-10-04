@@ -24,7 +24,7 @@ async def get_my_profile(
             id=token["sub"],
             first_name=token["given_name"],
             last_name=token["family_name"],
-            email=token["email"]
+            email=token["email"],
         )
     return db_profile
 
@@ -48,12 +48,15 @@ async def update_my_profile(
 async def upload_avatar(
     profile_crud: CRUDProfile = Depends(),
     token: dict[str, Any] = Security(get_current_user, scopes=[]),
-) -> S3PresignedPost:
+) -> schemas.GetUploadUrlResponse:
     db_profile = profile_crud.find_one_by(models.Profile.id == token["sub"])
     object_name = f"pp/{uuid.uuid4()}"
-    return s3.generate_post_presigned_url(
-        object_name,
-        {"user_id": token["sub"], "temp": "true"},
+    return schemas.GetUploadUrlResponse(
+        url=s3.generate_put_presigned_url(
+            object_name,
+            {"user_id": token["sub"], "temp": "true"},
+        ),
+        key=object_name,
     )
 
 

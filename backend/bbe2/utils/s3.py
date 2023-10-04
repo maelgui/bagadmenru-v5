@@ -22,6 +22,7 @@ class S3Helper:
             endpoint_url=str(settings.s3_endpoint),
             aws_access_key_id=settings.s3_access_key_id,
             aws_secret_access_key=settings.s3_secret_access_key,
+            config=Config(signature_version="s3v4"),
         )
         self.bucket_name = settings.s3_bucket_name
         self.client.head_bucket(Bucket=self.bucket_name)
@@ -61,12 +62,16 @@ class S3Helper:
             ExpiresIn=expiration,
         )
 
-    def generate_post_presigned_url(
+    def generate_put_presigned_url(
         self, object_name: str, tags: dict[str, str], expiration=3600
-    ) -> S3PresignedPost:
-        return self.client.generate_presigned_post(
-            self.bucket_name,
-            object_name,
+    ) -> str:
+        return self.client.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": self.bucket_name,
+                "Key": object_name,
+                "Tagging": urlencode(tags),
+            },
             ExpiresIn=expiration,
         )
 
