@@ -22,6 +22,7 @@ class S3Helper:
             endpoint_url=str(settings.s3_endpoint),
             aws_access_key_id=settings.s3_access_key_id,
             aws_secret_access_key=settings.s3_secret_access_key,
+            aws_default_region=settings.s3_default_region,
             config=Config(signature_version="s3v4"),
         )
         self.bucket_name = settings.s3_bucket_name
