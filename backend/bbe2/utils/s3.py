@@ -27,7 +27,7 @@ class S3Helper:
             ),
         )
         self.bucket_name = settings.s3_bucket_name
-        # self.client.head_bucket(Bucket=self.bucket_name)
+        self.client.head_bucket(Bucket=self.bucket_name)
 
     def upload_file(
         self, file_obj: BinaryIO, object_name: str, content_type: Optional[str] = None
