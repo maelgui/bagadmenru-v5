@@ -1,18 +1,9 @@
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useMutation } from '@tanstack/react-query';
 import { FileOrFolder } from 'bagad-client';
 import { FileIcon } from 'react-file-icon';
-import { filesApi } from '../../../config/client';
 
 export default function FileItem({ file }: { file: FileOrFolder }) {
-  const downloadMutation = useMutation({
-    mutationFn: (fileId: number) => filesApi.downloadFileApiV1FilesFileIdDownloadGet({ fileId }),
-    onSuccess(url) {
-      window.open(url, '_blank');
-    },
-  });
-
   return (
     <>
       <div className="relative border border-gray-200 hover:bg-gray-50 shadow-sm">
@@ -22,7 +13,7 @@ export default function FileItem({ file }: { file: FileOrFolder }) {
         <div className="flex justify-between p-4 ">
           <button
             type="button"
-            onClick={() => downloadMutation.mutate(file.id)}
+            onClick={() => window.open(file.fileUrl!, '_blank')}
             key={file.id}
             className="truncate after:absolute after:top-0 after:bottom-0 after:left-0 after:right-0"
           >

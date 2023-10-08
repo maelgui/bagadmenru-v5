@@ -8,7 +8,7 @@ import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
-import { eventsApi } from '../../config/client';
+import { useApiClient } from '../../config/client';
 import groupBy from '../../utils/groupby';
 import EventListItem from './components/event';
 
@@ -34,6 +34,8 @@ function* generator(monthOffset: number, dayOffset = 1) {
 const days = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 
 export default function CalendarPage() {
+  const { eventsApi } = useApiClient();
+
   const { data } = useQuery({
     queryKey: ['events'],
     queryFn: () => eventsApi.listEventsApiV1EventsGet(),

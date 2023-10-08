@@ -9,8 +9,7 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "postinstall": "node ../node_modules/@axa-fr/react-oidc/bin/copy-service-worker-files.mjs public"
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@axa-fr/react-oidc": "^7.6.0",

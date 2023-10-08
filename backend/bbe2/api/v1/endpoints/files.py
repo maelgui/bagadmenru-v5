@@ -95,24 +95,6 @@ async def get_breadcrumb(
 
 
 @router.get(
-    "/{file_id}/download",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
-)
-async def download_file(
-    file_id: int,
-    file_crud: CRUDFile = Depends(),
-) -> str:
-    """Get s3 pre-signed url for a given file."""
-    db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
-    if not db_file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-        )
-    url = s3.generate_get_presigned_url(db_file.url)
-    return url
-
-
-@router.get(
     "/{folder_id}/children",
     dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
     response_model=list[schemas.FileOrFolder],
@@ -147,7 +129,7 @@ async def upload_file(
     return file_crud.create(
         type=FileOrFolderType.FILE,
         name=file.filename,
-        url=filename,
+        file_key=filename,
         parent_id=folder_id,
     )
 

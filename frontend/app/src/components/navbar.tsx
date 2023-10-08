@@ -7,7 +7,7 @@ import { ReactNode, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import logo from '../assets/logov2.svg';
-import { usersApi } from '../config/client';
+import { useApiClient } from '../config/client';
 import Avatar from './avatar';
 import Button from './button';
 
@@ -25,6 +25,8 @@ function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
 
 export default function Navbar() {
   const { logout, isAuthenticated } = useOidc();
+  const { usersApi } = useApiClient();
+
   const { data: profile } = useQuery({
     queryKey: ['profiles', 'me'],
     queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),

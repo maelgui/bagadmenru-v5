@@ -12,7 +12,7 @@ class FileOrFolder(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    url = Column(String)
+    file_key = Column(String)
     type = Column(Enum(schemas.FileOrFolderType))
     children = relationship("FileOrFolder")
     parent_id = Column(Integer, ForeignKey("files.id"))

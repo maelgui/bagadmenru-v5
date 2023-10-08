@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/avatar';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { usersApi } from '../../config/client';
+import { useApiClient } from '../../config/client';
 
 export default function MyProfile() {
+  const { usersApi } = useApiClient();
+
   const { idTokenPayload } = useOidcIdToken();
   const navigate = useNavigate();
   const { data: profile } = useQuery({

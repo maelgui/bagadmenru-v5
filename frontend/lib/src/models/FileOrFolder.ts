@@ -55,7 +55,13 @@ export interface FileOrFolder {
      * @type {string}
      * @memberof FileOrFolder
      */
-    url?: string | null;
+    fileKey?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof FileOrFolder
+     */
+    fileUrl: string | null;
 }
 
 /**
@@ -66,6 +72,7 @@ export function instanceOfFileOrFolder(value: object): boolean {
     isInstance = isInstance && "name" in value;
     isInstance = isInstance && "type" in value;
     isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "fileUrl" in value;
 
     return isInstance;
 }
@@ -84,7 +91,8 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'type': FileOrFolderTypeFromJSON(json['type']),
         'id': json['id'],
         'parentId': !exists(json, 'parent_id') ? undefined : json['parent_id'],
-        'url': !exists(json, 'url') ? undefined : json['url'],
+        'fileKey': !exists(json, 'file_key') ? undefined : json['file_key'],
+        'fileUrl': json['fileUrl'],
     };
 }
 
@@ -101,7 +109,8 @@ export function FileOrFolderToJSON(value?: FileOrFolder | null): any {
         'type': FileOrFolderTypeToJSON(value.type),
         'id': value.id,
         'parent_id': value.parentId,
-        'url': value.url,
+        'file_key': value.fileKey,
+        'fileUrl': value.fileUrl,
     };
 }
 

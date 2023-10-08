@@ -1,7 +1,7 @@
 import defaultAvatar from '../assets/default.svg';
 
 interface AvatarProps {
-  src?: string
+  src: string | undefined | null
   size?: 'xs' | 'sm' | 'md' | 'lg'
 }
 

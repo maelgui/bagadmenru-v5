@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import Container from '../../components/container';
-import { eventsApi } from '../../config/client';
+import { useApiClient } from '../../config/client';
 
 export default function AgendaPage() {
+  const { eventsApi } = useApiClient();
+
   const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
 
   return (

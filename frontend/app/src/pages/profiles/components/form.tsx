@@ -9,9 +9,11 @@ import Avatar from '../../../components/avatar';
 import Button from '../../../components/button';
 import Input from '../../../components/input';
 import Select from '../../../components/select';
-import { queryClient, usersApi } from '../../../config/client';
+import { queryClient, useApiClient } from '../../../config/client';
 
 export default function EditProfileForm({ profile }: { profile: Profile }) {
+  const { usersApi } = useApiClient();
+
   const { data: instruments } = useQuery({
     queryKey: ['instruments'],
     queryFn: () => usersApi.listInstrumentsApiV1InstrumentsGet(),
@@ -21,7 +23,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     register, handleSubmit, setValue,
   } = useForm<ProfileUpdate>({ defaultValues: profile });
 
-  const [pictureUrl, setPictureUrl] = useState<string | undefined>(profile.pictureUrl);
+  const [pictureUrl, setPictureUrl] = useState<string | null>(profile.pictureUrl);
 
   const onUploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     // Call API to BE to generate a pre-signed url to upload file object

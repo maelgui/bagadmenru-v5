@@ -6,11 +6,13 @@ import Alert from '../../components/alert';
 import Container from '../../components/container';
 import ErrorComponent from '../../components/error';
 import Header from '../../components/header';
-import { filesApi, queryClient } from '../../config/client';
+import { queryClient, useApiClient } from '../../config/client';
 import FileItem from './components/file-item';
 import FolderItem from './components/folder-item';
 
 export default function ListFilesPage() {
+  const { filesApi } = useApiClient();
+
   const params = useParams();
   const { data: folder, error, status } = useQuery({
     queryKey: ['files', params.folderId ?? 'root'],

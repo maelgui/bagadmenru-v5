@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, ConfigDict, computed_field
 
 from bbe2.utils.s3 import s3
@@ -34,7 +35,7 @@ class Profile(_ProfileBase):
 
     @computed_field
     @property
-    def picture_url(self) -> str:
+    def picture_url(self) -> Optional[str]:
         if not self.picture_key:
             return None
         return s3.generate_get_presigned_url(object_name=self.picture_key)

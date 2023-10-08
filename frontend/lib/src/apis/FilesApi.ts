@@ -43,10 +43,6 @@ export interface DeleteFileApiV1FilesFileIdDeleteRequest {
     fileId: number;
 }
 
-export interface DownloadFileApiV1FilesFileIdDownloadGetRequest {
-    fileId: number;
-}
-
 export interface GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest {
     fileId: number;
 }
@@ -156,47 +152,6 @@ export class FilesApi extends runtime.BaseAPI {
      */
     async deleteFileApiV1FilesFileIdDelete(requestParameters: DeleteFileApiV1FilesFileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.deleteFileApiV1FilesFileIdDeleteRaw(requestParameters, initOverrides);
-    }
-
-    /**
-     * Get s3 pre-signed url for a given file.
-     * Download File
-     */
-    async downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
-        if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
-            throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling downloadFileApiV1FilesFileIdDownloadGet.');
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
-        const response = await this.request({
-            path: `/api/v1/files/{file_id}/download`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters.fileId))),
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<string>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
-
-    /**
-     * Get s3 pre-signed url for a given file.
-     * Download File
-     */
-    async downloadFileApiV1FilesFileIdDownloadGet(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
-        const response = await this.downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters, initOverrides);
-        return await response.value();
     }
 
     /**

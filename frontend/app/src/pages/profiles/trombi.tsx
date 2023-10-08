@@ -2,11 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { usersApi } from '../../config/client';
+import { useApiClient } from '../../config/client';
 
 import defaultAvatar from '../../assets/default.svg';
 
 export default function ProfilesPage() {
+  const { usersApi } = useApiClient();
+
   const { data } = useQuery({
     queryKey: ['profiles'],
     queryFn: () => usersApi.listProfilesApiV1ProfilesGet(),

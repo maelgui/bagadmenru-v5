@@ -14,7 +14,7 @@ import Alert from '../../components/alert';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
-import { eventsApi, queryClient, usersApi } from '../../config/client';
+import { queryClient, useApiClient } from '../../config/client';
 import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
 
@@ -36,8 +36,7 @@ interface ResponsesData {
   responsesSumByEvent: Map<number, number>;
 }
 
-async function responsesQuery(): Promise<ResponsesData> {
-  const responses = await eventsApi.listResponsesApiV1ResponsesGet();
+function responseFormat(responses: Response[]): ResponsesData {
   const responsesByUserAndEvent = groupby(responses, (r) => keyFunc(r.eventId, r.userId));
   const responsesSumByEvent = sumByEvents(responses);
   return {
@@ -47,13 +46,15 @@ async function responsesQuery(): Promise<ResponsesData> {
 
 export default function DoodlePage() {
   const { idTokenPayload } = useOidcIdToken();
+  const { usersApi, eventsApi } = useApiClient();
+
   const navigate = useNavigate();
 
   const [editing, setEditing] = useState<boolean>(false);
 
   const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
   const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: () => usersApi.listProfilesApiV1ProfilesGet() });
-  const { data: responses } = useQuery({ queryKey: ['responses'], queryFn: responsesQuery });
+  const { data: responses } = useQuery({ queryKey: ['responses'], queryFn: () => eventsApi.listResponsesApiV1ResponsesGet(), select: (data) => responseFormat(data) });
 
   const mutation = useMutation({
     mutationFn: ({ eventId, response }: { eventId: number, response: ResponseCreate }) => {

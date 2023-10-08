@@ -1,3 +1,4 @@
+import { useOidcAccessToken } from '@axa-fr/react-oidc';
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import {
   Configuration, EventsApi, FilesApi, ResponseError, UsersApi,
@@ -29,7 +30,13 @@ export const queryClient = new QueryClient({
   },
 });
 
-const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL });
-export const eventsApi = new EventsApi(conf);
-export const usersApi = new UsersApi(conf);
-export const filesApi = new FilesApi(conf);
+export function useApiClient() {
+  const { accessToken } = useOidcAccessToken();
+  const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL, accessToken: `Bearer ${accessToken}` });
+
+  return {
+    eventsApi: new EventsApi(conf),
+    usersApi: new UsersApi(conf),
+    filesApi: new FilesApi(conf),
+  };
+}

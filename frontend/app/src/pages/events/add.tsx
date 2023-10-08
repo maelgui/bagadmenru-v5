@@ -13,9 +13,11 @@ import polo from '../../assets/polo.svg';
 import tshirt from '../../assets/tshirt.svg';
 import Button from '../../components/button';
 import Container from '../../components/container';
-import { eventsApi, queryClient } from '../../config/client';
+import { queryClient, useApiClient } from '../../config/client';
 
 export default function AddEventPage() {
+  const { eventsApi } = useApiClient();
+
   const navigate = useNavigate();
   const {
     register, handleSubmit, formState: { errors },

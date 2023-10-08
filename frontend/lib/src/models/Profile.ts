@@ -60,7 +60,7 @@ export interface Profile {
      * @type {string}
      * @memberof Profile
      */
-    readonly pictureUrl: string;
+    pictureUrl: string | null;
 }
 
 /**
@@ -114,6 +114,7 @@ export function ProfileToJSON(value?: Profile | null): any {
         'last_name': value.lastName,
         'email': value.email,
         'id': value.id,
+        'picture_url': value.pictureUrl,
     };
 }
 
