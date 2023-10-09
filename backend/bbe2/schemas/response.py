@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -19,4 +19,4 @@ class Response(ResponseBase):
 
     user_id: str
     event_id: int
-    date: date
+    date: datetime
