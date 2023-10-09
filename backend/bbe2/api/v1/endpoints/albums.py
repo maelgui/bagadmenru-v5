@@ -1,7 +1,6 @@
 import uuid
 
-from fastapi import (APIRouter, Depends, HTTPException, Security, UploadFile,
-                     status)
+from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
 
 from bbe2 import models, schemas
 from bbe2.crud.crud_album import CRUDAlbum
@@ -16,7 +15,7 @@ router = APIRouter(prefix="/albums")
 @router.get("/", response_model=list[schemas.Album])
 async def list_albums(
     token: str = Security(get_current_user, scopes=[AlbumScopes.VIEW]),
-    album_crud: CRUDAlbum = Depends(CRUDAlbum)
+    album_crud: CRUDAlbum = Depends(CRUDAlbum),
 ):
     return album_crud.find_all()
 
@@ -25,13 +24,12 @@ async def list_albums(
 async def get_album(
     album_id: str,
     token: str = Security(get_current_user, scopes=[AlbumScopes.VIEW]),
-    album_crud: CRUDAlbum = Depends()
+    album_crud: CRUDAlbum = Depends(),
 ):
     db_album = album_crud.find_one_by(models.Album.id == album_id)
     if not db_album:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Album not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Album not found"
         )
     return db_album
 
@@ -40,7 +38,7 @@ async def get_album(
 async def list_album_photos(
     album_id: str,
     token: str = Security(get_current_user, scopes=[AlbumScopes.VIEW]),
-    photo_crud: CRUDPhoto = Depends()
+    photo_crud: CRUDPhoto = Depends(),
 ):
     return photo_crud.find_by(models.Photo.album_id == album_id)
 
@@ -50,7 +48,7 @@ async def upload_file(
     album_id: str,
     file: UploadFile,
     token: str = Security(get_current_user, scopes=[AlbumScopes.CREATE]),
-    photo_crud: CRUDPhoto = Depends()
+    photo_crud: CRUDPhoto = Depends(),
 ):
     filename = str(uuid.uuid4())
     s3.upload_file(file.file, "photos", filename)
@@ -61,7 +59,7 @@ async def upload_file(
 async def create_album(
     album: schemas.AlbumCreate,
     album_crud: CRUDAlbum = Depends(),
-    token: str = Security(get_current_user, scopes=[AlbumScopes.CREATE])
+    token: str = Security(get_current_user, scopes=[AlbumScopes.CREATE]),
 ):
     return album_crud.create(**album.dict())
 
@@ -71,11 +69,13 @@ async def update_album(
     album_id: str,
     album: schemas.AlbumCreate,
     token: str = Security(get_current_user, scopes=[AlbumScopes.UPDATE]),
-    album_crud: CRUDAlbum = Depends()
+    album_crud: CRUDAlbum = Depends(),
 ):
     db_album = album_crud.find_one_by(models.Album.id == album_id)
     if not db_album:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+        )
     db_album = album_crud.update(db_object=db_album, update_object=album)
     return db_album
 
@@ -84,7 +84,7 @@ async def update_album(
 async def delete_album(
     album_id: str,
     token: str = Security(get_current_user, scopes=[AlbumScopes.DELETE]),
-    album_crud: CRUDAlbum = Depends()
+    album_crud: CRUDAlbum = Depends(),
 ):
     db_album = album_crud.find_one_by(models.Album.id == album_id)
     if not db_album:
@@ -97,9 +97,11 @@ async def delete_photo(
     album_id: str,
     photo_id: str,
     token: str = Security(get_current_user, scopes=[AlbumScopes.DELETE]),
-    photo_crud: CRUDPhoto = Depends()
+    photo_crud: CRUDPhoto = Depends(),
 ):
-    db_photo = photo_crud.find_one_by(models.Photo.id == photo_id, models.Photo.album_id == album_id)
+    db_photo = photo_crud.find_one_by(
+        models.Photo.id == photo_id, models.Photo.album_id == album_id
+    )
     if not db_photo:
         raise HTTPException(status_code=404, detail="Album not found")
     photo_crud.delete(photo_id)

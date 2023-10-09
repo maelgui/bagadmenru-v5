@@ -1,7 +1,9 @@
+import logging
 from datetime import date
-from typing import Generator
+from typing import Annotated, Generator
 
 import pytest
+from fastapi import Header
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -9,12 +11,24 @@ from sqlalchemy.pool import StaticPool
 
 from bbe2 import models
 from bbe2.database import Base
+from bbe2.dependencies.auth import get_current_user
 from bbe2.dependencies.db import get_db, make_get_db
 from bbe2.main import app
 from bbe2.schemas import Costume, FileOrFolderType
 
 
 def populate_db(session):
+    # Profile
+    instrument = models.Instrument(id=1, name="Piccolo", color="#fff")
+    session.add(instrument)
+    user = models.Profile(
+        id="a8e2d3249e9d997e",
+        email="john.doe@example.com",
+        first_name="john",
+        last_name="doe",
+        instrument_id=1,
+    )
+    session.add(user)
     # Albums
     album = models.Album(
         id=1,
@@ -36,7 +50,6 @@ def populate_db(session):
         id=1,
         type=FileOrFolderType.DIRECTORY,
         name="root",
-        is_root=True,
     )
     file1 = models.FileOrFolder(
         id=2,
@@ -56,6 +69,11 @@ def populate_db(session):
     session.commit()
 
 
+def get_fake_user():
+    logging.info("blablebfwj")
+    return {"sub": "a8e2d3249e9d997e"}
+
+
 @pytest.fixture(scope="session")
 def client() -> Generator:
     engine = create_engine(
@@ -66,5 +84,6 @@ def client() -> Generator:
     Base.metadata.create_all(bind=engine)
     populate_db(TestingSessionLocal())
     app.dependency_overrides[get_db] = make_get_db(TestingSessionLocal)
+    app.dependency_overrides[get_current_user] = get_fake_user
     with TestClient(app) as cli:
         yield cli
