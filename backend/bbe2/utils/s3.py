@@ -8,11 +8,6 @@ from pydantic import BaseModel
 from bbe2.config import settings
 
 
-class S3PresignedPost(BaseModel):
-    url: str
-    fields: dict[str, str]
-
-
 class S3Helper:
     """Regroup S3 utilility functions."""
 
