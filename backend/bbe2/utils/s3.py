@@ -72,5 +72,18 @@ class S3Helper:
             ExpiresIn=expiration,
         )
 
+    def set_tags(self, object_name: str, tags: dict[str, str]):
+        return self.client.put_object_tagging(
+            Bucket=self.bucket_name,
+            Key=object_name,
+            Tagging={"TagSet": [{"Key": k, "Value": v} for k, v in tags.items()]},
+        )
+
+    def delete_object(self, object_name: str):
+        return self.client.delete_object(
+            Bucket=self.bucket_name,
+            Key=object_name,
+        )
+
 
 s3 = S3Helper()

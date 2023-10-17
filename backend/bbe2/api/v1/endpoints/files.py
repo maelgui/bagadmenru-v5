@@ -5,10 +5,10 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
 
 from bbe2 import models, schemas
-from bbe2.crud.crud_file import CRUDFile
+from bbe2.crud import CRUDFile
 from bbe2.dependencies.auth import get_current_user
 from bbe2.schemas.file import FileOrFolderType
-from bbe2.utils.s3 import S3PresignedPost, s3
+from bbe2.utils.s3 import s3
 from bbe2.utils.scopes import FileScopes
 
 router = APIRouter(prefix="/files")

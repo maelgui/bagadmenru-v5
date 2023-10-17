@@ -40,6 +40,13 @@ async def update_my_profile(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
+    if profile.picture_key and profile.picture_key != db_profile.picture_key:
+        if db_profile.picture_key:
+            s3.delete_object(db_profile.picture_key)
+        s3.set_tags(
+            profile.picture_key,
+            {"user_id": token["sub"], "temp": "false"},
+        )
     db_profile = profile_crud.update(db_profile, profile)
     return db_profile
 
