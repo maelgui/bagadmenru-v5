@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 from ics import Calendar, Event
@@ -104,8 +104,12 @@ async def delete_event(
 async def list_responses(
     token: str = Security(get_current_user, scopes=[]),
     response_crud: CRUDResponse = Depends(CRUDResponse),
+    user_id: Optional[str] = None,
 ) -> list[schemas.Response]:
-    return response_crud.find_all()
+    if user_id:
+        return response_crud.find_by(models.Response.user_id == user_id)
+    else:
+        return response_crud.find_all()
 
 
 @events_router.put("/{event_id}/responses", status_code=status.HTTP_204_NO_CONTENT)

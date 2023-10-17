@@ -87,7 +87,7 @@ export function ResponseToJSON(value?: Response | null): any {
         'value': value.value,
         'user_id': value.userId,
         'event_id': value.eventId,
-        'date': (value.date.toISOString().substring(0,10)),
+        'date': (value.date.toISOString()),
     };
 }
 

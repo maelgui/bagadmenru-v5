@@ -1,6 +1,8 @@
+import logging
 import uuid
 from typing import Any
 
+from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 
 from bbe2 import models, schemas
@@ -42,7 +44,14 @@ async def update_my_profile(
         )
     if profile.picture_key and profile.picture_key != db_profile.picture_key:
         if db_profile.picture_key:
-            s3.delete_object(db_profile.picture_key)
+            try:
+                s3.delete_object(db_profile.picture_key)
+            except ClientError as exc:
+                logging.error(
+                    "Unable to delete profile picture %s: %s",
+                    db_profile.picture_key,
+                    exc,
+                )
         s3.set_tags(
             profile.picture_key,
             {"user_id": token["sub"], "temp": "false"},

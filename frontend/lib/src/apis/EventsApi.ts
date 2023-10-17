@@ -51,6 +51,10 @@ export interface GetEventApiV1EventsEventIdGetRequest {
     eventId: string;
 }
 
+export interface ListResponsesApiV1ResponsesGetRequest {
+    userId?: string | null;
+}
+
 export interface UpdateEventApiV1EventsEventIdPutRequest {
     eventId: string;
     eventCreate: EventCreate;
@@ -278,8 +282,12 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * List Responses
      */
-    async listResponsesApiV1ResponsesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Response>>> {
+    async listResponsesApiV1ResponsesGetRaw(requestParameters: ListResponsesApiV1ResponsesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Response>>> {
         const queryParameters: any = {};
+
+        if (requestParameters.userId !== undefined) {
+            queryParameters['user_id'] = requestParameters.userId;
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -301,8 +309,8 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * List Responses
      */
-    async listResponsesApiV1ResponsesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Response>> {
-        const response = await this.listResponsesApiV1ResponsesGetRaw(initOverrides);
+    async listResponsesApiV1ResponsesGet(requestParameters: ListResponsesApiV1ResponsesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Response>> {
+        const response = await this.listResponsesApiV1ResponsesGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
