@@ -14,7 +14,6 @@ import EventListItem from './events/components/event';
 import FileItem from './files/components/file-item';
 
 export default function HomePage() {
-  const navigate = useNavigate();
   const { idTokenPayload } = useOidcIdToken();
   const { eventsApi, filesApi } = useApiClient();
 
