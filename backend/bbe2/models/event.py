@@ -14,4 +14,6 @@ class Event(Base):
     date = Column(DateTime)
     costume = Column(Enum(schemas.Costume))
 
+    category = Column(String)
+
     responses = relationship("Response", back_populates="event")

@@ -1,33 +1,73 @@
+import { faGear, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import Alert from '../../components/alert';
+import Badge from '../../components/badge';
+import Button from '../../components/button';
 import Container from '../../components/container';
+import Header from '../../components/header';
 import { useApiClient } from '../../config/client';
+import EventCategories from '../../utils/event-category';
 
-export default function AgendaPage() {
+export default function EventsManagePage() {
   const { eventsApi } = useApiClient();
 
   const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
 
   return (
-    <Container>
-      {events && events.map((event) => (
-        <div key={event.id} className="p-4 m-4 rounded-lg shadow-md ">
-          <h2 className=" text-xl ">{event.title}</h2>
-          <span>{event.description}</span>
-          <div className="flex -space-x-2">
-            <div className="inline-block h-16 w-16 rounded-full ring-4 ring-emerald-500 overflow-hidden bg-white"><img src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" /></div>
-            <div className="inline-block h-16 w-16 rounded-full ring-4 ring-emerald-500 overflow-hidden bg-white"><img src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" /></div>
-            <div className="inline-block h-16 w-16 rounded-full ring-4 ring-red-500 overflow-hidden bg-white"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.25&w=256&h=256&q=80" alt="" /></div>
-            <div className="inline-block h-16 w-16 rounded-full ring-4 ring-white overflow-hidden bg-white"><img className="grayscale contrast-50" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" /></div>
-            <div className="inline-block h-16 w-16 rounded-full ring-4 ring-white overflow-hidden bg-white"><img className="grayscale opacity-25" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.25&w=256&h=256&q=80" alt="" /></div>
-          </div>
-          <hr />
-          <div className="text-center">
-            <h3 className="text-lg">Serez-vous présent ?</h3>
-            <button type="button" className="mx-2 my-1 px-3 py-1 border-4 border-pourpre-500 bg-pourpre-500 text-white uppercase">Oui !</button>
-            <button type="button" className="mx-2 my-1 px-3 py-1 border-4 border-pourpre-500 uppercase">Non :&apos;(</button>
-          </div>
-        </div>
-      ))}
-    </Container>
+    <>
+      <Header
+        title="Gestion des évènements"
+        subtitle={"Ajouter, modifier, supprimer..."}
+        actions={[
+          <Header.Action key="add-event" as={Link} to="/events/add">
+            <FontAwesomeIcon icon={faPlusCircle} />
+            {' '}
+            Ajouter
+          </Header.Action>,
+        ]}
+        breadcrumb={[
+          { title: 'Calendrier', link: '/events' },
+          { title: 'Géstion des évènements' },
+        ]}
+
+      />
+      <Container>
+        {(events && events.length) ? (
+          <table className="table-auto w-full border">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-5">Nom</th>
+                <th>Catégorie</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {events.map((event) => (
+                <tr key={event.id} className="my-4 py-4">
+                  <td className="p-4">{event.title}<br /><span className="text-sm text-gray-500">{event.description}</span></td>
+                  <td>{event.date.toLocaleDateString()}</td>
+                  <td><Badge color={EventCategories[event.category]?.bg ?? "bg-gray-500"}>{EventCategories[event.category]?.name ?? event.category}</Badge></td>
+                  <td className="text-right">
+                    <Button as={Link} to={`/events/edit/${event.id}`} size="sm">
+                      <FontAwesomeIcon icon={faGear} />
+                      {' '}
+                      Modifier
+                    </Button>
+                    <Button as={Link} to={`/events/delete/${event.id}`} size="sm" variant="outline">
+                      <FontAwesomeIcon icon={faTrash} />
+                      {' '}
+                      Supprimer
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : <Alert type='warning'>Aucun évènement</Alert>}
+      </Container>
+    </>
   );
 }

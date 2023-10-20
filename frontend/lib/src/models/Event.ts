@@ -52,6 +52,12 @@ export interface Event {
     costume: Costume;
     /**
      * 
+     * @type {string}
+     * @memberof Event
+     */
+    category: string;
+    /**
+     * 
      * @type {number}
      * @memberof Event
      */
@@ -67,6 +73,7 @@ export function instanceOfEvent(value: object): boolean {
     isInstance = isInstance && "description" in value;
     isInstance = isInstance && "date" in value;
     isInstance = isInstance && "costume" in value;
+    isInstance = isInstance && "category" in value;
     isInstance = isInstance && "id" in value;
 
     return isInstance;
@@ -86,6 +93,7 @@ export function EventFromJSONTyped(json: any, ignoreDiscriminator: boolean): Eve
         'description': json['description'],
         'date': (new Date(json['date'])),
         'costume': CostumeFromJSON(json['costume']),
+        'category': json['category'],
         'id': json['id'],
     };
 }
@@ -103,6 +111,7 @@ export function EventToJSON(value?: Event | null): any {
         'description': value.description,
         'date': (value.date.toISOString().substring(0,10)),
         'costume': CostumeToJSON(value.costume),
+        'category': value.category,
         'id': value.id,
     };
 }

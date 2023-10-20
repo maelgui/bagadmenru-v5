@@ -1,15 +1,22 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { EventCreate } from 'bagad-client';
-import { useNavigate } from 'react-router-dom';
-import Header from '../../components/header';
-
+import { useNavigate, useParams } from 'react-router-dom';
 import Container from '../../components/container';
+import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
 import EventForm from './components/form';
 
-export default function AddEventPage() {
+export default function EditEventPage() {
   const { eventsApi } = useApiClient();
+  const params = useParams();
+
+  const { data } = useQuery({
+    queryKey: ["events", params.eventId],
+    queryFn: () => eventsApi.getEventApiV1EventsEventIdGet({ eventId: params.eventId! }),
+    enabled: !!params.eventId,
+  })
+
 
   const navigate = useNavigate();
   const { mutate } = useMutation({
@@ -32,7 +39,8 @@ export default function AddEventPage() {
         ]}
       />
       <Container>
-        <EventForm onSubmit={onSubmit} />
+        {data ?
+          <EventForm onSubmit={onSubmit} data={data} /> : 'Chargement'}
       </Container>
     </>
   );

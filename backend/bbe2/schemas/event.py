@@ -15,6 +15,7 @@ class _EventBase(BaseModel):
     description: str
     date: date
     costume: Costume
+    category: str
 
 
 class EventCreate(_EventBase):

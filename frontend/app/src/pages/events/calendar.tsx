@@ -1,4 +1,5 @@
-import { faCalendar, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarCheck } from '@fortawesome/free-regular-svg-icons';
+import { faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -55,13 +56,13 @@ export default function CalendarPage() {
         title="Calendrier"
         subtitle={(new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' })}
         actions={[
-          <Header.Action variant="outline" key="add-event" as={Link} to="/events/add">
-            <FontAwesomeIcon icon={faPlusCircle} />
+          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage">
+            <FontAwesomeIcon icon={faCalendarPlus} />
             {' '}
-            Ajouter
+            Gérer
           </Header.Action>,
           <Header.Action key="doodle-nav" as={Link} to="/events/doodle">
-            <FontAwesomeIcon icon={faCalendar} />
+            <FontAwesomeIcon icon={faCalendarCheck} />
             {' '}
             Mes Présences
           </Header.Action>,

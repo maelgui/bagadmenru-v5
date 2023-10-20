@@ -56,7 +56,7 @@ export interface ListResponsesApiV1ResponsesGetRequest {
 }
 
 export interface UpdateEventApiV1EventsEventIdPutRequest {
-    eventId: string;
+    eventId: number;
     eventCreate: EventCreate;
 }
 

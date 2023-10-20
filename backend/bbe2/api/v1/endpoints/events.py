@@ -44,7 +44,7 @@ async def export_ics(
 
 @events_router.get("/{event_id}", response_model=schemas.Event)
 async def get_event(
-    event_id: str,
+    event_id: int,
     token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
@@ -69,7 +69,7 @@ async def create_event(
 
 @events_router.put("/{event_id}", response_model=schemas.Event)
 async def update_event(
-    event_id: str,
+    event_id: int,
     event: schemas.EventCreate,
     token: str = Security(get_current_user, scopes=[EventScopes.UPDATE.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
@@ -85,7 +85,7 @@ async def update_event(
 
 @events_router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event(
-    event_id: str,
+    event_id: int,
     token: str = Security(get_current_user, scopes=[EventScopes.DELETE]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):

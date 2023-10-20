@@ -50,6 +50,12 @@ export interface EventCreate {
      * @memberof EventCreate
      */
     costume: Costume;
+    /**
+     * 
+     * @type {string}
+     * @memberof EventCreate
+     */
+    category: string;
 }
 
 /**
@@ -61,6 +67,7 @@ export function instanceOfEventCreate(value: object): boolean {
     isInstance = isInstance && "description" in value;
     isInstance = isInstance && "date" in value;
     isInstance = isInstance && "costume" in value;
+    isInstance = isInstance && "category" in value;
 
     return isInstance;
 }
@@ -79,6 +86,7 @@ export function EventCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'description': json['description'],
         'date': (new Date(json['date'])),
         'costume': CostumeFromJSON(json['costume']),
+        'category': json['category'],
     };
 }
 
@@ -95,6 +103,7 @@ export function EventCreateToJSON(value?: EventCreate | null): any {
         'description': value.description,
         'date': (value.date.toISOString().substring(0,10)),
         'costume': CostumeToJSON(value.costume),
+        'category': value.category,
     };
 }
 
