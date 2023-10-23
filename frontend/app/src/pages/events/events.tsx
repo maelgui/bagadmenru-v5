@@ -19,7 +19,7 @@ export default function EventsManagePage() {
     <>
       <Header
         title="Gestion des évènements"
-        subtitle={"Ajouter, modifier, supprimer..."}
+        subtitle="Ajouter, modifier, supprimer..."
         actions={[
           <Header.Action key="add-event" as={Link} to="/events/add">
             <FontAwesomeIcon icon={faPlusCircle} />
@@ -35,38 +35,44 @@ export default function EventsManagePage() {
       />
       <Container>
         {(events && events.length) ? (
-          <table className="table-auto w-full border">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-5">Nom</th>
-                <th>Catégorie</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {events.map((event) => (
-                <tr key={event.id} className="my-4 py-4">
-                  <td className="p-4">{event.title}<br /><span className="text-sm text-gray-500">{event.description}</span></td>
-                  <td>{event.date.toLocaleDateString()}</td>
-                  <td><Badge color={EventCategories[event.category]?.bg ?? "bg-gray-500"}>{EventCategories[event.category]?.name ?? event.category}</Badge></td>
-                  <td className="text-right">
-                    <Button as={Link} to={`/events/edit/${event.id}`} size="sm">
-                      <FontAwesomeIcon icon={faGear} />
-                      {' '}
-                      Modifier
-                    </Button>
-                    <Button as={Link} to={`/events/delete/${event.id}`} size="sm" variant="outline">
-                      <FontAwesomeIcon icon={faTrash} />
-                      {' '}
-                      Supprimer
-                    </Button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="table-auto w-full border">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-5">Nom</th>
+                  <th>Date</th>
+                  <th>Catégorie</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : <Alert type='warning'>Aucun évènement</Alert>}
+              </thead>
+              <tbody className="divide-y">
+                {events.map((event) => (
+                  <tr key={event.id} className="my-4 py-4">
+                    <td className="p-4">
+                      {event.title}
+                      <br />
+                      <span className="text-sm text-gray-500">{event.description}</span>
+                    </td>
+                    <td>{event.date.toLocaleDateString(undefined, { dateStyle: 'full' })}</td>
+                    <td><Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge></td>
+                    <td className="text-right">
+                      <Button as={Link} to={`/events/edit/${event.id}`} size="sm">
+                        <FontAwesomeIcon icon={faGear} />
+                        {' '}
+                        Modifier
+                      </Button>
+                      <Button as={Link} to={`/events/delete/${event.id}`} size="sm" variant="outline">
+                        <FontAwesomeIcon icon={faTrash} />
+                        {' '}
+                        Supprimer
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : <Alert type="warning">Aucun évènement</Alert>}
       </Container>
     </>
   );
