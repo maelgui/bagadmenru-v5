@@ -44,11 +44,11 @@ export interface CreateResponseApiV1EventsEventIdResponsesPutRequest {
 }
 
 export interface DeleteEventApiV1EventsEventIdDeleteRequest {
-    eventId: string;
+    eventId: number;
 }
 
 export interface GetEventApiV1EventsEventIdGetRequest {
-    eventId: string;
+    eventId: number;
 }
 
 export interface ListResponsesApiV1ResponsesGetRequest {
