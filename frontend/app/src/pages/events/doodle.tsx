@@ -96,7 +96,7 @@ export default function DoodlePage() {
         {!events?.length ? (
           <Alert type="error">Aucun évèvement prochainement.</Alert>
         ) : (
-          <>
+          <div className="overflow-x-auto">
             <table className="table-auto min-w-full">
               <thead className="divide-y">
                 <tr className="divide-x">
@@ -171,7 +171,7 @@ export default function DoodlePage() {
             >
               {editing ? <FontAwesomeIcon icon={faFloppyDisk} /> : <FontAwesomeIcon icon={faPen} />}
             </button>
-          </>
+          </div>
         )}
       </Container>
     </>
