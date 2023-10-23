@@ -12,10 +12,12 @@ import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import Alert from '../../components/alert';
+import Badge from '../../components/badge';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
 import { queryClient, useApiClient } from '../../config/client';
+import EventCategories from '../../utils/event-category';
 import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
 
@@ -114,6 +116,9 @@ export default function DoodlePage() {
                           </span>
                         )}
                       >
+                        <div className="p-1">
+                          <Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
+                        </div>
                         <strong>{event.title}</strong>
                         <br />
                         <span className="text-sm">
@@ -130,12 +135,11 @@ export default function DoodlePage() {
                   <td> </td>
                   {events && events.map((event) => (
                     <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
-                      <span className="rounded-full bg-gray-400 text-white px-2">
+                      <Badge color="bg-gray-400" className="m-1">
                         {(responses && responses.responsesSumByEvent.get(event.id)) ?? 0}
                         {' '}
                         présents
-
-                      </span>
+                      </Badge>
                     </td>
                   ))}
                 </tr>
