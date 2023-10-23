@@ -29,11 +29,11 @@ export default function Header({
       <div className="bg-pourpre-50 shadow-inner py-2">
         <Container>
           <ul className="flex flex-wrap text-sm">
-            <li className="font-semibold mr-2">Navigation :</li>
+            <li className="font-semibold mr-4">Navigation :</li>
             <li className="mx-2">{breadcrumb.length ? <Link to="/" className="underline underline-offset-4 hover:decoration-2">Accueil</Link> : 'Accueil'}</li>
             {breadcrumb.map((item) => (
-              <React.Fragment key={item.link}>
-                <li className="mx-2 text-gray-600"><FontAwesomeIcon icon={faCaretRight} className="pl-2" /></li>
+              <React.Fragment key={item.link ?? 'final'}>
+                <li className="mx-2 text-gray-600"><FontAwesomeIcon icon={faCaretRight} className="px-2" /></li>
                 <li className="mx-2">
                   {item.link ? <Link to={item.link} className="underline underline-offset-4 hover:decoration-2">{item.title}</Link> : item.title}
                 </li>
