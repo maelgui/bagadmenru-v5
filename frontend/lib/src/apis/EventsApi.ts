@@ -106,7 +106,7 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * Create Response
      */
-    async createResponseApiV1EventsEventIdResponsesPutRaw(requestParameters: CreateResponseApiV1EventsEventIdResponsesPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async createResponseApiV1EventsEventIdResponsesPutRaw(requestParameters: CreateResponseApiV1EventsEventIdResponsesPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Response>> {
         if (requestParameters.eventId === null || requestParameters.eventId === undefined) {
             throw new runtime.RequiredError('eventId','Required parameter requestParameters.eventId was null or undefined when calling createResponseApiV1EventsEventIdResponsesPut.');
         }
@@ -134,14 +134,15 @@ export class EventsApi extends runtime.BaseAPI {
             body: ResponseCreateToJSON(requestParameters.responseCreate),
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => ResponseFromJSON(jsonValue));
     }
 
     /**
      * Create Response
      */
-    async createResponseApiV1EventsEventIdResponsesPut(requestParameters: CreateResponseApiV1EventsEventIdResponsesPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.createResponseApiV1EventsEventIdResponsesPutRaw(requestParameters, initOverrides);
+    async createResponseApiV1EventsEventIdResponsesPut(requestParameters: CreateResponseApiV1EventsEventIdResponsesPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Response> {
+        const response = await this.createResponseApiV1EventsEventIdResponsesPutRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

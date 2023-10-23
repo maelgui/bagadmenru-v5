@@ -1,15 +1,16 @@
 /* eslint-disable max-len */
 import { useOidcIdToken } from '@axa-fr/react-oidc';
 import {
+  faCalendarPlus,
   faFloppyDisk,
   faPen,
-  faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Costume, Response, ResponseCreate } from 'bagad-client';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 import Alert from '../../components/alert';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -48,8 +49,6 @@ export default function DoodlePage() {
   const { idTokenPayload } = useOidcIdToken();
   const { usersApi, eventsApi } = useApiClient();
 
-  const navigate = useNavigate();
-
   const [editing, setEditing] = useState<boolean>(false);
 
   const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
@@ -61,43 +60,17 @@ export default function DoodlePage() {
       const params = { eventId, responseCreate: response };
       return eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
     },
-    onMutate: async ({ eventId, response }) => {
-      // Cancel any outgoing refetches
-      // (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries({ queryKey: ['responses'] });
-
-      // Snapshot the previous value
-      const previousResponses = queryClient.getQueryData<ResponsesData>(['responses']);
-
-      // Optimistically update to the new value
-      queryClient.setQueryData(['responses'], (data: ResponsesData | undefined) => {
-        let data2 = data;
-        if (data2) {
-          data2.responsesByUserAndEvent.set(keyFunc(eventId, idTokenPayload.sub), [{
-            eventId,
-            userId: idTokenPayload.sub,
-            value: response.value,
-            date: new Date(),
-          }]);
-        } else {
-          data2 = { responsesByUserAndEvent: new Map<string, Response[]>(), responsesSumByEvent: new Map<number, number>() };
-        }
-        return data2;
-      });
-
-      // Return a context object with the snapshotted value
-      return { previousResponses };
-    },
-    // If the mutation fails,
-    // use the context returned from onMutate to roll back
-    onError: (err, newTodo, context) => {
-      console.error(err, newTodo);
-      queryClient.setQueryData(['responses'], context?.previousResponses);
-    },
-    // Always refetch after error or success:
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['responses'] });
-    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['responses'] }),
+    onSuccess: (data) => toast.success(() => (
+      <span>
+        Réponse enregistrée pour
+        {' '}
+        <i>
+          Event#
+          {data.eventId}
+        </i>
+      </span>
+    )),
   });
 
   return (
@@ -106,10 +79,10 @@ export default function DoodlePage() {
         title="Doodle"
         subtitle="Mes présences aux évènements du groupe"
         actions={[
-          <Header.Action key="add-event" onClick={() => navigate('/events/add')}>
-            <FontAwesomeIcon icon={faPlusCircle} />
+          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage">
+            <FontAwesomeIcon icon={faCalendarPlus} />
             {' '}
-            Ajouter
+            Gérer
           </Header.Action>,
         ]}
         breadcrumb={[
@@ -117,7 +90,7 @@ export default function DoodlePage() {
           { title: 'Mes présences' },
         ]}
       />
-      <Container>
+      <Container className={`${mutation.isPending ? 'disabled' : ''}`}>
         {!events?.length ? (
           <Alert type="error">Aucun évèvement prochainement.</Alert>
         ) : (
@@ -125,7 +98,7 @@ export default function DoodlePage() {
             <table className="table-auto min-w-full">
               <thead className="divide-y">
                 <tr className="divide-x">
-                  <td />
+                  <td> </td>
                   {events && events.map((event) => (
                     <td key={event.id} className="text-center px-4">
                       <Tooltip
@@ -154,7 +127,7 @@ export default function DoodlePage() {
                   ))}
                 </tr>
                 <tr className="divide-x">
-                  <td />
+                  <td> </td>
                   {events && events.map((event) => (
                     <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
                       <span className="rounded-full bg-gray-400 text-white px-2">

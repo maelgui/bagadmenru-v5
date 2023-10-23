@@ -86,7 +86,7 @@ async def update_event(
 @events_router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event(
     event_id: int,
-    token: str = Security(get_current_user, scopes=[EventScopes.DELETE]),
+    token: str = Security(get_current_user, scopes=[EventScopes.DELETE.value]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -112,7 +112,7 @@ async def list_responses(
         return response_crud.find_all()
 
 
-@events_router.put("/{event_id}/responses", status_code=status.HTTP_204_NO_CONTENT)
+@events_router.put("/{event_id}/responses", response_model=schemas.Response)
 async def create_response(
     event_id: int,
     response: schemas.ResponseCreate,
