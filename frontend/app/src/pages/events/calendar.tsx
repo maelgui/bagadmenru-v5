@@ -1,4 +1,3 @@
-import { useOidcIdToken } from '@axa-fr/react-oidc';
 import { faCalendarCheck } from '@fortawesome/free-regular-svg-icons';
 import { faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -39,7 +38,6 @@ const days = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 
 export default function CalendarPage() {
   const { eventsApi } = useApiClient();
-  const { idTokenPayload } = useOidcIdToken();
 
   const { data } = useQuery({
     queryKey: ['events'],
@@ -49,12 +47,6 @@ export default function CalendarPage() {
       eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
       eventsByDate: groupBy(res, (item) => item.date.toLocaleDateString()),
     }),
-  });
-
-  const { data: responses } = useQuery({
-    queryKey: ['responses'],
-    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: idTokenPayload.sub }),
-    select: (d) => groupBy(d, (e) => e.eventId),
   });
 
   const [monthOffset, setMonthOffset] = useState(0);
