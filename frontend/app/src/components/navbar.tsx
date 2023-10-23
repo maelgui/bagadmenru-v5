@@ -71,7 +71,7 @@ export default function Navbar() {
                 <CustomNavLink to="/files">Fichiers</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
-                <CustomNavLink to="/albums">Photos</CustomNavLink>
+                <CustomNavLink to="/photos">Photos</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
                 <CustomNavLink to="/users">Trombinoscope</CustomNavLink>

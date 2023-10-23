@@ -4,13 +4,14 @@ import MainLayout from '../layout/main';
 import AddEventPage from '../pages/events/add';
 import CalendarPage from '../pages/events/calendar';
 import DoodlePage from '../pages/events/doodle';
+import EditEventPage from '../pages/events/edit';
 import EventsManagePage from '../pages/events/events';
 import ListFilesPage from '../pages/files/list';
 import HomePage from '../pages/home';
+import AlbumsPage from '../pages/photos';
 import EditProfilePage from '../pages/profiles/edit';
 import MyProfile from '../pages/profiles/me';
 import ProfilesPage from '../pages/profiles/trombi';
-import EditEventPage from '../pages/events/edit';
 
 export default createBrowserRouter([
   {
@@ -59,6 +60,10 @@ export default createBrowserRouter([
           {
             path: '/profile/edit',
             Component: EditProfilePage,
+          },
+          {
+            path: '/photos',
+            Component: AlbumsPage,
           },
         ],
       },
