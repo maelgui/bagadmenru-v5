@@ -1,19 +1,29 @@
 import { faGear, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Event } from 'bagad-client';
 import { Link } from 'react-router-dom';
 import Alert from '../../components/alert';
 import Badge from '../../components/badge';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { useApiClient } from '../../config/client';
+import { queryClient, useApiClient } from '../../config/client';
 import EventCategories from '../../utils/event-category';
 
 export default function EventsManagePage() {
   const { eventsApi } = useApiClient();
 
   const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
+
+  const { mutate } = useMutation({
+    mutationFn: (data: Event) => eventsApi.deleteEventApiV1EventsEventIdDelete({
+      eventId: data.id,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+  });
 
   return (
     <>
@@ -61,7 +71,17 @@ export default function EventsManagePage() {
                         {' '}
                         Modifier
                       </Button>
-                      <Button as={Link} to={`/events/delete/${event.id}`} size="sm" variant="outline">
+                      <Button
+                        onClick={() => {
+                          // eslint-disable-next-line no-alert
+                          const sure = window.confirm(`Supprimer la sortie ${event.title} ?`);
+                          if (sure) {
+                            mutate(event);
+                          }
+                        }}
+                        size="sm"
+                        variant="outline"
+                      >
                         <FontAwesomeIcon icon={faTrash} />
                         {' '}
                         Supprimer
