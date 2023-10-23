@@ -1,14 +1,13 @@
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
 
-interface BadgeProps {
+interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
   children: ReactNode,
   color?: string,
 }
 
-
-export default function Badge({ children, color = "bg-gray-500" }: BadgeProps) {
+export default function Badge({ children, color = 'bg-gray-500', className }: BadgeProps) {
   return (
-    <span className={`px-2 m-8 rounded-md overflow-hidden text-white font-medium text-sm ${color}`}>
+    <span className={`px-2 rounded-md overflow-hidden text-white font-medium text-sm ${color} ${className}`}>
       {children}
     </span>
   );

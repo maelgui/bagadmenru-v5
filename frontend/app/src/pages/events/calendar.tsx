@@ -5,11 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Alert from '../../components/alert';
+import Badge from '../../components/badge';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
 import { useApiClient } from '../../config/client';
+import EventCategories from '../../utils/event-category';
 import groupBy from '../../utils/groupby';
 import EventListItem from './components/event';
 
@@ -115,7 +117,9 @@ export default function CalendarPage() {
                     <div className="hidden md:block w-full">
                       {data?.eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map(
                         (event) => (
-                          <div key={event.id} className="border border-pourpre-400 rounded-sm truncate text-xs p-1 mb-px">{event.title}</div>
+                          <Badge key={event.id} color={EventCategories[event.category]?.bg ?? 'bg-gray-500'} className="block mb-px rounded-sm truncate">
+                            {event.title}
+                          </Badge>
                         ),
                       )}
                       <div className="pl-2 pt-1 text-sm">
