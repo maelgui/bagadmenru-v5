@@ -1,3 +1,4 @@
+import { useOidcIdToken } from '@axa-fr/react-oidc';
 import { faCalendarCheck } from '@fortawesome/free-regular-svg-icons';
 import { faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -38,6 +39,7 @@ const days = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 
 export default function CalendarPage() {
   const { eventsApi } = useApiClient();
+  const { idTokenPayload } = useOidcIdToken();
 
   const { data } = useQuery({
     queryKey: ['events'],
@@ -47,6 +49,12 @@ export default function CalendarPage() {
       eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
       eventsByDate: groupBy(res, (item) => item.date.toLocaleDateString()),
     }),
+  });
+
+  const { data: responses } = useQuery({
+    queryKey: ['responses'],
+    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: idTokenPayload.sub }),
+    select: (d) => groupBy(d, (e) => e.eventId),
   });
 
   const [monthOffset, setMonthOffset] = useState(0);
@@ -87,7 +95,6 @@ export default function CalendarPage() {
               </div>
               <div>
                 <Button size="sm" variant="outline" onClick={() => setMonthOffset(0)}>Reset</Button>
-
               </div>
             </div>
 
@@ -138,7 +145,11 @@ export default function CalendarPage() {
                 <div key={month} className="mb-4">
                   <h3 className="capitalize font-bold text-center">{(new Date(today.getFullYear(), month)).toLocaleString('fr', { month: 'long' })}</h3>
                   {events.map((event) => (
-                    <EventListItem key={event.id} event={event} />
+                    <div className="mb-5 mt-2" key={event.id}>
+                      <EventListItem
+                        event={event}
+                      />
+                    </div>
                   ))}
                 </div>
               ))}

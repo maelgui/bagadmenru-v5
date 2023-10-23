@@ -1,11 +1,12 @@
 import { useOidcIdToken } from '@axa-fr/react-oidc';
 import {
-  faArrowRight, faCircleCheck, faCircleXmark, faWarning,
+  faArrowRight,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { FileOrFolderType } from 'bagad-client';
 import { Link } from 'react-router-dom';
+import Button from '../components/button';
 import Container from '../components/container';
 import Header from '../components/header';
 import { useApiClient } from '../config/client';
@@ -36,7 +37,7 @@ export default function HomePage() {
       <Header title={`Hi ${idTokenPayload.name}`} />
       <Container>
         {events ? (
-          <div className="p-8 mb-8">
+          <div className="py-8 mb-8">
             <div className="flex flex-col md:flex-row gap-2 justify-between pb-8">
               <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase">Prochains évènements</h3>
               <Link to="/events/doodle" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
@@ -49,48 +50,21 @@ export default function HomePage() {
               {events.length ? events.map((event) => (
                 <div key={event.id} className="flex flex-col md:flex-row md:items-center p-4 gap-4">
                   <div className="flex-1">
-                    <EventListItem event={event} />
+                    <EventListItem
+                      event={event}
+                      response={responses?.get(event.id)?.at(0)?.value}
+                      showResponse
+                    />
                   </div>
-                  <div className="flex-1">
-                    {
-                      (() => {
-                        const value = responses?.get(event.id)?.at(0)?.value;
-                        if (value === undefined) {
-                          return (
-                            <>
-                              <FontAwesomeIcon icon={faWarning} className="text-amber-300" />
-                              {' '}
-                              Vous n&apos;avez pas répondu
-                            </>
-                          );
-                        }
-                        if (value) {
-                          return (
-                            <div>
-                              <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-300" />
-                              {' '}
-                              Vous serez présent
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <>
-                            <FontAwesomeIcon icon={faCircleXmark} className="text-red-300" />
-                            {' '}
-                            Vous ne serez pas présent
-                          </>
-                        );
-                      })()
-                    }
+                  <div className="flex-1 text-center">
                     {responses?.get(event.id)?.at(0) === undefined ? (
                       <>
                         <h6>Serez-vous présent ?</h6>
-                        <button type="button">Oui</button>
+                        <Button type="button" size="sm">Oui</Button>
                         {' '}
                         |
                         {' '}
-                        <button type="button">Non</button>
+                        <Button type="button" size="sm">Non</Button>
 
                       </>
                     ) : null}
