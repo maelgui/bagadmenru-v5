@@ -2,7 +2,7 @@
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Event, EventCreate } from 'bagad-client';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import Input from '../../../components/input';
 
 import costume from '../../../assets/costume.svg';
@@ -17,9 +17,8 @@ interface EventFormProps {
 }
 
 export default function EventForm({ onSubmit, data = undefined }: EventFormProps) {
-
   const {
-    register, handleSubmit, formState: { errors },
+    register, control, handleSubmit, formState: { errors },
   } = useForm<EventCreate>({ defaultValues: data });
 
   return (
@@ -44,11 +43,20 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
       </div>
       <div className="mb-6">
         <label className="mb-2 block font-semibold" htmlFor="date">Date</label>
-        <Input
-          type="date"
-          id="date"
-          error={errors.date?.message}
-          {...register('date', { required: 'Ce champ est obligatoire.', valueAsDate: true })}
+        <Controller
+          name="date"
+          control={control}
+          rules={{ required: 'Ce champ est obligatoire.' }}
+          defaultValue={new Date()}
+          render={({ field }) => (
+            <Input
+              {...field}
+              type="date"
+              error={errors.date?.message}
+              value={field.value.toISOString().split('T')[0]}
+              onChange={(e) => field.onChange(new Date(e.target.value))}
+            />
+          )}
         />
       </div>
       <div className="mb-6">

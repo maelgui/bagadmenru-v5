@@ -29,7 +29,7 @@ export default function EventsManagePage() {
         ]}
         breadcrumb={[
           { title: 'Calendrier', link: '/events' },
-          { title: 'Géstion des évènements' },
+          { title: 'Gestion des évènements' },
         ]}
 
       />

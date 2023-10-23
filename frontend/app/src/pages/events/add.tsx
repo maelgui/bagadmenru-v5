@@ -28,6 +28,7 @@ export default function AddEventPage() {
         subtitle="Sortie/répétition/réunion..."
         breadcrumb={[
           { link: '/events', title: 'Calendrier' },
+          { link: '/events/manage', title: 'Gérer' },
           { title: 'Ajouter un évènement' },
         ]}
       />
