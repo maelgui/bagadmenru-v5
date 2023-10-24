@@ -2,8 +2,8 @@
 import { useQuery } from '@tanstack/react-query';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import EditProfileForm from './components/form';
 import { useApiClient } from '../../config/client';
+import EditProfileForm from './components/form';
 
 export default function EditProfilePage() {
   const { usersApi } = useApiClient();
@@ -17,9 +17,9 @@ export default function EditProfilePage() {
     <>
       <Header
         title="Modifier mon profile"
-        subtitle=""
+        subtitle={`${profile?.firstName} ${profile?.lastName}`}
         breadcrumb={[
-          { title: 'Liste des membres', link: 'users' },
+          { title: 'Liste des membres', link: '/users' },
           { title: 'Modifier mon profile' },
         ]}
       />

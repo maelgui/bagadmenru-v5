@@ -84,7 +84,7 @@ export default function Navbar() {
               ? (
                 <>
                   <Link to="/profile" className="lg:order-last">
-                    <Avatar src={profile.pictureUrl} size="xs" />
+                    <Avatar src={profile.pictureUrl} size="xs" className="m-8" />
                   </Link>
                   <div className="lg:text-right lg:py-2">
                     <div className="whitespace-nowrap">

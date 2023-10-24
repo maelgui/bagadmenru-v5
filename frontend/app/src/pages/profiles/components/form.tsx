@@ -1,4 +1,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
+import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Profile, ProfileUpdate } from 'bagad-client';
@@ -57,6 +59,29 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="text-center mb-6">
+        <div className="inline-block m-auto relative my-8">
+          <Avatar src={pictureUrl} size="lg" />
+          <label htmlFor="pictureFileInput" className="cursor-pointer m-4 absolute right-0 bottom-0 rounded-full bg-white h-12 w-12 flex justify-center items-center shadow-lg">
+            <FontAwesomeIcon icon={faEdit} />
+          </label>
+        </div>
+        <input
+          type="file"
+          id="pictureFileInput"
+          accept="image/*"
+          onChange={onUploadAvatar}
+          className="hidden"
+        />
+        <input
+          type="text"
+          id="picture"
+          {...register('pictureKey')}
+          disabled
+          className="hidden"
+        />
+
+      </div>
       <div className="flex gap-4 mb-6">
         <div className="flex-1">
           <label className="mb-2 block font-semibold" htmlFor="first_name">Prénom</label>
@@ -90,33 +115,6 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
         <div>
           <Button as="a" href={`${import.meta.env.VITE_OIDC_PROVIDER_URL}/account`}>Modifier ces informations</Button>
         </div>
-      </div>
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="picture">Avatar</label>
-        <div className="flex items-center">
-          <div>
-            <Avatar src={pictureUrl} size="md" />
-          </div>
-          <Input
-            type="file"
-            id="picture"
-            accept="image/*"
-            onChange={onUploadAvatar}
-          />
-          <Input
-            type="text"
-            id="picture"
-            {...register('pictureKey')}
-            disabled
-          />
-        </div>
-        <div className="mb-6">
-          <label className="mb-2 block font-semibold" htmlFor="picture">Avatar</label>
-          <div className="flex items-center">
-            {/* <AvatarInput control={control} name="picture" /> */}
-          </div>
-        </div>
-
       </div>
       <div className="mb-6">
         <label className="mb-2 block font-semibold" htmlFor="instrument">Instrument</label>

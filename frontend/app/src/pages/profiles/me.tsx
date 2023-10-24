@@ -36,7 +36,7 @@ export default function MyProfile() {
           <>
             <div className="text-center">
               <div className="inline-block m-auto">
-                <Avatar src={profile.pictureUrl} size="lg" />
+                <Avatar src={profile.pictureUrl} size="lg" className="m-8" />
               </div>
               <h1 className="text-4xl">{`${profile.firstName} ${profile.lastName}`}</h1>
             </div>
