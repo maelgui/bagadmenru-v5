@@ -6,12 +6,13 @@ import './App.css';
 import { queryClient } from './config/client';
 import oidcConfiguration from './config/oidc';
 import router from './config/router';
+import LoadingComponent from './pages/error/loading';
 
 DefaultConfig.config = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL });
 
 function App() {
   return (
-    <OidcProvider configuration={oidcConfiguration}>
+    <OidcProvider configuration={oidcConfiguration} loadingComponent={LoadingComponent}>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>

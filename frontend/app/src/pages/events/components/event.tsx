@@ -6,17 +6,17 @@ import { Costume, Event } from 'bagad-client';
 import costume from '../../../assets/costume.svg';
 import polo from '../../../assets/polo.svg';
 
-interface EventListItemProps {
+interface EventListItemProps extends React.ComponentPropsWithoutRef<'div'> {
   event: Event
   response?: boolean
   showResponse?: boolean
 }
 
 export default function EventListItem({
-  event, response = undefined, showResponse = false,
+  event, response = undefined, showResponse = false, className = '',
 }: EventListItemProps) {
   return (
-    <div className={`flex items-center ${response !== undefined && !response ? 'opacity-20' : ''} relative`}>
+    <div className={`flex items-center ${response !== undefined && !response ? 'opacity-20' : ''} relative ${className}`}>
       <div>
         <div className="flex flex-col justify-center text-center mr-4 my-2 px-4 border-r-2 h-16 w-24 border-pourpre-400">
           <span className="text-xl font-bold">{event.date.getDate()}</span>
