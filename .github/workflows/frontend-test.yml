@@ -8,7 +8,7 @@ on:
 
 defaults:
   run:
-    working-directory: frontend/app
+    working-directory: frontend
 
 jobs:
   lint:
@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: "21.x"
       - run: yarn
-      - run: yarn lint
+      - run: yarn workspace bagad-frontend lint
   tsc:
     runs-on: ubuntu-latest
     name: Check typescript
@@ -30,4 +30,4 @@ jobs:
         with:
           node-version: "21.x"
       - run: yarn
-      - run: yarn tsc
+      - run: yarn workspace bagad-frontend tsc
