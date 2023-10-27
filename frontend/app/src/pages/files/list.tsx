@@ -107,6 +107,7 @@ export default function ListFilesPage() {
             key="add-folder"
             type="button"
             onClick={async () => {
+              /* eslint-disable no-alert */
               const name = prompt('nom du dossier', 'nom de sdosisr') ?? 'bla';
               createFolderMutation.mutate(name);
             }}
