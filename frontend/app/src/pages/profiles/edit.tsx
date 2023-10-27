@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import { useQuery } from '@tanstack/react-query';
 import Container from '../../components/container';
 import Header from '../../components/header';
