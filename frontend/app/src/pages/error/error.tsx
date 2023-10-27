@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import { useRouteError } from 'react-router-dom';
 import Container from '../../components/container';
 import ErrorLayout from '../../layout/error';
