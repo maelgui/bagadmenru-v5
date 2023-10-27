@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import { useMutation } from '@tanstack/react-query';
 import { EventCreate } from 'bagad-client';
 import { useNavigate } from 'react-router-dom';
