@@ -1,4 +1,4 @@
-import { useOidcAccessToken } from '@axa-fr/react-oidc';
+import { useOidcFetch } from '@axa-fr/react-oidc';
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import {
   Configuration, EventsApi, FilesApi, ResponseError, UsersApi,
@@ -22,17 +22,17 @@ export const queryClient = new QueryClient({
     queries: {
       retry: (failureCount, error) => {
         if (error instanceof ResponseError && error.response.status === 403) {
-          return false;
+          return failureCount < 1;
         }
-        return failureCount < 1;
+        return failureCount < 2;
       },
     },
   },
 });
 
 export function useApiClient() {
-  const { accessToken } = useOidcAccessToken();
-  const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL, accessToken: `Bearer ${accessToken}` });
+  const { fetch } = useOidcFetch();
+  const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL, fetchApi: fetch });
 
   return {
     eventsApi: new EventsApi(conf),
