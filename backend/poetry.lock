@@ -131,17 +131,17 @@ tzdata = ["tzdata"]
 
 [[package]]
 name = "boto3"
-version = "1.28.72"
+version = "1.29.5"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "boto3-1.28.72-py3-none-any.whl", hash = "sha256:73e2b56dcbe1b856274185c908dcb5973b007d62c74b646e6bd2ac09a303983a"},
-    {file = "boto3-1.28.72.tar.gz", hash = "sha256:cc7d939cdbb4ad3980274c96c589e95f028f740ac49a3547c8f4aaec6a7a6409"},
+    {file = "boto3-1.29.5-py3-none-any.whl", hash = "sha256:030b0f0faf8d44f97e67a5411644243482f33ebf1c45338bb40662239a16dda4"},
+    {file = "boto3-1.29.5.tar.gz", hash = "sha256:76fc6a17781c27558c526e899579ccf530df10eb279261fe7800540f0043917e"},
 ]
 
 [package.dependencies]
-botocore = ">=1.31.72,<1.32.0"
+botocore = ">=1.32.5,<1.33.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.7.0,<0.8.0"
 
@@ -150,13 +150,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.31.72"
+version = "1.32.5"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.31.72-py3-none-any.whl", hash = "sha256:1a0f5063a9a5e1ef40907c67778625cf14a8c47c8e09cd2b3f9dc53a8adb52cf"},
-    {file = "botocore-1.31.72.tar.gz", hash = "sha256:37763f40c2fcc48114015fe43bbd75ec1aabef48b418e1a5e28cb1c350967260"},
+    {file = "botocore-1.32.5-py3-none-any.whl", hash = "sha256:b8960c955ba275915bf022c54c896c2dac1038289d8a5ace92d1431257c0a439"},
+    {file = "botocore-1.32.5.tar.gz", hash = "sha256:75a68f942cd87baff83b3a20dfda11b3aeda48aad32e4dcd6fe8992c0cb0e7db"},
 ]
 
 [package.dependencies]
@@ -168,7 +168,7 @@ urllib3 = [
 ]
 
 [package.extras]
-crt = ["awscrt (==0.16.26)"]
+crt = ["awscrt (==0.19.12)"]
 
 [[package]]
 name = "certifi"
@@ -1510,4 +1510,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "9f069d5d04519338580d06f29d0af0737889895b08f51fe44a5307f452be4529"
+content-hash = "68f763c7ab5fb1fdc0ecf94e5d5273390ea834e6a4dedc34c47edca63954bd34"
