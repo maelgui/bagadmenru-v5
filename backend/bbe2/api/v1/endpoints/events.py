@@ -21,8 +21,9 @@ responses_router = APIRouter(prefix="/responses")
 async def list_events(
     token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
     session: Session = Depends(get_db),
+    limit: int = 10,
 ):
-    return session.query(models.Event).order_by(models.Event.date).all()
+    return session.query(models.Event).order_by(models.Event.date).limit(limit).all()
 
 
 @events_router.get("/export/ics")

@@ -72,7 +72,7 @@ export default function FileItem({ file, big = false }: FileItemProps) {
       <div className="relative border rounded border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm">
         {big && (
           <div className="p-4 text-center h-32 [&>svg]:max-h-16 flex justify-center items-center border-b border-gray-50">
-            <FileIcon type={fileIconType[file.name.split('.').pop() ?? 'document']} color="#15141A" glyphColor="whitesmoke" />
+            <FileIcon type={fileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} color="#15141A" glyphColor="whitesmoke" />
           </div>
         )}
         <div className="flex justify-between p-4 items-center">
@@ -85,7 +85,7 @@ export default function FileItem({ file, big = false }: FileItemProps) {
             {file.name}
           </button> */}
           <div className="truncate">
-            {!big && <FontAwesomeIcon icon={file.type == 'DIR' ? faFolder : faFileIconType[file.name.split('.').pop() ?? 'document']} className="mr-4" />}
+            {!big && <FontAwesomeIcon icon={file.type == 'DIR' ? faFolder : faFileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} className="mr-4" />}
 
             <Link to={file.fileUrl ?? `/files/${file.id}`} className="truncate after:absolute after:top-0 after:bottom-0 after:left-0 after:right-0">
               {file.name}

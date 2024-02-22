@@ -10,10 +10,10 @@ import Alert from '../components/alert';
 import Container from '../components/container';
 import Header from '../components/header';
 import { useApiClient } from '../config/client';
+import groupBy from '../utils/groupby';
 import Calendar from './events/components/calendar';
 import EventListItem from './events/components/event';
 import FileItem from './files/components/file-item';
-import groupBy from '../utils/groupby';
 
 export default function HomePage() {
   const { idTokenPayload } = useOidcIdToken();
@@ -21,11 +21,11 @@ export default function HomePage() {
 
   const { data: events } = useQuery({
     queryKey: ['events'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet(),
+    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 6 }),
   });
   const { data: files } = useQuery({
     queryKey: ['files'],
-    queryFn: () => filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File }),
+    queryFn: () => filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File, limit: 10 }),
   });
   const { data: responses } = useQuery({
     queryKey: ['responses'],
@@ -53,7 +53,7 @@ export default function HomePage() {
               <div className="basis-2/3">
                 <div>
                   {!events.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
-                  {events.map((event) => (
+                  {events.slice(0, 4).map((event) => (
                     <div className="mb-5 mt-2" key={event.id}>
                       <EventListItem
                         event={event}

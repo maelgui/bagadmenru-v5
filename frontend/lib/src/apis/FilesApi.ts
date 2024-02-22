@@ -57,6 +57,7 @@ export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
 
 export interface ListFilesApiV1FilesGetRequest {
     t?: FileOrFolderType | null;
+    limit?: number;
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
@@ -307,6 +308,10 @@ export class FilesApi extends runtime.BaseAPI {
 
         if (requestParameters.t !== undefined) {
             queryParameters['t'] = requestParameters.t;
+        }
+
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};

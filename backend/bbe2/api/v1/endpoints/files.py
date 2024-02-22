@@ -2,7 +2,8 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
+from fastapi import (APIRouter, Depends, HTTPException, Security, UploadFile,
+                     status)
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
@@ -22,11 +23,12 @@ router = APIRouter(prefix="/files")
 async def list_files(
     file_crud: CRUDFile = Depends(),
     t: Optional[FileOrFolderType] = None,
+    limit: int = 10,
 ):
     """List recent files."""
     if t:
-        return file_crud.find_by(models.FileOrFolder.type == t, limit=10)
-    return file_crud.find_all(limit=10)
+        return file_crud.find_by(models.FileOrFolder.type == t, limit=limit)
+    return file_crud.find_all(limit=limit)
 
 
 @router.get(
