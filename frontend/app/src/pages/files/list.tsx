@@ -12,7 +12,7 @@ export default function ListFilesPage() {
   const { filesApi } = useApiClient();
 
   const params = useParams();
-  const { data: folder, error, status } = useQuery({
+  const { data: folder, status } = useQuery({
     queryKey: ['files', params.folderId ?? 'root'],
     queryFn: async ({ queryKey }) => (
       queryKey[1] === 'root'

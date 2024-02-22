@@ -13,26 +13,6 @@ import groupBy from '../../utils/groupby';
 import Calendar from './components/calendar';
 import EventListItem from './components/event';
 
-function* generator(monthOffset: number, dayOffset = 1) {
-  const today = new Date();
-  const currentMonth = today.getMonth() + monthOffset;
-  const firstDay = new Date(today.getFullYear(), currentMonth, 1);
-  const lastDay = new Date(today.getFullYear(), currentMonth + 1, 0);
-  firstDay.setDate(firstDay.getDate() - ((firstDay.getDay() - dayOffset + 7) % 7));
-  lastDay.setDate(lastDay.getDate() + ((7 - lastDay.getDay() - 1 + dayOffset) % 7));
-  while (firstDay <= lastDay) {
-    yield [
-      new Date(firstDay),
-      currentMonth % 12 === firstDay.getMonth(),
-      firstDay.getDate() === today.getDate()
-      && firstDay.getMonth() === today.getMonth()
-      && firstDay.getFullYear() === today.getFullYear(),
-    ] as [Date, boolean, boolean];
-    firstDay.setDate(firstDay.getDate() + 1);
-  }
-}
-
-const days = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 
 export default function CalendarPage() {
   const { eventsApi } = useApiClient();
