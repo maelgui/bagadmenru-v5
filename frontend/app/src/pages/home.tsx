@@ -68,7 +68,7 @@ export default function HomePage() {
           </div>
         ) : null}
         {files ? (
-          <div className="p-8">
+          <div className="py-8 mb-8">
             <div className="flex flex-col md:flex-row gap-2 justify-between pb-8">
               <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase">Derniers fichiers ajoutés</h3>
               <Link to="/files" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">

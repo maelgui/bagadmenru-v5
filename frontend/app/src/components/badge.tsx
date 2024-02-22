@@ -7,7 +7,7 @@ interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
 
 export default function Badge({ children, color = 'bg-gray-500', className }: BadgeProps) {
   return (
-    <span className={`px-2 rounded-md overflow-hidden text-white font-medium text-sm ${color} ${className}`}>
+    <span className={`px-2 rounded-md overflow-hidden text-white font-medium text-sm ${color} ${className} whitespace-nowrap`}>
       {children}
     </span>
   );
