@@ -21,11 +21,11 @@ export default function HomePage() {
 
   const { data: events } = useQuery({
     queryKey: ['events'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 6 }),
+    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 10 }),
   });
   const { data: files } = useQuery({
     queryKey: ['files'],
-    queryFn: () => filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File, limit: 10 }),
+    queryFn: () => filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File, limit: 6 }),
   });
   const { data: responses } = useQuery({
     queryKey: ['responses'],
