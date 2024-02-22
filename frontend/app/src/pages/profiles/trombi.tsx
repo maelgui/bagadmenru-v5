@@ -30,8 +30,8 @@ export default function ProfilesPage() {
           {data ? data.map((profile) => (
             <div key={profile.id}>
               <div className="rounded overflow-hidden shadow flex flex-col">
-                <div className="aspect-square">
-                  <img src={profile.pictureUrl ?? defaultAvatar} alt="profile" className="object-cover w-full h-full bg-pourpre-50" />
+                <div className="aspect-square relative">
+                  <img src={profile.pictureUrl ?? defaultAvatar} alt="profile" className="object-cover w-full h-full absolute bg-pourpre-50" />
                 </div>
                 <div className="p-4">
                   <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
