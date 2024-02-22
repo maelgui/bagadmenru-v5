@@ -1,5 +1,5 @@
 import {
-  faCircleCheck, faCircleXmark, faWarning,
+  faCircleCheck, faCircleQuestion, faCircleXmark
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Costume, Event } from 'bagad-client';
@@ -16,7 +16,7 @@ export default function EventListItem({
   event, response = undefined, showResponse = false, className = '',
 }: EventListItemProps) {
   return (
-    <div className={`flex items-center ${response !== undefined && !response ? 'opacity-20' : ''} relative ${className}`}>
+    <div className={`flex items-center ${response !== undefined && !response ? 'opacity-50' : ''} relative ${className}`}>
       <div>
         <div className="flex flex-col justify-center text-center mr-4 my-2 px-4 border-r-2 h-16 w-24 border-pourpre-400">
           <span className="text-xl font-bold">{event.date.getDate()}</span>
@@ -33,7 +33,7 @@ export default function EventListItem({
               {(() => {
                 if (response === undefined) {
                   return (
-                    <FontAwesomeIcon icon={faWarning} className="text-amber-300" />
+                    <FontAwesomeIcon icon={faCircleQuestion} className="text-sky-300" />
                   );
                 }
                 if (response) {

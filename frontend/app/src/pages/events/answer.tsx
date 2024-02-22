@@ -3,16 +3,22 @@ import { faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ResponseCreate } from 'bagad-client';
+import { useParams } from 'react-router-dom';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import { queryClient, useApiClient } from '../../config/client';
 import EventListItem from './components/event';
 
-export default function AnswerLinkPage() {
-  const { idTokenPayload } = useOidcIdToken();
+type AnswerPageParams = {
+  eventId: string;
+};
 
+export default function AnswerLinkPage() {
+  const params = useParams<AnswerPageParams>();
+  const { idTokenPayload } = useOidcIdToken();
   const { eventsApi } = useApiClient();
-  const eventId = 1;
+
+  const eventId = parseInt(params.eventId!, 10);
 
   const { data: event } = useQuery({
     queryKey: ['events', eventId],

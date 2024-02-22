@@ -38,7 +38,7 @@ export default function EventsManagePage() {
           </Header.Action>,
         ]}
         breadcrumb={[
-          { title: 'Calendrier', link: '/events' },
+          { title: 'Évènements', link: '/events/doodle' },
           { title: 'Gestion des évènements' },
         ]}
 

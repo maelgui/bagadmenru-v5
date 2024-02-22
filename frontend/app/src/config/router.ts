@@ -22,26 +22,26 @@ export default createBrowserRouter([
     ErrorBoundary: RoutingErrorComponent,
     children: [
       {
-        Component: MainLayout,
+        Component: AuthGuard,
         children: [
           {
-            Component: AuthGuard,
+            Component: MainLayout,
             children: [
               {
                 index: true,
                 Component: HomePage,
               },
               {
-                path: '/events',
-                Component: CalendarPage,
+                path: '/events/doodle',
+                Component: DoodlePage,
               },
               {
                 path: '/events/manage',
                 Component: EventsManagePage,
               },
               {
-                path: '/events/doodle',
-                Component: DoodlePage,
+                path: '/events/calendar',
+                Component: CalendarPage,
               },
               {
                 path: '/events/add',
@@ -80,7 +80,7 @@ export default createBrowserRouter([
         Component: SimpleLayout,
         children: [
           {
-            path: 'answer',
+            path: 'answer/:eventId',
             Component: AnswerLinkPage,
           },
         ],

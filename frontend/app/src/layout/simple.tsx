@@ -22,7 +22,7 @@ export default function SimpleLayout() {
       <div className={`${isFetching ? 'loading' : ''} p-4 min-h-screen flex `}>
         <div className="m-auto max-w-md w-full align-middle">
           <div className="flex justify-center">
-            <img src={logo} alt="bagad men ru" className="h-64 m-4 pulse" />
+            <img src={logo} alt="bagad men ru" className="h-64 m-4" />
           </div>
           <Outlet />
         </div>

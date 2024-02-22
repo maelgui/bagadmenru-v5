@@ -6,13 +6,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { FileOrFolderType } from 'bagad-client';
 import { Link } from 'react-router-dom';
-import Button from '../components/button';
+import Alert from '../components/alert';
 import Container from '../components/container';
 import Header from '../components/header';
 import { useApiClient } from '../config/client';
-import groupBy from '../utils/groupby';
+import Calendar from './events/components/calendar';
 import EventListItem from './events/components/event';
 import FileItem from './files/components/file-item';
+import groupBy from '../utils/groupby';
 
 export default function HomePage() {
   const { idTokenPayload } = useOidcIdToken();
@@ -45,34 +46,25 @@ export default function HomePage() {
                 <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
               </Link>
             </div>
-            <div className="flex flex-col divide-y">
-
-              {events.length ? events.map((event) => (
-                <div key={event.id} className="flex flex-col md:flex-row md:items-center p-4 gap-4">
-                  <div className="flex-1">
-                    <EventListItem
-                      event={event}
-                      response={responses?.get(event.id)?.at(0)?.value}
-                      showResponse
-                    />
-                  </div>
-                  <div className="flex-1 text-center">
-                    {responses?.get(event.id)?.at(0) === undefined ? (
-                      <>
-                        <h6>Serez-vous présent ?</h6>
-                        <Button type="button" size="sm">Oui</Button>
-                        {' '}
-                        |
-                        {' '}
-                        <Button type="button" size="sm">Non</Button>
-
-                      </>
-                    ) : null}
-                  </div>
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="basis-1/3">
+                <Calendar events={events ?? []} />
+              </div>
+              <div className="basis-2/3">
+                <div>
+                  {!events.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
+                  {events.map((event) => (
+                    <div className="mb-5 mt-2" key={event.id}>
+                      <EventListItem
+                        event={event}
+                        response={responses?.get(event.id)?.at(0)?.value}
+                        showResponse
+                      />
+                    </div>
+                  ))}
                 </div>
-              )) : 'Pas d\'évènements à venir'}
+              </div>
             </div>
-
           </div>
         ) : null}
         {files ? (

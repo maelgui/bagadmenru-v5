@@ -5,14 +5,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Alert from '../../components/alert';
-import Badge from '../../components/badge';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import Tooltip from '../../components/tooltip';
 import { useApiClient } from '../../config/client';
-import EventCategories from '../../utils/event-category';
 import groupBy from '../../utils/groupby';
+import Calendar from './components/calendar';
 import EventListItem from './components/event';
 
 function* generator(monthOffset: number, dayOffset = 1) {
@@ -45,7 +43,6 @@ export default function CalendarPage() {
     select: (res) => ({
       events: res,
       eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
-      eventsByDate: groupBy(res, (item) => item.date.toLocaleDateString()),
     }),
   });
 
@@ -70,6 +67,7 @@ export default function CalendarPage() {
           </Header.Action>,
         ]}
         breadcrumb={[
+          { title: 'Évènements', link: '/events/doodle' },
           { title: 'Calendrier' },
         ]}
 
@@ -79,7 +77,7 @@ export default function CalendarPage() {
           <Alert type="warning">Aucun évèvement prochainement.</Alert>
         ) : null}
         <div className="flex flex-col lg:flex-row gap-8">
-          <div className="basis-3/4">
+          <div className="basis-2/3">
             <div className="flex justify-between items-center">
               <div>
                 <Button variant="outline" onClick={() => setMonthOffset(monthOffset - 1)}>précédent</Button>
@@ -90,47 +88,10 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-7">
-              {days.map((day) => <div key={day} className="font-bold uppercase text-center">{day}</div>)}
-            </div>
-            <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200">
-              {Array.from(generator(monthOffset)).map(([day, isCurrentMonth, isToday]) => (
-                <Tooltip
-                  key={day.getTime()}
-                  content={
-                    data?.eventsByDate.get(day.toLocaleDateString())?.map((event) => (
-                      <div key={event.id} className="py-1">
-                        <div className="font-bold">{event.title}</div>
-                        <div className="1">{event.description ? event.description : 'Pas de description'}</div>
-                      </div>
-                    ))
-                  }
-                  as="div"
-                >
-                  <div
-                    className={`bg-white md:h-32 flex flex-col items-center p-1 ${isCurrentMonth ? '' : 'opacity-50'}`}
-                  >
-                    <div className={`inline-flex justify-center items-center h-8 w-8 m-1 rounded-full ${isToday ? ' bg-pourpre-400 text-white' : ''} ${data?.eventsByDate.get(day.toLocaleDateString())?.length ? 'border border-pourpre-400' : ''}`}>
-                      {day.getDate()}
-                    </div>
-                    <div className="hidden md:block w-full">
-                      {data?.eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map(
-                        (event) => (
-                          <Badge key={event.id} color={EventCategories[event.category]?.bg ?? 'bg-gray-500'} className="block mb-px rounded-sm truncate">
-                            {event.title}
-                          </Badge>
-                        ),
-                      )}
-                      <div className="pl-2 pt-1 text-sm">
-                        {data?.eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
-                      </div>
-                    </div>
-                  </div>
-                </Tooltip>
-              ))}
-            </div>
+            <Calendar events={data?.events ?? []} monthOffset={monthOffset} displayContent={true} />
+
           </div>
-          <div className="basis-1/4">
+          <div className="basis-1/3">
             <div>
               {data && !data.events.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
               {Array.from(data?.eventsByMonth ?? []).map(([month, events]) => (

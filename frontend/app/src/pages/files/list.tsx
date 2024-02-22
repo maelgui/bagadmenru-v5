@@ -4,11 +4,9 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import Alert from '../../components/alert';
 import Container from '../../components/container';
-import ErrorComponent from '../../components/error';
 import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
 import FileItem from './components/file-item';
-import FolderItem from './components/folder-item';
 
 export default function ListFilesPage() {
   const { filesApi } = useApiClient();
@@ -81,18 +79,11 @@ export default function ListFilesPage() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] }),
   });
 
-  if (status === 'error') {
-    return <ErrorComponent error={error?.message} />;
-  }
-  if (status === 'pending') {
-    return <div>Loading</div>;
-  }
-
   return (
     <>
       <Header
         title="Fichiers"
-        subtitle={params.folderId ? folder.name : undefined}
+        subtitle={params.folderId ? folder?.name : undefined}
         breadcrumb={params.folderId ? [
           { title: 'Fichiers', link: '/files' },
           ...(breadcrumb?.slice(1, -1).map((item) => ({ title: item.name, link: `/files/${item.id}` })) ?? []),
@@ -117,19 +108,25 @@ export default function ListFilesPage() {
         ]}
       />
       <Container>
-        {children && !children?.files.length && !children?.folders.length ? (
-          <Alert type="info">Dossier vide</Alert>
+        {status === "pending" ? <>Chargement</> : null}
+        {status === "error" ? <Alert type="error">Erreur</Alert> : null}
+        {status === "success" ? (
+          <>
+            {children && !children?.files.length && !children?.folders.length ? (
+              <Alert type="info">Dossier vide</Alert>
+            ) : null}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {children?.folders.map((file) => (
+                <FileItem key={file.id} file={file} />
+              ))}
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
+              {children?.files.map((file) => (
+                <FileItem key={file.id} file={file} big={true} />
+              ))}
+            </div>
+          </>
         ) : null}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {children?.folders.map((file) => (
-            <FolderItem key={file.id} folder={file} />
-          ))}
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
-          {children?.files.map((file) => (
-            <FileItem key={file.id} file={file} />
-          ))}
-        </div>
       </Container>
     </>
   );

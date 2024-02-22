@@ -9,7 +9,7 @@ const EventCategories: { [key: string]: Category } = {
   },
   repetition: {
     name: 'Répétition',
-    bg: 'ng-amber-500',
+    bg: 'bg-amber-500',
   },
   autre: {
     name: 'Autre évènement',

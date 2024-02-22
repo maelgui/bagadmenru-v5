@@ -65,7 +65,7 @@ export default function Navbar() {
                 <CustomNavLink to="/">Dashboard</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
-                <CustomNavLink to="/events">Calendrier</CustomNavLink>
+                <CustomNavLink to="/events/doodle">Évènements</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
                 <CustomNavLink to="/files">Fichiers</CustomNavLink>

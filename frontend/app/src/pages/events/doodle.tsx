@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import { useOidcIdToken } from '@axa-fr/react-oidc';
 import {
+  faCalendar,
   faCalendarPlus,
   faFloppyDisk,
   faPen,
@@ -86,9 +87,15 @@ export default function DoodlePage() {
             {' '}
             Gérer
           </Header.Action>,
+          <Header.Action key="doodle-nav" as={Link} to="/events/calendar">
+            <FontAwesomeIcon icon={faCalendar} />
+            {' '}
+            Vue calendrier
+          </Header.Action>,
+
         ]}
         breadcrumb={[
-          { link: '/events', title: 'Calendrier' },
+          { link: '/events/doodle', title: 'Évènements' },
           { title: 'Mes présences' },
         ]}
       />
