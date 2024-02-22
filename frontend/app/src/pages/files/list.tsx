@@ -108,9 +108,9 @@ export default function ListFilesPage() {
         ]}
       />
       <Container>
-        {status === "pending" ? <>Chargement</> : null}
-        {status === "error" ? <Alert type="error">Erreur</Alert> : null}
-        {status === "success" ? (
+        {status === 'pending' ? <>Chargement</> : null}
+        {status === 'error' ? <Alert type="error">Erreur</Alert> : null}
+        {status === 'success' ? (
           <>
             {children && !children?.files.length && !children?.folders.length ? (
               <Alert type="info">Dossier vide</Alert>
@@ -122,7 +122,7 @@ export default function ListFilesPage() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
               {children?.files.map((file) => (
-                <FileItem key={file.id} file={file} big={true} />
+                <FileItem key={file.id} file={file} big />
               ))}
             </div>
           </>

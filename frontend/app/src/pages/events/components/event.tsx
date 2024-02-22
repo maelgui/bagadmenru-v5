@@ -1,5 +1,5 @@
 import {
-  faCircleCheck, faCircleQuestion, faCircleXmark
+  faCircleCheck, faCircleQuestion, faCircleXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Costume, Event } from 'bagad-client';

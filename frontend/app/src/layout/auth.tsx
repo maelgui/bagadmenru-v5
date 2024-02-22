@@ -11,10 +11,9 @@ export default function AuthGuard() {
     queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
   });
 
-
   return (
     <OidcSecure>
       {profile ? <Outlet /> : <LoadingComponent />}
     </OidcSecure>
-  )
+  );
 }

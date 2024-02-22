@@ -32,10 +32,8 @@ export default function AnswerLinkPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: ({ r }: { r: ResponseCreate }) => {
-      const params = { eventId, responseCreate: r };
-      return eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
-    },
+    // eslint-disable-next-line max-len
+    mutationFn: ({ r }: { r: ResponseCreate }) => eventsApi.createResponseApiV1EventsEventIdResponsesPut({ eventId, responseCreate: r }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['responses'] }),
   });
 

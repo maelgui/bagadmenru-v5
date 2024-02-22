@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-props-no-spreading */
 import {
   FloatingFocusManager,
   autoUpdate,
@@ -11,7 +12,10 @@ import {
   useRole,
 } from '@floating-ui/react';
 import { faFolder } from '@fortawesome/free-regular-svg-icons';
-import { IconDefinition, faEllipsisVertical, faFile, faFilePdf, faFolderTree, faImage, faMusic, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import {
+  IconDefinition,
+  faEllipsisVertical, faFile, faFilePdf, faFolderTree, faImage, faMusic, faPencil, faTrashCan,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FileOrFolder } from 'bagad-client';
 import { useState } from 'react';
@@ -25,7 +29,6 @@ interface FileItemProps {
 }
 
 export default function FileItem({ file, big = false }: FileItemProps) {
-
   const [isOpen, setIsOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -48,24 +51,20 @@ export default function FileItem({ file, big = false }: FileItemProps) {
   ]);
 
   const fileIconType: Record<string, IconType> = {
-    'mp3': 'audio',
-    'pdf': 'acrobat',
-    'png': 'image',
-    'jpg': 'image',
-    'document': 'document',
-  }
-
+    mp3: 'audio',
+    pdf: 'acrobat',
+    png: 'image',
+    jpg: 'image',
+    document: 'document',
+  };
 
   const faFileIconType: Record<string, IconDefinition> = {
-    'mp3': faMusic,
-    'pdf': faFilePdf,
-    'png': faImage,
-    'jpg': faImage,
-    'document': faFile,
-  }
-
-
-  console.log(fileIconType[file.name.split('.')[-1]], file.name.split('.')[-1], file.name.split('.').pop())
+    mp3: faMusic,
+    pdf: faFilePdf,
+    png: faImage,
+    jpg: faImage,
+    document: faFile,
+  };
 
   return (
     <>
@@ -76,22 +75,12 @@ export default function FileItem({ file, big = false }: FileItemProps) {
           </div>
         )}
         <div className="flex justify-between p-4 items-center">
-          {/* <button
-            type="button"
-            onClick={() => window.open(file.fileUrl!, '_blank')}
-            key={file.id}
-            className="truncate after:absolute after:top-0 after:bottom-0 after:left-0 after:right-0"
-          >
-            {file.name}
-          </button> */}
           <div className="truncate">
-            {!big && <FontAwesomeIcon icon={file.type == 'DIR' ? faFolder : faFileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} className="mr-4" />}
-
+            {!big && <FontAwesomeIcon icon={file.type === 'DIR' ? faFolder : faFileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} className="mr-4" />}
             <Link to={file.fileUrl ?? `/files/${file.id}`} className="truncate after:absolute after:top-0 after:bottom-0 after:left-0 after:right-0">
               {file.name}
             </Link>
           </div>
-
           <button
             type="button"
             data-dropdown-toggle={`dropdown-file-action-${file.id}`}
@@ -112,17 +101,25 @@ export default function FileItem({ file, big = false }: FileItemProps) {
             style={floatingStyles}
             {...getFloatingProps()}
           >
-            <Button variant="ghost" className="text-left"><FontAwesomeIcon icon={faPencil} className="mr-3 font-thin" /> Renomer...</Button>
-            <Button variant="ghost" className="text-left"><FontAwesomeIcon icon={faFolderTree} className="mr-3" /> Déplacer...</Button>
+            <Button variant="ghost" className="text-left">
+              <FontAwesomeIcon icon={faPencil} className="mr-3 font-thin" />
+              {' '}
+              Renomer...
+            </Button>
+            <Button variant="ghost" className="text-left">
+              <FontAwesomeIcon icon={faFolderTree} className="mr-3" />
+              {' '}
+              Déplacer...
+            </Button>
             <hr className="mx-2 my-1" />
-            <Button variant="ghost" className="text-left text-red-600"><FontAwesomeIcon icon={faTrashCan} className="mr-3" /> Supprimer...</Button>
+            <Button variant="ghost" className="text-left text-red-600">
+              <FontAwesomeIcon icon={faTrashCan} className="mr-3" />
+              {' '}
+              Supprimer...
+            </Button>
           </div>
         </FloatingFocusManager>
       )}
-
-
-
     </>
-
   );
 }

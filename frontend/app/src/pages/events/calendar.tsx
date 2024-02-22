@@ -13,7 +13,6 @@ import groupBy from '../../utils/groupby';
 import Calendar from './components/calendar';
 import EventListItem from './components/event';
 
-
 export default function CalendarPage() {
   const { eventsApi } = useApiClient();
 
@@ -68,7 +67,7 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <Calendar events={data?.events ?? []} monthOffset={monthOffset} displayContent={true} />
+            <Calendar events={data?.events ?? []} monthOffset={monthOffset} displayContent />
 
           </div>
           <div className="basis-1/3">

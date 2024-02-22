@@ -31,8 +31,11 @@ interface CalendarProps extends React.ComponentPropsWithoutRef<'div'> {
   displayContent?: boolean
 }
 
-export default function Calendar({ events, monthOffset = 0, displayContent = false }: CalendarProps) {
-
+export default function Calendar({
+  events,
+  monthOffset = 0,
+  displayContent = false,
+}: CalendarProps) {
   const eventsByDate = groupBy(events, (item) => item.date.toLocaleDateString());
 
   return (
@@ -60,18 +63,20 @@ export default function Calendar({ events, monthOffset = 0, displayContent = fal
               <div className={`inline-flex justify-center items-center h-8 w-8 m-1 rounded-full ${isToday ? ' bg-pourpre-400 text-white' : ''} ${eventsByDate.get(day.toLocaleDateString())?.length ? 'border border-pourpre-400' : ''}`}>
                 {day.getDate()}
               </div>
-              {displayContent && (<div className="hidden md:block w-full">
-                {eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map(
-                  (event) => (
-                    <Badge key={event.id} color={EventCategories[event.category]?.bg ?? 'bg-gray-500'} className="block mb-px rounded-sm truncate">
-                      {event.title}
-                    </Badge>
-                  ),
-                )}
-                <div className="pl-2 pt-1 text-sm">
-                  {eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
+              {displayContent && (
+                <div className="hidden md:block w-full">
+                  {eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map(
+                    (event) => (
+                      <Badge key={event.id} color={EventCategories[event.category]?.bg ?? 'bg-gray-500'} className="block mb-px rounded-sm truncate">
+                        {event.title}
+                      </Badge>
+                    ),
+                  )}
+                  <div className="pl-2 pt-1 text-sm">
+                    {eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
+                  </div>
                 </div>
-              </div>)}
+              )}
             </div>
           </Tooltip>
         ))}

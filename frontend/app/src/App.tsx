@@ -12,7 +12,11 @@ DefaultConfig.config = new Configuration({ basePath: import.meta.env.VITE_BBE2_A
 
 function App() {
   return (
-    <OidcProvider configuration={oidcConfiguration} loadingComponent={LoadingComponent}>
+    <OidcProvider
+      configuration={oidcConfiguration}
+      loadingComponent={LoadingComponent}
+      onEvent={(_, n, d) => console.log(n, d)}
+    >
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>

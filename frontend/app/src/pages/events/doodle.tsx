@@ -107,7 +107,7 @@ export default function DoodlePage() {
             <table className="table-auto min-w-full">
               <thead className="divide-y">
                 <tr className="divide-x">
-                  <td> </td>
+                  <td />
                   {events && events.map((event) => (
                     <td key={event.id} className="text-center px-4">
                       <Tooltip
@@ -139,7 +139,7 @@ export default function DoodlePage() {
                   ))}
                 </tr>
                 <tr className="divide-x">
-                  <td> </td>
+                  <td />
                   {events && events.map((event) => (
                     <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
                       <Badge color="bg-gray-400" className="m-1">
