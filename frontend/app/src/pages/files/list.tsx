@@ -1,5 +1,5 @@
 import {
-  faCloudArrowUp, faExclamationTriangle, faTrashAlt, faUpload,
+  faCloudArrowUp, faExclamationTriangle, faTrashAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -129,7 +129,6 @@ export default function ListFilesPage() {
         ]}
       />
       <Container>
-        {uploadFileMutation.status === 'pending' && <FontAwesomeIcon icon={faUpload} />}
         {status === 'pending' ? <>Chargement</> : null}
         {status === 'error' ? <Alert type="error">Erreur</Alert> : null}
         {status === 'success' ? (
@@ -167,7 +166,13 @@ export default function ListFilesPage() {
               Êtes-vous sûr de vouloir supprimer ce fichier ?
             </p>
             <div className="flex gap-4 mt-8 mb-2">
-              <Button className="w-full m-0" variant="outline">Annuler</Button>
+              <Button
+                className="w-full m-0"
+                variant="outline"
+                onClick={() => setFileToDelete(undefined)}
+              >
+                Annuler
+              </Button>
               <Button
                 className="w-full m-0"
                 disabled={fileToDelete === undefined || deleteFileMutation.status === 'pending'}

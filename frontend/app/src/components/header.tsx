@@ -1,4 +1,4 @@
-import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { faCaretRight, faHouse } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -29,8 +29,7 @@ export default function Header({
       <div className="bg-pourpre-50 shadow-inner py-2">
         <Container>
           <ul className="flex flex-wrap text-sm">
-            <li className="font-semibold mr-4">Navigation :</li>
-            <li className="mx-2">{breadcrumb.length ? <Link to="/" className="underline underline-offset-4 hover:decoration-2">Accueil</Link> : 'Accueil'}</li>
+            <li className="mx-2"><Link to="/" className="underline underline-offset-4 hover:decoration-2"><FontAwesomeIcon icon={faHouse} /></Link></li>
             {breadcrumb.map((item) => (
               <React.Fragment key={item.link ?? 'final'}>
                 <li className="mx-2 text-gray-600"><FontAwesomeIcon icon={faCaretRight} className="px-2" /></li>
