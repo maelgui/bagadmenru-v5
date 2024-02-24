@@ -80,10 +80,7 @@ class S3Helper:
         )
 
     def delete_object(self, object_name: str):
-        return self.client.delete_object(
-            Bucket=self.bucket_name,
-            Key=object_name,
-        )
+        self.set_tags(object_name, {"to_delete": "true"})
 
 
 s3 = S3Helper()

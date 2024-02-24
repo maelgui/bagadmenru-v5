@@ -4,6 +4,7 @@ import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
+from sqlalchemy import and_
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
@@ -124,8 +125,24 @@ async def upload_file(
     folder_id: int,
     file: UploadFile,
     file_crud: CRUDFile = Depends(),
+    force: bool = False,
 ):
     """Upload a file."""
+    db_file = file_crud.find_one_by(
+        and_(
+            models.FileOrFolder.name == file.filename,
+            models.FileOrFolder.parent_id == folder_id,
+        )
+    )
+    if db_file:
+        if not force:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="File already exists"
+            )
+        else:
+            s3.delete_object(db_file.file_key)
+            file_crud.delete(db_file.id)
+
     filename = "files/" + str(uuid.uuid4())
     s3.upload_file(file.file, filename, content_type=file.content_type)
     return file_crud.create(
@@ -188,4 +205,5 @@ async def delete_file(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
+    s3.delete_object(db_file.file_key)
     file_crud.delete(file_id)

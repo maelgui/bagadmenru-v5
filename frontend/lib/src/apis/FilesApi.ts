@@ -68,6 +68,7 @@ export interface UpdateFileApiV1FilesFileIdPutRequest {
 export interface UploadFileApiV1FilesFolderIdUploadPostRequest {
     folderId: number;
     file: Blob;
+    force?: boolean;
 }
 
 /**
@@ -398,6 +399,10 @@ export class FilesApi extends runtime.BaseAPI {
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters.force !== undefined) {
+            queryParameters['force'] = requestParameters.force;
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
