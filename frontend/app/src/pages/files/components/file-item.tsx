@@ -18,18 +18,24 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FileOrFolder } from 'bagad-client';
-import { useState } from 'react';
+import { MouseEventHandler, useState } from 'react';
 import { FileIcon, IconType } from 'react-file-icon';
 import { Link } from 'react-router-dom';
+import { LongPressEventType, useLongPress } from 'use-long-press';
 import Button from '../../../components/button';
 
 interface FileItemProps {
   file: FileOrFolder
   big?: boolean
+  deleteFn?: MouseEventHandler<HTMLButtonElement>
 }
 
-export default function FileItem({ file, big = false }: FileItemProps) {
+export default function FileItem({ file, big = false, deleteFn = undefined }: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const bind = useLongPress(() => {
+    setIsOpen(true);
+  }, { detect: LongPressEventType.Touch });
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -77,7 +83,12 @@ export default function FileItem({ file, big = false }: FileItemProps) {
         <div className="flex justify-between p-4 items-center">
           <div className="truncate">
             {!big && <FontAwesomeIcon icon={file.type === 'DIR' ? faFolder : faFileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} className="mr-4" />}
-            <Link to={file.fileUrl ?? `/files/${file.id}`} className="truncate after:absolute after:top-0 after:bottom-0 after:left-0 after:right-0">
+            <Link
+              to={file.fileUrl ?? `/files/${file.id}`}
+              className="truncate after:absolute after:top-0 after:bottom-0 after:left-0 after:right-0"
+              {...bind()}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               {file.name}
             </Link>
           </div>
@@ -101,19 +112,19 @@ export default function FileItem({ file, big = false }: FileItemProps) {
             style={floatingStyles}
             {...getFloatingProps()}
           >
-            <Button variant="ghost" className="text-left">
-              <FontAwesomeIcon icon={faPencil} className="mr-3 font-thin" />
+            <Button variant="ghost" className="text-left capitalize font-medium">
+              <FontAwesomeIcon icon={faPencil} className="mr-3 w-4" />
               {' '}
               Renomer...
             </Button>
-            <Button variant="ghost" className="text-left">
-              <FontAwesomeIcon icon={faFolderTree} className="mr-3" />
+            <Button variant="ghost" className="text-left capitalize font-medium">
+              <FontAwesomeIcon icon={faFolderTree} className="mr-3 w-4" />
               {' '}
               Déplacer...
             </Button>
             <hr className="mx-2 my-1" />
-            <Button variant="ghost" className="text-left text-red-600">
-              <FontAwesomeIcon icon={faTrashCan} className="mr-3" />
+            <Button variant="ghost" className="text-left text-red-600 capitalize font-medium" onClick={deleteFn}>
+              <FontAwesomeIcon icon={faTrashCan} className="mr-3 w-4" />
               {' '}
               Supprimer...
             </Button>

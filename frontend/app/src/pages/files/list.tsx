@@ -1,9 +1,17 @@
+import {
+  faCloudArrowUp, faExclamationTriangle, faTrashAlt, faUpload,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { FileOrFolderType } from 'bagad-client';
-import React from 'react';
+import { FileOrFolder, FileOrFolderType } from 'bagad-client';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Alert from '../../components/alert';
+import Button from '../../components/button';
 import Container from '../../components/container';
+import {
+  Dialog, DialogClose, DialogContent, DialogDescription, DialogHeading,
+} from '../../components/dialog';
 import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
 import FileItem from './components/file-item';
@@ -79,6 +87,19 @@ export default function ListFilesPage() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] }),
   });
 
+  const [fileToDelete, setFileToDelete] = useState<FileOrFolder | undefined>(undefined);
+  const confirmDeleteFile = (file: FileOrFolder) => {
+    setFileToDelete(file);
+  };
+
+  const deleteFileMutation = useMutation({
+    mutationFn: (fileId: number) => filesApi.deleteFileApiV1FilesFileIdDelete({ fileId }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] });
+      setFileToDelete(undefined);
+    },
+  });
+
   return (
     <>
       <Header
@@ -108,6 +129,7 @@ export default function ListFilesPage() {
         ]}
       />
       <Container>
+        {uploadFileMutation.status === 'pending' && <FontAwesomeIcon icon={faUpload} />}
         {status === 'pending' ? <>Chargement</> : null}
         {status === 'error' ? <Alert type="error">Erreur</Alert> : null}
         {status === 'success' ? (
@@ -122,12 +144,55 @@ export default function ListFilesPage() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
               {children?.files.map((file) => (
-                <FileItem key={file.id} file={file} big />
+                <FileItem key={file.id} file={file} big deleteFn={() => confirmDeleteFile(file)} />
               ))}
             </div>
           </>
         ) : null}
       </Container>
+      <Dialog open={fileToDelete !== undefined} onOpenChange={() => setFileToDelete(undefined)}>
+        <DialogContent>
+          <DialogHeading>
+            <div className="inline-flex mx-auto mb-4 h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-red-600" />
+            </div>
+            <h2>Supprimer un fichier</h2>
+          </DialogHeading>
+          <DialogDescription>
+            <p>
+              Vous vous apprêtez à supprimer le fichier
+              {' '}
+              <b>{fileToDelete?.name}</b>
+              .
+              Êtes-vous sûr de vouloir supprimer ce fichier ?
+            </p>
+            <div className="flex gap-4 mt-8 mb-2">
+              <Button className="w-full m-0" variant="outline">Annuler</Button>
+              <Button
+                className="w-full m-0"
+                disabled={fileToDelete === undefined || deleteFileMutation.status === 'pending'}
+                onClick={() => {
+                  if (fileToDelete !== undefined) deleteFileMutation.mutate(fileToDelete?.id);
+                }}
+              >
+                <FontAwesomeIcon icon={faTrashAlt} className={`w-4 mr-2 ${deleteFileMutation.status === 'pending' ? 'animate-spin' : ''}`} />
+                Supprimer
+              </Button>
+            </div>
+          </DialogDescription>
+          <DialogClose />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={uploadFileMutation.status === 'pending'}>
+        <DialogContent>
+          <DialogHeading>
+            <div className="animate-bounce inline-flex mx-auto mb-4 h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-sky-100">
+              <FontAwesomeIcon icon={faCloudArrowUp} className="h-5 w-5 text-sky-600" />
+            </div>
+            <h2>Envoie des fichiers...</h2>
+          </DialogHeading>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

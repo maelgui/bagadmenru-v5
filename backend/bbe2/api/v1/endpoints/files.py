@@ -1,9 +1,9 @@
 """File system API."""
+
 import uuid
 from typing import Optional
 
-from fastapi import (APIRouter, Depends, HTTPException, Security, UploadFile,
-                     status)
+from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
