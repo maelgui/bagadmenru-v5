@@ -205,5 +205,6 @@ async def delete_file(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
-    s3.delete_object(db_file.file_key)
+    if db_file.type == FileOrFolderType.FILE:
+        s3.delete_object(db_file.file_key)
     file_crud.delete(file_id)

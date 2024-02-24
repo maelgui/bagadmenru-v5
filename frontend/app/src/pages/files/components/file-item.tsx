@@ -19,7 +19,6 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FileOrFolder } from 'bagad-client';
 import { MouseEventHandler, useState } from 'react';
-import { FileIcon, IconType } from 'react-file-icon';
 import { Link } from 'react-router-dom';
 import { LongPressEventType, useLongPress } from 'use-long-press';
 import Button from '../../../components/button';
@@ -56,14 +55,6 @@ export default function FileItem({ file, big = false, deleteFn = undefined }: Fi
     role,
   ]);
 
-  const fileIconType: Record<string, IconType> = {
-    mp3: 'audio',
-    pdf: 'acrobat',
-    png: 'image',
-    jpg: 'image',
-    document: 'document',
-  };
-
   const faFileIconType: Record<string, IconDefinition> = {
     mp3: faMusic,
     pdf: faFilePdf,
@@ -77,7 +68,7 @@ export default function FileItem({ file, big = false, deleteFn = undefined }: Fi
       <div className="relative border rounded border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm">
         {big && (
           <div className="p-4 text-center h-32 [&>svg]:max-h-16 flex justify-center items-center border-b border-gray-50">
-            <FileIcon type={fileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} color="#15141A" glyphColor="whitesmoke" />
+            <FontAwesomeIcon size="3x" icon={file.type === 'DIR' ? faFolder : faFileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} className="mr-4" />
           </div>
         )}
         <div className="flex justify-between p-4 items-center">

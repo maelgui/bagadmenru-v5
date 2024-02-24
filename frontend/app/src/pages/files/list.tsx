@@ -138,7 +138,7 @@ export default function ListFilesPage() {
             ) : null}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {children?.folders.map((file) => (
-                <FileItem key={file.id} file={file} />
+                <FileItem key={file.id} file={file} deleteFn={() => confirmDeleteFile(file)} />
               ))}
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
