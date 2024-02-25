@@ -2,6 +2,8 @@ from enum import Enum
 
 
 class AlbumScopes(Enum):
+    """Photo gallery related scopes."""
+
     VIEW = "view_album"
     CREATE = "create_album"
     DELETE = "delete_album"
@@ -9,6 +11,8 @@ class AlbumScopes(Enum):
 
 
 class EventScopes(Enum):
+    """Events related scopes."""
+
     VIEW = "events:view"
     CREATE = "events:create"
     DELETE = "events:delete"
@@ -17,6 +21,8 @@ class EventScopes(Enum):
 
 
 class FileScopes(Enum):
+    """Filesystem related scopes."""
+
     VIEW = "files:view"
     CREATE = "files:create"
     DELETE = "files:delete"
@@ -24,5 +30,7 @@ class FileScopes(Enum):
 
 
 class ProfilesScopes(Enum):
+    """Profile managment related scopes."""
+
     VIEW = "profiles:view"
     UPDATE = "profiles:edit"

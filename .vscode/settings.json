@@ -13,10 +13,9 @@
     "python.testing.pytestArgs": [
         "backend/tests"
     ],
+    "python.envFile": "${workspaceFolder}/testing.env",
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
     "editor.codeActionsOnSave": {
         "source.organizeImports": "explicit",
         "source.fixAll": "explicit"
@@ -29,5 +28,4 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "python.formatting.provider": "none"
 }

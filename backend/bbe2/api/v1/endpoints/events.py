@@ -36,9 +36,8 @@ async def export_ics(
     for event in events:
         e = Event()
         e.name = event.title
-        e.begin = event.date.isoformat()
+        e.begin = event.date
         c.events.add(e)
-    c.events
 
     return c.serialize()
 
@@ -121,7 +120,7 @@ async def create_response(
     token: dict[str, Any] = Security(
         get_current_user, scopes=[EventScopes.REPLY.value]
     ),
-    db: Session = Depends(get_db),
+    database: Session = Depends(get_db),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -134,8 +133,8 @@ async def create_response(
         event_id=event_id, user_id=token["sub"], date=datetime.now(), **response.dict()
     )
     print(response, db_object)
-    db.merge(db_object)
-    db.commit()
+    database.merge(db_object)
+    database.commit()
     return db_object
 
 

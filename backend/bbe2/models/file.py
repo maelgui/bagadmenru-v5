@@ -1,8 +1,10 @@
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import relationship
+"""Filesystem ORM models."""
 
-from bbe2 import schemas
+from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from bbe2.database import Base
+from bbe2.schemas import FileOrFolderType
 
 
 class FileOrFolder(Base):
@@ -10,12 +12,14 @@ class FileOrFolder(Base):
 
     __tablename__ = "files"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    file_key = Column(String)
-    type = Column(Enum(schemas.FileOrFolderType))
-    children = relationship("FileOrFolder")
-    parent_id = Column(Integer, ForeignKey("files.id"))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(128))
+    file_key: Mapped[str] = mapped_column(String(128))
+    type: Mapped[FileOrFolderType]
+    children: Mapped[list["FileOrFolder"]] = relationship()
+
+    parent_id: Mapped[int] = mapped_column(ForeignKey("files.id", ondelete="cascade"))
+
     __table_args__ = (
         UniqueConstraint("name", "parent_id", name="file_unique_per_folder"),
     )

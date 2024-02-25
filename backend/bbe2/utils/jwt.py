@@ -1,3 +1,5 @@
+"""JWT utils function."""
+
 import time
 
 import requests
@@ -18,15 +20,18 @@ class JWTVerifier:
         self.jwks = []
 
     def load_keys(self):
+        """Loads keys from oidc provider."""
         try:
-            req2 = requests.get(str(settings.oidc_jwks_url))
+            req2 = requests.get(str(settings.oidc_jwks_url), timeout=10)
             req2.raise_for_status()
             self.jwks = req2.json()["keys"]
+            print(self.jwks)
             self.last_update = time.monotonic()
-        except:
+        except requests.HTTPError:
             pass
 
     def is_expired(self) -> bool:
+        """Checks if current jwks are expired and need reloading."""
         return not self.jwks or (
             self.last_update is not None
             and self.lifespan > -1

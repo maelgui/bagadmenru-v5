@@ -1,3 +1,5 @@
+"""Authentication fastapi dependencies."""
+
 import logging
 
 from fastapi import Depends, HTTPException, status
@@ -17,6 +19,18 @@ jwt_verifier = JWTVerifier(settings.jwt_audience, str(settings.jwt_issuer))
 async def get_current_user(
     security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)
 ):
+    """Checks oauth access token, checks scope, and return token content.
+
+    Args:
+        security_scopes (SecurityScopes): Required security scopes
+        token (str, optional): OAuth access token. Defaults to Depends(oauth2_scheme).
+
+    Raises:
+        HTTPException: 401 when token invalid, 403 when scope missing
+
+    Returns:
+        dict[str, Any]: access token content
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -24,7 +38,7 @@ async def get_current_user(
     )
     try:
         payload = jwt_verifier.verify(token)
-        username: str = payload.get("sub")
+        username = payload.get("sub")
         if username is None:
             raise credentials_exception
         token_roles = payload.get(

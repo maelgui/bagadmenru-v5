@@ -1,9 +1,10 @@
-from typing import Any, BinaryIO, Optional
+"""S3 file storage utils functions."""
+
+from typing import BinaryIO, Optional
 from urllib.parse import urlencode
 
 import boto3
 from botocore.client import Config
-from pydantic import BaseModel
 
 from bbe2.config import settings
 
@@ -62,6 +63,16 @@ class S3Helper:
     def generate_put_presigned_url(
         self, object_name: str, tags: dict[str, str], expiration=3600
     ) -> str:
+        """Generate presigned url for `put_object` action
+
+        Args:
+            object_name (str): Object Key in S3
+            tags (dict[str, str]): TagSet to add to object
+            expiration (int, optional): URL expiration in seconds. Defaults to 3600.
+
+        Returns:
+            str: Presign `put_object` url
+        """
         return self.client.generate_presigned_url(
             "put_object",
             Params={
@@ -73,13 +84,26 @@ class S3Helper:
         )
 
     def set_tags(self, object_name: str, tags: dict[str, str]):
-        return self.client.put_object_tagging(
+        """Set Tags of an object
+
+        Args:
+            object_name (str): Object Key in S3
+            tags (dict[str, str]): TagSet to add to object
+        """
+        self.client.put_object_tagging(
             Bucket=self.bucket_name,
             Key=object_name,
             Tagging={"TagSet": [{"Key": k, "Value": v} for k, v in tags.items()]},
         )
 
     def delete_object(self, object_name: str):
+        """Add `to_delete` tag to an S3 object.
+
+        Bucket is expected to have a lifecycle policy on tag `to_delete`.
+
+        Args:
+            object_name (str): Object key to delete.
+        """
         self.set_tags(object_name, {"to_delete": "true"})
 
 
