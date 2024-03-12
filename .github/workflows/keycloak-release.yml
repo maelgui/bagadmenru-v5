@@ -26,11 +26,10 @@ jobs:
           node-version: "21.x"
       - run: yarn
       - run: yarn build:theme
-      - run: ls -la app/dist_keycloak/target/*
       - uses: actions/upload-artifact@v4
         with:
           name: bagad-keycloak-theme
-          path: app/dist_keycloak/target/bagad-frontend-keycloak-theme-0.0.0.jar
+          path: frontend/app/dist_keycloak/target/bagad-frontend-keycloak-theme-0.0.0.jar
 
   build-push-docker:
     runs-on: ubuntu-latest
