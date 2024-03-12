@@ -1,4 +1,5 @@
-import Fallback, { type PageProps } from 'keycloakify/login';
+/* eslint-disable max-len */
+import Fallback, { PageProps } from 'keycloakify/login';
 import { lazy, Suspense } from 'react';
 import '../../index.css';
 import { useI18n } from './i18n';
@@ -6,14 +7,6 @@ import './KcApp.css';
 import type { KcContext } from './kcContext';
 import Template from './Template';
 
-const Login = lazy(() => import('./pages/Login'));
-const LoginResetPassword = lazy(() => import('./pages/LoginResetPassword'));
-// If you can, favor register-user-profile.ftl over register.ftl, see: https://docs.keycloakify.dev/realtime-input-validation
-const Register = lazy(() => import('./pages/Register'));
-const RegisterUserProfile = lazy(() => import('./pages/RegisterUserProfile'));
-const Terms = lazy(() => import('./pages/Terms'));
-const MyExtraPage1 = lazy(() => import('./pages/MyExtraPage1'));
-const MyExtraPage2 = lazy(() => import('./pages/MyExtraPage2'));
 const Info = lazy(() => import('keycloakify/login/pages/Info'));
 
 // This is like adding classes to theme.properties
@@ -22,6 +15,11 @@ const classes = {
   // NOTE: The classes are defined in ./KcApp.css
   kcHtmlClass: 'my-root-class',
   kcHeaderWrapperClass: 'my-color my-font',
+  kcFormGroupClass: 'mb-6',
+  kcLabelClass: 'mb-2 block font-semibold',
+  kcInputClass: 'block w-full border-gray-200 rounded py-2 px-4 border-2 focus:outline-none focus:bg-white focus:border-pourpre-400 hover:bg-gray-50 invalid:border-red-600 disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed',
+  kcButtonClass: 'py-2 px-4 bg-pourpre-500 text-white hover:border-pourpre-200 hover:bg-white hover:text-pourpre-600 rounded inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm undefined whitespace-nowrap disabled:cursor-not-allowed',
+  kcButtonBlockClass: 'w-full my-6',
 } satisfies PageProps['classes'];
 
 export default function KcApp(props: { kcContext: KcContext; }) {
@@ -46,66 +44,6 @@ export default function KcApp(props: { kcContext: KcContext; }) {
     <Suspense>
       {(() => {
         switch (kcContext.pageId) {
-          case 'login.ftl': return (
-            <Login
-              {...{
-                kcContext, i18n, Template, classes,
-              }}
-              doUseDefaultCss
-            />
-          );
-          case 'login-reset-password.ftl': return (
-            <LoginResetPassword
-              {...{
-                kcContext, i18n, Template, classes,
-              }}
-              doUseDefaultCss
-            />
-          );
-          case 'register.ftl': return (
-            <Register
-              {...{
-                kcContext, i18n, Template, classes,
-              }}
-              doUseDefaultCss
-            />
-          );
-          case 'register-user-profile.ftl': return (
-            <RegisterUserProfile
-              {...{
-                kcContext, i18n, Template, classes,
-              }}
-              doUseDefaultCss
-            />
-          );
-          case 'terms.ftl': return (
-            <Terms
-              {...{
-                kcContext, i18n, Template, classes,
-              }}
-              doUseDefaultCss
-            />
-          );
-          // Removes those pages in you project.
-          // They are included to show you how to implement keycloak pages
-          // that are not yes implemented by Keycloakify.
-          // See: https://docs.keycloakify.dev/limitations#some-pages-still-have-the-default-theme.-why
-          case 'my-extra-page-1.ftl': return (
-            <MyExtraPage1
-              {...{
-                kcContext, i18n, Template, classes,
-              }}
-              doUseDefaultCss
-            />
-          );
-          case 'my-extra-page-2.ftl': return (
-            <MyExtraPage2
-              {...{
-                kcContext, i18n, Template, classes,
-              }}
-              doUseDefaultCss
-            />
-          );
           // We choose to use the default Template for the Info page and to download the theme resources.
           // This is just an example to show you what is possible. You likely don't want to keep this as is.
           case 'info.ftl': return (
@@ -115,7 +53,7 @@ export default function KcApp(props: { kcContext: KcContext; }) {
               doUseDefaultCss
             />
           );
-          default: return <Fallback {...{ kcContext, i18n, classes }} Template={Template} doUseDefaultCss />;
+          default: return <Fallback {...{ kcContext, i18n, classes }} Template={Template} doUseDefaultCss={false} />;
         }
       })()}
     </Suspense>
