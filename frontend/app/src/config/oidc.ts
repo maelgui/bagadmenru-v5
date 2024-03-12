@@ -1,7 +1,3 @@
-// This configuration use the ServiceWorker mode only
-// "access_token" will be provided automaticaly to the urls and
-// domains configured inside "OidcTrustedDomains.js"
-
 import { OidcConfiguration } from '@axa-fr/react-oidc';
 
 export default {
