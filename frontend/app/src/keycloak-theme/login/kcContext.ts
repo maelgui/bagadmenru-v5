@@ -75,7 +75,7 @@ export const { getKcContext } = createGetKcContext<KcContextExtension>({
       ],
       // Simulate we got an error with the email field
       messagesPerField: {
-        printIfExists: <T>(fieldName: string, className: T) => { console.log({ fieldName }); return fieldName === 'email' ? className : undefined; },
+        printIfExists: <T>(fieldName: string, className: T) => (fieldName === 'email' ? className : undefined),
         existsError: (fieldName: string) => fieldName === 'email',
         get: (fieldName: string) => `Fake error for ${fieldName}`,
         exists: (fieldName: string) => fieldName === 'email',
