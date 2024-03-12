@@ -7,6 +7,7 @@ import type { KcContext } from './kcContext';
 import Template from './Template';
 
 const Login = lazy(() => import('./pages/Login'));
+const LoginResetPassword = lazy(() => import('./pages/LoginResetPassword'));
 // If you can, favor register-user-profile.ftl over register.ftl, see: https://docs.keycloakify.dev/realtime-input-validation
 const Register = lazy(() => import('./pages/Register'));
 const RegisterUserProfile = lazy(() => import('./pages/RegisterUserProfile'));
@@ -47,6 +48,14 @@ export default function KcApp(props: { kcContext: KcContext; }) {
         switch (kcContext.pageId) {
           case 'login.ftl': return (
             <Login
+              {...{
+                kcContext, i18n, Template, classes,
+              }}
+              doUseDefaultCss
+            />
+          );
+          case 'login-reset-password.ftl': return (
+            <LoginResetPassword
               {...{
                 kcContext, i18n, Template, classes,
               }}
