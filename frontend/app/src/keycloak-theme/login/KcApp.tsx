@@ -18,7 +18,7 @@ const classes = {
   kcFormGroupClass: 'mb-6',
   kcLabelClass: 'mb-2 block font-semibold',
   kcInputClass: 'block w-full border-gray-200 rounded py-2 px-4 border-2 focus:outline-none focus:bg-white focus:border-pourpre-400 hover:bg-gray-50 invalid:border-red-600 disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed',
-  kcButtonClass: 'py-2 px-4 bg-pourpre-500 text-white hover:border-pourpre-200 hover:bg-white hover:text-pourpre-600 rounded inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm undefined whitespace-nowrap disabled:cursor-not-allowed',
+  kcButtonClass: 'py-2 px-4 bg-pourpre-500 text-white hover:border-pourpre-200 hover:bg-white hover:text-pourpre-600 rounded inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm undefined whitespace-nowrap disabled:cursor-not-allowed cursor-pointer',
   kcButtonBlockClass: 'w-full my-6',
 } satisfies PageProps['classes'];
 
