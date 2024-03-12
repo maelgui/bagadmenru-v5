@@ -5,7 +5,7 @@ import sys
 import requests
 
 try:
-    res = requests.head("http://localhost:8000", timeout=3)
+    res = requests.get("http://localhost:8000", timeout=3)
     res.raise_for_status()
 except requests.RequestException as exc:
     logging.error("Healthcheck error: %s", exc)
