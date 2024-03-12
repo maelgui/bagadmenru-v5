@@ -36,3 +36,5 @@ jobs:
             VITE_BBE2_API_URL=${{ vars.VITE_BBE2_API_URL }}
             VITE_OIDC_PROVIDER_URL=${{ vars.VITE_OIDC_PROVIDER_URL }}
             VITE_OIDC_CLIENT_ID=${{ vars.VITE_OIDC_CLIENT_ID }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
