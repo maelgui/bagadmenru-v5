@@ -62,24 +62,28 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       <div className="text-center mb-6">
         <div className="inline-block m-auto relative my-8">
           <Avatar src={pictureUrl} size="lg" />
-          <label htmlFor="pictureFileInput" className="cursor-pointer m-4 absolute right-0 bottom-0 rounded-full bg-white h-12 w-12 flex justify-center items-center shadow-lg">
+          <label
+            htmlFor="pictureFileInput"
+            className="cursor-pointer m-4 absolute right-0 bottom-0 rounded-full bg-white h-12 w-12 flex justify-center items-center shadow-lg"
+            aria-label="Changer mon avatar"
+          >
             <FontAwesomeIcon icon={faEdit} />
           </label>
+          <input
+            type="file"
+            id="pictureFileInput"
+            accept="image/*"
+            onChange={onUploadAvatar}
+            className="hidden"
+          />
+          <input
+            type="text"
+            id="picture"
+            {...register('pictureKey')}
+            disabled
+            className="hidden"
+          />
         </div>
-        <input
-          type="file"
-          id="pictureFileInput"
-          accept="image/*"
-          onChange={onUploadAvatar}
-          className="hidden"
-        />
-        <input
-          type="text"
-          id="picture"
-          {...register('pictureKey')}
-          disabled
-          className="hidden"
-        />
 
       </div>
       <div className="flex gap-4 mb-6">
@@ -94,7 +98,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
         </div>
         <div className="flex-1">
           <label className="mb-2 block font-semibold" htmlFor="last_name">Nom</label>
-          <Input
+          <input
             type="text"
             id="last_name"
             disabled
