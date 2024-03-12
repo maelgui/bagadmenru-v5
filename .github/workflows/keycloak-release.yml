@@ -26,6 +26,7 @@ jobs:
           node-version: "21.x"
       - run: yarn
       - run: yarn build:theme
+      - run: ls -la app/dist_keycloak/target/*
       - uses: actions/upload-artifact@v4
         with:
           name: bagad-keycloak-theme
