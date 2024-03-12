@@ -16,7 +16,7 @@ jobs:
     defaults:
       run:
         working-directory: frontend
-    name: Run eslint
+    name: Build keycloak theme jar
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
@@ -29,8 +29,12 @@ jobs:
         with:
           name: bagad-keycloak-theme
           path: bagad-frontend-keycloak-theme.jar
+
   build-push-docker:
     runs-on: ubuntu-latest
+    needs:
+      - build-theme
+    name: Build and push keycloak docker image
     steps:
       - name: Checkout
         uses: actions/checkout@v3
