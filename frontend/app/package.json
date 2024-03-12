@@ -9,7 +9,8 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "build-keycloak-theme": "yarn build && keycloakify"
   },
   "dependencies": {
     "@axa-fr/react-oidc": "^7.15.0",
@@ -21,6 +22,7 @@
     "@tanstack/react-query": "^5.0.0-alpha.63",
     "axios": "^1.6.0",
     "bagad-client": "0.1.0",
+    "keycloakify": "^9.6.1",
     "nprogress": "^0.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

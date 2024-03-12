@@ -30,6 +30,7 @@ const config: StorybookConfig = {
     skipBabel: true,
     check: false,
   },
-
+  staticDirs: ["../public"],
 };
+
 export default config;

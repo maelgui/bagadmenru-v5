@@ -2,7 +2,7 @@ FROM node AS node-env
 
 WORKDIR /project
 
-RUN apt-get update && apt-get install -y default-jre-headless && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y default-jre-headless maven && rm -rf /var/lib/apt/lists/*
 
 COPY package.json yarn.lock ./
 COPY lib/package.json ./lib/

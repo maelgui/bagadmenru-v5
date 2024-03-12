@@ -1,12 +1,16 @@
 import { useIsFetching } from '@tanstack/react-query';
 import nprogress from 'nprogress';
-import { useEffect } from 'react';
+import { PropsWithChildren, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Outlet } from 'react-router-dom';
 import logo from '../assets/logov2full.svg';
 
-export default function SimpleLayout() {
-  const isFetching = useIsFetching();
+interface SimpleLayoutProps extends PropsWithChildren {
+  noQueryClient?: boolean
+}
+
+export default function SimpleLayout({ children, noQueryClient = false }: SimpleLayoutProps) {
+  const isFetching = noQueryClient ? false : useIsFetching();
 
   useEffect(() => {
     if (isFetching) {
@@ -24,9 +28,13 @@ export default function SimpleLayout() {
           <div className="flex justify-center">
             <img src={logo} alt="bagad men ru" className="h-64 m-4" />
           </div>
-          <Outlet />
+          {children}
         </div>
       </div>
     </>
   );
+}
+
+export function SimpleLayoutWithOutlet() {
+  return <SimpleLayout><Outlet /></SimpleLayout>;
 }

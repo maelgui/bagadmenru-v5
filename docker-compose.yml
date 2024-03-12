@@ -18,8 +18,8 @@ services:
       - POSTGRES_PASSWORD=kcwRzG4coiE
 
   keycloak:
-    image: quay.io/keycloak/keycloak
-    command: --verbose start-dev --import-realm --features=account3,declarative-user-profile
+    build: keycloak
+    command: --verbose start-dev --import-realm
     ports:
       - 8080:8080
     volumes:
@@ -27,7 +27,6 @@ services:
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_FEATURES=account3,declarative-user-profile
       - KC_HEALTH_ENABLED=true
       - KC_DB=postgres
       - KC_DB_USERNAME=postgres
@@ -35,15 +34,6 @@ services:
       - KC_DB_URL_HOST=db
       - KC_DB_URL_DATABASE=postgres
 
-  hanko:
-    image: ghcr.io/teamhanko/hanko:latest
-    ports:
-      - 8001:8000
-    command: serve --config /etc/hanko/config.yaml all
-    volumes:
-      - ./hanko/config.yaml:/etc/hanko/config.yaml
-    environment:
-      - PASSWORD_ENABLED
   mailhog:
     image: mailhog/mailhog
     ports:

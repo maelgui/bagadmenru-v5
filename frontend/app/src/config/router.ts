@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
-import SimpleLayout from '../layout/simple';
+import SimpleLayoutWithOutlet from '../layout/simple';
 import RoutingErrorComponent from '../pages/error/error';
 import AddEventPage from '../pages/events/add';
 import AnswerLinkPage from '../pages/events/answer';
@@ -77,7 +77,7 @@ export default createBrowserRouter([
       },
       {
         path: '/s/',
-        Component: SimpleLayout,
+        Component: SimpleLayoutWithOutlet,
         children: [
           {
             path: 'answer/:eventId',
