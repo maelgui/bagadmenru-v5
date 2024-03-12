@@ -2,7 +2,7 @@ FROM python:3.10-alpine
 
 WORKDIR /project
 
-RUN pip install poetry
+RUN pip install --no-cache-dir poetry==1.8.2
 
 COPY pyproject.toml poetry.lock ./
 

@@ -7,7 +7,7 @@ import { type TemplateProps } from 'keycloakify/login/TemplateProps';
 import { useGetClassName } from 'keycloakify/login/lib/useGetClassName';
 import { assert } from 'keycloakify/tools/assert';
 import { clsx } from 'keycloakify/tools/clsx';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Dropdown, { DropdownContent, DropdownItem, DropdownTrigger } from '../../components/dropdown';
 import SimpleLayout from '../../layout/simple';
 import type { I18n } from './i18n';
@@ -54,10 +54,6 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
 
   useState(() => { document.title = i18n.msgStr('loginTitle', kcContext.realm.displayName); });
 
-  useEffect(() => {
-    console.log(`Value of MY_ENV_VARIABLE on the Keycloak server: "${kcContext.properties.MY_ENV_VARIABLE}"`);
-  }, []);
-
   if (!isReady) {
     return null;
   }
@@ -99,32 +95,49 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                   </Dropdown>
                 </div>
               )}
-            {!(auth !== undefined && auth.showUsername && !auth.showResetCredentials) ? (
-              displayRequiredFields ? (
+            {// eslint-disable-next-line no-nested-ternary
+              !(auth !== undefined && auth.showUsername && !auth.showResetCredentials) ? (
+                displayRequiredFields ? (
+                  <div className={getClassName('kcContentWrapperClass')}>
+                    <div className={clsx(getClassName('kcLabelWrapperClass'), 'subtitle')}>
+                      <span className="subtitle">
+                        <span className="required">*</span>
+                        {msg('requiredFields')}
+                      </span>
+                    </div>
+                    <div className="col-md-10">
+                      <h1 id="kc-page-title" className="text-2xl mb-6">{headerNode}</h1>
+                    </div>
+                  </div>
+                ) : (
+                  <h1 id="kc-page-title" className="text-2xl mb-6">{headerNode}</h1>
+                )
+              ) : displayRequiredFields ? (
                 <div className={getClassName('kcContentWrapperClass')}>
                   <div className={clsx(getClassName('kcLabelWrapperClass'), 'subtitle')}>
                     <span className="subtitle">
                       <span className="required">*</span>
+                      {' '}
                       {msg('requiredFields')}
                     </span>
                   </div>
                   <div className="col-md-10">
-                    <h1 id="kc-page-title" className="text-2xl mb-6">{headerNode}</h1>
+                    {showUsernameNode}
+                    <div className={getClassName('kcFormGroupClass')}>
+                      <div id="kc-username">
+                        <label id="kc-attempted-username">{auth?.attemptedUsername}</label>
+                        <a id="reset-login" href={url.loginRestartFlowUrl}>
+                          <div className="kc-login-tooltip">
+                            <i className={getClassName('kcResetFlowIcon')} />
+                            <span className="kc-tooltip-text">{msg('restartLoginTooltip')}</span>
+                          </div>
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <h1 id="kc-page-title" className="text-2xl mb-6">{headerNode}</h1>
-              )
-            ) : displayRequiredFields ? (
-              <div className={getClassName('kcContentWrapperClass')}>
-                <div className={clsx(getClassName('kcLabelWrapperClass'), 'subtitle')}>
-                  <span className="subtitle">
-                    <span className="required">*</span>
-                    {' '}
-                    {msg('requiredFields')}
-                  </span>
-                </div>
-                <div className="col-md-10">
+                <>
                   {showUsernameNode}
                   <div className={getClassName('kcFormGroupClass')}>
                     <div id="kc-username">
@@ -137,28 +150,14 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                       </a>
                     </div>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                {showUsernameNode}
-                <div className={getClassName('kcFormGroupClass')}>
-                  <div id="kc-username">
-                    <label id="kc-attempted-username">{auth?.attemptedUsername}</label>
-                    <a id="reset-login" href={url.loginRestartFlowUrl}>
-                      <div className="kc-login-tooltip">
-                        <i className={getClassName('kcResetFlowIcon')} />
-                        <span className="kc-tooltip-text">{msg('restartLoginTooltip')}</span>
-                      </div>
-                    </a>
-                  </div>
-                </div>
-              </>
-            )}
+                </>
+              )
+            }
           </header>
           <div id="kc-content">
             <div id="kc-content-wrapper">
-              {/* App-initiated actions should not see warning messages about the need to complete the action during login. */}
+              {/* App-initiated actions should not see warning messages
+              about the need to complete the action during login. */}
               {displayMessage && message !== undefined && (message.type !== 'warning' || !isAppInitiatedAction) && (
                 <div className={clsx('alert', `alert-${message.type}`)}>
                   {message.type === 'success' && <span className={getClassName('kcFeedbackSuccessIcon')} />}
@@ -167,6 +166,7 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                   {message.type === 'info' && <span className={getClassName('kcFeedbackInfoIcon')} />}
                   <span
                     className="kc-feedback-text"
+                    // eslint-disable-next-line react/no-danger
                     dangerouslySetInnerHTML={{
                       __html: message.summary,
                     }}
@@ -188,8 +188,8 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                   >
                     <div className={getClassName('kcFormGroupClass')}>
                       <input type="hidden" name="tryAnotherWay" value="on" />
-                      <a
-                        href="#"
+                      <button
+                        type="button"
                         id="try-another-way"
                         onClick={() => {
                           document.forms['kc-select-try-another-way-form' as never].submit();
@@ -197,7 +197,7 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                         }}
                       >
                         {msg('doTryAnotherWay')}
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </form>
