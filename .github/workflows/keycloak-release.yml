@@ -1,3 +1,5 @@
+name: keycloak-release
+
 on:
   pull_request:
     branches:
@@ -23,7 +25,7 @@ jobs:
         with:
           node-version: "21.x"
       - run: yarn
-      - run: yarn workspace bagad-frontend build-keycloak-theme
+      - run: yarn build:theme
       - run: mv app/dist_keycloak/target/bagad-frontend-keycloak-theme-0.0.0.jar bagad-frontend-keycloak-theme.jar
       - uses: actions/upload-artifact@v4
         with:
