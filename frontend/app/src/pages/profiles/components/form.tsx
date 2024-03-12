@@ -98,7 +98,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
         </div>
         <div className="flex-1">
           <label className="mb-2 block font-semibold" htmlFor="last_name">Nom</label>
-          <input
+          <Input
             type="text"
             id="last_name"
             disabled
