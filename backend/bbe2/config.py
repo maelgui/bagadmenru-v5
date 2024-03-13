@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     swagger_client_id: str | None = "bbe2-swagger"
 
     cors_allowed_origins: list[str] = []
+    cors_allowed_origin_regex: Optional[list[str]] = None
 
     class Config:
         env_file = ".env"
