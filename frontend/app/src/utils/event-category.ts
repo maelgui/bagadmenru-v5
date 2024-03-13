@@ -5,7 +5,7 @@ interface Category {
 const EventCategories: { [key: string]: Category } = {
   sortie: {
     name: 'Sortie',
-    bg: 'bg-sky-500',
+    bg: 'bg-camelot-600',
   },
   repetition: {
     name: 'Répétition',
