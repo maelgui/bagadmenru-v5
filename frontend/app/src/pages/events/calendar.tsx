@@ -17,8 +17,8 @@ export default function CalendarPage() {
   const { eventsApi } = useApiClient();
 
   const { data } = useQuery({
-    queryKey: ['events'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet(),
+    queryKey: ['events', 'next100'],
+    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date() }),
     select: (res) => ({
       events: res,
       eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
@@ -39,14 +39,14 @@ export default function CalendarPage() {
             {' '}
             Gérer
           </Header.Action>,
-          <Header.Action key="doodle-nav" as={Link} to="/events/doodle">
+          <Header.Action key="doodle-nav" as={Link} to="/events">
             <FontAwesomeIcon icon={faCalendarCheck} />
             {' '}
             Mes Présences
           </Header.Action>,
         ]}
         breadcrumb={[
-          { title: 'Évènements', link: '/events/doodle' },
+          { title: 'Évènements', link: '/events' },
           { title: 'Calendrier' },
         ]}
 

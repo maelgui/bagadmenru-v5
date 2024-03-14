@@ -26,7 +26,7 @@ export default function AddEventPage() {
         title="Ajouter un évènement"
         subtitle="Sortie/répétition/réunion..."
         breadcrumb={[
-          { link: '/events/doodle', title: 'Évènements' },
+          { link: '/events', title: 'Évènements' },
           { link: '/events/manage', title: 'Gestion des évènements' },
           { title: 'Ajouter un évènement' },
         ]}

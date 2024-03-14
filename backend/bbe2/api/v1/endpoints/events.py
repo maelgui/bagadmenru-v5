@@ -22,8 +22,22 @@ async def list_events(
     token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
     session: Session = Depends(get_db),
     limit: int = 10,
+    date__gte: Optional[datetime] = None,
+    date__lt: Optional[datetime] = None,
+    ordering: str = "date",
 ):
-    return session.query(models.Event).order_by(models.Event.date).limit(limit).all()
+    q = session.query(models.Event)
+    if date__gte:
+        q = q.filter(models.Event.date >= date__gte)
+    if date__lt:
+        q = q.filter(models.Event.date < date__lt)
+    if ordering:
+        order = "desc" if ordering.startswith("-") else "asc"
+        col = getattr(models.Event, ordering.lstrip("-"))
+        order = getattr(col, order)()
+        q = q.order_by(order)
+    q = q.limit(limit)
+    return q.all()
 
 
 @events_router.get("/export/ics")

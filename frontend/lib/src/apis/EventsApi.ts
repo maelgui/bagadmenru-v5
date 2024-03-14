@@ -53,6 +53,9 @@ export interface GetEventApiV1EventsEventIdGetRequest {
 
 export interface ListEventsApiV1EventsGetRequest {
     limit?: number;
+    dateGte?: Date | null;
+    dateLt?: Date | null;
+    ordering?: string;
 }
 
 export interface ListResponsesApiV1ResponsesGetRequest {
@@ -261,6 +264,18 @@ export class EventsApi extends runtime.BaseAPI {
 
         if (requestParameters.limit !== undefined) {
             queryParameters['limit'] = requestParameters.limit;
+        }
+
+        if (requestParameters.dateGte !== undefined) {
+            queryParameters['date__gte'] = (requestParameters.dateGte as any).toISOString();
+        }
+
+        if (requestParameters.dateLt !== undefined) {
+            queryParameters['date__lt'] = (requestParameters.dateLt as any).toISOString();
+        }
+
+        if (requestParameters.ordering !== undefined) {
+            queryParameters['ordering'] = requestParameters.ordering;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};

@@ -14,7 +14,7 @@ import EventCategories from '../../utils/event-category';
 export default function EventsManagePage() {
   const { eventsApi } = useApiClient();
 
-  const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet() });
+  const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, ordering: '-date' }) });
 
   const { mutate } = useMutation({
     mutationFn: (data: Event) => eventsApi.deleteEventApiV1EventsEventIdDelete({
@@ -38,7 +38,7 @@ export default function EventsManagePage() {
           </Header.Action>,
         ]}
         breadcrumb={[
-          { title: 'Évènements', link: '/events/doodle' },
+          { title: 'Évènements', link: '/events' },
           { title: 'Gestion des évènements' },
         ]}
 

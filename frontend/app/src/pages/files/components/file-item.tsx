@@ -27,9 +27,12 @@ interface FileItemProps {
   file: FileOrFolder
   big?: boolean
   deleteFn?: MouseEventHandler<HTMLButtonElement>
+  noAction?: boolean
 }
 
-export default function FileItem({ file, big = false, deleteFn = undefined }: FileItemProps) {
+export default function FileItem({
+  file, big = false, deleteFn = undefined, noAction = false,
+}: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const bind = useLongPress(() => {
@@ -83,19 +86,21 @@ export default function FileItem({ file, big = false, deleteFn = undefined }: Fi
               {file.name}
             </Link>
           </div>
-          <button
-            type="button"
-            data-dropdown-toggle={`dropdown-file-action-${file.id}`}
-            className="relative shrink-0 w-6 h-6 rounded hover:bg-gray-200 text-center"
-            ref={refs.setReference}
-            {...getReferenceProps()}
-          >
-            <FontAwesomeIcon icon={faEllipsisVertical} />
-          </button>
+          {!noAction ? (
+            <button
+              type="button"
+              data-dropdown-toggle={`dropdown-file-action-${file.id}`}
+              className="relative shrink-0 w-6 h-6 rounded hover:bg-gray-200 text-center"
+              ref={refs.setReference}
+              {...getReferenceProps()}
+            >
+              <FontAwesomeIcon icon={faEllipsisVertical} />
+            </button>
+          ) : null}
         </div>
       </div>
 
-      {isOpen && (
+      {(!noAction && isOpen) && (
         <FloatingFocusManager context={context} modal={false}>
           <div
             ref={refs.setFloating}

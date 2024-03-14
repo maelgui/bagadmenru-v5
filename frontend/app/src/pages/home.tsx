@@ -19,9 +19,19 @@ export default function HomePage() {
   const { idTokenPayload } = useOidcIdToken();
   const { eventsApi, filesApi } = useApiClient();
 
-  const { data: events } = useQuery({
-    queryKey: ['events'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 10 }),
+  const today = new Date();
+
+  const { data: nextEvents } = useQuery({
+    queryKey: ['events', 'next3'],
+    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 3, dateGte: today }),
+  });
+  const { data: calendarEvents } = useQuery({
+    queryKey: ['events', 'currentMonth'],
+    queryFn: () => eventsApi.listEventsApiV1EventsGet({
+      limit: 100,
+      dateGte: new Date(today.getFullYear(), today.getMonth(), 0),
+      dateLt: new Date(today.getFullYear(), today.getMonth() + 1, 0),
+    }),
   });
   const { data: files } = useQuery({
     queryKey: ['files'],
@@ -38,51 +48,57 @@ export default function HomePage() {
       <Header title={`Degemer mat ${idTokenPayload.name}`} />
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 content-stretch">
-          {events ? (
-            <>
-              <div className="flex flex-col">
-                <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Calendrier</h3>
-                <div className="mb-5">
-                  <Calendar events={events ?? []} />
-                </div>
-                <Link to="/events/calendar" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2 mt-auto">
+          {calendarEvents ? (
+            <div className="flex flex-col">
+              <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Calendrier</h3>
+              <div className="mb-5">
+                <Calendar events={calendarEvents ?? []} />
+              </div>
+              <div className="mt-auto">
+                <Link to="/events/calendar" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
                   Accéder au calendrier
                   <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
                 </Link>
               </div>
-              <div className="flex flex-col">
-                <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Prochains évènements</h3>
-                <div>
-                  {!events.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
-                  {events.slice(0, 4).map((event) => (
-                    <div className="mb-5" key={event.id}>
-                      <EventListItem
-                        event={event}
-                        response={responses?.get(event.id)?.at(0)?.value}
-                        showResponse
-                      />
-                    </div>
-                  ))}
-                </div>
-                <Link to="/events/doodle" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2 mt-auto">
+            </div>
+          ) : null}
+          {nextEvents ? (
+            <div className="flex flex-col">
+              <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Prochains évènements</h3>
+              <div>
+                {!nextEvents.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
+                {nextEvents.slice(0, 4).map((event) => (
+                  <div className="mb-5" key={event.id}>
+                    <EventListItem
+                      event={event}
+                      response={responses?.get(event.id)?.at(0)?.value}
+                      showResponse
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto">
+                <Link to="/events" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
                   Accéder au doodle
                   <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
                 </Link>
               </div>
-            </>
+            </div>
           ) : null}
           {files ? (
             <div className="flex flex-col">
               <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Derniers fichiers ajoutés</h3>
               <div className="flex flex-col gap-4 mb-5">
                 {files.length ? files.map((file) => (
-                  <FileItem key={file.id} file={file} />
+                  <FileItem key={file.id} file={file} noAction />
                 )) : 'Aucun fichier ajouté récemment'}
               </div>
-              <Link to="/files" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2 mt-auto">
-                Accéder aux fichiers
-                <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
-              </Link>
+              <div className="mt-auto">
+                <Link to="/files" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
+                  Accéder aux fichiers
+                  <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
+                </Link>
+              </div>
             </div>
           ) : null}
         </div>

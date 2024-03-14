@@ -32,7 +32,7 @@ export default createBrowserRouter([
                 Component: HomePage,
               },
               {
-                path: '/events/doodle',
+                path: '/events',
                 Component: DoodlePage,
               },
               {
