@@ -50,7 +50,7 @@ export default function HomePage() {
                   <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
                 </Link>
               </div>
-              <div>
+              <div className="flex flex-col">
                 <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Prochains évènements</h3>
                 <div>
                   {!events.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
@@ -64,7 +64,7 @@ export default function HomePage() {
                     </div>
                   ))}
                 </div>
-                <Link to="/events/doodle" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
+                <Link to="/events/doodle" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2 mt-auto">
                   Accéder au doodle
                   <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
                 </Link>
