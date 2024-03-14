@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Costume, Event } from 'bagad-client';
 import costume from '../../../assets/costume.svg';
 import polo from '../../../assets/polo.svg';
+import Badge from '../../../components/badge';
+import EventCategories from '../../../utils/event-category';
 
 interface EventListItemProps extends React.ComponentPropsWithoutRef<'div'> {
   event: Event
@@ -18,7 +20,7 @@ export default function EventListItem({
   return (
     <div className={`flex items-center ${response !== undefined && !response ? 'opacity-50' : ''} relative ${className}`}>
       <div>
-        <div className="flex flex-col justify-center text-center mr-4 my-2 px-4 border-r-2 h-16 w-24 border-pourpre-400">
+        <div className="flex flex-col justify-center text-center mr-4 my-2 px-4 border-r-2 h-16 w-24 border-camelot-800">
           <span className="text-xl font-bold">{event.date.getDate()}</span>
           <span className="text-sm truncate">{event.date.toLocaleString('fr', { month: 'long' })}</span>
         </div>
@@ -27,13 +29,16 @@ export default function EventListItem({
       <div className="overflow-hidden">
         <div className="truncate">{event.title}</div>
         <div className="text-sm truncate">{event.description}</div>
-        <div className="ml-auto flex">
+        <div className="ml-auto flex items-center">
+          <div className="p-1">
+            <Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
+          </div>
           {showResponse ? (
             <div className="w-6 h-6 flex items-center justify-center">
               {(() => {
                 if (response === undefined) {
                   return (
-                    <FontAwesomeIcon icon={faCircleQuestion} className="text-sky-300" />
+                    <FontAwesomeIcon icon={faCircleQuestion} className="text-sky-500" />
                   );
                 }
                 if (response) {
