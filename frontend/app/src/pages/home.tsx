@@ -53,24 +53,26 @@ export default function HomePage() {
     <>
       <Header title={`Degemer mat ${idTokenPayload.name}`} />
       <Container>
-        {(() => {
-          if (!stats) { return null; }
-          const days = parse(stats.avgResponseTime).days ?? 0;
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
-              <Counter
-                type="error"
-                value={stats.responsesNeeded}
-                description={`Vous devez répondre à ${stats.responsesNeeded} sortie ${stats.responsesNeeded > 1 ? 's' : ''}`}
-              />
-              <Counter
-                type={days < 5 ? 'info' : 'warning'}
-                value={days ?? 0}
-                description={`Vous mettez en moyenne ${days} jours pour répondre aux sorties.`}
-              />
-            </div>
-          );
-        })()}
+        {stats ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
+            <Counter
+              type="error"
+              value={stats.responsesNeeded}
+              description={`Vous devez répondre à ${stats.responsesNeeded} sortie${stats.responsesNeeded > 1 ? 's' : ''}`}
+            />
+            {(() => {
+              if (!stats.avgResponseTime) { return null; }
+              const days = parse(stats.avgResponseTime).days ?? 0;
+              return (
+                <Counter
+                  type={days < 5 ? 'info' : 'warning'}
+                  value={days ?? 0}
+                  description={`Vous mettez en moyenne ${days} jours pour répondre aux sorties.`}
+                />
+              );
+            })()}
+          </div>
+        ) : null}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 content-stretch">
           {calendarEvents ? (
             <div className="flex flex-col">

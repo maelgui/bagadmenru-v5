@@ -30,13 +30,13 @@ export interface MyStats {
      * @type {number}
      * @memberof MyStats
      */
-    nPositiveResponses: number;
+    nPositiveResponses: number | null;
     /**
      * 
      * @type {string}
      * @memberof MyStats
      */
-    avgResponseTime: string;
+    avgResponseTime: string | null;
     /**
      * 
      * @type {number}

@@ -10,6 +10,6 @@ class GetUploadUrlResponse(BaseModel):
 
 class MyStats(BaseModel):
     n_responses: int
-    n_positive_responses: int
-    avg_response_time: timedelta
+    n_positive_responses: int | None
+    avg_response_time: timedelta | None
     responses_needed: int

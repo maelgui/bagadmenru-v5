@@ -8695,6 +8695,11 @@ tiny-invariant@^1.3.1:
   resolved "https://registry.yarnpkg.com/tiny-invariant/-/tiny-invariant-1.3.1.tgz#8560808c916ef02ecfd55e66090df23a4b7aa642"
   integrity sha512-AD5ih2NlSssTCwsMznbvwMZpJ1cbhkGd2uueNxzv2jDlEeZdU04JQfRnggJQ8DrcVBGjAsCKwFBbDlVNtEMlzw==
 
+tinyduration@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/tinyduration/-/tinyduration-3.3.0.tgz#f36ea583b9a0dd2027a1cf8810c931e37541fe80"
+  integrity sha512-sLR0iVUnnnyGEX/a3jhTA0QMK7UvakBqQJFLiibiuEYL6U1L85W+qApTZj6DcL1uoWQntYuL0gExoe9NU5B3PA==
+
 tmp@^0.0.33:
   version "0.0.33"
   resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.33.tgz#6d34335889768d21b2bcda0aa277ced3b1bfadf9"
