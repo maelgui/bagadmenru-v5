@@ -1,13 +1,20 @@
 import logging
 import uuid
+from datetime import datetime
 from typing import Any
 
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, Security, status
+from sqlalchemy import cast, func, or_, select
+from sqlalchemy.orm import Session
+from sqlalchemy.sql.functions import count, sum
+from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDInstrument, CRUDProfile
 from bbe2.dependencies.auth import get_current_user
+from bbe2.dependencies.db import get_db
+from bbe2.schemas.utils import MyStats
 from bbe2.utils.s3 import s3
 from bbe2.utils.scopes import ProfilesScopes
 
@@ -111,6 +118,64 @@ async def list_instruments(
     return instru_crud.find_all()
 
 
+stats_router = APIRouter(prefix="/stats")
+
+
+@stats_router.get("/me")
+async def get_my_stats(
+    token: dict[str, Any] = Security(get_current_user),
+    session: Session = Depends(get_db),
+) -> MyStats:
+    q = select(
+        count(models.Response.value).label("n_responses"),
+        sum(cast(models.Response.value, Integer)).label("n_positive_responses"),
+        func.avg(models.Response.date - models.Event.created_at).label(
+            "avg_response_time"
+        ),
+    ).join_from(models.Event, models.Response)
+    # q = q.where(models.Event.date >= datetime.now())
+    q = q.where(models.Response.user_id == token["sub"])
+    res1 = session.execute(q).one()._mapping
+
+    q = select(
+        (count(models.Event.id) - count(models.Response.value)).label(
+            "responses_needed"
+        ),
+    ).join_from(models.Event, models.Response, isouter=True)
+    q = q.where(models.Event.date >= datetime.now())
+    q = q.where(
+        or_(models.Response.user_id == None, models.Response.user_id == token["sub"])
+    )
+    res4 = session.execute(q).one()._mapping
+
+    return dict(**res1, **res4)
+
+
+@stats_router.get("/")
+async def get_global_stats(
+    token: dict[str, Any] = Security(get_current_user),
+    session: Session = Depends(get_db),
+) -> dict[str, Any]:
+
+    q = select(
+        count(models.Response.value).label("n_responses"),
+        func.avg(models.Response.date - models.Event.created_at).label(
+            "avg_response_time"
+        ),
+    ).join_from(models.Event, models.Response)
+    # q = q.where(models.Event.date >= datetime.now())
+    res2 = session.execute(q).one()._mapping
+
+    q = select(
+        count(models.Event.id).label("n_events"),
+    ).select_from(models.Event)
+    # q = q.where(models.Event.date >= datetime.now())
+    res3 = session.execute(q).one()._mapping
+
+    return dict(**res2, **res3)
+
+
 router = APIRouter()
 router.include_router(profiles_router)
 router.include_router(instruments_router)
+router.include_router(stats_router)

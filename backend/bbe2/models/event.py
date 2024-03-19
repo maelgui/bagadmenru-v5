@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
 
 from bbe2.database import Base
 from bbe2.models.profile import Profile
@@ -15,6 +16,7 @@ class Event(Base):
     title: Mapped[str] = mapped_column(String(30))
     description: Mapped[str]
     date: Mapped[datetime]
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
     costume: Mapped[Costume]
     category: Mapped[str] = mapped_column(String(30))
 

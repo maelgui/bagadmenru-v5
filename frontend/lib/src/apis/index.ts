@@ -4,4 +4,4 @@ export * from './DefaultApi';
 export * from './EventsApi';
 export * from './FilesApi';
 export * from './PhotosApi';
-export * from './UsersApi';
+export * from './ProfilesApi';

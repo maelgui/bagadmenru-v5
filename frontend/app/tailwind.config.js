@@ -42,6 +42,7 @@ export default {
       emerald: colors.emerald,
       sky: colors.sky,
       amber: colors.amber,
+      hotpink: 'hotpink',
     },
     fontFamily: {
       'sans': ["Montserrat"]

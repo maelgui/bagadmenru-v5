@@ -1,7 +1,9 @@
 import { useOidcFetch } from '@axa-fr/react-oidc';
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import {
-  Configuration, EventsApi, FilesApi, ResponseError, UsersApi,
+  Configuration, EventsApi, FilesApi,
+  ProfilesApi,
+  ResponseError,
 } from 'bagad-client';
 import toast from 'react-hot-toast';
 
@@ -36,7 +38,7 @@ export function useApiClient() {
 
   return {
     eventsApi: new EventsApi(conf),
-    usersApi: new UsersApi(conf),
+    usersApi: new ProfilesApi(conf),
     filesApi: new FilesApi(conf),
   };
 }

@@ -6,8 +6,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { FileOrFolderType } from 'bagad-client';
 import { Link } from 'react-router-dom';
+import { parse } from 'tinyduration';
 import Alert from '../components/alert';
 import Container from '../components/container';
+import Counter from '../components/counter';
 import Header from '../components/header';
 import { useApiClient } from '../config/client';
 import groupBy from '../utils/groupby';
@@ -17,7 +19,7 @@ import FileItem from './files/components/file-item';
 
 export default function HomePage() {
   const { idTokenPayload } = useOidcIdToken();
-  const { eventsApi, filesApi } = useApiClient();
+  const { eventsApi, filesApi, usersApi } = useApiClient();
 
   const today = new Date();
 
@@ -42,11 +44,33 @@ export default function HomePage() {
     queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: idTokenPayload.sub }),
     select: (data) => groupBy(data, (e) => e.eventId),
   });
+  const { data: stats } = useQuery({
+    queryKey: ['stats', 'me'],
+    queryFn: () => usersApi.getMyStatsApiV1StatsMeGet(),
+  });
 
   return (
     <>
       <Header title={`Degemer mat ${idTokenPayload.name}`} />
       <Container>
+        {(() => {
+          if (!stats) { return null; }
+          const days = parse(stats.avgResponseTime).days ?? 0;
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
+              <Counter
+                type="error"
+                value={stats.responsesNeeded}
+                description={`Vous devez répondre à ${stats.responsesNeeded} sortie ${stats.responsesNeeded > 1 ? 's' : ''}`}
+              />
+              <Counter
+                type={days < 5 ? 'info' : 'warning'}
+                value={days ?? 0}
+                description={`Vous mettez en moyenne ${days} jours pour répondre aux sorties.`}
+              />
+            </div>
+          );
+        })()}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 content-stretch">
           {calendarEvents ? (
             <div className="flex flex-col">

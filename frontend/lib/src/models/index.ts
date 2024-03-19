@@ -12,6 +12,7 @@ export * from './FolderCreate';
 export * from './GetUploadUrlResponse';
 export * from './HTTPValidationError';
 export * from './Instrument';
+export * from './MyStats';
 export * from './Photo';
 export * from './Profile';
 export * from './ProfileUpdate';

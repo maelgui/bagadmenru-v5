@@ -3,6 +3,7 @@ import nprogress from 'nprogress';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Outlet } from 'react-router-dom';
+import Footer from '../components/footer';
 import Navbar from '../components/navbar';
 
 export default function MainLayout() {
@@ -22,6 +23,9 @@ export default function MainLayout() {
       <Navbar />
       <div className={`${isFetching ? 'loading' : ''}`}>
         <Outlet />
+      </div>
+      <div className="mt-auto">
+        <Footer />
       </div>
     </>
   );
