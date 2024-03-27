@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@axa-fr/react-oidc": "^7.15.0",
-    "@floating-ui/react": "^0.26.1",
+    "@floating-ui/react": "^0.26.10",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
