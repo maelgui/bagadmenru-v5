@@ -6,6 +6,7 @@ import { Costume, Event } from 'bagad-client';
 import costume from '../../../assets/costume.svg';
 import polo from '../../../assets/polo.svg';
 import Badge from '../../../components/badge';
+import { SkeletonText } from '../../../components/skeleton';
 import EventCategories from '../../../utils/event-category';
 
 interface EventListItemProps extends React.ComponentPropsWithoutRef<'div'> {
@@ -59,6 +60,30 @@ export default function EventListItem({
               {event.costume === Costume.Polo ? <img src={polo} alt="En Polo" className="w-5 h-5" /> : null}
             </div>
           ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function EventListItemSkeleton({
+  className = '',
+}: { className?: string }) {
+  return (
+    <div className={`flex items-center relative ${className}`}>
+      <div>
+        <div className="flex flex-col justify-center text-center mr-4 my-2 px-4 border-r-2 h-16 w-24 border-camelot-800">
+          <span className="text-xl font-bold"><SkeletonText className="w-6 h-6" /></span>
+          <span className="text-sm truncate"><SkeletonText className="w-8" /></span>
+        </div>
+      </div>
+      <div className="overflow-hidden">
+        <div className="truncate"><SkeletonText className="w-16" /></div>
+        <div className="text-sm truncate"><SkeletonText className="w-48" /></div>
+        <div className="ml-auto flex items-center">
+          <div className="py-1">
+            <SkeletonText className="w-16 h-4" />
+          </div>
         </div>
       </div>
     </div>

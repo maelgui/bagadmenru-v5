@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { FileOrFolder, FileOrFolderType } from 'bagad-client';
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
 import Alert from '../../components/alert';
 import Button from '../../components/button';
@@ -13,14 +14,15 @@ import {
   Dialog, DialogClose, DialogContent, DialogDescription, DialogHeading,
 } from '../../components/dialog';
 import Header from '../../components/header';
+import { SkeletonText } from '../../components/skeleton';
 import { queryClient, useApiClient } from '../../config/client';
-import FileItem from './components/file-item';
+import FileItem, { FileItemSkeleton } from './components/file-item';
 
 export default function ListFilesPage() {
   const { filesApi } = useApiClient();
 
   const params = useParams();
-  const { data: folder, status } = useQuery({
+  const { data: folder } = useQuery({
     queryKey: ['files', params.folderId ?? 'root'],
     queryFn: async ({ queryKey }) => (
       queryKey[1] === 'root'
@@ -30,7 +32,7 @@ export default function ListFilesPage() {
   });
 
   const {
-    data: children,
+    data: children, status,
   } = useQuery({
     queryKey: ['files', 'children', folder?.id],
     queryFn: async ({ queryKey }) => (
@@ -85,6 +87,7 @@ export default function ListFilesPage() {
       )));
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] }),
+    onSuccess: (data) => toast.success(`${data.length} fichier(s) envoyé(s) avec succès.`),
   });
 
   const [fileToDelete, setFileToDelete] = useState<FileOrFolder | undefined>(undefined);
@@ -104,7 +107,7 @@ export default function ListFilesPage() {
     <>
       <Header
         title="Fichiers"
-        subtitle={params.folderId ? folder?.name : undefined}
+        subtitle={folder?.name ? folder.name : <SkeletonText className="w-32" />}
         breadcrumb={params.folderId ? [
           { title: 'Fichiers', link: '/files' },
           ...(breadcrumb?.slice(1, -1).map((item) => ({ title: item.name, link: `/files/${item.id}` })) ?? []),
@@ -129,7 +132,17 @@ export default function ListFilesPage() {
         ]}
       />
       <Container>
-        {status === 'pending' ? <>Chargement</> : null}
+        {status === 'pending' ? (
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <FileItemSkeleton />
+              <FileItemSkeleton />
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
+              <FileItemSkeleton big />
+            </div>
+          </>
+        ) : null}
         {status === 'error' ? <Alert type="error">Erreur</Alert> : null}
         {status === 'success' ? (
           <>

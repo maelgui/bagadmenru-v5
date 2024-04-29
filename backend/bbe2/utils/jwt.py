@@ -27,7 +27,7 @@ class JWTVerifier:
             self.jwks = req2.json()["keys"]
             print(self.jwks)
             self.last_update = time.monotonic()
-        except requests.HTTPError:
+        except requests.RequestException:
             pass
 
     def is_expired(self) -> bool:

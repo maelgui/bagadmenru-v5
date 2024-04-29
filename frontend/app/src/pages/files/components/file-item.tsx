@@ -22,6 +22,7 @@ import { MouseEventHandler, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LongPressEventType, useLongPress } from 'use-long-press';
 import Button from '../../../components/button';
+import { SkeletonText } from '../../../components/skeleton';
 
 interface FileItemProps {
   file: FileOrFolder
@@ -128,5 +129,23 @@ export default function FileItem({
         </FloatingFocusManager>
       )}
     </>
+  );
+}
+
+export function FileItemSkeleton({
+  big = false,
+}: { big?: boolean }) {
+  return (
+    <div className="relative border rounded border-gray-200 shadow-sm animate-pulse">
+      {big && (
+        <div className="p-4 text-center h-32 [&>svg]:max-h-16 flex justify-center items-center border-b border-gray-50">
+          <div className="inline-block bg-gray-200 rounded animate-pulse w-24 h-24" />
+        </div>
+      )}
+      <div className="flex p-4 items-center">
+        {!big && <div className="inline-block bg-gray-200 rounded animate-pulse w-6 h-6 mr-4" />}
+        <SkeletonText className="w-48" />
+      </div>
+    </div>
   );
 }

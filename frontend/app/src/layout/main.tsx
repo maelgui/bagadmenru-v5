@@ -21,7 +21,7 @@ export default function MainLayout() {
     <>
       <Toaster position="bottom-center" />
       <Navbar />
-      <div className={`${isFetching ? 'loading' : ''}`}>
+      <div className={`${isFetching ? '' : ''}`}>
         <Outlet />
       </div>
       <div className="mt-auto">

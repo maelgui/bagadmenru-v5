@@ -25,11 +25,11 @@ export default function Checkbox({
   }
 
   if (disabled) {
-    return <td className={`${className} px-4 py-2 text-center border-4 border-white`}>{content}</td>;
+    return <td className={`${className} h-8 text-center border-4 border-white`}>{content}</td>;
   }
 
   return (
-    <td className={`${className} px-4 py-2 text-center border-4 border-white`}>
+    <td className={`${className} h-8 text-center border-4 border-white`}>
       <span
         role="checkbox"
         aria-checked={value}
