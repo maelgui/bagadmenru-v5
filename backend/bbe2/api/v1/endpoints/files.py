@@ -5,10 +5,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
 from sqlalchemy import and_
+from sqlalchemy.orm import Session
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
 from bbe2.dependencies.auth import get_current_user
+from bbe2.dependencies.db import get_db
 from bbe2.schemas.file import FileOrFolderType
 from bbe2.utils.s3 import s3
 from bbe2.utils.scopes import FileScopes
@@ -22,14 +24,18 @@ router = APIRouter(prefix="/files")
     response_model=list[schemas.FileOrFolder],
 )
 async def list_files(
-    file_crud: CRUDFile = Depends(),
     t: Optional[FileOrFolderType] = None,
     limit: int = 10,
+    session: Session = Depends(get_db),
 ):
     """List recent files."""
+    q = session.query(models.FileOrFolder)
     if t:
-        return file_crud.find_by(models.FileOrFolder.type == t, limit=limit)
-    return file_crud.find_all(limit=limit)
+        q = q.filter(models.FileOrFolder.type == t)
+    q = q.order_by(models.FileOrFolder.uploaded_at.asc())
+    q = q.limit(limit)
+
+    return q.all()
 
 
 @router.get(
