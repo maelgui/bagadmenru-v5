@@ -65,7 +65,7 @@
     "eslint-plugin-storybook": "^0.6.13",
     "openapi-typescript-codegen": "^0.29.0",
     "postcss": "^8.4.31",
-    "storybook": "^7.1.1",
+    "storybook": "^8.0.10",
     "tailwindcss": "^3.3.4",
     "typescript": "^5.4.5",
     "vite": "^4.5.3"
