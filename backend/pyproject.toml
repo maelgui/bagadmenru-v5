@@ -20,7 +20,7 @@ pydantic = "^2.7.1"
 pydantic-settings = "^2.0.3"
 
 [tool.poetry.group.dev.dependencies]
-httpx = "^0.24.1"
+httpx = "^0.27.0"
 pylint = "^3.0.2"
 pytest = "^8.2.0"
 autopep8 = "^1.7.0"
