@@ -23,7 +23,7 @@ pydantic-settings = "^2.0.3"
 httpx = "^0.27.0"
 pylint = "^3.0.2"
 pytest = "^8.2.0"
-autopep8 = "^1.7.0"
+autopep8 = "^2.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
