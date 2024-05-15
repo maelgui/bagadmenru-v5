@@ -39,3 +39,6 @@ class Profile(_ProfileBase):
         if not self.picture_key:
             return None
         return s3.generate_get_presigned_url(object_name=self.picture_key)
+
+class Group(BaseModel):
+    name: str

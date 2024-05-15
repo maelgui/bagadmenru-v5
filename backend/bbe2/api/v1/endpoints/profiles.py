@@ -175,7 +175,18 @@ async def get_global_stats(
     return dict(**res2, **res3)
 
 
+groups_router = APIRouter(prefix="/groups")
+
+
+@groups_router.get("/", response_model=list[schemas.Group])
+async def list_groups(
+    token: dict[str, Any] = Security(get_current_user),
+):
+    httpx
+
+
 router = APIRouter()
 router.include_router(profiles_router)
 router.include_router(instruments_router)
 router.include_router(stats_router)
+router.include_router(groups_router)
