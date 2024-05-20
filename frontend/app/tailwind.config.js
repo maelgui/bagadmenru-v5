@@ -45,7 +45,8 @@ export default {
       hotpink: 'hotpink',
     },
     fontFamily: {
-      'sans': ["Montserrat"]
+      'sans': ["Open Sans"],
+      'mono': ["IBM Plex Mono"]
     },
   },
   plugins: [],

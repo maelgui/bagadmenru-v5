@@ -13,6 +13,13 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { Group } from './Group';
+import {
+    GroupFromJSON,
+    GroupFromJSONTyped,
+    GroupToJSON,
+} from './Group';
+
 /**
  * 
  * @export
@@ -57,6 +64,12 @@ export interface Profile {
     id: string;
     /**
      * 
+     * @type {Array<Group>}
+     * @memberof Profile
+     */
+    groups?: Array<Group>;
+    /**
+     * 
      * @type {string}
      * @memberof Profile
      */
@@ -95,6 +108,7 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'lastName': json['last_name'],
         'email': json['email'],
         'id': json['id'],
+        'groups': !exists(json, 'groups') ? undefined : ((json['groups'] as Array<any>).map(GroupFromJSON)),
         'pictureUrl': json['picture_url'],
     };
 }
@@ -114,6 +128,7 @@ export function ProfileToJSON(value?: Profile | null): any {
         'last_name': value.lastName,
         'email': value.email,
         'id': value.id,
+        'groups': value.groups === undefined ? undefined : ((value.groups as Array<any>).map(GroupToJSON)),
         'picture_url': value.pictureUrl,
     };
 }

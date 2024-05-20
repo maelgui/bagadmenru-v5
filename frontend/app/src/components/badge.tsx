@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-props-no-spreading */
 import { ReactNode } from 'react';
 
 interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
@@ -5,9 +6,11 @@ interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
   color?: string,
 }
 
-export default function Badge({ children, color = 'bg-gray-500', className }: BadgeProps) {
+export default function Badge({
+  children, color = 'bg-gray-500', className, ...rest
+}: BadgeProps) {
   return (
-    <span className={`inline-block px-2 rounded-md overflow-hidden text-white font-medium text-sm ${color} ${className} whitespace-nowrap`}>
+    <span className={`inline-block px-2 rounded-full overflow-hidden text-white font-medium text-sm ${color} ${className} whitespace-nowrap`} {...rest}>
       {children}
     </span>
   );

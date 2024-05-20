@@ -16,6 +16,7 @@ class _EventBase(BaseModel):
     date: date
     costume: Costume
     category: str
+    is_in_doodle: bool
 
 
 class EventCreate(_EventBase):

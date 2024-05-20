@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
+import { faSquare } from '@fortawesome/free-regular-svg-icons';
+import { faCircleCheck, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Event, EventCreate } from 'bagad-client';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
@@ -18,8 +19,8 @@ interface EventFormProps {
 
 export default function EventForm({ onSubmit, data = undefined }: EventFormProps) {
   const {
-    register, control, handleSubmit, formState: { errors },
-  } = useForm<EventCreate>({ defaultValues: data });
+    register, control, handleSubmit, formState: { errors, dirtyFields }, setValue,
+  } = useForm<EventCreate>({ defaultValues: data || { category: 'sortie', isInDoodle: true, costume: 'COSTUME' } });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -64,7 +65,13 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
         <Select
           id="category"
           error={errors.category?.message}
-          {...register('category', { required: 'Ce champ est obligatoire.' })}
+          {...register('category', {
+            required: 'Ce champ est obligatoire.',
+            onChange: (e) => {
+              if (dirtyFields.isInDoodle !== true) setValue('isInDoodle', e.target.value === 'sortie');
+              if (dirtyFields.costume !== true) setValue('costume', e.target.value === 'sortie' ? 'COSTUME' : 'POLO');
+            },
+          })}
         >
           <option value="sortie">Sortie</option>
           <option value="repetition">Répétition</option>
@@ -98,6 +105,27 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
             </label>
             <FontAwesomeIcon className="absolute invisible top-4 right-4 md:top-8 md:right-8 peer-checked:visible text-pourpre-500" icon={faCircleCheck} />
           </div>
+        </div>
+      </div>
+      <div className="mb-6">
+        <span className="mb-2 block font-semibold">Options</span>
+        <div className="relative">
+          <input
+            type="checkbox"
+            id="is_in_doodle"
+            {...register('isInDoodle')}
+            className="hidden peer"
+          />
+
+          <label htmlFor="is_in_doodle" className="block p-4 pl-16 cursor-pointer rounded border-2 ring-2 ring-transparent ring-offset-2 peer-checked:border-pourpre-500 hover:bg-gray-50 active:ring-pourpre-200 focus:ring-pourpre-200 focus:ring-offset-0">
+            <span className="mb-2 block font-semibold">Afficher dans le sondage</span>
+            <p className="text-gray-600">
+              Cette évènement apparaitra dans le sondage,
+              et tous les membres recevront un email lors de la création de l&apos;évènement.
+            </p>
+          </label>
+          <FontAwesomeIcon className="absolute invisible top-4 left-4 md:top-8 md:left-8 peer-checked:visible text-pourpre-500" icon={faSquareCheck} />
+          <FontAwesomeIcon className="absolute visible top-4 left-4 md:top-8 md:left-8 peer-checked:invisible text-gray-200" icon={faSquare} />
         </div>
       </div>
       <div className="mb-6">

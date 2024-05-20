@@ -24,6 +24,7 @@ async def list_events(
     limit: int = 10,
     date__gte: Optional[datetime] = None,
     date__lt: Optional[datetime] = None,
+    is_in_doodle: Optional[bool] = None,
     ordering: str = "date",
 ):
     q = session.query(models.Event)
@@ -31,6 +32,8 @@ async def list_events(
         q = q.filter(models.Event.date >= date__gte)
     if date__lt:
         q = q.filter(models.Event.date < date__lt)
+    if is_in_doodle:
+        q = q.filter(models.Event.is_in_doodle == is_in_doodle)
     if ordering:
         order = "desc" if ordering.startswith("-") else "asc"
         col = getattr(models.Event, ordering.lstrip("-"))

@@ -58,6 +58,12 @@ export interface Event {
     category: string;
     /**
      * 
+     * @type {boolean}
+     * @memberof Event
+     */
+    isInDoodle: boolean;
+    /**
+     * 
      * @type {number}
      * @memberof Event
      */
@@ -74,6 +80,7 @@ export function instanceOfEvent(value: object): boolean {
     isInstance = isInstance && "date" in value;
     isInstance = isInstance && "costume" in value;
     isInstance = isInstance && "category" in value;
+    isInstance = isInstance && "isInDoodle" in value;
     isInstance = isInstance && "id" in value;
 
     return isInstance;
@@ -94,6 +101,7 @@ export function EventFromJSONTyped(json: any, ignoreDiscriminator: boolean): Eve
         'date': (new Date(json['date'])),
         'costume': CostumeFromJSON(json['costume']),
         'category': json['category'],
+        'isInDoodle': json['is_in_doodle'],
         'id': json['id'],
     };
 }
@@ -112,6 +120,7 @@ export function EventToJSON(value?: Event | null): any {
         'date': (value.date.toISOString().substring(0,10)),
         'costume': CostumeToJSON(value.costume),
         'category': value.category,
+        'is_in_doodle': value.isInDoodle,
         'id': value.id,
     };
 }

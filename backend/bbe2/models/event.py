@@ -19,6 +19,7 @@ class Event(Base):
     created_at: Mapped[datetime] = mapped_column(default=func.now())
     costume: Mapped[Costume]
     category: Mapped[str] = mapped_column(String(30))
+    is_in_doodle: Mapped[bool]
 
     responses: Mapped[list["Response"]] = relationship(back_populates="event")
 
