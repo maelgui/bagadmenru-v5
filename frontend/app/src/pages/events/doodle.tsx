@@ -56,7 +56,10 @@ export default function DoodlePage() {
 
   const [editing, setEditing] = useState<boolean>(false);
 
-  const { data: events } = useQuery({ queryKey: ['events', 'next100'], queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date() }) });
+  const { data: events } = useQuery({
+    queryKey: ['events', 'next100'],
+    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date(), isInDoodle: true }),
+  });
   const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: () => usersApi.listProfilesApiV1ProfilesGet() });
   const { data: responses } = useQuery({ queryKey: ['responses'], queryFn: () => eventsApi.listResponsesApiV1ResponsesGet(), select: (data) => responseFormat(data) });
 

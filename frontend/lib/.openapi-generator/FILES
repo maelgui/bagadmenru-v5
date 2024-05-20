@@ -19,6 +19,7 @@ src/models/FileOrFolderType.ts
 src/models/FileOrFolderUpdate.ts
 src/models/FolderCreate.ts
 src/models/GetUploadUrlResponse.ts
+src/models/Group.ts
 src/models/HTTPValidationError.ts
 src/models/Instrument.ts
 src/models/MyStats.ts

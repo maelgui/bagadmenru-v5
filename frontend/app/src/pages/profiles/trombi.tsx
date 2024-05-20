@@ -14,6 +14,11 @@ export default function ProfilesPage() {
     queryFn: () => usersApi.listProfilesApiV1ProfilesGet(),
   });
 
+  const { data: instruments } = useQuery({
+    queryKey: ['instruments'],
+    queryFn: () => usersApi.listInstrumentsApiV1InstrumentsGet(),
+  });
+
   return (
     <>
       <Header
@@ -26,7 +31,7 @@ export default function ProfilesPage() {
       />
 
       <Container>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
           {data ? data.map((profile) => (
             <div key={profile.id}>
               <div className="rounded overflow-hidden shadow flex flex-col">
@@ -36,9 +41,17 @@ export default function ProfilesPage() {
                 <div className="p-4">
                   <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
                   <div>
-                    {['admin', 'caisse-claire', 'commission-musicale'].map((group) => (
-                      <span className="px-2 py-1 m-1 inline-block bg-pourpre-500 text-white text-sm rounded-sm" key={group}>{group}</span>
-                    ))}
+                    {(() => {
+                      const instrument = instruments?.find((e) => e.id === profile.instrumentId);
+                      if (!instrument) {
+                        return null;
+                      }
+                      return (
+                        <span className="px-2 py-1 m-1 inline-bloc text-white text-sm rounded-sm" style={{ backgroundColor: instrument.color }}>
+                          {instrument.name}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
 

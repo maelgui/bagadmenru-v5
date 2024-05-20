@@ -56,6 +56,12 @@ export interface EventCreate {
      * @memberof EventCreate
      */
     category: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventCreate
+     */
+    isInDoodle: boolean;
 }
 
 /**
@@ -68,6 +74,7 @@ export function instanceOfEventCreate(value: object): boolean {
     isInstance = isInstance && "date" in value;
     isInstance = isInstance && "costume" in value;
     isInstance = isInstance && "category" in value;
+    isInstance = isInstance && "isInDoodle" in value;
 
     return isInstance;
 }
@@ -87,6 +94,7 @@ export function EventCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'date': (new Date(json['date'])),
         'costume': CostumeFromJSON(json['costume']),
         'category': json['category'],
+        'isInDoodle': json['is_in_doodle'],
     };
 }
 
@@ -104,6 +112,7 @@ export function EventCreateToJSON(value?: EventCreate | null): any {
         'date': (value.date.toISOString().substring(0,10)),
         'costume': CostumeToJSON(value.costume),
         'category': value.category,
+        'is_in_doodle': value.isInDoodle,
     };
 }
 

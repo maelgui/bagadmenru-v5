@@ -6,14 +6,18 @@ import LoadingComponent from '../pages/error/loading';
 
 export default function AuthGuard() {
   const { usersApi } = useApiClient();
-  const { data: profile } = useQuery({
+  const { status } = useQuery({
     queryKey: ['profiles', 'me'],
     queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
   });
 
+  if (status === 'error') {
+    throw new Response("Communication avec le backend impossible.", { status: 500 });
+  }
+
   return (
     <OidcSecure>
-      {profile ? <Outlet /> : <LoadingComponent />}
+      {status === 'success' ? <Outlet /> : <LoadingComponent />}
     </OidcSecure>
   );
 }

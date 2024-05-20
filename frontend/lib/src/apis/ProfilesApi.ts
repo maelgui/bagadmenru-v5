@@ -16,6 +16,7 @@
 import * as runtime from '../runtime';
 import type {
   GetUploadUrlResponse,
+  Group,
   HTTPValidationError,
   Instrument,
   MyStats,
@@ -25,6 +26,8 @@ import type {
 import {
     GetUploadUrlResponseFromJSON,
     GetUploadUrlResponseToJSON,
+    GroupFromJSON,
+    GroupToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     InstrumentFromJSON,
@@ -175,6 +178,37 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async getProfileApiV1ProfilesProfileIdGet(requestParameters: GetProfileApiV1ProfilesProfileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
         const response = await this.getProfileApiV1ProfilesProfileIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * List Groups
+     */
+    async listGroupsApiV1GroupsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Group>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/groups/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(GroupFromJSON));
+    }
+
+    /**
+     * List Groups
+     */
+    async listGroupsApiV1GroupsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Group>> {
+        const response = await this.listGroupsApiV1GroupsGetRaw(initOverrides);
         return await response.value();
     }
 

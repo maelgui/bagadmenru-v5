@@ -8,16 +8,16 @@ export default function Counter({ type, description, value }: CounterProps) {
   let className = '';
   switch (type) {
     case 'error':
-      className = 'border border-b-4 border-red-700 text-red-900';
+      className = 'border border-l-4 border-red-700 text-red-900 rounded-lg';
       break;
     case 'warning':
-      className = 'border border-b-4 border-amber-700 text-amber-900';
+      className = 'border border-l-4 border-amber-700 text-amber-900 rounded-lg';
       break;
     case 'success':
-      className = 'border border-b-4 border-emerald-700 text-emerald-950';
+      className = 'border border-l-4 border-emerald-700 text-emerald-950 rounded-lg';
       break;
     case 'info':
-      className = 'border border-b-4 border-sky-700 text-sky-950';
+      className = 'border border-l-4 border-sky-700 text-sky-950 rounded-lg';
       break;
     default:
       break;

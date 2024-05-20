@@ -55,6 +55,7 @@ export interface ListEventsApiV1EventsGetRequest {
     limit?: number;
     dateGte?: Date | null;
     dateLt?: Date | null;
+    isInDoodle?: boolean | null;
     ordering?: string;
 }
 
@@ -272,6 +273,10 @@ export class EventsApi extends runtime.BaseAPI {
 
         if (requestParameters.dateLt !== undefined) {
             queryParameters['date__lt'] = (requestParameters.dateLt as any).toISOString();
+        }
+
+        if (requestParameters.isInDoodle !== undefined) {
+            queryParameters['is_in_doodle'] = requestParameters.isInDoodle;
         }
 
         if (requestParameters.ordering !== undefined) {

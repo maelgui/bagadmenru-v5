@@ -10,6 +10,7 @@ export * from './FileOrFolderType';
 export * from './FileOrFolderUpdate';
 export * from './FolderCreate';
 export * from './GetUploadUrlResponse';
+export * from './Group';
 export * from './HTTPValidationError';
 export * from './Instrument';
 export * from './MyStats';
