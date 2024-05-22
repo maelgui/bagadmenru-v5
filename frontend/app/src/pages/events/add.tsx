@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { EventCreate } from 'bagad-client';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/header';
 
@@ -16,6 +17,9 @@ export default function AddEventPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       navigate('/events/manage');
+    },
+    onError: (error) => {
+      toast.error(`Erreur lors de la création de l'évènement : ${error.message}`);
     },
   });
   const onSubmit = (data: EventCreate) => mutate(data);

@@ -107,133 +107,133 @@ export default function DoodlePage() {
       <Container className={`${mutation.isPending ? 'disabled' : ''}`}>
         {!events?.length ? (
           <Alert type="info">Aucun évèvement prochainement.</Alert>
-        ) : null}
-
-        <div className="overflow-x-auto">
-          <table className="table-auto min-w-full">
-            <thead className="divide-y">
-              <tr className="divide-x">
-                <td>{' '}</td>
-                {events ? events.map((event) => (
-                  <td key={event.id} className="text-center px-4">
-                    <Tooltip
-                      content={(
-                        <span>
-                          {event.description !== '' ? event.description : 'Pas de description'}
-                          {event.costume !== Costume.None && (
-                            <span>
-                              <br />
-                              {event.costume === Costume.Costume ? 'En costume !' : 'En polo !'}
-                            </span>
-                          )}
+        ) : (
+          <div className="overflow-scroll h-96">
+            <table className="table-auto min-w-full relative">
+              <thead className="divide-y sticky top-0">
+                <tr className="divide-x">
+                  <th className="bg-white">{' '}</th>
+                  {events ? events.map((event) => (
+                    <th key={event.id} className="text-center px-4 bg-white">
+                      <Tooltip
+                        content={(
+                          <span>
+                            {event.description !== '' ? event.description : 'Pas de description'}
+                            {event.costume !== Costume.None && (
+                              <span>
+                                <br />
+                                {event.costume === Costume.Costume ? 'En costume !' : 'En polo !'}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      >
+                        <div className="p-1">
+                          <Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
+                        </div>
+                        <strong>{event.title}</strong>
+                        <br />
+                        <span className="text-sm">
+                          {(new Date(event.date)).toLocaleDateString('fr-FR', {
+                            weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
+                          })}
                         </span>
-                      )}
-                    >
-                      <div className="p-1">
-                        <Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
-                      </div>
-                      <strong>{event.title}</strong>
-                      <br />
-                      <span className="text-sm">
-                        {(new Date(event.date)).toLocaleDateString('fr-FR', {
-                          weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
-                        })}
-                      </span>
-                    </Tooltip>
+                      </Tooltip>
 
-                  </td>
-                )) : (
-                  <>
-                    <td className="text-center px-4">
-                      <strong><SkeletonText className="w-24" /></strong>
-                      <br />
-                      <span className="text-sm">
-                        <SkeletonText className="w-32" />
-                      </span>
+                    </th>
+                  )) : (
+                    <>
+                      <th className="text-center px-4">
+                        <strong><SkeletonText className="w-24" /></strong>
+                        <br />
+                        <span className="text-sm">
+                          <SkeletonText className="w-32" />
+                        </span>
+                      </th>
+                      <th className="text-center px-4">
+                        <strong><SkeletonText className="w-24" /></strong>
+                        <br />
+                        <span className="text-sm">
+                          <SkeletonText className="w-32" />
+                        </span>
+                      </th>
+                      <th className="text-center px-4">
+                        <strong><SkeletonText className="w-24" /></strong>
+                        <br />
+                        <span className="text-sm">
+                          <SkeletonText className="w-32" />
+                        </span>
+                      </th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="divide-x">
+                  <td>{' '}</td>
+                  {events ? events.map((event) => (
+                    <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
+                      <Badge color="bg-gray-400" className="m-1">
+                        {(responses && responses.responsesSumByEvent.get(event.id)) ?? 0}
+                        {' '}
+                        présents
+                      </Badge>
                     </td>
-                    <td className="text-center px-4">
-                      <strong><SkeletonText className="w-24" /></strong>
-                      <br />
-                      <span className="text-sm">
-                        <SkeletonText className="w-32" />
-                      </span>
-                    </td>
-                    <td className="text-center px-4">
-                      <strong><SkeletonText className="w-24" /></strong>
-                      <br />
-                      <span className="text-sm">
-                        <SkeletonText className="w-32" />
-                      </span>
-                    </td>
-                  </>
-                )}
-              </tr>
-              <tr className="divide-x">
-                <td>{' '}</td>
-                {events ? events.map((event) => (
-                  <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
-                    <Badge color="bg-gray-400" className="m-1">
-                      {(responses && responses.responsesSumByEvent.get(event.id)) ?? 0}
-                      {' '}
-                      présents
-                    </Badge>
-                  </td>
-                )) : (
-                  <>
-                    <td className="text-center whitespace-nowrap  px-4 text-sm">
-                      <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
-                    </td>
-                    <td className="text-center whitespace-nowrap  px-4 text-sm">
-                      <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
-                    </td>
-                    <td className="text-center whitespace-nowrap  px-4 text-sm">
-                      <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
-                    </td>
-                  </>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {profiles ? profiles.map((user) => (
-                <tr key={user.id}>
-                  <th className={`text-right whitespace-nowrap ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
-                    {user.pictureUrl ? <Avatar src={user.pictureUrl} size="sm" className="rounded-full w-6 h-6 mr-2" /> : null}
-                    <span>{`${user.firstName} ${user.lastName.slice(0, 1)}`}</span>
-                  </th>
-                  {events && events.map((event) => {
-                    const value = responses?.responsesByUserAndEvent.get(keyFunc(event.id, user.id))?.at(0)?.value;
-                    return (
-                      <Checkbox
-                        key={`${user.id}-${event.id}`}
-                        disabled={idTokenPayload.sub === user.id ? !editing : true}
-                        value={value}
-                        onClick={() => mutation.mutate({ eventId: event.id, response: { value: !value } })}
-                      />
-                    );
-                  })}
+                  )) : (
+                    <>
+                      <td className="text-center whitespace-nowrap  px-4 text-sm">
+                        <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
+                      </td>
+                      <td className="text-center whitespace-nowrap  px-4 text-sm">
+                        <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
+                      </td>
+                      <td className="text-center whitespace-nowrap  px-4 text-sm">
+                        <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
+                      </td>
+                    </>
+                  )}
+                </tr>
+                {profiles ? profiles.map((user) => (
+                  <tr key={user.id}>
+                    <th className={`text-right whitespace-nowrap ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
+                      {user.pictureUrl ? <Avatar src={user.pictureUrl} size="sm" className="rounded-full w-6 h-6 mr-2" /> : null}
+                      <span>{`${user.firstName} ${user.lastName.slice(0, 1)}`}</span>
+                    </th>
+                    {events && events.map((event) => {
+                      const value = responses?.responsesByUserAndEvent.get(keyFunc(event.id, user.id))?.at(0)?.value;
+                      return (
+                        <Checkbox
+                          key={`${user.id}-${event.id}`}
+                          disabled={idTokenPayload.sub === user.id ? !editing : true}
+                          value={value}
+                          onClick={() => mutation.mutate({ eventId: event.id, response: { value: !value } })}
+                        />
+                      );
+                    })}
 
-                </tr>
-              )) : (
-                <tr>
-                  <th className="text-right flex justify-end items-center">
-                    <SkeletonImage className="w-8 h-8 mr-2" />
-                    <SkeletonText className="w-24" />
-                  </th>
-                  <td />
-                  <td />
-                  <td />
-                </tr>
-              )}
-            </tbody>
-          </table>
-          <button
-            type="button"
-            className="w-16 h-16 shadow-md shadow-white text-white bg-pourpre-500 rounded-full absolute right-8 bottom-8"
-            onClick={() => setEditing(!editing)}
-          >
-            {editing ? <FontAwesomeIcon icon={faFloppyDisk} /> : <FontAwesomeIcon icon={faPen} />}
-          </button>
-        </div>
+                  </tr>
+                )) : (
+                  <tr>
+                    <th className="text-right flex justify-end items-center">
+                      <SkeletonImage className="w-8 h-8 mr-2" />
+                      <SkeletonText className="w-24" />
+                    </th>
+                    <td />
+                    <td />
+                    <td />
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <button
+              type="button"
+              className="w-16 h-16 shadow-md shadow-white text-white bg-pourpre-500 rounded-full absolute right-8 bottom-8"
+              onClick={() => setEditing(!editing)}
+            >
+              {editing ? <FontAwesomeIcon icon={faFloppyDisk} /> : <FontAwesomeIcon icon={faPen} />}
+            </button>
+          </div>
+        )}
       </Container>
     </>
   );

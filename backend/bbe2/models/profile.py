@@ -16,7 +16,9 @@ class Profile(Base):
     first_name: Mapped[str] = mapped_column(String(30), nullable=False)
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)
-    instrument_id: Mapped[int] = mapped_column(ForeignKey("instruments.id"))
+    instrument_id: Mapped[int] = mapped_column(
+        ForeignKey("instruments.id"), nullable=True
+    )
     instrument: Mapped["Instrument"] = relationship("Instrument")
 
 

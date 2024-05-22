@@ -1,4 +1,5 @@
 import { useOidcIdToken } from '@axa-fr/react-oidc';
+import { faCheckCircle } from '@fortawesome/free-regular-svg-icons';
 import {
   faArrowRight,
 } from '@fortawesome/free-solid-svg-icons';
@@ -45,35 +46,50 @@ export default function HomePage() {
     queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: idTokenPayload.sub }),
     select: (data) => groupBy(data, (e) => e.eventId),
   });
-  const { data: stats } = useQuery({
+  const { data: myStats } = useQuery({
     queryKey: ['stats', 'me'],
     queryFn: () => usersApi.getMyStatsApiV1StatsMeGet(),
+  });
+  const { data: globalStats } = useQuery({
+    queryKey: ['stats', 'global'],
+    queryFn: () => usersApi.getGlobalStatsApiV1StatsGet(),
   });
 
   return (
     <>
       <Header title={`Degemer mat ${idTokenPayload.name}`} />
       <Container>
-        {stats ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
+          {myStats ? (
+            <>
+              <Counter
+                type={myStats.responsesNeeded > 0 ? 'error' : 'success'}
+                value={myStats.responsesNeeded > 0
+                  ? myStats.responsesNeeded
+                  : (<FontAwesomeIcon icon={faCheckCircle} />)}
+                description={myStats.responsesNeeded > 0 ? `Vous devez répondre à ${myStats.responsesNeeded} sortie${myStats.responsesNeeded > 1 ? 's' : ''}` : 'Vous avez répondu à toutes les prochaines sorties !'}
+              />
+              {(() => {
+                if (!myStats.avgResponseTime) { return null; }
+                const days = parse(myStats.avgResponseTime).days ?? 0;
+                return (
+                  <Counter
+                    type={days < 5 ? 'info' : 'warning'}
+                    value={days ?? 0}
+                    description={`Vous mettez en moyenne ${days} jours pour répondre aux sorties.`}
+                  />
+                );
+              })()}
+            </>
+          ) : null}
+          {globalStats ? (
             <Counter
-              type="error"
-              value={stats.responsesNeeded}
-              description={`Vous devez répondre à ${stats.responsesNeeded} sortie${stats.responsesNeeded > 1 ? 's' : ''}`}
+              type="info"
+              value={globalStats.nEvents}
+              description={`Il y a ${globalStats.nEvents} sorties cette saison.`}
             />
-            {(() => {
-              if (!stats.avgResponseTime) { return null; }
-              const days = parse(stats.avgResponseTime).days ?? 0;
-              return (
-                <Counter
-                  type={days < 5 ? 'info' : 'warning'}
-                  value={days ?? 0}
-                  description={`Vous mettez en moyenne ${days} jours pour répondre aux sorties.`}
-                />
-              );
-            })()}
-          </div>
-        ) : null}
+          ) : null}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 content-stretch">
           <div className="flex flex-col">
             <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Calendrier</h3>

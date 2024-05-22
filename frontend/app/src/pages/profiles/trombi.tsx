@@ -13,6 +13,10 @@ export default function ProfilesPage() {
     queryKey: ['profiles'],
     queryFn: () => usersApi.listProfilesApiV1ProfilesGet(),
   });
+  const { data: waiting } = useQuery({
+    queryKey: ['invitations'],
+    queryFn: () => usersApi.listInvitationsApiV1InvitationsGet(),
+  });
 
   const { data: instruments } = useQuery({
     queryKey: ['instruments'],
@@ -58,6 +62,16 @@ export default function ProfilesPage() {
               </div>
             </div>
           )) : 'Loading'}
+        </div>
+        <h3 className="mt-8 mb-4 text-xl">En attente</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
+          {waiting?.map((profile) => (
+            <div key={profile.id}>
+              <div className="rounded overflow-hidden shadow flex flex-col p-4">
+                <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
+              </div>
+            </div>
+          ))}
         </div>
       </Container>
 

@@ -26,21 +26,23 @@ export default function Header({
 }: HeaderProps) {
   return (
     <>
-      <div className="bg-pourpre-50 shadow-inner py-2">
-        <Container>
-          <ul className="flex flex-wrap text-sm">
-            <li className="mx-2"><Link to="/" className="underline underline-offset-4 hover:decoration-2"><FontAwesomeIcon icon={faHouse} /></Link></li>
-            {breadcrumb.map((item) => (
-              <React.Fragment key={item.link ?? 'final'}>
-                <li className="mx-2 text-gray-600"><FontAwesomeIcon icon={faCaretRight} className="px-2" /></li>
-                <li className="mx-2">
-                  {item.link ? <Link to={item.link} className="underline underline-offset-4 hover:decoration-2">{item.title}</Link> : item.title}
-                </li>
-              </React.Fragment>
-            ))}
-          </ul>
-        </Container>
-      </div>
+      {breadcrumb.length !== 0 ? (
+        <div className="bg-pourpre-50 shadow-inner py-2">
+          <Container>
+            <ul className="flex text-sm overflow-x-auto">
+              <li className="mx-2"><Link to="/" className="underline underline-offset-4 hover:decoration-2"><FontAwesomeIcon icon={faHouse} /></Link></li>
+              {breadcrumb.map((item) => (
+                <React.Fragment key={item.link ?? 'final'}>
+                  <li className="mx-2 text-gray-600"><FontAwesomeIcon icon={faCaretRight} className="px-2" /></li>
+                  <li className="mx-2 text-nowrap">
+                    {item.link ? <Link to={item.link} className="underline underline-offset-4 hover:decoration-2">{item.title}</Link> : item.title}
+                  </li>
+                </React.Fragment>
+              ))}
+            </ul>
+          </Container>
+        </div>
+      ) : null}
       <div className="py-8">
         <Container>
           <div className="flex flex-col md:flex-row gap-4 justify-between md:items-center">
@@ -50,7 +52,7 @@ export default function Header({
               <h4 className="text-lg text-gray-500">{subtitle}</h4>
             </div>
 
-            <div className="text-right">
+            <div>
               {actions.map((action) => <span key={action.key}>{action}</span>)}
             </div>
           </div>

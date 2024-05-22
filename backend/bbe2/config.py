@@ -20,8 +20,9 @@ class Settings(BaseSettings):
     oidc_token_url: AnyHttpUrl
     oidc_jwks_url: AnyHttpUrl
 
-    keycloak_access_key: str
+    keycloak_client_id: str
     keycloak_secret_key: str
+    keycloak_url: str
 
     swagger_client_id: str | None = "bbe2-swagger"
 
