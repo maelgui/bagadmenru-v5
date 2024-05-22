@@ -74,7 +74,7 @@ export default function Navbar() {
                 <CustomNavLink to="/photos">Photos</CustomNavLink>
               </li>
               <li className="px-3 py-2 tracking-wide">
-                <CustomNavLink to="/users">Trombinoscope</CustomNavLink>
+                <CustomNavLink to="/profile">Trombinoscope</CustomNavLink>
               </li>
             </ul>
           </nav>
@@ -83,7 +83,7 @@ export default function Navbar() {
             {isAuthenticated && profile
               ? (
                 <>
-                  <Link to="/profile" className="lg:order-last">
+                  <Link to="/profile/me" className="lg:order-last">
                     <Avatar src={profile.pictureUrl} size="xs" className="m-8" />
                   </Link>
                   <div className="lg:text-right lg:py-2">

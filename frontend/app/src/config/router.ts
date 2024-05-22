@@ -56,11 +56,11 @@ export default createBrowserRouter([
                 Component: ListFilesPage,
               },
               {
-                path: '/users',
+                path: '/profile',
                 Component: ProfilesPage,
               },
               {
-                path: '/profile',
+                path: '/profile/me',
                 Component: MyProfile,
               },
               {

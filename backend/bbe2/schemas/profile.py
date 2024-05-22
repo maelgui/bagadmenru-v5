@@ -1,5 +1,7 @@
+import uuid
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, computed_field
+
+from pydantic import BaseModel, ConfigDict, EmailStr, computed_field
 
 from bbe2.utils.s3 import s3
 
@@ -25,6 +27,12 @@ class ProfileUpdate(_ProfileBase):
     pass
 
 
+class Group(BaseModel):
+    id: uuid.UUID
+    name: str
+    path: str
+
+
 class Profile(_ProfileBase):
     model_config = ConfigDict(from_attributes=True)
 
@@ -33,9 +41,17 @@ class Profile(_ProfileBase):
     email: str
     id: str
 
+    groups: list[Group] = []
+
     @computed_field
     @property
     def picture_url(self) -> Optional[str]:
         if not self.picture_key:
             return None
         return s3.generate_get_presigned_url(object_name=self.picture_key)
+
+
+class Invitation(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr

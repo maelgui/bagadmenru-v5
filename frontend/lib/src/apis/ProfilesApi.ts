@@ -16,9 +16,11 @@
 import * as runtime from '../runtime';
 import type {
   GetUploadUrlResponse,
+  GlobalStats,
   Group,
   HTTPValidationError,
   Instrument,
+  Invitation,
   MyStats,
   Profile,
   ProfileUpdate,
@@ -26,12 +28,16 @@ import type {
 import {
     GetUploadUrlResponseFromJSON,
     GetUploadUrlResponseToJSON,
+    GlobalStatsFromJSON,
+    GlobalStatsToJSON,
     GroupFromJSON,
     GroupToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     InstrumentFromJSON,
     InstrumentToJSON,
+    InvitationFromJSON,
+    InvitationToJSON,
     MyStatsFromJSON,
     MyStatsToJSON,
     ProfileFromJSON,
@@ -39,6 +45,10 @@ import {
     ProfileUpdateFromJSON,
     ProfileUpdateToJSON,
 } from '../models/index';
+
+export interface CreateInvitationsApiV1InvitationsPostRequest {
+    invitation: Invitation;
+}
 
 export interface GetProfileApiV1ProfilesProfileIdGetRequest {
     profileId: string;
@@ -54,9 +64,46 @@ export interface UpdateMyProfileApiV1ProfilesMePutRequest {
 export class ProfilesApi extends runtime.BaseAPI {
 
     /**
+     * Create Invitations
+     */
+    async createInvitationsApiV1InvitationsPostRaw(requestParameters: CreateInvitationsApiV1InvitationsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters.invitation === null || requestParameters.invitation === undefined) {
+            throw new runtime.RequiredError('invitation','Required parameter requestParameters.invitation was null or undefined when calling createInvitationsApiV1InvitationsPost.');
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/invitations/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: InvitationToJSON(requestParameters.invitation),
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Create Invitations
+     */
+    async createInvitationsApiV1InvitationsPost(requestParameters: CreateInvitationsApiV1InvitationsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.createInvitationsApiV1InvitationsPostRaw(requestParameters, initOverrides);
+    }
+
+    /**
      * Get Global Stats
      */
-    async getGlobalStatsApiV1StatsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>> {
+    async getGlobalStatsApiV1StatsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GlobalStats>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -73,13 +120,13 @@ export class ProfilesApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => GlobalStatsFromJSON(jsonValue));
     }
 
     /**
      * Get Global Stats
      */
-    async getGlobalStatsApiV1StatsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object> {
+    async getGlobalStatsApiV1StatsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GlobalStats> {
         const response = await this.getGlobalStatsApiV1StatsGetRaw(initOverrides);
         return await response.value();
     }
@@ -240,6 +287,37 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async listInstrumentsApiV1InstrumentsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Instrument>> {
         const response = await this.listInstrumentsApiV1InstrumentsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * List Invitations
+     */
+    async listInvitationsApiV1InvitationsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/invitations/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProfileFromJSON));
+    }
+
+    /**
+     * List Invitations
+     */
+    async listInvitationsApiV1InvitationsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Profile>> {
+        const response = await this.listInvitationsApiV1InvitationsGetRaw(initOverrides);
         return await response.value();
     }
 
