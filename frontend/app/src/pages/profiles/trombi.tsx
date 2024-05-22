@@ -23,11 +23,6 @@ export default function ProfilesPage() {
     queryFn: () => usersApi.listInstrumentsApiV1InstrumentsGet(),
   });
 
-  const { data: instruments } = useQuery({
-    queryKey: ['instruments'],
-    queryFn: () => usersApi.listInstrumentsApiV1InstrumentsGet(),
-  });
-
   return (
     <>
       <Header
