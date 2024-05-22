@@ -1,4 +1,3 @@
-import { useOidcIdToken } from '@axa-fr/react-oidc';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/avatar';
