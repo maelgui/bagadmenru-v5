@@ -10,7 +10,6 @@ import { useApiClient } from '../../config/client';
 export default function MyProfile() {
   const { usersApi } = useApiClient();
 
-  const { idTokenPayload } = useOidcIdToken();
   const navigate = useNavigate();
   const { data: profile } = useQuery({
     queryKey: ['profiles', 'me'],
