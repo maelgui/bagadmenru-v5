@@ -40,9 +40,11 @@ export default function ProfilesPage() {
                 <div className="p-4">
                   <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
                   <div>
-                    <span className="px-2 py-1 m-1 inline-bloc text-white text-sm rounded-sm" style={{ backgroundColor: profile.instrument.color }}>
-                      {profile.instrument.name}
-                    </span>
+                    {profile.instrument ? (
+                      <span className="px-2 py-1 m-1 inline-bloc text-white text-sm rounded-sm" style={{ backgroundColor: profile.instrument.color }}>
+                        {profile.instrument.name}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 

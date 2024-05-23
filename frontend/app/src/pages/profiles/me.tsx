@@ -38,7 +38,7 @@ export default function MyProfile() {
             </div>
             <h1 className="text-4xl">{`${profile.firstName} ${profile.lastName}`}</h1>
             <ul className="mt-8">
-              <Badge className="m-2" style={{ backgroundColor: profile.instrument.color }}>{profile.instrument.name}</Badge>
+              {profile.instrument ? (<Badge className="m-2" style={{ backgroundColor: profile.instrument.color }}>{profile.instrument.name}</Badge>) : null}
               {profile.groups?.map((g) => <Badge key={g.id} className="bg-pourpre-500 m-2">{g.name}</Badge>)}
             </ul>
           </div>
