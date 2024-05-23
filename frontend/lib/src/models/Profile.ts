@@ -19,6 +19,12 @@ import {
     GroupFromJSONTyped,
     GroupToJSON,
 } from './Group';
+import type { Instrument } from './Instrument';
+import {
+    InstrumentFromJSON,
+    InstrumentFromJSONTyped,
+    InstrumentToJSON,
+} from './Instrument';
 
 /**
  * 
@@ -70,6 +76,12 @@ export interface Profile {
     groups?: Array<Group>;
     /**
      * 
+     * @type {Instrument}
+     * @memberof Profile
+     */
+    instrument?: Instrument | null;
+    /**
+     * 
      * @type {string}
      * @memberof Profile
      */
@@ -109,6 +121,7 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'email': json['email'],
         'id': json['id'],
         'groups': !exists(json, 'groups') ? undefined : ((json['groups'] as Array<any>).map(GroupFromJSON)),
+        'instrument': !exists(json, 'instrument') ? undefined : InstrumentFromJSON(json['instrument']),
         'pictureUrl': json['picture_url'],
     };
 }
@@ -129,6 +142,7 @@ export function ProfileToJSON(value?: Profile | null): any {
         'email': value.email,
         'id': value.id,
         'groups': value.groups === undefined ? undefined : ((value.groups as Array<any>).map(GroupToJSON)),
+        'instrument': InstrumentToJSON(value.instrument),
         'picture_url': value.pictureUrl,
     };
 }

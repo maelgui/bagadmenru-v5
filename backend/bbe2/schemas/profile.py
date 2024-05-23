@@ -43,6 +43,8 @@ class Profile(_ProfileBase):
 
     groups: list[Group] = []
 
+    instrument: Optional[Instrument] = None
+
     @computed_field
     @property
     def picture_url(self) -> Optional[str]:

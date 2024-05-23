@@ -18,11 +18,6 @@ export default function ProfilesPage() {
     queryFn: () => usersApi.listInvitationsApiV1InvitationsGet(),
   });
 
-  const { data: instruments } = useQuery({
-    queryKey: ['instruments'],
-    queryFn: () => usersApi.listInstrumentsApiV1InstrumentsGet(),
-  });
-
   return (
     <>
       <Header
@@ -45,17 +40,9 @@ export default function ProfilesPage() {
                 <div className="p-4">
                   <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
                   <div>
-                    {(() => {
-                      const instrument = instruments?.find((e) => e.id === profile.instrumentId);
-                      if (!instrument) {
-                        return null;
-                      }
-                      return (
-                        <span className="px-2 py-1 m-1 inline-bloc text-white text-sm rounded-sm" style={{ backgroundColor: instrument.color }}>
-                          {instrument.name}
-                        </span>
-                      );
-                    })()}
+                    <span className="px-2 py-1 m-1 inline-bloc text-white text-sm rounded-sm" style={{ backgroundColor: profile.instrument.color }}>
+                      {profile.instrument.name}
+                    </span>
                   </div>
                 </div>
 

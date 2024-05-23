@@ -62,27 +62,30 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
           {myStats && globalStats ? (
             <>
-              <Counter
-                type={myStats.responsesNeeded > 0 ? 'error' : 'success'}
-                value={myStats.responsesNeeded > 0
-                  ? myStats.responsesNeeded
-                  : (<FontAwesomeIcon icon={faCheckCircle} />)}
-                description={myStats.responsesNeeded > 0 ? `Vous devez répondre à ${myStats.responsesNeeded} sortie${myStats.responsesNeeded > 1 ? 's' : ''}` : 'Vous avez répondu à toutes les prochaines sorties !'}
-              />
+              <Link to="/events">
+                <Counter
+                  className="h-full"
+                  type={myStats.responsesNeeded > 0 ? 'error' : 'success'}
+                  value={myStats.responsesNeeded > 0
+                    ? myStats.responsesNeeded
+                    : (<FontAwesomeIcon icon={faCheckCircle} />)}
+                  description={myStats.responsesNeeded > 0 ? `Vous devez répondre à ${myStats.responsesNeeded} sortie${myStats.responsesNeeded > 1 ? 's' : ''}` : 'Vous avez répondu à toutes les prochaines sorties !'}
+                />
+              </Link>
               {(() => {
                 if (!myStats.avgResponseTime) { return null; }
                 const days = parse(myStats.avgResponseTime).days ?? 0;
                 return (
                   <Counter
-                    type={days < 5 ? 'info' : 'warning'}
+                    type={days < 5 ? 'ghost' : 'warning'}
                     value={days ?? 0}
                     description={`Vous mettez en moyenne ${days} jours pour répondre aux sorties.`}
                   />
                 );
               })()}
               <Counter
-                type="info"
-                value={globalStats.nEvents}
+                type="ghost"
+                value={`${myStats.nPositiveResponses} / ${globalStats.nEvents}`}
                 description={`Il y a ${globalStats.nEvents} sorties cette saison. Vous en avez fait ${myStats.nPositiveResponses}.`}
               />
             </>

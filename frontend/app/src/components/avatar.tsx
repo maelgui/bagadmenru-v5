@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-props-no-spreading */
 import defaultAvatar from '../assets/default.svg';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
@@ -12,9 +13,11 @@ const sizeClass = {
   lg: 'h-64 w-64',
 };
 
-export default function Avatar({ src = undefined, size = 'md', className = '' }: AvatarProps) {
+export default function Avatar({
+  src = undefined, size = 'md', className = '', ...rest
+}: AvatarProps) {
   return (
-    <div className={`${sizeClass[size]} rounded-full overflow-hidden bg-pourpre-50 ${className}`}>
+    <div className={`${sizeClass[size]} rounded-full overflow-hidden bg-pourpre-50 ${className}`} {...rest}>
       <img className="object-cover min-w-full min-h-full" src={src ?? defaultAvatar} alt="profile" />
     </div>
   );

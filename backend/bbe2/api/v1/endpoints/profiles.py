@@ -117,10 +117,13 @@ async def get_profile(
 
 @profiles_router.get("/", response_model=list[schemas.Profile])
 async def list_profiles(
-    profile_crud: CRUDProfile = Depends(),
+    session: Session = Depends(get_db),
     token: dict[str, Any] = Security(get_current_user),
 ):
-    return profile_crud.find_all()
+    q = select(models.Profile).order_by(models.Profile.instrument_id)
+    print(q)
+    res = session.scalars(q).all()
+    return res
 
 
 instruments_router = APIRouter(prefix="/instruments")
