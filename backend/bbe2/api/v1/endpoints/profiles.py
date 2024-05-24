@@ -154,7 +154,9 @@ async def get_my_stats(
 
     q = select(
         count(models.Response.value).label("n_responses"),
-        sum(cast(models.Response.value, Integer)).label("n_positive_responses"),
+        func.coalesce(sum(cast(models.Response.value, Integer)), 0).label(
+            "n_positive_responses"
+        ),
         func.avg(models.Response.date - models.Event.created_at).label(
             "avg_response_time"
         ),
@@ -268,7 +270,7 @@ async def create_invitations(
         client_secret_key=settings.keycloak_secret_key,
         realm_name="bagadmenru",
     )
-    admin.create_user(
+    user_id = admin.create_user(
         {
             "email": profile.email,
             "firstName": profile.first_name,
@@ -278,6 +280,12 @@ async def create_invitations(
                 "bbe2ProfileCreated": "no",
             },
         }
+    )
+    admin.send_update_account(
+        user_id,
+        ["UPDATE_PASSWORD", "VERIFY_EMAIL"],
+        client_id="bbe2-frontend",
+        lifespan=3600 * 72,
     )
 
 

@@ -33,11 +33,11 @@ export default function ProfilesPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
           {data ? data.map((profile) => (
             <div key={profile.id}>
-              <div className="rounded overflow-hidden shadow flex flex-col">
-                <div className="aspect-square relative">
+              <div className="rounded overflow-hidden shadow flex flex-col p-8 h-full">
+                <div className="aspect-square relative rounded-full overflow-hidden">
                   <img src={profile.pictureUrl ?? defaultAvatar} alt="profile" className="object-cover w-full h-full absolute bg-pourpre-50" />
                 </div>
-                <div className="p-4">
+                <div className="pt-4 text-center">
                   <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
                   <div>
                     {profile.instrument ? (
@@ -54,16 +54,16 @@ export default function ProfilesPage() {
         </div>
         {waiting?.length ? (
           <div>
-        <h3 className="mt-8 mb-4 text-xl">En attente</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
-          {waiting?.map((profile) => (
-            <div key={profile.id}>
-              <div className="rounded overflow-hidden shadow flex flex-col p-4">
-                <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
-              </div>
+            <h3 className="mt-8 mb-4 text-xl">En attente</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
+              {waiting?.map((profile) => (
+                <div key={profile.id}>
+                  <div className="rounded overflow-hidden shadow flex flex-col p-4">
+                    <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
           </div>
         ) : null}
       </Container>
