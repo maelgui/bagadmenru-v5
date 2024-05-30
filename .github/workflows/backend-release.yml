@@ -40,7 +40,7 @@ jobs:
       - name: Clear old packages
         uses: actions/delete-package-versions@v5
         with: 
-          package-name: backend
+          package-name: bagadmenru-v5/backend
           package-type: 'container'
           min-versions-to-keep: 10
           delete-only-untagged-versions: 'true'
