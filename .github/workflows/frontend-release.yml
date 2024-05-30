@@ -38,3 +38,11 @@ jobs:
             VITE_OIDC_CLIENT_ID=${{ vars.VITE_OIDC_CLIENT_ID }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+      - name: Clear old packages
+        uses: actions/delete-package-versions@v5
+        with: 
+          package-name: bagadmenru-v5/frontend
+          package-type: 'container'
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: 'true'
