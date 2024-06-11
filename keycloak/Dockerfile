@@ -1,4 +1,4 @@
-ARG KEYCLOAK_TAG=24.0
+ARG KEYCLOAK_TAG=25.0
 FROM quay.io/keycloak/keycloak:$KEYCLOAK_TAG as builder
 
 # Enable health and metrics support
