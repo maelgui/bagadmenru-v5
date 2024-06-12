@@ -17,7 +17,7 @@ sqlalchemy = "^2.0.30"
 psycopg = {extras = ["binary"], version = "^3.1.19"}
 ics = "^0.7.2"
 pydantic = "^2.7.3"
-pydantic-settings = "^2.0.3"
+pydantic-settings = "^2.3.2"
 python-keycloak = "^4.0.0"
 email-validator = "^2.1.1"
 
