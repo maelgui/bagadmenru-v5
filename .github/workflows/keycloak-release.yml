@@ -30,6 +30,7 @@ jobs:
         with:
           name: bagad-keycloak-theme
           path: frontend/app/dist_keycloak/target/bagad-frontend-keycloak-theme-0.0.0.jar
+          retention-days: 1
 
   build-push-docker:
     runs-on: ubuntu-latest
