@@ -32,9 +32,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22.x"
-      - run: whereis tsc
       - run: yarn
       - run: yarn run tsc --version
-      - run: whereis tsc
-      - run: which tsc
       - run: yarn workspace bagad-frontend tsc
