@@ -28,7 +28,7 @@ jobs:
     name: Check typescript
     steps:
       - uses: actions/checkout@v4
-      - run: rm $(whereis tsc) || true
+      - run: rm $(which tsc) || true
       - uses: actions/setup-node@v4
         with:
           node-version: "22.x"
