@@ -33,5 +33,6 @@ jobs:
           node-version: "22.x"
       - run: yarn
       - run: yarn run tsc --version
-      - run: yarn run tsc --showConfig
+      - run: whereis tsc
+      - run: which tsc
       - run: yarn workspace bagad-frontend tsc
