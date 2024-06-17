@@ -27,11 +27,12 @@ jobs:
     runs-on: ubuntu-latest
     name: Check typescript
     steps:
-      - run: whereis tsc
       - uses: actions/checkout@v4
+      - run: whereis tsc || true
       - uses: actions/setup-node@v4
         with:
           node-version: "22.x"
+      - run: whereis tsc
       - run: yarn
       - run: yarn run tsc --version
       - run: whereis tsc
