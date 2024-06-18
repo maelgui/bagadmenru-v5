@@ -13,7 +13,7 @@
     "build-keycloak-theme": "yarn build && keycloakify"
   },
   "dependencies": {
-    "@axa-fr/react-oidc": "^7.22.6",
+    "@axa-fr/react-oidc": "^7.22.7",
     "@floating-ui/react": "^0.26.16",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
     "@fortawesome/free-regular-svg-icons": "^6.5.2",
