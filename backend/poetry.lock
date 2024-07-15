@@ -70,6 +70,17 @@ files = [
 typing-extensions = {version = ">=4.0.0", markers = "python_version < \"3.11\""}
 
 [[package]]
+name = "async-property"
+version = "0.2.2"
+description = "Python decorator for async properties."
+optional = false
+python-versions = "*"
+files = [
+    {file = "async_property-0.2.2-py2.py3-none-any.whl", hash = "sha256:8924d792b5843994537f8ed411165700b27b2bd966cefc4daeefc1253442a9d7"},
+    {file = "async_property-0.2.2.tar.gz", hash = "sha256:17d9bd6ca67e27915a75d92549df64b5c7174e9dc806b30a3934dc4ff0506380"},
+]
+
+[[package]]
 name = "attrs"
 version = "23.2.0"
 description = "Classes Without Boilerplate"
@@ -1511,18 +1522,20 @@ pycryptodome = ["pyasn1", "pycryptodome (>=3.3.1,<4.0.0)"]
 
 [[package]]
 name = "python-keycloak"
-version = "4.0.0"
+version = "4.2.1"
 description = "python-keycloak is a Python package providing access to the Keycloak API."
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "python_keycloak-4.0.0-py3-none-any.whl", hash = "sha256:5ab0a0dab88508ad4bcfae656e045c6068b2f47ea98d9e44ce6ee19f075d36e9"},
-    {file = "python_keycloak-4.0.0.tar.gz", hash = "sha256:b089a3f3abc7d4f27b67f84628fe930c19ebf1cdc42e75ba3bdf0da738048bef"},
+    {file = "python_keycloak-4.2.1-py3-none-any.whl", hash = "sha256:0cb877fa32b69308e00f25eafdbfdc62db81ff5866923e28675c68c501998916"},
+    {file = "python_keycloak-4.2.1.tar.gz", hash = "sha256:ced087f347dd01679d2203e62274f8334173fd47133d65a59d8affb164fffaba"},
 ]
 
 [package.dependencies]
+async-property = ">=0.2.2"
 deprecation = ">=2.1.0"
-jwcrypto = ">=1.5.4,<2.0.0"
+httpx = ">=0.23.2"
+jwcrypto = ">=1.5.4"
 requests = ">=2.20.0"
 requests-toolbelt = ">=0.6.0"
 
