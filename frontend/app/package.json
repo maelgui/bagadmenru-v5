@@ -31,7 +31,7 @@
     "react-hook-form": "^7.44.3",
     "react-hot-toast": "^2.4.1",
     "react-query": "^3.39.3",
-    "react-router-dom": "^6.24.1",
+    "react-router-dom": "^6.25.0",
     "tinyduration": "^3.3.0",
     "use-long-press": "^3.2.0"
   },
