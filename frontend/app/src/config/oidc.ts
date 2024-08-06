@@ -7,5 +7,5 @@ export default {
   scope: 'openid profile email offline_access',
   authority: import.meta.env.VITE_OIDC_PROVIDER_URL,
   storage: localStorage,
-  token_request_extras: { audience: 'https://api.beta.bagadmenru.bzh' },
+  extras: { audience: 'https://api.beta.bagadmenru.bzh' },
 } as OidcConfiguration;
