@@ -16,50 +16,50 @@ import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface Group
+ * @interface LoginData
  */
-export interface Group {
-    /**
-     * 
-     * @type {number}
-     * @memberof Group
-     */
-    id: number;
+export interface LoginData {
     /**
      * 
      * @type {string}
-     * @memberof Group
+     * @memberof LoginData
      */
-    name: string;
+    identifier: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LoginData
+     */
+    password: string;
 }
 
 /**
- * Check if a given object implements the Group interface.
+ * Check if a given object implements the LoginData interface.
  */
-export function instanceOfGroup(value: object): boolean {
+export function instanceOfLoginData(value: object): boolean {
     let isInstance = true;
-    isInstance = isInstance && "id" in value;
-    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "identifier" in value;
+    isInstance = isInstance && "password" in value;
 
     return isInstance;
 }
 
-export function GroupFromJSON(json: any): Group {
-    return GroupFromJSONTyped(json, false);
+export function LoginDataFromJSON(json: any): LoginData {
+    return LoginDataFromJSONTyped(json, false);
 }
 
-export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Group {
+export function LoginDataFromJSONTyped(json: any, ignoreDiscriminator: boolean): LoginData {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'id': json['id'],
-        'name': json['name'],
+        'identifier': json['identifier'],
+        'password': json['password'],
     };
 }
 
-export function GroupToJSON(value?: Group | null): any {
+export function LoginDataToJSON(value?: LoginData | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -68,8 +68,8 @@ export function GroupToJSON(value?: Group | null): any {
     }
     return {
         
-        'id': value.id,
-        'name': value.name,
+        'identifier': value.identifier,
+        'password': value.password,
     };
 }
 

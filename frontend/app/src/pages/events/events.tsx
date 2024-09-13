@@ -41,20 +41,23 @@ export default function EventsManagePage() {
             <ul className="divide-y">
               {events.map((event) => (
                 <li key={event.id} className="gap-4 flex items-center hover:bg-gray-50 relative px-8 py-4">
-                  <div>
-                    <Link to={`/events/edit/${event.id}`}>
-                      <span className="absolute top-0 bottom-0 left-0 right-0" />
-                      <span className="block whitespace-nowrap">
-                        {event.title}
-                        <Badge className="mx-4 align-middle" color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
-                      </span>
-                      <span className="text-sm text-gray-500">{event.description}</span>
-                    </Link>
+                  <div className="flex-1 md:flex items-center">
+
+                    <div>
+                      <Link to={`/events/edit/${event.id}`}>
+                        <span className="absolute top-0 bottom-0 left-0 right-0" />
+                        <span className="block whitespace-nowrap">
+                          {event.title}
+                          <Badge className="mx-4 align-middle" color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
+                        </span>
+                        <span className="text-sm text-gray-500">{event.description}</span>
+                      </Link>
+                    </div>
+                    <div className="ml-auto">
+                      {event.date.toLocaleDateString(undefined, { dateStyle: 'full' })}
+                    </div>
                   </div>
-                  <div className="ml-auto">
-                    {event.date.toLocaleDateString(undefined, { dateStyle: 'full' })}
-                  </div>
-                  <div className=" p-8">
+                  <div className="p-8">
                     <FontAwesomeIcon icon={faChevronRight} className="text-gray-500" />
                   </div>
                 </li>

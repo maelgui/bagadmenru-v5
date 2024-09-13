@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2AuthorizationCodeBearer, SecurityScopes
 from jose import JWTError
 
@@ -17,7 +17,8 @@ jwt_verifier = JWTVerifier(settings.jwt_audience, str(settings.jwt_issuer))
 
 
 async def get_current_user(
-    security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)
+    request: Request,
+    security_scopes: SecurityScopes,
 ):
     """Checks oauth access token, checks scope, and return token content.
 
@@ -31,35 +32,28 @@ async def get_current_user(
     Returns:
         dict[str, Any]: access token content
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt_verifier.verify(token)
-        username = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_roles = payload.get(
-            "resource_access", {settings.jwt_audience: {"roles": []}}
-        )[settings.jwt_audience]["roles"]
-    except JWTError as exp:
-        logging.error(exp)
-        raise credentials_exception from exp
-
+    identifier = request.session.get("identifier")
+    permissions = request.session.get("permissions")
+    email = request.session.get("email")
+    if not identifier or not permissions or not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     logging.info(
-        "userId=%s, userName=%s, requiredScopes=%s, userScopes=%s",
-        payload.get("sub"),
-        payload.get("preferred_username"),
+        "validating: userId=%s, userEmail=%s, userPermissions=%s, requiredPermissions=%s",
+        identifier,
+        email,
+        permissions,
         security_scopes.scopes,
-        token_roles,
     )
-    for scope in security_scopes.scopes:
-        if scope not in token_roles:
+    for permission in security_scopes.scopes:
+        if permission not in permissions:
+            logging.warning("Unauthorized access: missing role %s", permission)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-    return payload
+    return identifier

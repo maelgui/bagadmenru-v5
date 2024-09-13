@@ -3,14 +3,22 @@ import time
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2.api.v1.api import api_router
 from bbe2.config import settings
 from bbe2.database import Base, engine
+from bbe2.fixtures import init_fixtures
 
 logging.basicConfig(level=logging.INFO)
 
-Base.metadata.create_all(bind=engine)
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
+    init_fixtures()
+
+
+init_db()
 
 tags_metadata = [
     {
@@ -37,6 +45,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.secret_key,
+    https_only=True,
 )
 
 

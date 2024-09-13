@@ -1,4 +1,3 @@
-import { useOidcIdToken } from '@axa-fr/react-oidc';
 import { faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -6,7 +5,7 @@ import { ResponseCreate } from 'bagad-client';
 import { useParams } from 'react-router-dom';
 import Button from '../../components/button';
 import Container from '../../components/container';
-import { queryClient, useApiClient } from '../../config/client';
+import { queryClient, useApiClient, useUserProfile } from '../../config/client';
 import EventListItem from './components/event';
 
 type AnswerPageParams = {
@@ -15,7 +14,7 @@ type AnswerPageParams = {
 
 export default function AnswerLinkPage() {
   const params = useParams<AnswerPageParams>();
-  const { idTokenPayload } = useOidcIdToken();
+  const profile = useUserProfile();
   const { eventsApi } = useApiClient();
 
   const eventId = parseInt(params.eventId!, 10);
@@ -27,7 +26,7 @@ export default function AnswerLinkPage() {
 
   const { data: response } = useQuery({
     queryKey: ['responses', 'me'],
-    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: idTokenPayload.sub }),
+    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: profile?.id }),
     select: (data) => data.filter((r) => r.eventId === eventId).at(0),
   });
 

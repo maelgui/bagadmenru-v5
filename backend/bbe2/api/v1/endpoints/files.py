@@ -20,7 +20,7 @@ router = APIRouter(prefix="/files")
 
 @router.get(
     "/",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
     response_model=list[schemas.FileOrFolder],
 )
 async def list_files(
@@ -40,7 +40,7 @@ async def list_files(
 
 @router.get(
     "/root",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
     response_model=schemas.FileOrFolder,
 )
 async def get_root(
@@ -59,7 +59,7 @@ async def get_root(
 
 @router.get(
     "/{file_id}",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
     response_model=schemas.FileOrFolder,
 )
 async def get_file(
@@ -77,7 +77,7 @@ async def get_file(
 
 @router.get(
     "/{file_id}/breadcrumb",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
     response_model=list[schemas.FileOrFolder],
 )
 async def get_breadcrumb(
@@ -105,7 +105,7 @@ async def get_breadcrumb(
 
 @router.get(
     "/{folder_id}/children",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
     response_model=list[schemas.FileOrFolder],
 )
 async def list_children(
@@ -123,7 +123,7 @@ async def list_children(
 
 @router.post(
     "/{folder_id}/upload",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
     response_model=schemas.FileOrFolder,
     status_code=status.HTTP_201_CREATED,
 )
@@ -161,7 +161,7 @@ async def upload_file(
 
 @router.post(
     "/{folder_id}",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.CREATE.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.CREATE)])],
     response_model=schemas.FileOrFolder,
     status_code=status.HTTP_201_CREATED,
 )
@@ -178,7 +178,7 @@ async def create_folder(
 
 @router.put(
     "/{file_id}",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
     response_model=schemas.FileOrFolder,
 )
 async def update_file(
@@ -198,7 +198,7 @@ async def update_file(
 
 @router.delete(
     "/{file_id}",
-    dependencies=[Security(get_current_user, scopes=[FileScopes.VIEW.value])],
+    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_file(

@@ -87,11 +87,6 @@ export class EventsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/events/`,
             method: 'POST',
@@ -129,11 +124,6 @@ export class EventsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/events/{event_id}/responses`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters.eventId))),
             method: 'PUT',
@@ -165,11 +155,6 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters.eventId))),
             method: 'DELETE',
@@ -194,11 +179,6 @@ export class EventsApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/events/export/ics`,
@@ -233,11 +213,6 @@ export class EventsApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters.eventId))),
@@ -285,11 +260,6 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/events/`,
             method: 'GET',
@@ -319,11 +289,6 @@ export class EventsApi extends runtime.BaseAPI {
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/responses/`,
@@ -360,11 +325,6 @@ export class EventsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters.eventId))),

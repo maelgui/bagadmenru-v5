@@ -37,18 +37,6 @@ export interface Profile {
      * @type {string}
      * @memberof Profile
      */
-    pictureKey: string | null;
-    /**
-     * 
-     * @type {number}
-     * @memberof Profile
-     */
-    instrumentId: number | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof Profile
-     */
     firstName: string;
     /**
      * 
@@ -56,6 +44,18 @@ export interface Profile {
      * @memberof Profile
      */
     lastName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Profile
+     */
+    pictureKey: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof Profile
+     */
+    instrumentId: number | null;
     /**
      * 
      * @type {string}
@@ -93,10 +93,10 @@ export interface Profile {
  */
 export function instanceOfProfile(value: object): boolean {
     let isInstance = true;
-    isInstance = isInstance && "pictureKey" in value;
-    isInstance = isInstance && "instrumentId" in value;
     isInstance = isInstance && "firstName" in value;
     isInstance = isInstance && "lastName" in value;
+    isInstance = isInstance && "pictureKey" in value;
+    isInstance = isInstance && "instrumentId" in value;
     isInstance = isInstance && "email" in value;
     isInstance = isInstance && "id" in value;
     isInstance = isInstance && "pictureUrl" in value;
@@ -114,10 +114,10 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
     }
     return {
         
-        'pictureKey': json['picture_key'],
-        'instrumentId': json['instrument_id'],
         'firstName': json['first_name'],
         'lastName': json['last_name'],
+        'pictureKey': json['picture_key'],
+        'instrumentId': json['instrument_id'],
         'email': json['email'],
         'id': json['id'],
         'groups': !exists(json, 'groups') ? undefined : ((json['groups'] as Array<any>).map(GroupFromJSON)),
@@ -135,10 +135,10 @@ export function ProfileToJSON(value?: Profile | null): any {
     }
     return {
         
-        'picture_key': value.pictureKey,
-        'instrument_id': value.instrumentId,
         'first_name': value.firstName,
         'last_name': value.lastName,
+        'picture_key': value.pictureKey,
+        'instrument_id': value.instrumentId,
         'email': value.email,
         'id': value.id,
         'groups': value.groups === undefined ? undefined : ((value.groups as Array<any>).map(GroupToJSON)),

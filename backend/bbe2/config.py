@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     cors_allowed_origins: list[str] = []
     cors_allowed_origin_regex: Optional[str] = None
 
+    secret_key: str
+
     class Config:
         env_file = ".env"
 

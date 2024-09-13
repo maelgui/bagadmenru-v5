@@ -23,35 +23,14 @@ from bbe2.utils.scopes import ProfilesScopes
 profiles_router = APIRouter(prefix="/profiles")
 
 
-@profiles_router.get("/me")
+@profiles_router.get("/me", response_model=schemas.Profile)
 async def get_my_profile(
     profile_crud: CRUDProfile = Depends(),
-    token: dict[str, Any] = Security(get_current_user, scopes=[]),
-) -> schemas.Profile:
-    db_profile = profile_crud.find_one_by(models.Profile.id == token["sub"])
+    identifier: str = Security(get_current_user, scopes=[]),
+):
+    db_profile = profile_crud.find_one_by(models.Profile.id == identifier)
 
-    admin = KeycloakAdmin(
-        server_url=settings.keycloak_url,
-        client_id=settings.keycloak_client_id,
-        client_secret_key=settings.keycloak_secret_key,
-        realm_name="bagadmenru",
-    )
-
-    if not db_profile:
-        db_profile = profile_crud.create(
-            id=token["sub"],
-            first_name=token["given_name"],
-            last_name=token["family_name"],
-            email=token["email"],
-        )
-        admin.update_user(db_profile.id, {"bbe2ProfileCreated": "yes"})
-
-    # Retrieve groups
-    kc_groups: list[dict[str, str]] = admin.get_user_groups(db_profile.id)
-    profile = schemas.Profile.model_validate(db_profile)
-    profile.groups = [schemas.Group.model_validate(g) for g in kc_groups]
-
-    return profile
+    return db_profile
 
 
 @profiles_router.put("/me", response_model=schemas.Profile)
@@ -60,7 +39,7 @@ async def update_my_profile(
     profile_crud: CRUDProfile = Depends(),
     token: dict[str, Any] = Security(get_current_user, scopes=[]),
 ):
-    db_profile = profile_crud.find_one_by(models.Profile.id == token["sub"])
+    db_profile = profile_crud.find_one_by(models.Profile.id == token)
     if not db_profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
@@ -104,7 +83,7 @@ async def get_profile(
     profile_id: str,
     profile_crud: CRUDProfile = Depends(),
     token: dict[str, Any] = Security(
-        get_current_user, scopes=[ProfilesScopes.VIEW.value]
+        get_current_user, scopes=[str(ProfilesScopes.VIEW)]
     ),
 ):
     db_profile = profile_crud.find_one_by(models.Profile.id == profile_id)
@@ -162,7 +141,7 @@ async def get_my_stats(
         ),
     ).join_from(models.Event, models.Response)
     q = q.where(models.Event.date >= date_debut_saison)
-    q = q.where(models.Response.user_id == token["sub"])
+    q = q.where(models.Response.user_id == token)
     q = q.where(models.Event.is_in_doodle == True)
     res1 = session.execute(q).one()._mapping
 
@@ -172,9 +151,7 @@ async def get_my_stats(
         ),
     ).join_from(models.Event, models.Response, isouter=True)
     q = q.where(models.Event.date >= date_now)
-    q = q.where(
-        or_(models.Response.user_id == None, models.Response.user_id == token["sub"])
-    )
+    q = q.where(or_(models.Response.user_id == None, models.Response.user_id == token))
     q = q.where(models.Event.is_in_doodle == True)
     res4 = session.execute(q).one()._mapping
 
@@ -219,15 +196,12 @@ groups_router = APIRouter(prefix="/groups")
 @groups_router.get("/", response_model=list[schemas.Group])
 async def list_groups(
     token: dict[str, Any] = Security(get_current_user),
+    session: Session = Depends(get_db),
 ):
+    q = select(models.Group).order_by(models.Group.name)
+    res = session.scalars(q).all()
 
-    admin = KeycloakAdmin(
-        server_url=settings.keycloak_url,
-        client_id=settings.keycloak_client_id,
-        client_secret_key=settings.keycloak_secret_key,
-        realm_name="bagadmenru",
-    )
-    return admin.get_groups()
+    return res
 
 
 invitations_router = APIRouter(prefix="/invitations")

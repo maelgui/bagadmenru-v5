@@ -15,6 +15,7 @@ export * from './Group';
 export * from './HTTPValidationError';
 export * from './Instrument';
 export * from './Invitation';
+export * from './LoginData';
 export * from './MyStats';
 export * from './Photo';
 export * from './Profile';

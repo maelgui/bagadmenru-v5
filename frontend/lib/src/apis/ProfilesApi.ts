@@ -77,11 +77,6 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/invitations/`,
             method: 'POST',
@@ -107,11 +102,6 @@ export class ProfilesApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/stats/`,
@@ -139,11 +129,6 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/profiles/me`,
             method: 'GET',
@@ -169,11 +154,6 @@ export class ProfilesApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/stats/me`,
@@ -205,11 +185,6 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/profiles/{profile_id}`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters.profileId))),
             method: 'GET',
@@ -235,11 +210,6 @@ export class ProfilesApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/groups/`,
@@ -267,11 +237,6 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/instruments/`,
             method: 'GET',
@@ -298,11 +263,6 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/invitations/`,
             method: 'GET',
@@ -328,11 +288,6 @@ export class ProfilesApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/profiles/`,
@@ -366,11 +321,6 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
         const response = await this.request({
             path: `/api/v1/profiles/me`,
             method: 'PUT',
@@ -397,11 +347,6 @@ export class ProfilesApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/profiles/me/avatar`,

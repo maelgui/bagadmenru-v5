@@ -11,6 +11,7 @@ import EditEventPage from '../pages/events/edit';
 import EventsManagePage from '../pages/events/events';
 import ListFilesPage from '../pages/files/list';
 import HomePage from '../pages/home';
+import LoginPage from '../pages/auth/login';
 import AlbumsPage from '../pages/photos';
 import EditProfilePage from '../pages/profiles/edit';
 import MyProfile from '../pages/profiles/me';
@@ -82,6 +83,16 @@ export default createBrowserRouter([
           {
             path: 'answer/:eventId',
             Component: AnswerLinkPage,
+          },
+        ],
+      },
+      {
+        path: '/auth/',
+        Component: SimpleLayoutWithOutlet,
+        children: [
+          {
+            path: 'login',
+            Component: LoginPage,
           },
         ],
       },

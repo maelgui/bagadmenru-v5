@@ -1,7 +1,9 @@
 from enum import Enum
 
+class PermissionBase(Enum):
+    pass
 
-class AlbumScopes(Enum):
+class AlbumScopes(PermissionBase):
     """Photo gallery related scopes."""
 
     VIEW = "view_album"
@@ -10,7 +12,7 @@ class AlbumScopes(Enum):
     UPDATE = "update_album"
 
 
-class EventScopes(Enum):
+class EventScopes(PermissionBase):
     """Events related scopes."""
 
     VIEW = "events:view"
@@ -20,7 +22,7 @@ class EventScopes(Enum):
     REPLY = "answers:manage-own"
 
 
-class FileScopes(Enum):
+class FileScopes(PermissionBase):
     """Filesystem related scopes."""
 
     VIEW = "files:view"
@@ -29,7 +31,7 @@ class FileScopes(Enum):
     UPDATE = "files:edit"
 
 
-class ProfilesScopes(Enum):
+class ProfilesScopes(PermissionBase):
     """Profile managment related scopes."""
 
     VIEW = "profiles:view"

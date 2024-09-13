@@ -15,11 +15,15 @@ class Instrument(BaseModel):
 
 
 class _ProfileBase(BaseModel):
+    first_name: str
+    last_name: str
     picture_key: str | None
     instrument_id: int | None
 
 
 class ProfileCreate(_ProfileBase):
+    email: str
+
     pass
 
 
@@ -28,16 +32,13 @@ class ProfileUpdate(_ProfileBase):
 
 
 class Group(BaseModel):
-    id: uuid.UUID
+    id: int
     name: str
-    path: str
 
 
 class Profile(_ProfileBase):
     model_config = ConfigDict(from_attributes=True)
 
-    first_name: str
-    last_name: str
     email: str
     id: str
 

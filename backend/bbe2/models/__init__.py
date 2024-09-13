@@ -3,4 +3,4 @@
 from .album import Album, Photo
 from .event import Event, Response
 from .file import FileOrFolder
-from .profile import Instrument, Profile
+from .profile import Instrument, Profile, Group

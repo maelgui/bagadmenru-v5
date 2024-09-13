@@ -1,13 +1,11 @@
 import { Link, NavLink } from 'react-router-dom';
 
-import { useOidc } from '@axa-fr/react-oidc';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ReactNode, useState } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
 import logo from '../assets/logov2.svg';
-import { useApiClient } from '../config/client';
+import { useUserProfile } from '../config/client';
 import Avatar from './avatar';
 import Button from './button';
 
@@ -24,13 +22,7 @@ function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
 }
 
 export default function Navbar() {
-  const { logout, isAuthenticated } = useOidc();
-  const { usersApi } = useApiClient();
-
-  const { data: profile } = useQuery({
-    queryKey: ['profiles', 'me'],
-    queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
-  });
+  const profile = useUserProfile();
 
   const [show, setShow] = useState<boolean>();
 
@@ -80,7 +72,7 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center pb-4 lg:py-0">
-            {isAuthenticated && profile
+            {profile
               ? (
                 <>
                   <Link to="/profile/me" className="lg:order-last">
@@ -94,7 +86,7 @@ export default function Navbar() {
                       </span>
                       <span>{profile.lastName}</span>
                     </div>
-                    <Button type="button" size="sm" variant="outline" onClick={() => logout()}>Déconnexion</Button>
+                    <Button type="button" size="sm" variant="outline">Déconnexion</Button>
                   </div>
                 </>
               )

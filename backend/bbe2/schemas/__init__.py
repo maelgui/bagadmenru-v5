@@ -1,7 +1,15 @@
 from .album import Album, AlbumCreate
+from .auth import LoginData
 from .event import Costume, Event, EventCreate
 from .file import FileOrFolder, FileOrFolderType, FileOrFolderUpdate, FolderCreate
 from .photo import Photo
-from .profile import Instrument, Profile, ProfileCreate, ProfileUpdate, Group, Invitation
+from .profile import (
+    Group,
+    Instrument,
+    Invitation,
+    Profile,
+    ProfileCreate,
+    ProfileUpdate,
+)
 from .response import Response, ResponseCreate
 from .utils import GetUploadUrlResponse

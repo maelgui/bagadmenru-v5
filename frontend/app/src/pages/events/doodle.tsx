@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-import { useOidcIdToken } from '@axa-fr/react-oidc';
 import {
   faCalendar,
   faCalendarPlus,
@@ -19,7 +18,7 @@ import Container from '../../components/container';
 import Header from '../../components/header';
 import { SkeletonImage, SkeletonText } from '../../components/skeleton';
 import Tooltip from '../../components/tooltip';
-import { queryClient, useApiClient } from '../../config/client';
+import { queryClient, useApiClient, useUserProfile } from '../../config/client';
 import EventCategories from '../../utils/event-category';
 import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
@@ -51,8 +50,8 @@ function responseFormat(responses: Response[]): ResponsesData {
 }
 
 export default function DoodlePage() {
-  const { idTokenPayload } = useOidcIdToken();
   const { usersApi, eventsApi } = useApiClient();
+  const profile = useUserProfile();
 
   const [editing, setEditing] = useState<boolean>(false);
 
@@ -195,7 +194,7 @@ export default function DoodlePage() {
                 </tr>
                 {profiles ? profiles.map((user) => (
                   <tr key={user.id}>
-                    <th className={`text-right whitespace-nowrap ${idTokenPayload.sub === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
+                    <th className={`text-right whitespace-nowrap ${profile?.id === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
                       <Avatar src={user.pictureUrl} size="sm" className="rounded-full border-2 w-6 h-6 mr-2" style={{ borderColor: user.instrument?.color }} />
                       <span>{`${user.firstName} ${user.lastName.slice(0, 1)}`}</span>
                     </th>
@@ -204,7 +203,7 @@ export default function DoodlePage() {
                       return (
                         <Checkbox
                           key={`${user.id}-${event.id}`}
-                          disabled={idTokenPayload.sub === user.id ? !editing : true}
+                          disabled={profile?.id === user.id ? !editing : true}
                           value={value}
                           onClick={() => mutation.mutate({ eventId: event.id, response: { value: !value } })}
                         />

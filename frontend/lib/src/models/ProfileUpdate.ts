@@ -24,6 +24,18 @@ export interface ProfileUpdate {
      * @type {string}
      * @memberof ProfileUpdate
      */
+    firstName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileUpdate
+     */
+    lastName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfileUpdate
+     */
     pictureKey: string | null;
     /**
      * 
@@ -38,6 +50,8 @@ export interface ProfileUpdate {
  */
 export function instanceOfProfileUpdate(value: object): boolean {
     let isInstance = true;
+    isInstance = isInstance && "firstName" in value;
+    isInstance = isInstance && "lastName" in value;
     isInstance = isInstance && "pictureKey" in value;
     isInstance = isInstance && "instrumentId" in value;
 
@@ -54,6 +68,8 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
     }
     return {
         
+        'firstName': json['first_name'],
+        'lastName': json['last_name'],
         'pictureKey': json['picture_key'],
         'instrumentId': json['instrument_id'],
     };
@@ -68,6 +84,8 @@ export function ProfileUpdateToJSON(value?: ProfileUpdate | null): any {
     }
     return {
         
+        'first_name': value.firstName,
+        'last_name': value.lastName,
         'picture_key': value.pictureKey,
         'instrument_id': value.instrumentId,
     };

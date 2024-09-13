@@ -17,23 +17,6 @@ services:
     environment:
       - POSTGRES_PASSWORD=kcwRzG4coiE
 
-  keycloak:
-    build: keycloak
-    command: --verbose start-dev --import-realm
-    ports:
-      - 8080:8080
-    volumes:
-      - ./realm:/opt/keycloak/data/import
-      - ./keycloak/providers:/opt/keycloak/providers
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_DB=postgres
-      - KC_DB_USERNAME=postgres
-      - KC_DB_PASSWORD=kcwRzG4coiE
-      - KC_DB_URL_HOST=db
-      - KC_DB_URL_DATABASE=postgres
-
   mailhog:
     image: mailhog/mailhog
     ports:
@@ -53,12 +36,16 @@ services:
       - OIDC_AUTHORIZATION_URL=http://localhost:8080/realms/bagadmenru/protocol/openid-connect/auth
       - OIDC_TOKEN_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/token
       - OIDC_JWKS_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/certs
-      - CORS_ALLOWED_ORIGINS=["http://localhost:5173"]
+      - CORS_ALLOWED_ORIGINS=["http://localhost:5173", "https://bagadmenru.localhost:5173"]
       - S3_ENDPOINT=http://storage:9000
       - S3_BUCKET_NAME=bagadmenru5-dev
       - S3_ACCESS_KEY_ID=minioadmin
       - S3_SECRET_ACCESS_KEY=minioadmin
       - DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@db/postgres
+      - KEYCLOAK_CLIENT_ID=bbe2
+      - KEYCLOAK_SECRET_KEY=FvnxnD7yIwgc6m8Vwff7SdVTijPrQtnk
+      - KEYCLOAK_URL=http://keycloak:8080
+      - SECRET_KEY=FURIFNQVICWFEONWFIUDJSKNfrni
 
   frontend:
     build:
@@ -70,10 +57,12 @@ services:
       - 5173:5173
       - 6006:6006
     environment:
-      - VITE_BBE2_API_URL=http://localhost:8000
+      - VITE_BBE2_API_URL=https://bagadmenru.localhost:5173
       - VITE_OIDC_PROVIDER_URL=http://localhost:8080/realms/bagadmenru
       - VITE_OIDC_CLIENT_ID=bbe2-frontend
+
 
 volumes:
   s3data:
   pgdata:
+  orydata:

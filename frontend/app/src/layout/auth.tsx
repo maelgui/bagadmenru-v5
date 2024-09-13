@@ -1,4 +1,3 @@
-import { OidcSecure } from '@axa-fr/react-oidc';
 import { useQuery } from '@tanstack/react-query';
 import { Outlet } from 'react-router-dom';
 import { useApiClient } from '../config/client';
@@ -12,12 +11,12 @@ export default function AuthGuard() {
   });
 
   if (status === 'error') {
-    throw new Response("Communication avec le backend impossible.", { status: 500 });
+    throw new Response('Communication avec le backend impossible.', { status: 500 });
   }
 
   return (
-    <OidcSecure>
+    <div>
       {status === 'success' ? <Outlet /> : <LoadingComponent />}
-    </OidcSecure>
+    </div>
   );
 }

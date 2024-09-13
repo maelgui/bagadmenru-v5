@@ -19,7 +19,7 @@ responses_router = APIRouter(prefix="/responses")
 
 @events_router.get("/", response_model=list[schemas.Event])
 async def list_events(
-    token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
+    token: str = Security(get_current_user, scopes=[str(EventScopes.VIEW)]),
     session: Session = Depends(get_db),
     limit: int = 10,
     date__gte: Optional[datetime] = None,
@@ -45,7 +45,7 @@ async def list_events(
 
 @events_router.get("/export/ics")
 async def export_ics(
-    token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
+    token: str = Security(get_current_user, scopes=[str(EventScopes.VIEW)]),
     session: Session = Depends(get_db),
 ) -> str:
     events = session.query(models.Event).order_by(models.Event.date).all()
@@ -62,7 +62,7 @@ async def export_ics(
 @events_router.get("/{event_id}", response_model=schemas.Event)
 async def get_event(
     event_id: int,
-    token: str = Security(get_current_user, scopes=[EventScopes.VIEW.value]),
+    token: str = Security(get_current_user, scopes=[str(EventScopes.VIEW)]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -79,7 +79,7 @@ async def get_event(
 )
 async def create_event(
     event: schemas.EventCreate,
-    token: str = Security(get_current_user, scopes=[EventScopes.CREATE.value]),
+    token: str = Security(get_current_user, scopes=[str(EventScopes.CREATE)]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     return event_crud.create(**event.dict())
@@ -89,7 +89,7 @@ async def create_event(
 async def update_event(
     event_id: int,
     event: schemas.EventCreate,
-    token: str = Security(get_current_user, scopes=[EventScopes.UPDATE.value]),
+    token: str = Security(get_current_user, scopes=[str(EventScopes.UPDATE)]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -104,7 +104,7 @@ async def update_event(
 @events_router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event(
     event_id: int,
-    token: str = Security(get_current_user, scopes=[EventScopes.DELETE.value]),
+    token: str = Security(get_current_user, scopes=[str(EventScopes.DELETE)]),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
@@ -134,9 +134,7 @@ async def list_responses(
 async def create_response(
     event_id: int,
     response: schemas.ResponseCreate,
-    token: dict[str, Any] = Security(
-        get_current_user, scopes=[EventScopes.REPLY.value]
-    ),
+    token: dict[str, Any] = Security(get_current_user, scopes=[str(EventScopes.REPLY)]),
     database: Session = Depends(get_db),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
