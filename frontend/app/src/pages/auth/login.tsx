@@ -1,12 +1,13 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { LoginData } from 'bagad-client';
+import { LoginData, ResponseError } from 'bagad-client';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Input from '../../components/input';
-import { useApiClient } from '../../config/client';
+import { queryClient, useApiClient } from '../../config/client';
 
 function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -19,11 +20,16 @@ function LoginPage() {
   const onSubmit = (data: LoginData) => {
     auth.loginApiV1AuthLoginPost({ loginData: data })
       .then(() => {
-        navigate('/');
+        queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] }).then(() => {
+          navigate('/');
+          toast.success('Connexion réussie !');
+        });
       })
       .catch((e) => {
-        if (e.response.status === 401) {
+        if (e instanceof ResponseError && e.response.status === 401) {
           setErrorMessage('Bad email/password');
+        } else {
+          toast.error(`Erreur lors de la connexion : ${e.message}`);
         }
       });
   };
@@ -54,7 +60,6 @@ function LoginPage() {
           />
         </div>
         <Button type="submit">Connexion</Button>
-        <hr className="hr-text" data-content="OU" />
       </form>
     </>
   );

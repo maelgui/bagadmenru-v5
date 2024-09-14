@@ -4,8 +4,10 @@ import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ReactNode, useState } from 'react';
 
+import { useMutation } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import logo from '../assets/logov2.svg';
-import { useUserProfile } from '../config/client';
+import { queryClient, useApiClient, useUserProfile } from '../config/client';
 import Avatar from './avatar';
 import Button from './button';
 
@@ -23,8 +25,21 @@ function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
 
 export default function Navbar() {
   const profile = useUserProfile();
+  const { auth } = useApiClient();
 
   const [show, setShow] = useState<boolean>();
+
+  const { mutate: logout } = useMutation({
+    mutationFn: () => auth.logoutApiV1AuthLogoutPost(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] }).then(() => {
+        toast.success('Déconnexion réussie !');
+      });
+    },
+    onError: (error) => {
+      toast.error(`Erreur lors de la déconnexion : ${error.message}`);
+    },
+  });
 
   return (
     <header className="shadow-md">
@@ -86,7 +101,7 @@ export default function Navbar() {
                       </span>
                       <span>{profile.lastName}</span>
                     </div>
-                    <Button type="button" size="sm" variant="outline">Déconnexion</Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => logout()}>Déconnexion</Button>
                   </div>
                 </>
               )

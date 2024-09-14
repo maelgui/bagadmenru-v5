@@ -24,9 +24,9 @@ src/models/GlobalStats.ts
 src/models/Group.ts
 src/models/HTTPValidationError.ts
 src/models/Instrument.ts
-src/models/Invitation.ts
 src/models/LoginData.ts
 src/models/MyStats.ts
+src/models/Permission.ts
 src/models/Photo.ts
 src/models/Profile.ts
 src/models/ProfileUpdate.ts

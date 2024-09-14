@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
+import LoginPage from '../pages/auth/login';
 import RoutingErrorComponent from '../pages/error/error';
 import AddEventPage from '../pages/events/add';
 import AnswerLinkPage from '../pages/events/answer';
@@ -10,8 +11,9 @@ import DoodlePage from '../pages/events/doodle';
 import EditEventPage from '../pages/events/edit';
 import EventsManagePage from '../pages/events/events';
 import ListFilesPage from '../pages/files/list';
+import GroupPage from '../pages/groups/group';
+import GroupListPage from '../pages/groups/list';
 import HomePage from '../pages/home';
-import LoginPage from '../pages/auth/login';
 import AlbumsPage from '../pages/photos';
 import EditProfilePage from '../pages/profiles/edit';
 import MyProfile from '../pages/profiles/me';
@@ -67,6 +69,14 @@ export default createBrowserRouter([
               {
                 path: '/profile/edit',
                 Component: EditProfilePage,
+              },
+              {
+                path: '/groups',
+                Component: GroupListPage,
+              },
+              {
+                path: '/groups/:groupId',
+                Component: GroupPage,
               },
               {
                 path: '/photos',

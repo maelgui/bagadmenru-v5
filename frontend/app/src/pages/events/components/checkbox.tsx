@@ -7,7 +7,7 @@ export default function Checkbox({
   disabled = false,
   onClick,
 }: {
-  disabled: boolean,
+  disabled?: boolean,
   value: boolean | undefined,
   onClick: ReactEventHandler,
 }) {

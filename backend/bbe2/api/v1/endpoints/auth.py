@@ -24,7 +24,6 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Basic"},
         )
     admin_group = session.get_one(models.Group, 1)
     db_profile.groups = [admin_group]
@@ -36,4 +35,13 @@ async def login(
     request.session["permissions"] = [
         p.id for g in db_profile.groups for p in g.permissions
     ]
+    return "OK"
+
+@router.post("/logout")
+async def logout(
+    request: Request,
+):
+    request.session["identifier"] = None
+    request.session["email"] = None
+    request.session["permissions"] = None
     return "OK"

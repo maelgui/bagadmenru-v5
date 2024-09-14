@@ -20,8 +20,8 @@ import type {
   Group,
   HTTPValidationError,
   Instrument,
-  Invitation,
   MyStats,
+  Permission,
   Profile,
   ProfileUpdate,
 } from '../models/index';
@@ -36,18 +36,22 @@ import {
     HTTPValidationErrorToJSON,
     InstrumentFromJSON,
     InstrumentToJSON,
-    InvitationFromJSON,
-    InvitationToJSON,
     MyStatsFromJSON,
     MyStatsToJSON,
+    PermissionFromJSON,
+    PermissionToJSON,
     ProfileFromJSON,
     ProfileToJSON,
     ProfileUpdateFromJSON,
     ProfileUpdateToJSON,
 } from '../models/index';
 
-export interface CreateInvitationsApiV1InvitationsPostRequest {
-    invitation: Invitation;
+export interface GetGroupApiV1GroupsGroupIdGetRequest {
+    groupId: number;
+}
+
+export interface GetGroupMembersApiV1GroupsGroupIdMembersGetRequest {
+    groupId: number;
 }
 
 export interface GetProfileApiV1ProfilesProfileIdGetRequest {
@@ -62,38 +66,6 @@ export interface UpdateMyProfileApiV1ProfilesMePutRequest {
  * 
  */
 export class ProfilesApi extends runtime.BaseAPI {
-
-    /**
-     * Create Invitations
-     */
-    async createInvitationsApiV1InvitationsPostRaw(requestParameters: CreateInvitationsApiV1InvitationsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.invitation === null || requestParameters.invitation === undefined) {
-            throw new runtime.RequiredError('invitation','Required parameter requestParameters.invitation was null or undefined when calling createInvitationsApiV1InvitationsPost.');
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-        const response = await this.request({
-            path: `/api/v1/invitations/`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: InvitationToJSON(requestParameters.invitation),
-        }, initOverrides);
-
-        return new runtime.VoidApiResponse(response);
-    }
-
-    /**
-     * Create Invitations
-     */
-    async createInvitationsApiV1InvitationsPost(requestParameters: CreateInvitationsApiV1InvitationsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.createInvitationsApiV1InvitationsPostRaw(requestParameters, initOverrides);
-    }
 
     /**
      * Get Global Stats
@@ -118,6 +90,92 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async getGlobalStatsApiV1StatsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GlobalStats> {
         const response = await this.getGlobalStatsApiV1StatsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get Group
+     */
+    async getGroupApiV1GroupsGroupIdGetRaw(requestParameters: GetGroupApiV1GroupsGroupIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+        if (requestParameters.groupId === null || requestParameters.groupId === undefined) {
+            throw new runtime.RequiredError('groupId','Required parameter requestParameters.groupId was null or undefined when calling getGroupApiV1GroupsGroupIdGet.');
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/v1/groups/{group_id}`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters.groupId))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GroupFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Group
+     */
+    async getGroupApiV1GroupsGroupIdGet(requestParameters: GetGroupApiV1GroupsGroupIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Group> {
+        const response = await this.getGroupApiV1GroupsGroupIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get Group Members
+     */
+    async getGroupMembersApiV1GroupsGroupIdMembersGetRaw(requestParameters: GetGroupMembersApiV1GroupsGroupIdMembersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
+        if (requestParameters.groupId === null || requestParameters.groupId === undefined) {
+            throw new runtime.RequiredError('groupId','Required parameter requestParameters.groupId was null or undefined when calling getGroupMembersApiV1GroupsGroupIdMembersGet.');
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/v1/groups/{group_id}/members`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters.groupId))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProfileFromJSON));
+    }
+
+    /**
+     * Get Group Members
+     */
+    async getGroupMembersApiV1GroupsGroupIdMembersGet(requestParameters: GetGroupMembersApiV1GroupsGroupIdMembersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Profile>> {
+        const response = await this.getGroupMembersApiV1GroupsGroupIdMembersGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get My Permissions
+     */
+    async getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/v1/profiles/me/permissions`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
+    }
+
+    /**
+     * Get My Permissions
+     */
+    async getMyPermissionsApiV1ProfilesMePermissionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
+        const response = await this.getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides);
         return await response.value();
     }
 
@@ -256,28 +314,28 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * List Invitations
+     * List Permissions
      */
-    async listInvitationsApiV1InvitationsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
+    async listPermissionsApiV1PermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Permission>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/invitations/`,
+            path: `/api/v1/permissions/`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProfileFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PermissionFromJSON));
     }
 
     /**
-     * List Invitations
+     * List Permissions
      */
-    async listInvitationsApiV1InvitationsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Profile>> {
-        const response = await this.listInvitationsApiV1InvitationsGetRaw(initOverrides);
+    async listPermissionsApiV1PermissionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Permission>> {
+        const response = await this.listPermissionsApiV1PermissionsGetRaw(initOverrides);
         return await response.value();
     }
 

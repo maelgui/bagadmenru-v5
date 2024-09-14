@@ -30,10 +30,16 @@ class ProfileCreate(_ProfileBase):
 class ProfileUpdate(_ProfileBase):
     pass
 
+class Permission(BaseModel):
+    id: str
+    tag: str
+    name: str
+    description: str
 
 class Group(BaseModel):
     id: int
     name: str
+    permissions: list[Permission]
 
 
 class Profile(_ProfileBase):

@@ -13,7 +13,7 @@ export const queryClient = new QueryClient({
       if (error instanceof ResponseError && error.response.status === 403) {
         toast.error("Vous n'avez pas les droits nécessaire pour accéder à cette ressources.");
       } else if (error instanceof ResponseError && error.response.status === 401) {
-        toast.error("Vous n'avez pas les droits nécessaire pour accéder à cette ressources.");
+        toast.error('Vous ne semblez pas authentifié.');
       } else {
         toast.error(`Something went wrong: ${error.message}`);
       }
@@ -23,8 +23,8 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (error instanceof ResponseError && error.response.status === 403) {
-          return failureCount < 1;
+        if (error instanceof ResponseError && error.response.status === 401) {
+          return false;
         }
         return failureCount < 2;
       },

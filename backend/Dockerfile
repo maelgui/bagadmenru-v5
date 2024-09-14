@@ -7,7 +7,8 @@ RUN pip install --no-cache-dir poetry==1.8.2
 COPY pyproject.toml poetry.lock ./
 
 ENV POETRY_VIRTUALENVS_CREATE=false
-RUN poetry install --no-ansi --no-root
+
+RUN --mount=type=cache,target=/root/.cache poetry install --no-ansi --no-root
 
 COPY . .
 

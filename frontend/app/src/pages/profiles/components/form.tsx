@@ -117,7 +117,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
           />
         </div>
         <div>
-          <Button as="a" href={`${import.meta.env.VITE_OIDC_PROVIDER_URL}/account?referrer=bbe2&referrer_uri=${encodeURIComponent(document.location)}`}>Modifier ces informations</Button>
+          <Button as="a" href="#email">Modifier ces informations</Button>
         </div>
       </div>
       <div className="mb-6">

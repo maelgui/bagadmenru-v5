@@ -66,4 +66,29 @@ export class AuthApi extends runtime.BaseAPI {
         await this.loginApiV1AuthLoginPostRaw(requestParameters, initOverrides);
     }
 
+    /**
+     * Logout
+     */
+    async logoutApiV1AuthLogoutPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/v1/auth/logout`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Logout
+     */
+    async logoutApiV1AuthLogoutPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.logoutApiV1AuthLogoutPostRaw(initOverrides);
+    }
+
 }

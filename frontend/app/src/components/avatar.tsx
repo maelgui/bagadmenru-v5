@@ -3,10 +3,11 @@ import defaultAvatar from '../assets/default.svg';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
   src: string | undefined | null
-  size?: 'xs' | 'sm' | 'md' | 'lg'
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg'
 }
 
 const sizeClass = {
+  xxs: 'h-10 w-10',
   xs: 'h-12 w-12',
   sm: 'h-24 w-24',
   md: 'h-48 w-48',
@@ -14,7 +15,7 @@ const sizeClass = {
 };
 
 export default function Avatar({
-  src = undefined, size = 'md', className = '', ...rest
+  src, size = 'md', className = '', ...rest
 }: AvatarProps) {
   return (
     <div className={`${sizeClass[size]} rounded-full overflow-hidden bg-pourpre-50 ${className}`} {...rest}>
