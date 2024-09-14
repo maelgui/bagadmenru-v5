@@ -19,7 +19,7 @@ from bbe2.schemas import Costume, FileOrFolderType
 
 def populate_db(session):
     # Profile
-    instrument = models.Instrument(id=1, name="Piccolo", color="#fff")
+    instrument = models.Group(id=1, name="Piccolo", color="#fff")
     session.add(instrument)
     user = models.Profile(
         id="a8e2d3249e9d997e",

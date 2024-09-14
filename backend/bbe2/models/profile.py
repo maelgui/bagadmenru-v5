@@ -35,9 +35,9 @@ class Profile(Base):
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)
     instrument_id: Mapped[int] = mapped_column(
-        ForeignKey("instruments.id"), nullable=True
+        ForeignKey("groups.id"), nullable=True
     )
-    instrument: Mapped["Instrument"] = relationship("Instrument")
+    instrument: Mapped["Group"] = relationship("Group")
     groups: Mapped[List["Group"]] = relationship(
         secondary=profile_group_association_table
     )
@@ -50,19 +50,10 @@ class Group(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
+    color: Mapped[str] = mapped_column(String(7), nullable=False, default="#fff")
     permissions: Mapped[List["Permission"]] = relationship(
         secondary=group_permission_association_table
     )
-
-
-class Instrument(Base):
-    """Instrument ORM model."""
-
-    __tablename__ = "instruments"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
-    color: Mapped[str] = mapped_column(String(7), nullable=False, default="#fff")
 
 
 class Permission(Base):

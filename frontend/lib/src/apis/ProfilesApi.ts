@@ -19,7 +19,6 @@ import type {
   GlobalStats,
   Group,
   HTTPValidationError,
-  Instrument,
   MyStats,
   Permission,
   Profile,
@@ -34,8 +33,6 @@ import {
     GroupToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
-    InstrumentFromJSON,
-    InstrumentToJSON,
     MyStatsFromJSON,
     MyStatsToJSON,
     PermissionFromJSON,
@@ -284,32 +281,6 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async listGroupsApiV1GroupsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Group>> {
         const response = await this.listGroupsApiV1GroupsGetRaw(initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * List Instruments
-     */
-    async listInstrumentsApiV1InstrumentsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Instrument>>> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        const response = await this.request({
-            path: `/api/v1/instruments/`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(InstrumentFromJSON));
-    }
-
-    /**
-     * List Instruments
-     */
-    async listInstrumentsApiV1InstrumentsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Instrument>> {
-        const response = await this.listInstrumentsApiV1InstrumentsGetRaw(initOverrides);
         return await response.value();
     }
 

@@ -23,7 +23,6 @@ src/models/GetUploadUrlResponse.ts
 src/models/GlobalStats.ts
 src/models/Group.ts
 src/models/HTTPValidationError.ts
-src/models/Instrument.ts
 src/models/LoginData.ts
 src/models/MyStats.ts
 src/models/Permission.ts

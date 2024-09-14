@@ -6,14 +6,6 @@ from pydantic import BaseModel, ConfigDict, EmailStr, computed_field
 from bbe2.utils.s3 import s3
 
 
-class Instrument(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    color: str
-
-
 class _ProfileBase(BaseModel):
     first_name: str
     last_name: str
@@ -40,6 +32,7 @@ class Group(BaseModel):
     id: int
     name: str
     permissions: list[Permission]
+    color: str = "#932a58"
 
 
 class Profile(_ProfileBase):
@@ -50,7 +43,7 @@ class Profile(_ProfileBase):
 
     groups: list[Group] = []
 
-    instrument: Optional[Instrument] = None
+    instrument: Optional[Group] = None
 
     @computed_field
     @property

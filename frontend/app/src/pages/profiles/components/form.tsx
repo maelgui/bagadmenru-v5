@@ -18,7 +18,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
 
   const { data: instruments } = useQuery({
     queryKey: ['instruments'],
-    queryFn: () => usersApi.listInstrumentsApiV1InstrumentsGet(),
+    queryFn: () => usersApi.listGroupsApiV1GroupsGet(),
   });
 
   const {

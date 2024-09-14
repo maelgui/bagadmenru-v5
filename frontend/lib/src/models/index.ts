@@ -13,7 +13,6 @@ export * from './GetUploadUrlResponse';
 export * from './GlobalStats';
 export * from './Group';
 export * from './HTTPValidationError';
-export * from './Instrument';
 export * from './LoginData';
 export * from './MyStats';
 export * from './Permission';

@@ -44,6 +44,12 @@ export interface Group {
      * @memberof Group
      */
     permissions: Array<Permission>;
+    /**
+     * 
+     * @type {string}
+     * @memberof Group
+     */
+    color?: string;
 }
 
 /**
@@ -71,6 +77,7 @@ export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Gro
         'id': json['id'],
         'name': json['name'],
         'permissions': ((json['permissions'] as Array<any>).map(PermissionFromJSON)),
+        'color': !exists(json, 'color') ? undefined : json['color'],
     };
 }
 
@@ -86,6 +93,7 @@ export function GroupToJSON(value?: Group | null): any {
         'id': value.id,
         'name': value.name,
         'permissions': ((value.permissions as Array<any>).map(PermissionToJSON)),
+        'color': value.color,
     };
 }
 

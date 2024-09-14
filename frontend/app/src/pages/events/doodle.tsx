@@ -195,7 +195,7 @@ export default function DoodlePage() {
                 {profiles ? profiles.map((user) => (
                   <tr key={user.id}>
                     <th className={`text-right whitespace-nowrap ${profile?.id === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
-                      <Avatar src={user.pictureUrl} size="sm" className="rounded-full border-2 w-6 h-6 mr-2" style={{ borderColor: user.instrument?.color }} />
+                      <Avatar src={user.pictureUrl} size="sm" className="rounded-full border-2 w-6 h-6 mr-2" style={{ borderColor: user.instrument?.color ?? '' }} />
                       <span>{`${user.firstName} ${user.lastName.slice(0, 1)}`}</span>
                     </th>
                     {events && events.map((event) => {

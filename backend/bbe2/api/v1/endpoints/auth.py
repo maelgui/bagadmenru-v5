@@ -3,9 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from bbe2 import models, schemas
-from bbe2.crud import CRUDInstrument, CRUDProfile
+from bbe2.crud import CRUDProfile
 from bbe2.dependencies.db import get_db
-from bbe2.utils.scopes import EventScopes
 
 router = APIRouter(prefix="/auth")
 

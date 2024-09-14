@@ -13,7 +13,7 @@ from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
 from bbe2.config import settings
-from bbe2.crud import CRUDInstrument, CRUDProfile
+from bbe2.crud import CRUDProfile
 from bbe2.dependencies.auth import get_current_user
 from bbe2.dependencies.db import get_db
 from bbe2.schemas.utils import GlobalStats, MyStats
@@ -121,19 +121,8 @@ async def list_profiles(
     return res
 
 
-instruments_router = APIRouter(prefix="/instruments")
-
-
-@instruments_router.get("/", response_model=list[schemas.Instrument])
-async def list_instruments(
-    instru_crud: CRUDInstrument = Depends(),
-    token: dict[str, Any] = Security(get_current_user),
-):
-    return instru_crud.find_all()
-
 
 stats_router = APIRouter(prefix="/stats")
-
 
 @stats_router.get("/me")
 async def get_my_stats(
@@ -256,7 +245,6 @@ async def list_permissions(
 
 router = APIRouter()
 router.include_router(profiles_router)
-router.include_router(instruments_router)
 router.include_router(stats_router)
 router.include_router(groups_router)
 router.include_router(permissions_router)
