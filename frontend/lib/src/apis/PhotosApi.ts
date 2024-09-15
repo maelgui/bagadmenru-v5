@@ -71,8 +71,11 @@ export class PhotosApi extends runtime.BaseAPI {
      * Create Album
      */
     async createAlbumApiV1AlbumsPostRaw(requestParameters: CreateAlbumApiV1AlbumsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Album>> {
-        if (requestParameters.albumCreate === null || requestParameters.albumCreate === undefined) {
-            throw new runtime.RequiredError('albumCreate','Required parameter requestParameters.albumCreate was null or undefined when calling createAlbumApiV1AlbumsPost.');
+        if (requestParameters['albumCreate'] == null) {
+            throw new runtime.RequiredError(
+                'albumCreate',
+                'Required parameter "albumCreate" was null or undefined when calling createAlbumApiV1AlbumsPost().'
+            );
         }
 
         const queryParameters: any = {};
@@ -86,7 +89,7 @@ export class PhotosApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: AlbumCreateToJSON(requestParameters.albumCreate),
+            body: AlbumCreateToJSON(requestParameters['albumCreate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => AlbumFromJSON(jsonValue));
@@ -104,8 +107,11 @@ export class PhotosApi extends runtime.BaseAPI {
      * Delete Album
      */
     async deleteAlbumApiV1AlbumsAlbumIdDeleteRaw(requestParameters: DeleteAlbumApiV1AlbumsAlbumIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.albumId === null || requestParameters.albumId === undefined) {
-            throw new runtime.RequiredError('albumId','Required parameter requestParameters.albumId was null or undefined when calling deleteAlbumApiV1AlbumsAlbumIdDelete.');
+        if (requestParameters['albumId'] == null) {
+            throw new runtime.RequiredError(
+                'albumId',
+                'Required parameter "albumId" was null or undefined when calling deleteAlbumApiV1AlbumsAlbumIdDelete().'
+            );
         }
 
         const queryParameters: any = {};
@@ -113,7 +119,7 @@ export class PhotosApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters.albumId))),
+            path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -133,12 +139,18 @@ export class PhotosApi extends runtime.BaseAPI {
      * Delete Photo
      */
     async deletePhotoApiV1AlbumsAlbumIdPhotosPhotoIdDeleteRaw(requestParameters: DeletePhotoApiV1AlbumsAlbumIdPhotosPhotoIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.albumId === null || requestParameters.albumId === undefined) {
-            throw new runtime.RequiredError('albumId','Required parameter requestParameters.albumId was null or undefined when calling deletePhotoApiV1AlbumsAlbumIdPhotosPhotoIdDelete.');
+        if (requestParameters['albumId'] == null) {
+            throw new runtime.RequiredError(
+                'albumId',
+                'Required parameter "albumId" was null or undefined when calling deletePhotoApiV1AlbumsAlbumIdPhotosPhotoIdDelete().'
+            );
         }
 
-        if (requestParameters.photoId === null || requestParameters.photoId === undefined) {
-            throw new runtime.RequiredError('photoId','Required parameter requestParameters.photoId was null or undefined when calling deletePhotoApiV1AlbumsAlbumIdPhotosPhotoIdDelete.');
+        if (requestParameters['photoId'] == null) {
+            throw new runtime.RequiredError(
+                'photoId',
+                'Required parameter "photoId" was null or undefined when calling deletePhotoApiV1AlbumsAlbumIdPhotosPhotoIdDelete().'
+            );
         }
 
         const queryParameters: any = {};
@@ -146,7 +158,7 @@ export class PhotosApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/albums/{album_id}/photos/{photo_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters.albumId))).replace(`{${"photo_id"}}`, encodeURIComponent(String(requestParameters.photoId))),
+            path: `/api/v1/albums/{album_id}/photos/{photo_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))).replace(`{${"photo_id"}}`, encodeURIComponent(String(requestParameters['photoId']))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -166,8 +178,11 @@ export class PhotosApi extends runtime.BaseAPI {
      * Get Album
      */
     async getAlbumApiV1AlbumsAlbumIdGetRaw(requestParameters: GetAlbumApiV1AlbumsAlbumIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Album>> {
-        if (requestParameters.albumId === null || requestParameters.albumId === undefined) {
-            throw new runtime.RequiredError('albumId','Required parameter requestParameters.albumId was null or undefined when calling getAlbumApiV1AlbumsAlbumIdGet.');
+        if (requestParameters['albumId'] == null) {
+            throw new runtime.RequiredError(
+                'albumId',
+                'Required parameter "albumId" was null or undefined when calling getAlbumApiV1AlbumsAlbumIdGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -175,7 +190,7 @@ export class PhotosApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters.albumId))),
+            path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -196,8 +211,11 @@ export class PhotosApi extends runtime.BaseAPI {
      * List Album Photos
      */
     async listAlbumPhotosApiV1AlbumsAlbumIdPhotosGetRaw(requestParameters: ListAlbumPhotosApiV1AlbumsAlbumIdPhotosGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Photo>>> {
-        if (requestParameters.albumId === null || requestParameters.albumId === undefined) {
-            throw new runtime.RequiredError('albumId','Required parameter requestParameters.albumId was null or undefined when calling listAlbumPhotosApiV1AlbumsAlbumIdPhotosGet.');
+        if (requestParameters['albumId'] == null) {
+            throw new runtime.RequiredError(
+                'albumId',
+                'Required parameter "albumId" was null or undefined when calling listAlbumPhotosApiV1AlbumsAlbumIdPhotosGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -205,7 +223,7 @@ export class PhotosApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/albums/{album_id}/photos`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters.albumId))),
+            path: `/api/v1/albums/{album_id}/photos`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -252,12 +270,18 @@ export class PhotosApi extends runtime.BaseAPI {
      * Update Album
      */
     async updateAlbumApiV1AlbumsAlbumIdPutRaw(requestParameters: UpdateAlbumApiV1AlbumsAlbumIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Album>> {
-        if (requestParameters.albumId === null || requestParameters.albumId === undefined) {
-            throw new runtime.RequiredError('albumId','Required parameter requestParameters.albumId was null or undefined when calling updateAlbumApiV1AlbumsAlbumIdPut.');
+        if (requestParameters['albumId'] == null) {
+            throw new runtime.RequiredError(
+                'albumId',
+                'Required parameter "albumId" was null or undefined when calling updateAlbumApiV1AlbumsAlbumIdPut().'
+            );
         }
 
-        if (requestParameters.albumCreate === null || requestParameters.albumCreate === undefined) {
-            throw new runtime.RequiredError('albumCreate','Required parameter requestParameters.albumCreate was null or undefined when calling updateAlbumApiV1AlbumsAlbumIdPut.');
+        if (requestParameters['albumCreate'] == null) {
+            throw new runtime.RequiredError(
+                'albumCreate',
+                'Required parameter "albumCreate" was null or undefined when calling updateAlbumApiV1AlbumsAlbumIdPut().'
+            );
         }
 
         const queryParameters: any = {};
@@ -267,11 +291,11 @@ export class PhotosApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters.albumId))),
+            path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: AlbumCreateToJSON(requestParameters.albumCreate),
+            body: AlbumCreateToJSON(requestParameters['albumCreate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => AlbumFromJSON(jsonValue));
@@ -289,12 +313,18 @@ export class PhotosApi extends runtime.BaseAPI {
      * Upload File
      */
     async uploadFileApiV1AlbumsAlbumIdPhotosPostRaw(requestParameters: UploadFileApiV1AlbumsAlbumIdPhotosPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Photo>> {
-        if (requestParameters.albumId === null || requestParameters.albumId === undefined) {
-            throw new runtime.RequiredError('albumId','Required parameter requestParameters.albumId was null or undefined when calling uploadFileApiV1AlbumsAlbumIdPhotosPost.');
+        if (requestParameters['albumId'] == null) {
+            throw new runtime.RequiredError(
+                'albumId',
+                'Required parameter "albumId" was null or undefined when calling uploadFileApiV1AlbumsAlbumIdPhotosPost().'
+            );
         }
 
-        if (requestParameters.file === null || requestParameters.file === undefined) {
-            throw new runtime.RequiredError('file','Required parameter requestParameters.file was null or undefined when calling uploadFileApiV1AlbumsAlbumIdPhotosPost.');
+        if (requestParameters['file'] == null) {
+            throw new runtime.RequiredError(
+                'file',
+                'Required parameter "file" was null or undefined when calling uploadFileApiV1AlbumsAlbumIdPhotosPost().'
+            );
         }
 
         const queryParameters: any = {};
@@ -317,12 +347,12 @@ export class PhotosApi extends runtime.BaseAPI {
             formParams = new URLSearchParams();
         }
 
-        if (requestParameters.file !== undefined) {
-            formParams.append('file', requestParameters.file as any);
+        if (requestParameters['file'] != null) {
+            formParams.append('file', requestParameters['file'] as any);
         }
 
         const response = await this.request({
-            path: `/api/v1/albums/{album_id}/photos`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters.albumId))),
+            path: `/api/v1/albums/{album_id}/photos`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,

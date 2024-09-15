@@ -16,46 +16,54 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface FolderCreate
+ * @interface MinimalGroup
  */
-export interface FolderCreate {
+export interface MinimalGroup {
     /**
      * 
      * @type {string}
-     * @memberof FolderCreate
+     * @memberof MinimalGroup
      */
     name: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MinimalGroup
+     */
+    color?: string;
 }
 
 /**
- * Check if a given object implements the FolderCreate interface.
+ * Check if a given object implements the MinimalGroup interface.
  */
-export function instanceOfFolderCreate(value: object): value is FolderCreate {
+export function instanceOfMinimalGroup(value: object): value is MinimalGroup {
     if (!('name' in value) || value['name'] === undefined) return false;
     return true;
 }
 
-export function FolderCreateFromJSON(json: any): FolderCreate {
-    return FolderCreateFromJSONTyped(json, false);
+export function MinimalGroupFromJSON(json: any): MinimalGroup {
+    return MinimalGroupFromJSONTyped(json, false);
 }
 
-export function FolderCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean): FolderCreate {
+export function MinimalGroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): MinimalGroup {
     if (json == null) {
         return json;
     }
     return {
         
         'name': json['name'],
+        'color': json['color'] == null ? undefined : json['color'],
     };
 }
 
-export function FolderCreateToJSON(value?: FolderCreate | null): any {
+export function MinimalGroupToJSON(value?: MinimalGroup | null): any {
     if (value == null) {
         return value;
     }
     return {
         
         'name': value['name'],
+        'color': value['color'],
     };
 }
 

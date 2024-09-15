@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -30,11 +30,9 @@ export interface ResponseCreate {
 /**
  * Check if a given object implements the ResponseCreate interface.
  */
-export function instanceOfResponseCreate(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "value" in value;
-
-    return isInstance;
+export function instanceOfResponseCreate(value: object): value is ResponseCreate {
+    if (!('value' in value) || value['value'] === undefined) return false;
+    return true;
 }
 
 export function ResponseCreateFromJSON(json: any): ResponseCreate {
@@ -42,7 +40,7 @@ export function ResponseCreateFromJSON(json: any): ResponseCreate {
 }
 
 export function ResponseCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean): ResponseCreate {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -52,15 +50,12 @@ export function ResponseCreateFromJSONTyped(json: any, ignoreDiscriminator: bool
 }
 
 export function ResponseCreateToJSON(value?: ResponseCreate | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'value': value.value,
+        'value': value['value'],
     };
 }
 

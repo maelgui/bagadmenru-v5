@@ -5,7 +5,6 @@ from typing import Any
 
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, Security, status
-from keycloak import KeycloakAdmin
 from sqlalchemy import cast, func, or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import count, sum
@@ -13,7 +12,7 @@ from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
 from bbe2.config import settings
-from bbe2.crud import CRUDProfile
+from bbe2.crud import CRUDProfile, CRUDGroup
 from bbe2.dependencies.auth import get_current_user
 from bbe2.dependencies.db import get_db
 from bbe2.schemas.utils import GlobalStats, MyStats
@@ -212,12 +211,40 @@ async def list_groups(
 @groups_router.get("/{group_id}", response_model=schemas.Group)
 async def get_group(
     group_id: int,
-    token: dict[str, Any] = Security(get_current_user),
+    token: str = Security(get_current_user),
     session: Session = Depends(get_db),
 ):
     q = session.get(models.Group, group_id)
 
     return q
+
+@groups_router.post("/", response_model=schemas.Group)
+async def create_group(
+    group: schemas.GroupCreate,
+    token: str = Security(get_current_user),
+    group_crud: CRUDGroup = Depends(CRUDGroup),
+    session: Session = Depends(get_db),
+):
+    return group_crud.create(**group.dict())
+
+@groups_router.put("/{group_id}", response_model=schemas.Group)
+async def update_group(
+    group_id: int,
+    group: schemas.GroupUpdate,
+    token: dict[str, Any] = Security(get_current_user),
+    session: Session = Depends(get_db),
+):
+    group_db = session.get(models.Group, group_id)
+    if not group_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
+    permissions = session.query(models.Permission).filter(models.Permission.id.in_(group.permission_ids)).all()
+    group_db.permissions = permissions
+    print(group.permission_ids)
+    print([p.id for p in permissions])
+    session.commit()
+    return group_db
 
 @groups_router.get("/{group_id}/members", response_model=list[schemas.Profile])
 async def get_group_members(

@@ -12,13 +12,19 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 import type { Permission } from './Permission';
 import {
     PermissionFromJSON,
     PermissionFromJSONTyped,
     PermissionToJSON,
 } from './Permission';
+import type { Profile } from './Profile';
+import {
+    ProfileFromJSON,
+    ProfileFromJSONTyped,
+    ProfileToJSON,
+} from './Profile';
 
 /**
  * 
@@ -28,16 +34,22 @@ import {
 export interface Group {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof Group
      */
-    id: number;
+    name: string;
     /**
      * 
      * @type {string}
      * @memberof Group
      */
-    name: string;
+    color?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Group
+     */
+    id: number;
     /**
      * 
      * @type {Array<Permission>}
@@ -46,22 +58,21 @@ export interface Group {
     permissions: Array<Permission>;
     /**
      * 
-     * @type {string}
+     * @type {Array<Profile>}
      * @memberof Group
      */
-    color?: string;
+    members: Array<Profile>;
 }
 
 /**
  * Check if a given object implements the Group interface.
  */
-export function instanceOfGroup(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "id" in value;
-    isInstance = isInstance && "name" in value;
-    isInstance = isInstance && "permissions" in value;
-
-    return isInstance;
+export function instanceOfGroup(value: object): value is Group {
+    if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('permissions' in value) || value['permissions'] === undefined) return false;
+    if (!('members' in value) || value['members'] === undefined) return false;
+    return true;
 }
 
 export function GroupFromJSON(json: any): Group {
@@ -69,31 +80,30 @@ export function GroupFromJSON(json: any): Group {
 }
 
 export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Group {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
         
-        'id': json['id'],
         'name': json['name'],
+        'color': json['color'] == null ? undefined : json['color'],
+        'id': json['id'],
         'permissions': ((json['permissions'] as Array<any>).map(PermissionFromJSON)),
-        'color': !exists(json, 'color') ? undefined : json['color'],
+        'members': ((json['members'] as Array<any>).map(ProfileFromJSON)),
     };
 }
 
 export function GroupToJSON(value?: Group | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'id': value.id,
-        'name': value.name,
-        'permissions': ((value.permissions as Array<any>).map(PermissionToJSON)),
-        'color': value.color,
+        'name': value['name'],
+        'color': value['color'],
+        'id': value['id'],
+        'permissions': ((value['permissions'] as Array<any>).map(PermissionToJSON)),
+        'members': ((value['members'] as Array<any>).map(ProfileToJSON)),
     };
 }
 

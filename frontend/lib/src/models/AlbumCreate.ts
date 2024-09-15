@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -36,12 +36,10 @@ export interface AlbumCreate {
 /**
  * Check if a given object implements the AlbumCreate interface.
  */
-export function instanceOfAlbumCreate(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "title" in value;
-    isInstance = isInstance && "date" in value;
-
-    return isInstance;
+export function instanceOfAlbumCreate(value: object): value is AlbumCreate {
+    if (!('title' in value) || value['title'] === undefined) return false;
+    if (!('date' in value) || value['date'] === undefined) return false;
+    return true;
 }
 
 export function AlbumCreateFromJSON(json: any): AlbumCreate {
@@ -49,7 +47,7 @@ export function AlbumCreateFromJSON(json: any): AlbumCreate {
 }
 
 export function AlbumCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean): AlbumCreate {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -60,16 +58,13 @@ export function AlbumCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
 }
 
 export function AlbumCreateToJSON(value?: AlbumCreate | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'title': value.title,
-        'date': (value.date.toISOString().substring(0,10)),
+        'title': value['title'],
+        'date': ((value['date']).toISOString().substring(0,10)),
     };
 }
 

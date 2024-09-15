@@ -81,12 +81,18 @@ export class FilesApi extends runtime.BaseAPI {
      * Create Folder
      */
     async createFolderApiV1FilesFolderIdPostRaw(requestParameters: CreateFolderApiV1FilesFolderIdPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
-        if (requestParameters.folderId === null || requestParameters.folderId === undefined) {
-            throw new runtime.RequiredError('folderId','Required parameter requestParameters.folderId was null or undefined when calling createFolderApiV1FilesFolderIdPost.');
+        if (requestParameters['folderId'] == null) {
+            throw new runtime.RequiredError(
+                'folderId',
+                'Required parameter "folderId" was null or undefined when calling createFolderApiV1FilesFolderIdPost().'
+            );
         }
 
-        if (requestParameters.folderCreate === null || requestParameters.folderCreate === undefined) {
-            throw new runtime.RequiredError('folderCreate','Required parameter requestParameters.folderCreate was null or undefined when calling createFolderApiV1FilesFolderIdPost.');
+        if (requestParameters['folderCreate'] == null) {
+            throw new runtime.RequiredError(
+                'folderCreate',
+                'Required parameter "folderCreate" was null or undefined when calling createFolderApiV1FilesFolderIdPost().'
+            );
         }
 
         const queryParameters: any = {};
@@ -96,11 +102,11 @@ export class FilesApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/files/{folder_id}`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters.folderId))),
+            path: `/api/v1/files/{folder_id}`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters['folderId']))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: FolderCreateToJSON(requestParameters.folderCreate),
+            body: FolderCreateToJSON(requestParameters['folderCreate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
@@ -120,8 +126,11 @@ export class FilesApi extends runtime.BaseAPI {
      * Delete File
      */
     async deleteFileApiV1FilesFileIdDeleteRaw(requestParameters: DeleteFileApiV1FilesFileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
-            throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling deleteFileApiV1FilesFileIdDelete.');
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling deleteFileApiV1FilesFileIdDelete().'
+            );
         }
 
         const queryParameters: any = {};
@@ -129,7 +138,7 @@ export class FilesApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters.fileId))),
+            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -151,8 +160,11 @@ export class FilesApi extends runtime.BaseAPI {
      * Get Breadcrumb
      */
     async getBreadcrumbApiV1FilesFileIdBreadcrumbGetRaw(requestParameters: GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
-        if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
-            throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling getBreadcrumbApiV1FilesFileIdBreadcrumbGet.');
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling getBreadcrumbApiV1FilesFileIdBreadcrumbGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -160,7 +172,7 @@ export class FilesApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/files/{file_id}/breadcrumb`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters.fileId))),
+            path: `/api/v1/files/{file_id}/breadcrumb`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -183,8 +195,11 @@ export class FilesApi extends runtime.BaseAPI {
      * Get File
      */
     async getFileApiV1FilesFileIdGetRaw(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
-        if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
-            throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling getFileApiV1FilesFileIdGet.');
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling getFileApiV1FilesFileIdGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -192,7 +207,7 @@ export class FilesApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters.fileId))),
+            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -243,8 +258,11 @@ export class FilesApi extends runtime.BaseAPI {
      * List Children
      */
     async listChildrenApiV1FilesFolderIdChildrenGetRaw(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
-        if (requestParameters.folderId === null || requestParameters.folderId === undefined) {
-            throw new runtime.RequiredError('folderId','Required parameter requestParameters.folderId was null or undefined when calling listChildrenApiV1FilesFolderIdChildrenGet.');
+        if (requestParameters['folderId'] == null) {
+            throw new runtime.RequiredError(
+                'folderId',
+                'Required parameter "folderId" was null or undefined when calling listChildrenApiV1FilesFolderIdChildrenGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -252,7 +270,7 @@ export class FilesApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/files/{folder_id}/children`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters.folderId))),
+            path: `/api/v1/files/{folder_id}/children`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters['folderId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -277,12 +295,12 @@ export class FilesApi extends runtime.BaseAPI {
     async listFilesApiV1FilesGetRaw(requestParameters: ListFilesApiV1FilesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
         const queryParameters: any = {};
 
-        if (requestParameters.t !== undefined) {
-            queryParameters['t'] = requestParameters.t;
+        if (requestParameters['t'] != null) {
+            queryParameters['t'] = requestParameters['t'];
         }
 
-        if (requestParameters.limit !== undefined) {
-            queryParameters['limit'] = requestParameters.limit;
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -311,12 +329,18 @@ export class FilesApi extends runtime.BaseAPI {
      * Update File
      */
     async updateFileApiV1FilesFileIdPutRaw(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
-        if (requestParameters.fileId === null || requestParameters.fileId === undefined) {
-            throw new runtime.RequiredError('fileId','Required parameter requestParameters.fileId was null or undefined when calling updateFileApiV1FilesFileIdPut.');
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling updateFileApiV1FilesFileIdPut().'
+            );
         }
 
-        if (requestParameters.fileOrFolderUpdate === null || requestParameters.fileOrFolderUpdate === undefined) {
-            throw new runtime.RequiredError('fileOrFolderUpdate','Required parameter requestParameters.fileOrFolderUpdate was null or undefined when calling updateFileApiV1FilesFileIdPut.');
+        if (requestParameters['fileOrFolderUpdate'] == null) {
+            throw new runtime.RequiredError(
+                'fileOrFolderUpdate',
+                'Required parameter "fileOrFolderUpdate" was null or undefined when calling updateFileApiV1FilesFileIdPut().'
+            );
         }
 
         const queryParameters: any = {};
@@ -326,11 +350,11 @@ export class FilesApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters.fileId))),
+            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: FileOrFolderUpdateToJSON(requestParameters.fileOrFolderUpdate),
+            body: FileOrFolderUpdateToJSON(requestParameters['fileOrFolderUpdate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
@@ -350,18 +374,24 @@ export class FilesApi extends runtime.BaseAPI {
      * Upload File
      */
     async uploadFileApiV1FilesFolderIdUploadPostRaw(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
-        if (requestParameters.folderId === null || requestParameters.folderId === undefined) {
-            throw new runtime.RequiredError('folderId','Required parameter requestParameters.folderId was null or undefined when calling uploadFileApiV1FilesFolderIdUploadPost.');
+        if (requestParameters['folderId'] == null) {
+            throw new runtime.RequiredError(
+                'folderId',
+                'Required parameter "folderId" was null or undefined when calling uploadFileApiV1FilesFolderIdUploadPost().'
+            );
         }
 
-        if (requestParameters.file === null || requestParameters.file === undefined) {
-            throw new runtime.RequiredError('file','Required parameter requestParameters.file was null or undefined when calling uploadFileApiV1FilesFolderIdUploadPost.');
+        if (requestParameters['file'] == null) {
+            throw new runtime.RequiredError(
+                'file',
+                'Required parameter "file" was null or undefined when calling uploadFileApiV1FilesFolderIdUploadPost().'
+            );
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters.force !== undefined) {
-            queryParameters['force'] = requestParameters.force;
+        if (requestParameters['force'] != null) {
+            queryParameters['force'] = requestParameters['force'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -382,12 +412,12 @@ export class FilesApi extends runtime.BaseAPI {
             formParams = new URLSearchParams();
         }
 
-        if (requestParameters.file !== undefined) {
-            formParams.append('file', requestParameters.file as any);
+        if (requestParameters['file'] != null) {
+            formParams.append('file', requestParameters['file'] as any);
         }
 
         const response = await this.request({
-            path: `/api/v1/files/{folder_id}/upload`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters.folderId))),
+            path: `/api/v1/files/{folder_id}/upload`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters['folderId']))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,

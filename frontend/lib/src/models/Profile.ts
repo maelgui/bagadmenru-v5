@@ -12,13 +12,13 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
-import type { Group } from './Group';
+import { mapValues } from '../runtime';
+import type { MinimalGroup } from './MinimalGroup';
 import {
-    GroupFromJSON,
-    GroupFromJSONTyped,
-    GroupToJSON,
-} from './Group';
+    MinimalGroupFromJSON,
+    MinimalGroupFromJSONTyped,
+    MinimalGroupToJSON,
+} from './MinimalGroup';
 
 /**
  * 
@@ -64,16 +64,16 @@ export interface Profile {
     id: string;
     /**
      * 
-     * @type {Array<Group>}
+     * @type {Array<MinimalGroup>}
      * @memberof Profile
      */
-    groups?: Array<Group>;
+    groups?: Array<MinimalGroup>;
     /**
      * 
-     * @type {Group}
+     * @type {MinimalGroup}
      * @memberof Profile
      */
-    instrument?: Group | null;
+    instrument?: MinimalGroup | null;
     /**
      * 
      * @type {string}
@@ -85,17 +85,15 @@ export interface Profile {
 /**
  * Check if a given object implements the Profile interface.
  */
-export function instanceOfProfile(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "firstName" in value;
-    isInstance = isInstance && "lastName" in value;
-    isInstance = isInstance && "pictureKey" in value;
-    isInstance = isInstance && "instrumentId" in value;
-    isInstance = isInstance && "email" in value;
-    isInstance = isInstance && "id" in value;
-    isInstance = isInstance && "pictureUrl" in value;
-
-    return isInstance;
+export function instanceOfProfile(value: object): value is Profile {
+    if (!('firstName' in value) || value['firstName'] === undefined) return false;
+    if (!('lastName' in value) || value['lastName'] === undefined) return false;
+    if (!('pictureKey' in value) || value['pictureKey'] === undefined) return false;
+    if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
+    if (!('email' in value) || value['email'] === undefined) return false;
+    if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('pictureUrl' in value) || value['pictureUrl'] === undefined) return false;
+    return true;
 }
 
 export function ProfileFromJSON(json: any): Profile {
@@ -103,7 +101,7 @@ export function ProfileFromJSON(json: any): Profile {
 }
 
 export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): Profile {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -114,30 +112,27 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'instrumentId': json['instrument_id'],
         'email': json['email'],
         'id': json['id'],
-        'groups': !exists(json, 'groups') ? undefined : ((json['groups'] as Array<any>).map(GroupFromJSON)),
-        'instrument': !exists(json, 'instrument') ? undefined : GroupFromJSON(json['instrument']),
+        'groups': json['groups'] == null ? undefined : ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
+        'instrument': json['instrument'] == null ? undefined : MinimalGroupFromJSON(json['instrument']),
         'pictureUrl': json['picture_url'],
     };
 }
 
 export function ProfileToJSON(value?: Profile | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'first_name': value.firstName,
-        'last_name': value.lastName,
-        'picture_key': value.pictureKey,
-        'instrument_id': value.instrumentId,
-        'email': value.email,
-        'id': value.id,
-        'groups': value.groups === undefined ? undefined : ((value.groups as Array<any>).map(GroupToJSON)),
-        'instrument': GroupToJSON(value.instrument),
-        'picture_url': value.pictureUrl,
+        'first_name': value['firstName'],
+        'last_name': value['lastName'],
+        'picture_key': value['pictureKey'],
+        'instrument_id': value['instrumentId'],
+        'email': value['email'],
+        'id': value['id'],
+        'groups': value['groups'] == null ? undefined : ((value['groups'] as Array<any>).map(MinimalGroupToJSON)),
+        'instrument': MinimalGroupToJSON(value['instrument']),
+        'picture_url': value['pictureUrl'],
     };
 }
 

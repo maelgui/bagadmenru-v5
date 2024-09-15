@@ -24,6 +24,17 @@ export const FileOrFolderType = {
 export type FileOrFolderType = typeof FileOrFolderType[keyof typeof FileOrFolderType];
 
 
+export function instanceOfFileOrFolderType(value: any): boolean {
+    for (const key in FileOrFolderType) {
+        if (Object.prototype.hasOwnProperty.call(FileOrFolderType, key)) {
+            if (FileOrFolderType[key as keyof typeof FileOrFolderType] === value) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 export function FileOrFolderTypeFromJSON(json: any): FileOrFolderType {
     return FileOrFolderTypeFromJSONTyped(json, false);
 }

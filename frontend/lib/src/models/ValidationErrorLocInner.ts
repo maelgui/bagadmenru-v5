@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -24,10 +24,8 @@ export interface ValidationErrorLocInner {
 /**
  * Check if a given object implements the ValidationErrorLocInner interface.
  */
-export function instanceOfValidationErrorLocInner(value: object): boolean {
-    let isInstance = true;
-
-    return isInstance;
+export function instanceOfValidationErrorLocInner(value: object): value is ValidationErrorLocInner {
+    return true;
 }
 
 export function ValidationErrorLocInnerFromJSON(json: any): ValidationErrorLocInner {

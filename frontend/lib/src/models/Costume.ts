@@ -25,6 +25,17 @@ export const Costume = {
 export type Costume = typeof Costume[keyof typeof Costume];
 
 
+export function instanceOfCostume(value: any): boolean {
+    for (const key in Costume) {
+        if (Object.prototype.hasOwnProperty.call(Costume, key)) {
+            if (Costume[key as keyof typeof Costume] === value) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 export function CostumeFromJSON(json: any): Costume {
     return CostumeFromJSONTyped(json, false);
 }

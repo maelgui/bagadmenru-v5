@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 import type { FileOrFolderType } from './FileOrFolderType';
 import {
     FileOrFolderTypeFromJSON,
@@ -64,17 +64,17 @@ export interface FileOrFolder {
     fileUrl: string | null;
 }
 
+
+
 /**
  * Check if a given object implements the FileOrFolder interface.
  */
-export function instanceOfFileOrFolder(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "name" in value;
-    isInstance = isInstance && "type" in value;
-    isInstance = isInstance && "id" in value;
-    isInstance = isInstance && "fileUrl" in value;
-
-    return isInstance;
+export function instanceOfFileOrFolder(value: object): value is FileOrFolder {
+    if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('type' in value) || value['type'] === undefined) return false;
+    if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('fileUrl' in value) || value['fileUrl'] === undefined) return false;
+    return true;
 }
 
 export function FileOrFolderFromJSON(json: any): FileOrFolder {
@@ -82,7 +82,7 @@ export function FileOrFolderFromJSON(json: any): FileOrFolder {
 }
 
 export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolean): FileOrFolder {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -90,27 +90,24 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'name': json['name'],
         'type': FileOrFolderTypeFromJSON(json['type']),
         'id': json['id'],
-        'parentId': !exists(json, 'parent_id') ? undefined : json['parent_id'],
-        'fileKey': !exists(json, 'file_key') ? undefined : json['file_key'],
+        'parentId': json['parent_id'] == null ? undefined : json['parent_id'],
+        'fileKey': json['file_key'] == null ? undefined : json['file_key'],
         'fileUrl': json['fileUrl'],
     };
 }
 
 export function FileOrFolderToJSON(value?: FileOrFolder | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'name': value.name,
-        'type': FileOrFolderTypeToJSON(value.type),
-        'id': value.id,
-        'parent_id': value.parentId,
-        'file_key': value.fileKey,
-        'fileUrl': value.fileUrl,
+        'name': value['name'],
+        'type': FileOrFolderTypeToJSON(value['type']),
+        'id': value['id'],
+        'parent_id': value['parentId'],
+        'file_key': value['fileKey'],
+        'fileUrl': value['fileUrl'],
     };
 }
 

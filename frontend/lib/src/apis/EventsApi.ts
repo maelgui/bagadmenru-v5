@@ -77,8 +77,11 @@ export class EventsApi extends runtime.BaseAPI {
      * Create Event
      */
     async createEventApiV1EventsPostRaw(requestParameters: CreateEventApiV1EventsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
-        if (requestParameters.eventCreate === null || requestParameters.eventCreate === undefined) {
-            throw new runtime.RequiredError('eventCreate','Required parameter requestParameters.eventCreate was null or undefined when calling createEventApiV1EventsPost.');
+        if (requestParameters['eventCreate'] == null) {
+            throw new runtime.RequiredError(
+                'eventCreate',
+                'Required parameter "eventCreate" was null or undefined when calling createEventApiV1EventsPost().'
+            );
         }
 
         const queryParameters: any = {};
@@ -92,7 +95,7 @@ export class EventsApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: EventCreateToJSON(requestParameters.eventCreate),
+            body: EventCreateToJSON(requestParameters['eventCreate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => EventFromJSON(jsonValue));
@@ -110,12 +113,18 @@ export class EventsApi extends runtime.BaseAPI {
      * Create Response
      */
     async createResponseApiV1EventsEventIdResponsesPutRaw(requestParameters: CreateResponseApiV1EventsEventIdResponsesPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Response>> {
-        if (requestParameters.eventId === null || requestParameters.eventId === undefined) {
-            throw new runtime.RequiredError('eventId','Required parameter requestParameters.eventId was null or undefined when calling createResponseApiV1EventsEventIdResponsesPut.');
+        if (requestParameters['eventId'] == null) {
+            throw new runtime.RequiredError(
+                'eventId',
+                'Required parameter "eventId" was null or undefined when calling createResponseApiV1EventsEventIdResponsesPut().'
+            );
         }
 
-        if (requestParameters.responseCreate === null || requestParameters.responseCreate === undefined) {
-            throw new runtime.RequiredError('responseCreate','Required parameter requestParameters.responseCreate was null or undefined when calling createResponseApiV1EventsEventIdResponsesPut.');
+        if (requestParameters['responseCreate'] == null) {
+            throw new runtime.RequiredError(
+                'responseCreate',
+                'Required parameter "responseCreate" was null or undefined when calling createResponseApiV1EventsEventIdResponsesPut().'
+            );
         }
 
         const queryParameters: any = {};
@@ -125,11 +134,11 @@ export class EventsApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/events/{event_id}/responses`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters.eventId))),
+            path: `/api/v1/events/{event_id}/responses`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: ResponseCreateToJSON(requestParameters.responseCreate),
+            body: ResponseCreateToJSON(requestParameters['responseCreate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ResponseFromJSON(jsonValue));
@@ -147,8 +156,11 @@ export class EventsApi extends runtime.BaseAPI {
      * Delete Event
      */
     async deleteEventApiV1EventsEventIdDeleteRaw(requestParameters: DeleteEventApiV1EventsEventIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.eventId === null || requestParameters.eventId === undefined) {
-            throw new runtime.RequiredError('eventId','Required parameter requestParameters.eventId was null or undefined when calling deleteEventApiV1EventsEventIdDelete.');
+        if (requestParameters['eventId'] == null) {
+            throw new runtime.RequiredError(
+                'eventId',
+                'Required parameter "eventId" was null or undefined when calling deleteEventApiV1EventsEventIdDelete().'
+            );
         }
 
         const queryParameters: any = {};
@@ -156,7 +168,7 @@ export class EventsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters.eventId))),
+            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -206,8 +218,11 @@ export class EventsApi extends runtime.BaseAPI {
      * Get Event
      */
     async getEventApiV1EventsEventIdGetRaw(requestParameters: GetEventApiV1EventsEventIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
-        if (requestParameters.eventId === null || requestParameters.eventId === undefined) {
-            throw new runtime.RequiredError('eventId','Required parameter requestParameters.eventId was null or undefined when calling getEventApiV1EventsEventIdGet.');
+        if (requestParameters['eventId'] == null) {
+            throw new runtime.RequiredError(
+                'eventId',
+                'Required parameter "eventId" was null or undefined when calling getEventApiV1EventsEventIdGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -215,7 +230,7 @@ export class EventsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters.eventId))),
+            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -238,24 +253,24 @@ export class EventsApi extends runtime.BaseAPI {
     async listEventsApiV1EventsGetRaw(requestParameters: ListEventsApiV1EventsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Event>>> {
         const queryParameters: any = {};
 
-        if (requestParameters.limit !== undefined) {
-            queryParameters['limit'] = requestParameters.limit;
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
         }
 
-        if (requestParameters.dateGte !== undefined) {
-            queryParameters['date__gte'] = (requestParameters.dateGte as any).toISOString();
+        if (requestParameters['dateGte'] != null) {
+            queryParameters['date__gte'] = (requestParameters['dateGte'] as any).toISOString();
         }
 
-        if (requestParameters.dateLt !== undefined) {
-            queryParameters['date__lt'] = (requestParameters.dateLt as any).toISOString();
+        if (requestParameters['dateLt'] != null) {
+            queryParameters['date__lt'] = (requestParameters['dateLt'] as any).toISOString();
         }
 
-        if (requestParameters.isInDoodle !== undefined) {
-            queryParameters['is_in_doodle'] = requestParameters.isInDoodle;
+        if (requestParameters['isInDoodle'] != null) {
+            queryParameters['is_in_doodle'] = requestParameters['isInDoodle'];
         }
 
-        if (requestParameters.ordering !== undefined) {
-            queryParameters['ordering'] = requestParameters.ordering;
+        if (requestParameters['ordering'] != null) {
+            queryParameters['ordering'] = requestParameters['ordering'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -284,8 +299,8 @@ export class EventsApi extends runtime.BaseAPI {
     async listResponsesApiV1ResponsesGetRaw(requestParameters: ListResponsesApiV1ResponsesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Response>>> {
         const queryParameters: any = {};
 
-        if (requestParameters.userId !== undefined) {
-            queryParameters['user_id'] = requestParameters.userId;
+        if (requestParameters['userId'] != null) {
+            queryParameters['user_id'] = requestParameters['userId'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -312,12 +327,18 @@ export class EventsApi extends runtime.BaseAPI {
      * Update Event
      */
     async updateEventApiV1EventsEventIdPutRaw(requestParameters: UpdateEventApiV1EventsEventIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
-        if (requestParameters.eventId === null || requestParameters.eventId === undefined) {
-            throw new runtime.RequiredError('eventId','Required parameter requestParameters.eventId was null or undefined when calling updateEventApiV1EventsEventIdPut.');
+        if (requestParameters['eventId'] == null) {
+            throw new runtime.RequiredError(
+                'eventId',
+                'Required parameter "eventId" was null or undefined when calling updateEventApiV1EventsEventIdPut().'
+            );
         }
 
-        if (requestParameters.eventCreate === null || requestParameters.eventCreate === undefined) {
-            throw new runtime.RequiredError('eventCreate','Required parameter requestParameters.eventCreate was null or undefined when calling updateEventApiV1EventsEventIdPut.');
+        if (requestParameters['eventCreate'] == null) {
+            throw new runtime.RequiredError(
+                'eventCreate',
+                'Required parameter "eventCreate" was null or undefined when calling updateEventApiV1EventsEventIdPut().'
+            );
         }
 
         const queryParameters: any = {};
@@ -327,11 +348,11 @@ export class EventsApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters.eventId))),
+            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: EventCreateToJSON(requestParameters.eventCreate),
+            body: EventCreateToJSON(requestParameters['eventCreate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => EventFromJSON(jsonValue));

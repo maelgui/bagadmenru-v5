@@ -18,6 +18,8 @@ import type {
   GetUploadUrlResponse,
   GlobalStats,
   Group,
+  GroupCreate,
+  GroupUpdate,
   HTTPValidationError,
   MyStats,
   Permission,
@@ -31,6 +33,10 @@ import {
     GlobalStatsToJSON,
     GroupFromJSON,
     GroupToJSON,
+    GroupCreateFromJSON,
+    GroupCreateToJSON,
+    GroupUpdateFromJSON,
+    GroupUpdateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     MyStatsFromJSON,
@@ -42,6 +48,10 @@ import {
     ProfileUpdateFromJSON,
     ProfileUpdateToJSON,
 } from '../models/index';
+
+export interface CreateGroupApiV1GroupsPostRequest {
+    groupCreate: GroupCreate;
+}
 
 export interface GetGroupApiV1GroupsGroupIdGetRequest {
     groupId: number;
@@ -55,6 +65,11 @@ export interface GetProfileApiV1ProfilesProfileIdGetRequest {
     profileId: string;
 }
 
+export interface UpdateGroupApiV1GroupsGroupIdPutRequest {
+    groupId: number;
+    groupUpdate: GroupUpdate;
+}
+
 export interface UpdateMyProfileApiV1ProfilesMePutRequest {
     profileUpdate: ProfileUpdate;
 }
@@ -63,6 +78,42 @@ export interface UpdateMyProfileApiV1ProfilesMePutRequest {
  * 
  */
 export class ProfilesApi extends runtime.BaseAPI {
+
+    /**
+     * Create Group
+     */
+    async createGroupApiV1GroupsPostRaw(requestParameters: CreateGroupApiV1GroupsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+        if (requestParameters['groupCreate'] == null) {
+            throw new runtime.RequiredError(
+                'groupCreate',
+                'Required parameter "groupCreate" was null or undefined when calling createGroupApiV1GroupsPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/api/v1/groups/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: GroupCreateToJSON(requestParameters['groupCreate']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GroupFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Group
+     */
+    async createGroupApiV1GroupsPost(requestParameters: CreateGroupApiV1GroupsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Group> {
+        const response = await this.createGroupApiV1GroupsPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Get Global Stats
@@ -94,8 +145,11 @@ export class ProfilesApi extends runtime.BaseAPI {
      * Get Group
      */
     async getGroupApiV1GroupsGroupIdGetRaw(requestParameters: GetGroupApiV1GroupsGroupIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
-        if (requestParameters.groupId === null || requestParameters.groupId === undefined) {
-            throw new runtime.RequiredError('groupId','Required parameter requestParameters.groupId was null or undefined when calling getGroupApiV1GroupsGroupIdGet.');
+        if (requestParameters['groupId'] == null) {
+            throw new runtime.RequiredError(
+                'groupId',
+                'Required parameter "groupId" was null or undefined when calling getGroupApiV1GroupsGroupIdGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -103,7 +157,7 @@ export class ProfilesApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/groups/{group_id}`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters.groupId))),
+            path: `/api/v1/groups/{group_id}`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters['groupId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -124,8 +178,11 @@ export class ProfilesApi extends runtime.BaseAPI {
      * Get Group Members
      */
     async getGroupMembersApiV1GroupsGroupIdMembersGetRaw(requestParameters: GetGroupMembersApiV1GroupsGroupIdMembersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
-        if (requestParameters.groupId === null || requestParameters.groupId === undefined) {
-            throw new runtime.RequiredError('groupId','Required parameter requestParameters.groupId was null or undefined when calling getGroupMembersApiV1GroupsGroupIdMembersGet.');
+        if (requestParameters['groupId'] == null) {
+            throw new runtime.RequiredError(
+                'groupId',
+                'Required parameter "groupId" was null or undefined when calling getGroupMembersApiV1GroupsGroupIdMembersGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -133,7 +190,7 @@ export class ProfilesApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/groups/{group_id}/members`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters.groupId))),
+            path: `/api/v1/groups/{group_id}/members`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters['groupId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -232,8 +289,11 @@ export class ProfilesApi extends runtime.BaseAPI {
      * Get Profile
      */
     async getProfileApiV1ProfilesProfileIdGetRaw(requestParameters: GetProfileApiV1ProfilesProfileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
-        if (requestParameters.profileId === null || requestParameters.profileId === undefined) {
-            throw new runtime.RequiredError('profileId','Required parameter requestParameters.profileId was null or undefined when calling getProfileApiV1ProfilesProfileIdGet.');
+        if (requestParameters['profileId'] == null) {
+            throw new runtime.RequiredError(
+                'profileId',
+                'Required parameter "profileId" was null or undefined when calling getProfileApiV1ProfilesProfileIdGet().'
+            );
         }
 
         const queryParameters: any = {};
@@ -241,7 +301,7 @@ export class ProfilesApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/profiles/{profile_id}`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters.profileId))),
+            path: `/api/v1/profiles/{profile_id}`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -337,11 +397,57 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Update Group
+     */
+    async updateGroupApiV1GroupsGroupIdPutRaw(requestParameters: UpdateGroupApiV1GroupsGroupIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+        if (requestParameters['groupId'] == null) {
+            throw new runtime.RequiredError(
+                'groupId',
+                'Required parameter "groupId" was null or undefined when calling updateGroupApiV1GroupsGroupIdPut().'
+            );
+        }
+
+        if (requestParameters['groupUpdate'] == null) {
+            throw new runtime.RequiredError(
+                'groupUpdate',
+                'Required parameter "groupUpdate" was null or undefined when calling updateGroupApiV1GroupsGroupIdPut().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/api/v1/groups/{group_id}`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters['groupId']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: GroupUpdateToJSON(requestParameters['groupUpdate']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GroupFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Group
+     */
+    async updateGroupApiV1GroupsGroupIdPut(requestParameters: UpdateGroupApiV1GroupsGroupIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Group> {
+        const response = await this.updateGroupApiV1GroupsGroupIdPutRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Update My Profile
      */
     async updateMyProfileApiV1ProfilesMePutRaw(requestParameters: UpdateMyProfileApiV1ProfilesMePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
-        if (requestParameters.profileUpdate === null || requestParameters.profileUpdate === undefined) {
-            throw new runtime.RequiredError('profileUpdate','Required parameter requestParameters.profileUpdate was null or undefined when calling updateMyProfileApiV1ProfilesMePut.');
+        if (requestParameters['profileUpdate'] == null) {
+            throw new runtime.RequiredError(
+                'profileUpdate',
+                'Required parameter "profileUpdate" was null or undefined when calling updateMyProfileApiV1ProfilesMePut().'
+            );
         }
 
         const queryParameters: any = {};
@@ -355,7 +461,7 @@ export class ProfilesApi extends runtime.BaseAPI {
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: ProfileUpdateToJSON(requestParameters.profileUpdate),
+            body: ProfileUpdateToJSON(requestParameters['profileUpdate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));

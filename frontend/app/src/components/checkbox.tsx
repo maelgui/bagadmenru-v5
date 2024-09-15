@@ -5,21 +5,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   title: string
   description: string
+  id: string
 }
 
 export default function Checkbox({
-  title, description, className, ...rest
+  title, description, className, id, ...rest
 }: CheckboxProps) {
   return (
     <div className="relative">
       <input
         type="checkbox"
-        id="is_in_doodle"
+        id={id}
         {...rest}
         className="hidden peer"
       />
 
-      <label htmlFor="is_in_doodle" className={`block p-4 pl-16 cursor-pointer rounded border-2 ring-2 ring-transparent ring-offset-2 peer-checked:border-pourpre-500 hover:bg-gray-50 active:ring-pourpre-200 focus:ring-pourpre-200 focus:ring-offset-0 ${className}`}>
+      <label htmlFor={id} className={`block p-4 pl-16 cursor-pointer rounded border-2 ring-2 ring-transparent ring-offset-2 peer-checked:border-pourpre-500 hover:bg-gray-50 active:ring-pourpre-200 focus:ring-pourpre-200 focus:ring-offset-0 ${className}`}>
         <span className="mb-2 block font-semibold">{title}</span>
         <p className="text-gray-600">{description}</p>
       </label>

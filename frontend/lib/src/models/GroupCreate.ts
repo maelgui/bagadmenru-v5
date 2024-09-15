@@ -16,46 +16,54 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface FolderCreate
+ * @interface GroupCreate
  */
-export interface FolderCreate {
+export interface GroupCreate {
     /**
      * 
      * @type {string}
-     * @memberof FolderCreate
+     * @memberof GroupCreate
      */
     name: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GroupCreate
+     */
+    color?: string;
 }
 
 /**
- * Check if a given object implements the FolderCreate interface.
+ * Check if a given object implements the GroupCreate interface.
  */
-export function instanceOfFolderCreate(value: object): value is FolderCreate {
+export function instanceOfGroupCreate(value: object): value is GroupCreate {
     if (!('name' in value) || value['name'] === undefined) return false;
     return true;
 }
 
-export function FolderCreateFromJSON(json: any): FolderCreate {
-    return FolderCreateFromJSONTyped(json, false);
+export function GroupCreateFromJSON(json: any): GroupCreate {
+    return GroupCreateFromJSONTyped(json, false);
 }
 
-export function FolderCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean): FolderCreate {
+export function GroupCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean): GroupCreate {
     if (json == null) {
         return json;
     }
     return {
         
         'name': json['name'],
+        'color': json['color'] == null ? undefined : json['color'],
     };
 }
 
-export function FolderCreateToJSON(value?: FolderCreate | null): any {
+export function GroupCreateToJSON(value?: GroupCreate | null): any {
     if (value == null) {
         return value;
     }
     return {
         
         'name': value['name'],
+        'color': value['color'],
     };
 }
 

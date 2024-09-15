@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -30,11 +30,9 @@ export interface Photo {
 /**
  * Check if a given object implements the Photo interface.
  */
-export function instanceOfPhoto(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "url" in value;
-
-    return isInstance;
+export function instanceOfPhoto(value: object): value is Photo {
+    if (!('url' in value) || value['url'] === undefined) return false;
+    return true;
 }
 
 export function PhotoFromJSON(json: any): Photo {
@@ -42,7 +40,7 @@ export function PhotoFromJSON(json: any): Photo {
 }
 
 export function PhotoFromJSONTyped(json: any, ignoreDiscriminator: boolean): Photo {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -52,15 +50,12 @@ export function PhotoFromJSONTyped(json: any, ignoreDiscriminator: boolean): Pho
 }
 
 export function PhotoToJSON(value?: Photo | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'url': value.url,
+        'url': value['url'],
     };
 }
 

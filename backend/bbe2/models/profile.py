@@ -39,7 +39,7 @@ class Profile(Base):
     )
     instrument: Mapped["Group"] = relationship("Group")
     groups: Mapped[List["Group"]] = relationship(
-        secondary=profile_group_association_table
+        secondary=profile_group_association_table, back_populates="members"
     )
 
 
@@ -53,6 +53,9 @@ class Group(Base):
     color: Mapped[str] = mapped_column(String(7), nullable=False, default="#fff")
     permissions: Mapped[List["Permission"]] = relationship(
         secondary=group_permission_association_table
+    )
+    members: Mapped[List[Profile]] = relationship(
+        secondary=profile_group_association_table, back_populates="groups"
     )
 
 

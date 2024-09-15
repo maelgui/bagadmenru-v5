@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -48,14 +48,12 @@ export interface Response {
 /**
  * Check if a given object implements the Response interface.
  */
-export function instanceOfResponse(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "value" in value;
-    isInstance = isInstance && "userId" in value;
-    isInstance = isInstance && "eventId" in value;
-    isInstance = isInstance && "date" in value;
-
-    return isInstance;
+export function instanceOfResponse(value: object): value is Response {
+    if (!('value' in value) || value['value'] === undefined) return false;
+    if (!('userId' in value) || value['userId'] === undefined) return false;
+    if (!('eventId' in value) || value['eventId'] === undefined) return false;
+    if (!('date' in value) || value['date'] === undefined) return false;
+    return true;
 }
 
 export function ResponseFromJSON(json: any): Response {
@@ -63,7 +61,7 @@ export function ResponseFromJSON(json: any): Response {
 }
 
 export function ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): Response {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -76,18 +74,15 @@ export function ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
 }
 
 export function ResponseToJSON(value?: Response | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'value': value.value,
-        'user_id': value.userId,
-        'event_id': value.eventId,
-        'date': (value.date.toISOString()),
+        'value': value['value'],
+        'user_id': value['userId'],
+        'event_id': value['eventId'],
+        'date': ((value['date']).toISOString()),
     };
 }
 

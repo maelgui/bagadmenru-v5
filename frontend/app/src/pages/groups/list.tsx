@@ -1,5 +1,8 @@
+import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import Badge from '../../components/badge';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { useApiClient } from '../../config/client';
@@ -17,7 +20,12 @@ export default function GroupListPage() {
       <Header
         title="Liste des groupes"
         subtitle=""
-        actions={[]}
+        actions={[<Header.Action key="add-event" as={Link} to="/groups/add">
+          <FontAwesomeIcon icon={faPlusCircle} />
+          {' '}
+          Ajouter
+        </Header.Action>,
+        ]}
         breadcrumb={[
           { title: 'Groupes' },
         ]}
@@ -25,14 +33,23 @@ export default function GroupListPage() {
 
       <Container>
         {groups?.map((group) => (
-          <Link key={group.id} to={`/groups/${group.id}`}>
-            <h4 className="text-lg">{group.name}</h4>
-            <p className="text-gray-500 italic">
-              {group.permissions.length}
-              {' '}
-              permissions
-            </p>
-          </Link>
+          <div key={group.id} className="mb-8">
+            <Link to={`/groups/${group.id}`}>
+              <Badge className="text-lg" style={{ backgroundColor: group.color }}>{group.name}</Badge>
+              <p className="text-gray-500 italic">
+                {group.permissions.length}
+                {' '}
+                permissions
+                {' / '}
+                {group.members.length}
+                {' '}
+                membres
+
+              </p>
+              <p className="text-gray-500 italic">
+              </p>
+            </Link>
+          </div>
         ))}
       </Container>
 

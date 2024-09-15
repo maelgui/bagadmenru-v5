@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 import type { Costume } from './Costume';
 import {
     CostumeFromJSON,
@@ -64,19 +64,19 @@ export interface EventCreate {
     isInDoodle: boolean;
 }
 
+
+
 /**
  * Check if a given object implements the EventCreate interface.
  */
-export function instanceOfEventCreate(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "title" in value;
-    isInstance = isInstance && "description" in value;
-    isInstance = isInstance && "date" in value;
-    isInstance = isInstance && "costume" in value;
-    isInstance = isInstance && "category" in value;
-    isInstance = isInstance && "isInDoodle" in value;
-
-    return isInstance;
+export function instanceOfEventCreate(value: object): value is EventCreate {
+    if (!('title' in value) || value['title'] === undefined) return false;
+    if (!('description' in value) || value['description'] === undefined) return false;
+    if (!('date' in value) || value['date'] === undefined) return false;
+    if (!('costume' in value) || value['costume'] === undefined) return false;
+    if (!('category' in value) || value['category'] === undefined) return false;
+    if (!('isInDoodle' in value) || value['isInDoodle'] === undefined) return false;
+    return true;
 }
 
 export function EventCreateFromJSON(json: any): EventCreate {
@@ -84,7 +84,7 @@ export function EventCreateFromJSON(json: any): EventCreate {
 }
 
 export function EventCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean): EventCreate {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -99,20 +99,17 @@ export function EventCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
 }
 
 export function EventCreateToJSON(value?: EventCreate | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'title': value.title,
-        'description': value.description,
-        'date': (value.date.toISOString().substring(0,10)),
-        'costume': CostumeToJSON(value.costume),
-        'category': value.category,
-        'is_in_doodle': value.isInDoodle,
+        'title': value['title'],
+        'description': value['description'],
+        'date': ((value['date']).toISOString().substring(0,10)),
+        'costume': CostumeToJSON(value['costume']),
+        'category': value['category'],
+        'is_in_doodle': value['isInDoodle'],
     };
 }
 

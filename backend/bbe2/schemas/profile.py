@@ -28,12 +28,6 @@ class Permission(BaseModel):
     name: str
     description: str
 
-class Group(BaseModel):
-    id: int
-    name: str
-    permissions: list[Permission]
-    color: str = "#932a58"
-
 
 class Profile(_ProfileBase):
     model_config = ConfigDict(from_attributes=True)
@@ -41,9 +35,9 @@ class Profile(_ProfileBase):
     email: str
     id: str
 
-    groups: list[Group] = []
+    groups: list["MinimalGroup"] = []
 
-    instrument: Optional[Group] = None
+    instrument: Optional["MinimalGroup"] = None
 
     @computed_field
     @property
@@ -53,7 +47,16 @@ class Profile(_ProfileBase):
         return s3.generate_get_presigned_url(object_name=self.picture_key)
 
 
-class Invitation(BaseModel):
-    first_name: str
-    last_name: str
-    email: EmailStr
+class MinimalGroup(BaseModel):
+    name: str
+    color: str = "#932a58"
+class GroupCreate(MinimalGroup):
+    pass
+
+class GroupUpdate(MinimalGroup):
+    permission_ids: list[str]
+
+class Group(MinimalGroup):
+    id: int
+    permissions: list[Permission]
+    members: list[Profile]

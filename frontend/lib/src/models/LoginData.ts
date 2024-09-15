@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -36,12 +36,10 @@ export interface LoginData {
 /**
  * Check if a given object implements the LoginData interface.
  */
-export function instanceOfLoginData(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "identifier" in value;
-    isInstance = isInstance && "password" in value;
-
-    return isInstance;
+export function instanceOfLoginData(value: object): value is LoginData {
+    if (!('identifier' in value) || value['identifier'] === undefined) return false;
+    if (!('password' in value) || value['password'] === undefined) return false;
+    return true;
 }
 
 export function LoginDataFromJSON(json: any): LoginData {
@@ -49,7 +47,7 @@ export function LoginDataFromJSON(json: any): LoginData {
 }
 
 export function LoginDataFromJSONTyped(json: any, ignoreDiscriminator: boolean): LoginData {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -60,16 +58,13 @@ export function LoginDataFromJSONTyped(json: any, ignoreDiscriminator: boolean):
 }
 
 export function LoginDataToJSON(value?: LoginData | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'identifier': value.identifier,
-        'password': value.password,
+        'identifier': value['identifier'],
+        'password': value['password'],
     };
 }
 

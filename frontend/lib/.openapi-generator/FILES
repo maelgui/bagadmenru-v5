@@ -22,8 +22,11 @@ src/models/FolderCreate.ts
 src/models/GetUploadUrlResponse.ts
 src/models/GlobalStats.ts
 src/models/Group.ts
+src/models/GroupCreate.ts
+src/models/GroupUpdate.ts
 src/models/HTTPValidationError.ts
 src/models/LoginData.ts
+src/models/MinimalGroup.ts
 src/models/MyStats.ts
 src/models/Permission.ts
 src/models/Photo.ts

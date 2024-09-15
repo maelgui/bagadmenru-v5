@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -48,14 +48,12 @@ export interface ProfileUpdate {
 /**
  * Check if a given object implements the ProfileUpdate interface.
  */
-export function instanceOfProfileUpdate(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "firstName" in value;
-    isInstance = isInstance && "lastName" in value;
-    isInstance = isInstance && "pictureKey" in value;
-    isInstance = isInstance && "instrumentId" in value;
-
-    return isInstance;
+export function instanceOfProfileUpdate(value: object): value is ProfileUpdate {
+    if (!('firstName' in value) || value['firstName'] === undefined) return false;
+    if (!('lastName' in value) || value['lastName'] === undefined) return false;
+    if (!('pictureKey' in value) || value['pictureKey'] === undefined) return false;
+    if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
+    return true;
 }
 
 export function ProfileUpdateFromJSON(json: any): ProfileUpdate {
@@ -63,7 +61,7 @@ export function ProfileUpdateFromJSON(json: any): ProfileUpdate {
 }
 
 export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProfileUpdate {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -76,18 +74,15 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
 }
 
 export function ProfileUpdateToJSON(value?: ProfileUpdate | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'first_name': value.firstName,
-        'last_name': value.lastName,
-        'picture_key': value.pictureKey,
-        'instrument_id': value.instrumentId,
+        'first_name': value['firstName'],
+        'last_name': value['lastName'],
+        'picture_key': value['pictureKey'],
+        'instrument_id': value['instrumentId'],
     };
 }
 

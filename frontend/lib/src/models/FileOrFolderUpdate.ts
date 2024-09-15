@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -36,10 +36,8 @@ export interface FileOrFolderUpdate {
 /**
  * Check if a given object implements the FileOrFolderUpdate interface.
  */
-export function instanceOfFileOrFolderUpdate(value: object): boolean {
-    let isInstance = true;
-
-    return isInstance;
+export function instanceOfFileOrFolderUpdate(value: object): value is FileOrFolderUpdate {
+    return true;
 }
 
 export function FileOrFolderUpdateFromJSON(json: any): FileOrFolderUpdate {
@@ -47,27 +45,24 @@ export function FileOrFolderUpdateFromJSON(json: any): FileOrFolderUpdate {
 }
 
 export function FileOrFolderUpdateFromJSONTyped(json: any, ignoreDiscriminator: boolean): FileOrFolderUpdate {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
         
-        'name': !exists(json, 'name') ? undefined : json['name'],
-        'parentId': !exists(json, 'parent_id') ? undefined : json['parent_id'],
+        'name': json['name'] == null ? undefined : json['name'],
+        'parentId': json['parent_id'] == null ? undefined : json['parent_id'],
     };
 }
 
 export function FileOrFolderUpdateToJSON(value?: FileOrFolderUpdate | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'name': value.name,
-        'parent_id': value.parentId,
+        'name': value['name'],
+        'parent_id': value['parentId'],
     };
 }
 

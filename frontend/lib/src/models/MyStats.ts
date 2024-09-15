@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -48,14 +48,12 @@ export interface MyStats {
 /**
  * Check if a given object implements the MyStats interface.
  */
-export function instanceOfMyStats(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "nResponses" in value;
-    isInstance = isInstance && "nPositiveResponses" in value;
-    isInstance = isInstance && "avgResponseTime" in value;
-    isInstance = isInstance && "responsesNeeded" in value;
-
-    return isInstance;
+export function instanceOfMyStats(value: object): value is MyStats {
+    if (!('nResponses' in value) || value['nResponses'] === undefined) return false;
+    if (!('nPositiveResponses' in value) || value['nPositiveResponses'] === undefined) return false;
+    if (!('avgResponseTime' in value) || value['avgResponseTime'] === undefined) return false;
+    if (!('responsesNeeded' in value) || value['responsesNeeded'] === undefined) return false;
+    return true;
 }
 
 export function MyStatsFromJSON(json: any): MyStats {
@@ -63,7 +61,7 @@ export function MyStatsFromJSON(json: any): MyStats {
 }
 
 export function MyStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean): MyStats {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -76,18 +74,15 @@ export function MyStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean): M
 }
 
 export function MyStatsToJSON(value?: MyStats | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'n_responses': value.nResponses,
-        'n_positive_responses': value.nPositiveResponses,
-        'avg_response_time': value.avgResponseTime,
-        'responses_needed': value.responsesNeeded,
+        'n_responses': value['nResponses'],
+        'n_positive_responses': value['nPositiveResponses'],
+        'avg_response_time': value['avgResponseTime'],
+        'responses_needed': value['responsesNeeded'],
     };
 }
 

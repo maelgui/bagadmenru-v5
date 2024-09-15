@@ -37,9 +37,12 @@ export class AuthApi extends runtime.BaseAPI {
     /**
      * Login
      */
-    async loginApiV1AuthLoginPostRaw(requestParameters: LoginApiV1AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters.loginData === null || requestParameters.loginData === undefined) {
-            throw new runtime.RequiredError('loginData','Required parameter requestParameters.loginData was null or undefined when calling loginApiV1AuthLoginPost.');
+    async loginApiV1AuthLoginPostRaw(requestParameters: LoginApiV1AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['loginData'] == null) {
+            throw new runtime.RequiredError(
+                'loginData',
+                'Required parameter "loginData" was null or undefined when calling loginApiV1AuthLoginPost().'
+            );
         }
 
         const queryParameters: any = {};
@@ -53,23 +56,28 @@ export class AuthApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: LoginDataToJSON(requestParameters.loginData),
+            body: LoginDataToJSON(requestParameters['loginData']),
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * Login
      */
-    async loginApiV1AuthLoginPost(requestParameters: LoginApiV1AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.loginApiV1AuthLoginPostRaw(requestParameters, initOverrides);
+    async loginApiV1AuthLoginPost(requestParameters: LoginApiV1AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.loginApiV1AuthLoginPostRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**
      * Logout
      */
-    async logoutApiV1AuthLogoutPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async logoutApiV1AuthLogoutPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -81,14 +89,19 @@ export class AuthApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      * Logout
      */
-    async logoutApiV1AuthLogoutPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.logoutApiV1AuthLogoutPostRaw(initOverrides);
+    async logoutApiV1AuthLogoutPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.logoutApiV1AuthLogoutPostRaw(initOverrides);
+        return await response.value();
     }
 
 }

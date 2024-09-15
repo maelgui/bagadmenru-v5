@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from '../runtime';
+import { mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -42,13 +42,11 @@ export interface GlobalStats {
 /**
  * Check if a given object implements the GlobalStats interface.
  */
-export function instanceOfGlobalStats(value: object): boolean {
-    let isInstance = true;
-    isInstance = isInstance && "nResponses" in value;
-    isInstance = isInstance && "nEvents" in value;
-    isInstance = isInstance && "avgResponseTime" in value;
-
-    return isInstance;
+export function instanceOfGlobalStats(value: object): value is GlobalStats {
+    if (!('nResponses' in value) || value['nResponses'] === undefined) return false;
+    if (!('nEvents' in value) || value['nEvents'] === undefined) return false;
+    if (!('avgResponseTime' in value) || value['avgResponseTime'] === undefined) return false;
+    return true;
 }
 
 export function GlobalStatsFromJSON(json: any): GlobalStats {
@@ -56,7 +54,7 @@ export function GlobalStatsFromJSON(json: any): GlobalStats {
 }
 
 export function GlobalStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean): GlobalStats {
-    if ((json === undefined) || (json === null)) {
+    if (json == null) {
         return json;
     }
     return {
@@ -68,17 +66,14 @@ export function GlobalStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean
 }
 
 export function GlobalStatsToJSON(value?: GlobalStats | null): any {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (value === null) {
-        return null;
+    if (value == null) {
+        return value;
     }
     return {
         
-        'n_responses': value.nResponses,
-        'n_events': value.nEvents,
-        'avg_response_time': value.avgResponseTime,
+        'n_responses': value['nResponses'],
+        'n_events': value['nEvents'],
+        'avg_response_time': value['avgResponseTime'],
     };
 }
 

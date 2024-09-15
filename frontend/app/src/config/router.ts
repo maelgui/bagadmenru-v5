@@ -11,6 +11,7 @@ import DoodlePage from '../pages/events/doodle';
 import EditEventPage from '../pages/events/edit';
 import EventsManagePage from '../pages/events/events';
 import ListFilesPage from '../pages/files/list';
+import AddGroupPage from '../pages/groups/add';
 import GroupPage from '../pages/groups/group';
 import GroupListPage from '../pages/groups/list';
 import HomePage from '../pages/home';
@@ -77,6 +78,10 @@ export default createBrowserRouter([
               {
                 path: '/groups/:groupId',
                 Component: GroupPage,
+              },
+              {
+                path: '/groups/add',
+                Component: AddGroupPage,
               },
               {
                 path: '/photos',

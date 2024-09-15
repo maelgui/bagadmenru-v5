@@ -33,7 +33,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     # CRUD operation
     def create(self, **kwargs) -> ModelType:
-        print(self.model, kwargs)
         db_object = self.model(**kwargs)
         self.db_session.add(db_object)
         self.db_session.commit()

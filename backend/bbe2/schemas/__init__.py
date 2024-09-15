@@ -5,7 +5,8 @@ from .file import FileOrFolder, FileOrFolderType, FileOrFolderUpdate, FolderCrea
 from .photo import Photo
 from .profile import (
     Group,
-    Invitation,
+    GroupUpdate,
+    GroupCreate,
     Profile,
     ProfileCreate,
     ProfileUpdate,
