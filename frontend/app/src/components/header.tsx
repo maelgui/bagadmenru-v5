@@ -49,7 +49,7 @@ export default function Header({
 
             <div>
               <h2 className="text-4xl">{title}</h2>
-              <h4 className="text-lg text-gray-500">{subtitle}</h4>
+              <h4 className="text-lg text-gray-500 first-letter:uppercase">{subtitle}</h4>
             </div>
 
             <div>

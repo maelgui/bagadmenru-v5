@@ -112,7 +112,7 @@ export default function FileItem({
             <Button variant="ghost" className="text-left capitalize font-medium">
               <FontAwesomeIcon icon={faPencil} className="mr-3 w-4" />
               {' '}
-              Renomer...
+              Renommer...
             </Button>
             <Button variant="ghost" className="text-left capitalize font-medium">
               <FontAwesomeIcon icon={faFolderTree} className="mr-3 w-4" />

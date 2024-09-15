@@ -59,8 +59,8 @@ export default function CalendarPage() {
           <div className="basis-2/3">
             <div className="flex justify-between items-center">
               <div>
-                <Button variant="outline" onClick={() => setMonthOffset(monthOffset - 1)}>précédent</Button>
-                <Button variant="outline" onClick={() => setMonthOffset(monthOffset + 1)}>suivant</Button>
+                <Button size="sm" variant="outline" onClick={() => setMonthOffset(monthOffset - 1)}>précédent</Button>
+                <Button size="sm" variant="outline" onClick={() => setMonthOffset(monthOffset + 1)}>suivant</Button>
               </div>
               <div>
                 <Button size="sm" variant="outline" onClick={() => setMonthOffset(0)}>Reset</Button>

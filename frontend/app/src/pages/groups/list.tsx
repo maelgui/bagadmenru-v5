@@ -20,11 +20,12 @@ export default function GroupListPage() {
       <Header
         title="Liste des groupes"
         subtitle=""
-        actions={[<Header.Action key="add-event" as={Link} to="/groups/add">
-          <FontAwesomeIcon icon={faPlusCircle} />
-          {' '}
-          Ajouter
-        </Header.Action>,
+        actions={[
+          <Header.Action key="add-event" as={Link} to="/groups/add">
+            <FontAwesomeIcon icon={faPlusCircle} />
+            {' '}
+            Ajouter
+          </Header.Action>,
         ]}
         breadcrumb={[
           { title: 'Groupes' },
@@ -44,10 +45,8 @@ export default function GroupListPage() {
                 {group.members.length}
                 {' '}
                 membres
-
               </p>
-              <p className="text-gray-500 italic">
-              </p>
+              <p className="text-gray-500 italic" />
             </Link>
           </div>
         ))}

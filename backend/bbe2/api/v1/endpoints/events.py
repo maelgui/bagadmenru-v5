@@ -134,7 +134,7 @@ async def list_responses(
 async def create_response(
     event_id: int,
     response: schemas.ResponseCreate,
-    token: dict[str, Any] = Security(get_current_user, scopes=[str(EventScopes.REPLY)]),
+    identifier: str = Security(get_current_user, scopes=[str(EventScopes.REPLY)]),
     database: Session = Depends(get_db),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
@@ -145,7 +145,7 @@ async def create_response(
         )
 
     db_object = models.Response(
-        event_id=event_id, user_id=token["sub"], date=datetime.now(), **response.dict()
+        event_id=event_id, user_id=identifier, date=datetime.now(), **response.dict()
     )
     print(response, db_object)
     database.merge(db_object)

@@ -31,6 +31,12 @@ export interface GroupCreate {
      * @memberof GroupCreate
      */
     color?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof GroupCreate
+     */
+    permissionIds: Array<string>;
 }
 
 /**
@@ -38,6 +44,7 @@ export interface GroupCreate {
  */
 export function instanceOfGroupCreate(value: object): value is GroupCreate {
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('permissionIds' in value) || value['permissionIds'] === undefined) return false;
     return true;
 }
 
@@ -53,6 +60,7 @@ export function GroupCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
+        'permissionIds': json['permission_ids'],
     };
 }
 
@@ -64,6 +72,7 @@ export function GroupCreateToJSON(value?: GroupCreate | null): any {
         
         'name': value['name'],
         'color': value['color'],
+        'permission_ids': value['permissionIds'],
     };
 }
 

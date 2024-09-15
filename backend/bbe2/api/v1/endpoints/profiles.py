@@ -222,10 +222,16 @@ async def get_group(
 async def create_group(
     group: schemas.GroupCreate,
     token: str = Security(get_current_user),
-    group_crud: CRUDGroup = Depends(CRUDGroup),
     session: Session = Depends(get_db),
 ):
-    return group_crud.create(**group.dict())
+    group_db = models.Group(name=group.name, color=group.color)
+    permissions = session.query(models.Permission).filter(models.Permission.id.in_(group.permission_ids)).all()
+    group_db.permissions = permissions
+    session.add(group_db)
+    session.commit()
+    session.refresh(group_db)
+
+    return group_db
 
 @groups_router.put("/{group_id}", response_model=schemas.Group)
 async def update_group(
@@ -241,8 +247,6 @@ async def update_group(
         )
     permissions = session.query(models.Permission).filter(models.Permission.id.in_(group.permission_ids)).all()
     group_db.permissions = permissions
-    print(group.permission_ids)
-    print([p.id for p in permissions])
     session.commit()
     return group_db
 

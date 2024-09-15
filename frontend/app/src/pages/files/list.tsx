@@ -123,7 +123,7 @@ export default function ListFilesPage() {
             type="button"
             onClick={async () => {
               /* eslint-disable no-alert */
-              const name = prompt('nom du dossier', 'nom de sdosisr');
+              const name = prompt('Nom du dossier');
               if (name) {
                 createFolderMutation.mutate(name);
               }

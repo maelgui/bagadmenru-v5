@@ -68,16 +68,7 @@ export default function DoodlePage() {
       return eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['responses'] }),
-    onSuccess: (data) => toast.success(() => (
-      <span>
-        Réponse enregistrée pour
-        {' '}
-        <i>
-          Event#
-          {data.eventId}
-        </i>
-      </span>
-    )),
+    onSuccess: () => toast.success('Réponse enregistrée'),
   });
 
   return (
@@ -226,7 +217,7 @@ export default function DoodlePage() {
             </table>
             <button
               type="button"
-              className="w-16 h-16 shadow-md shadow-white text-white bg-pourpre-500 rounded-full absolute right-8 bottom-8"
+              className="w-16 h-16 shadow-md shadow-white text-white bg-pourpre-500 rounded-full fixed right-8 bottom-8"
               onClick={() => setEditing(!editing)}
             >
               {editing ? <FontAwesomeIcon icon={faFloppyDisk} /> : <FontAwesomeIcon icon={faPen} />}

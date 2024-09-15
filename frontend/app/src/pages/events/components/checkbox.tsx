@@ -34,7 +34,7 @@ export default function Checkbox({
         role="checkbox"
         aria-checked={value}
         tabIndex={0}
-        className="inline-block h-6 w-6 cursor-pointer bg-white m-auto border-2 focus:border-pourpre-500"
+        className="flex h-6 w-6 cursor-pointer bg-white m-auto border-2 focus:border-pourpre-500 justify-center items-center"
         onClick={onClick}
         onKeyDown={(e) => ((e.key === 'Space') ? onClick(e) : null)}
       >

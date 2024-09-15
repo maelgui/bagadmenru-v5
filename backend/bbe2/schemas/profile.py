@@ -46,17 +46,19 @@ class Profile(_ProfileBase):
             return None
         return s3.generate_get_presigned_url(object_name=self.picture_key)
 
-
-class MinimalGroup(BaseModel):
+class _GroupBase(BaseModel):
     name: str
     color: str = "#932a58"
-class GroupCreate(MinimalGroup):
-    pass
 
-class GroupUpdate(MinimalGroup):
+class MinimalGroup(_GroupBase):
+    id: int
+
+class GroupCreate(_GroupBase):
+    permission_ids: list[str]
+
+class GroupUpdate(_GroupBase):
     permission_ids: list[str]
 
 class Group(MinimalGroup):
-    id: int
     permissions: list[Permission]
     members: list[Profile]

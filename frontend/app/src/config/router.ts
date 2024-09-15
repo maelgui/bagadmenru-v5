@@ -12,6 +12,7 @@ import EditEventPage from '../pages/events/edit';
 import EventsManagePage from '../pages/events/events';
 import ListFilesPage from '../pages/files/list';
 import AddGroupPage from '../pages/groups/add';
+import EditGroupPage from '../pages/groups/edit';
 import GroupPage from '../pages/groups/group';
 import GroupListPage from '../pages/groups/list';
 import HomePage from '../pages/home';
@@ -82,6 +83,10 @@ export default createBrowserRouter([
               {
                 path: '/groups/add',
                 Component: AddGroupPage,
+              },
+              {
+                path: '/groups/edit/:groupId',
+                Component: EditGroupPage,
               },
               {
                 path: '/photos',

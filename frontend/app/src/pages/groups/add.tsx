@@ -20,11 +20,11 @@ export default function AddGroupPage() {
       toast.success('Groupe crée !');
     },
     onError: (error) => {
-      toast.error(`Erreur lors de la création de l'évènement : ${error.message}`);
+      toast.error(`Erreur lors de la création du groupe : ${error.message}`);
     },
   });
   const onSubmit = (data: GroupCreate) => mutate(data);
-  // const onSubmit = (data: GroupUpdate) => console.log(data);
+  // const onSubmit = (data: GroupCreate) => console.log(data);
 
   return (
     <>

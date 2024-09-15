@@ -57,7 +57,7 @@ import Button from './button';
 //             style={floatingStyles}
 //             {...getFloatingProps()}
 //           >
-//             <Button variant="ghost">Renomer</Button>
+//             <Button variant="ghost">Renommer</Button>
 //             <Button variant="ghost">Déplacer</Button>
 //             <hr className="mx-2 my-1" />
 //             <Button variant="ghost">Supprimer</Button>
