@@ -23,44 +23,39 @@ from bbe2.utils.scopes import ProfilesScopes
 profiles_router = APIRouter(prefix="/profiles")
 
 
-@profiles_router.get("/me")
+@profiles_router.get("/me", response_model=schemas.Profile)
 async def get_my_profile(
     profile_crud: CRUDProfile = Depends(),
-    token: dict[str, Any] = Security(get_current_user, scopes=[]),
-) -> schemas.Profile:
-    db_profile = profile_crud.find_one_by(models.Profile.id == token["sub"])
-
-    admin = KeycloakAdmin(
-        server_url=settings.keycloak_url,
-        client_id=settings.keycloak_client_id,
-        client_secret_key=settings.keycloak_secret_key,
-        realm_name="bagadmenru",
-    )
-
+    identifier: str = Security(get_current_user, scopes=[]),
+):
+    db_profile = profile_crud.find_one_by(models.Profile.id == identifier)
     if not db_profile:
-        db_profile = profile_crud.create(
-            id=token["sub"],
-            first_name=token["given_name"],
-            last_name=token["family_name"],
-            email=token["email"],
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
-        admin.update_user(db_profile.id, {"bbe2ProfileCreated": "yes"})
+    return db_profile
 
-    # Retrieve groups
-    kc_groups: list[dict[str, str]] = admin.get_user_groups(db_profile.id)
-    profile = schemas.Profile.model_validate(db_profile)
-    profile.groups = [schemas.Group.model_validate(g) for g in kc_groups]
+@profiles_router.get("/me/permissions", response_model=schemas.Profile)
+async def get_my_permissions(
+    profile_crud: CRUDProfile = Depends(),
+    identifier: str = Security(get_current_user, scopes=[]),
+):
+    db_profile = profile_crud.find_one_by(models.Profile.id == identifier)
+    if not db_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
 
-    return profile
+    return [p.id for g in db_profile.groups for p in g.permissions]
 
 
 @profiles_router.put("/me", response_model=schemas.Profile)
 async def update_my_profile(
     profile: schemas.ProfileUpdate,
     profile_crud: CRUDProfile = Depends(),
-    token: dict[str, Any] = Security(get_current_user, scopes=[]),
+    user_identifier: str = Security(get_current_user, scopes=[]),
 ):
-    db_profile = profile_crud.find_one_by(models.Profile.id == token["sub"])
+    db_profile = profile_crud.find_one_by(models.Profile.id == user_identifier)
     if not db_profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
@@ -77,7 +72,7 @@ async def update_my_profile(
                 )
         s3.set_tags(
             profile.picture_key,
-            {"user_id": token["sub"], "temp": "false"},
+            {"user_id": user_identifier, "temp": "false"},
         )
     db_profile = profile_crud.update(db_profile, profile)
     return db_profile
@@ -86,14 +81,14 @@ async def update_my_profile(
 @profiles_router.post("/me/avatar")
 async def upload_avatar(
     profile_crud: CRUDProfile = Depends(),
-    token: dict[str, Any] = Security(get_current_user, scopes=[]),
+    user_identifier: str = Security(get_current_user, scopes=[]),
 ) -> schemas.GetUploadUrlResponse:
-    db_profile = profile_crud.find_one_by(models.Profile.id == token["sub"])
+    db_profile = profile_crud.find_one_by(models.Profile.id == user_identifier)
     object_name = f"pp/{uuid.uuid4()}"
     return schemas.GetUploadUrlResponse(
         url=s3.generate_put_presigned_url(
             object_name,
-            {"user_id": token["sub"], "temp": "true"},
+            {"user_id": user_identifier, "temp": "true"},
         ),
         key=object_name,
     )
@@ -104,7 +99,7 @@ async def get_profile(
     profile_id: str,
     profile_crud: CRUDProfile = Depends(),
     token: dict[str, Any] = Security(
-        get_current_user, scopes=[ProfilesScopes.VIEW.value]
+        get_current_user, scopes=[str(ProfilesScopes.VIEW)]
     ),
 ):
     db_profile = profile_crud.find_one_by(models.Profile.id == profile_id)
@@ -162,7 +157,7 @@ async def get_my_stats(
         ),
     ).join_from(models.Event, models.Response)
     q = q.where(models.Event.date >= date_debut_saison)
-    q = q.where(models.Response.user_id == token["sub"])
+    q = q.where(models.Response.user_id == token)
     q = q.where(models.Event.is_in_doodle == True)
     res1 = session.execute(q).one()._mapping
 
@@ -172,9 +167,7 @@ async def get_my_stats(
         ),
     ).join_from(models.Event, models.Response, isouter=True)
     q = q.where(models.Event.date >= date_now)
-    q = q.where(
-        or_(models.Response.user_id == None, models.Response.user_id == token["sub"])
-    )
+    q = q.where(or_(models.Response.user_id == None, models.Response.user_id == token))
     q = q.where(models.Event.is_in_doodle == True)
     res4 = session.execute(q).one()._mapping
 
@@ -219,74 +212,46 @@ groups_router = APIRouter(prefix="/groups")
 @groups_router.get("/", response_model=list[schemas.Group])
 async def list_groups(
     token: dict[str, Any] = Security(get_current_user),
+    session: Session = Depends(get_db),
 ):
+    q = select(models.Group).order_by(models.Group.name)
+    res = session.scalars(q).all()
 
-    admin = KeycloakAdmin(
-        server_url=settings.keycloak_url,
-        client_id=settings.keycloak_client_id,
-        client_secret_key=settings.keycloak_secret_key,
-        realm_name="bagadmenru",
-    )
-    return admin.get_groups()
+    return res
 
 
-invitations_router = APIRouter(prefix="/invitations")
-
-
-@invitations_router.get("/", response_model=list[schemas.Profile])
-async def list_invitations(
+@groups_router.get("/{group_id}", response_model=schemas.Group)
+async def get_group(
+    group_id: int,
     token: dict[str, Any] = Security(get_current_user),
+    session: Session = Depends(get_db),
 ):
+    q = session.get(models.Group, group_id)
 
-    admin = KeycloakAdmin(
-        server_url=settings.keycloak_url,
-        client_id=settings.keycloak_client_id,
-        client_secret_key=settings.keycloak_secret_key,
-        realm_name="bagadmenru",
-    )
-    users: list[dict[str, str]] = admin.get_users({"q": "bbe2ProfileCreated:no"})
-    return [
-        schemas.Profile(
-            id=user["id"],
-            email=user["email"],
-            first_name=user.get("firstName", ""),
-            last_name=user.get("lastName", ""),
-            picture_key=None,
-            instrument_id=None,
-        )
-        for user in users
-    ]
+    return q
 
-
-@invitations_router.post("/", status_code=201)
-async def create_invitations(
-    profile: schemas.Invitation,
+@groups_router.get("/{group_id}/members", response_model=list[schemas.Profile])
+async def get_group_members(
+    group_id: int,
     token: dict[str, Any] = Security(get_current_user),
+    session: Session = Depends(get_db),
 ):
+    q = select(models.Profile).where(models.Profile.groups.any(models.Group.id == group_id)).order_by(models.Profile.first_name)
+    res = session.scalars(q).all()
 
-    admin = KeycloakAdmin(
-        server_url=settings.keycloak_url,
-        client_id=settings.keycloak_client_id,
-        client_secret_key=settings.keycloak_secret_key,
-        realm_name="bagadmenru",
-    )
-    user_id = admin.create_user(
-        {
-            "email": profile.email,
-            "firstName": profile.first_name,
-            "lastName": profile.last_name,
-            "enabled": "true",
-            "attributes": {
-                "bbe2ProfileCreated": "no",
-            },
-        }
-    )
-    admin.send_update_account(
-        user_id,
-        ["UPDATE_PASSWORD", "VERIFY_EMAIL"],
-        client_id="bbe2-frontend",
-        lifespan=3600 * 72,
-    )
+    return res
+
+permissions_router = APIRouter(prefix="/permissions")
+
+@permissions_router.get("/", response_model=list[schemas.Permission])
+async def list_permissions(
+    token: dict[str, Any] = Security(get_current_user),
+    session: Session = Depends(get_db),
+):
+    q = select(models.Permission).order_by(models.Permission.tag)
+    res = session.scalars(q).all()
+
+    return res
 
 
 router = APIRouter()
@@ -294,4 +259,4 @@ router.include_router(profiles_router)
 router.include_router(instruments_router)
 router.include_router(stats_router)
 router.include_router(groups_router)
-router.include_router(invitations_router)
+router.include_router(permissions_router)

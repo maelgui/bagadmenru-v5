@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../../components/avatar';
 import Badge from '../../components/badge';
 import Container from '../../components/container';
@@ -39,7 +39,7 @@ export default function MyProfile() {
             <h1 className="text-4xl">{`${profile.firstName} ${profile.lastName}`}</h1>
             <ul className="mt-8">
               {profile.instrument ? (<Badge className="m-2" style={{ backgroundColor: profile.instrument.color }}>{profile.instrument.name}</Badge>) : null}
-              {profile.groups?.map((g) => <Badge key={g.id} className="bg-pourpre-500 m-2">{g.name}</Badge>)}
+              {profile.groups?.map((g) => <Link key={g.id} to={`/groups/${g.id}`}><Badge className="bg-pourpre-500 m-2">{g.name}</Badge></Link>)}
             </ul>
           </div>
         ) : 'Loading'}

@@ -1,7 +1,6 @@
 import { useIsFetching } from '@tanstack/react-query';
 import nprogress from 'nprogress';
 import { useEffect } from 'react';
-import { Toaster } from 'react-hot-toast';
 import { Outlet } from 'react-router-dom';
 import Footer from '../components/footer';
 import Navbar from '../components/navbar';
@@ -19,7 +18,6 @@ export default function MainLayout() {
 
   return (
     <>
-      <Toaster position="bottom-center" />
       <Navbar />
       <div className={`${isFetching ? '' : ''}`}>
         <Outlet />

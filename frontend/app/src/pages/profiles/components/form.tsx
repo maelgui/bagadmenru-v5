@@ -22,7 +22,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
   });
 
   const {
-    register, handleSubmit, setValue,
+    register, handleSubmit, setValue, formState: { errors },
   } = useForm<ProfileUpdate>({ defaultValues: profile });
 
   const [pictureUrl, setPictureUrl] = useState<string | null>(profile.pictureUrl);
@@ -37,7 +37,6 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
         {
           headers: {
             'X-Amz-Tagging': new URLSearchParams({ user_id: profile.id, temp: 'true' }).toString(),
-            //             `temp=true&user=${users.id}`,
           },
         },
       );
@@ -92,8 +91,9 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
           <Input
             type="text"
             id="first_name"
-            disabled
-            value={profile.firstName}
+            error={errors.firstName?.message}
+            {...register('firstName', { required: 'Ce champ est obligatoire.' })}
+
           />
         </div>
         <div className="flex-1">
@@ -101,8 +101,8 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
           <Input
             type="text"
             id="last_name"
-            disabled
-            value={profile.lastName}
+            error={errors.lastName?.message}
+            {...register('lastName', { required: 'Ce champ est obligatoire.' })}
           />
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
           />
         </div>
         <div>
-          <Button as="a" href={`${import.meta.env.VITE_OIDC_PROVIDER_URL}/account`}>Modifier ces informations</Button>
+          <Button as="a" href="#email">Modifier ces informations</Button>
         </div>
       </div>
       <div className="mb-6">

@@ -1,13 +1,13 @@
 import { Link, NavLink } from 'react-router-dom';
 
-import { useOidc } from '@axa-fr/react-oidc';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ReactNode, useState } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import logo from '../assets/logov2.svg';
-import { useApiClient } from '../config/client';
+import { queryClient, useApiClient, useUserProfile } from '../config/client';
 import Avatar from './avatar';
 import Button from './button';
 
@@ -24,15 +24,22 @@ function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
 }
 
 export default function Navbar() {
-  const { logout, isAuthenticated } = useOidc();
-  const { usersApi } = useApiClient();
-
-  const { data: profile } = useQuery({
-    queryKey: ['profiles', 'me'],
-    queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
-  });
+  const profile = useUserProfile();
+  const { auth } = useApiClient();
 
   const [show, setShow] = useState<boolean>();
+
+  const { mutate: logout } = useMutation({
+    mutationFn: () => auth.logoutApiV1AuthLogoutPost(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] }).then(() => {
+        toast.success('Déconnexion réussie !');
+      });
+    },
+    onError: (error) => {
+      toast.error(`Erreur lors de la déconnexion : ${error.message}`);
+    },
+  });
 
   return (
     <header className="shadow-md">
@@ -80,7 +87,7 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center pb-4 lg:py-0">
-            {isAuthenticated && profile
+            {profile
               ? (
                 <>
                   <Link to="/profile/me" className="lg:order-last">

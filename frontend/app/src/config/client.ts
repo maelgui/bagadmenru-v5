@@ -1,6 +1,6 @@
-import { useOidcFetch } from '@axa-fr/react-oidc';
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { QueryCache, QueryClient, useQuery } from '@tanstack/react-query';
 import {
+  AuthApi,
   Configuration, EventsApi, FilesApi,
   ProfilesApi,
   ResponseError,
@@ -13,7 +13,7 @@ export const queryClient = new QueryClient({
       if (error instanceof ResponseError && error.response.status === 403) {
         toast.error("Vous n'avez pas les droits nécessaire pour accéder à cette ressources.");
       } else if (error instanceof ResponseError && error.response.status === 401) {
-        toast.error("Vous n'avez pas les droits nécessaire pour accéder à cette ressources.");
+        toast.error('Vous ne semblez pas authentifié.');
       } else {
         toast.error(`Something went wrong: ${error.message}`);
       }
@@ -23,8 +23,8 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (error instanceof ResponseError && error.response.status === 403) {
-          return failureCount < 1;
+        if (error instanceof ResponseError && error.response.status === 401) {
+          return false;
         }
         return failureCount < 2;
       },
@@ -33,12 +33,21 @@ export const queryClient = new QueryClient({
 });
 
 export function useApiClient() {
-  const { fetch } = useOidcFetch();
-  const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL, fetchApi: fetch });
+  const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL });
 
   return {
+    auth: new AuthApi(conf),
     eventsApi: new EventsApi(conf),
     usersApi: new ProfilesApi(conf),
     filesApi: new FilesApi(conf),
   };
+}
+
+export function useUserProfile() {
+  const { usersApi } = useApiClient();
+  const { data } = useQuery({
+    queryKey: ['profiles', 'me'],
+    queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
+  });
+  return data;
 }

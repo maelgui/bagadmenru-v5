@@ -15,29 +15,36 @@ class Instrument(BaseModel):
 
 
 class _ProfileBase(BaseModel):
+    first_name: str
+    last_name: str
     picture_key: str | None
     instrument_id: int | None
 
 
 class ProfileCreate(_ProfileBase):
+    email: str
+
     pass
 
 
 class ProfileUpdate(_ProfileBase):
     pass
 
+class Permission(BaseModel):
+    id: str
+    tag: str
+    name: str
+    description: str
 
 class Group(BaseModel):
-    id: uuid.UUID
+    id: int
     name: str
-    path: str
+    permissions: list[Permission]
 
 
 class Profile(_ProfileBase):
     model_config = ConfigDict(from_attributes=True)
 
-    first_name: str
-    last_name: str
     email: str
     id: str
 

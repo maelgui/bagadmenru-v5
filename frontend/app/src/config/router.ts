@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import AuthGuard from '../layout/auth';
 import MainLayout from '../layout/main';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
+import LoginPage from '../pages/auth/login';
 import RoutingErrorComponent from '../pages/error/error';
 import AddEventPage from '../pages/events/add';
 import AnswerLinkPage from '../pages/events/answer';
@@ -10,6 +11,8 @@ import DoodlePage from '../pages/events/doodle';
 import EditEventPage from '../pages/events/edit';
 import EventsManagePage from '../pages/events/events';
 import ListFilesPage from '../pages/files/list';
+import GroupPage from '../pages/groups/group';
+import GroupListPage from '../pages/groups/list';
 import HomePage from '../pages/home';
 import AlbumsPage from '../pages/photos';
 import EditProfilePage from '../pages/profiles/edit';
@@ -68,6 +71,14 @@ export default createBrowserRouter([
                 Component: EditProfilePage,
               },
               {
+                path: '/groups',
+                Component: GroupListPage,
+              },
+              {
+                path: '/groups/:groupId',
+                Component: GroupPage,
+              },
+              {
                 path: '/photos',
                 Component: AlbumsPage,
               },
@@ -82,6 +93,16 @@ export default createBrowserRouter([
           {
             path: 'answer/:eventId',
             Component: AnswerLinkPage,
+          },
+        ],
+      },
+      {
+        path: '/auth/',
+        Component: SimpleLayoutWithOutlet,
+        children: [
+          {
+            path: 'login',
+            Component: LoginPage,
           },
         ],
       },

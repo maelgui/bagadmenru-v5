@@ -13,68 +13,69 @@
  */
 
 import { exists, mapValues } from '../runtime';
-import type { Permission } from './Permission';
-import {
-    PermissionFromJSON,
-    PermissionFromJSONTyped,
-    PermissionToJSON,
-} from './Permission';
-
 /**
  * 
  * @export
- * @interface Group
+ * @interface Permission
  */
-export interface Group {
-    /**
-     * 
-     * @type {number}
-     * @memberof Group
-     */
-    id: number;
+export interface Permission {
     /**
      * 
      * @type {string}
-     * @memberof Group
+     * @memberof Permission
+     */
+    id: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Permission
+     */
+    tag: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Permission
      */
     name: string;
     /**
      * 
-     * @type {Array<Permission>}
-     * @memberof Group
+     * @type {string}
+     * @memberof Permission
      */
-    permissions: Array<Permission>;
+    description: string;
 }
 
 /**
- * Check if a given object implements the Group interface.
+ * Check if a given object implements the Permission interface.
  */
-export function instanceOfGroup(value: object): boolean {
+export function instanceOfPermission(value: object): boolean {
     let isInstance = true;
     isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "tag" in value;
     isInstance = isInstance && "name" in value;
-    isInstance = isInstance && "permissions" in value;
+    isInstance = isInstance && "description" in value;
 
     return isInstance;
 }
 
-export function GroupFromJSON(json: any): Group {
-    return GroupFromJSONTyped(json, false);
+export function PermissionFromJSON(json: any): Permission {
+    return PermissionFromJSONTyped(json, false);
 }
 
-export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Group {
+export function PermissionFromJSONTyped(json: any, ignoreDiscriminator: boolean): Permission {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'id': json['id'],
+        'tag': json['tag'],
         'name': json['name'],
-        'permissions': ((json['permissions'] as Array<any>).map(PermissionFromJSON)),
+        'description': json['description'],
     };
 }
 
-export function GroupToJSON(value?: Group | null): any {
+export function PermissionToJSON(value?: Permission | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -84,8 +85,9 @@ export function GroupToJSON(value?: Group | null): any {
     return {
         
         'id': value.id,
+        'tag': value.tag,
         'name': value.name,
-        'permissions': ((value.permissions as Array<any>).map(PermissionToJSON)),
+        'description': value.description,
     };
 }
 

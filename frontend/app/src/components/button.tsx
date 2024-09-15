@@ -64,5 +64,7 @@ function PrivateButton<C extends React.ElementType = 'button'>(
   );
 }
 
+// TODO: Fix
+// @ts-ignore
 const Button = forwardRef(PrivateButton) as typeof PrivateButton;
 export default Button;

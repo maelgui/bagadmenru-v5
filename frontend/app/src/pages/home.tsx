@@ -1,4 +1,3 @@
-import { useOidcIdToken } from '@axa-fr/react-oidc';
 import { faCheckCircle } from '@fortawesome/free-regular-svg-icons';
 import {
   faArrowRight,
@@ -12,15 +11,15 @@ import Alert from '../components/alert';
 import Container from '../components/container';
 import Counter from '../components/counter';
 import Header from '../components/header';
-import { useApiClient } from '../config/client';
+import { useApiClient, useUserProfile } from '../config/client';
 import groupBy from '../utils/groupby';
 import Calendar from './events/components/calendar';
 import EventListItem, { EventListItemSkeleton } from './events/components/event';
 import FileItem, { FileItemSkeleton } from './files/components/file-item';
 
 export default function HomePage() {
-  const { idTokenPayload } = useOidcIdToken();
   const { eventsApi, filesApi, usersApi } = useApiClient();
+  const profile = useUserProfile();
 
   const today = new Date();
 
@@ -43,7 +42,7 @@ export default function HomePage() {
   });
   const { data: responses } = useQuery({
     queryKey: ['responses'],
-    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: idTokenPayload.sub }),
+    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: profile?.id }),
     select: (data) => groupBy(data, (e) => e.eventId),
   });
   const { data: myStats } = useQuery({
@@ -57,7 +56,7 @@ export default function HomePage() {
 
   return (
     <>
-      <Header title={`Degemer mat ${idTokenPayload.name}`} />
+      <Header title={`Degemer mat ${profile?.firstName}`} />
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
           {myStats && globalStats ? (
