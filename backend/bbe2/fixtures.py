@@ -31,7 +31,7 @@ def init_fixtures():
                     description=permission.value,
                 )
                 permission_objs.append(p)
-                session.merge(p)
+                # session.merge(p)
         admin_group = Group(id=1, name="Admins", permissions=permission_objs)
         session.merge(admin_group)
         session.commit()
