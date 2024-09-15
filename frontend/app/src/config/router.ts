@@ -17,6 +17,7 @@ import GroupPage from '../pages/groups/group';
 import GroupListPage from '../pages/groups/list';
 import HomePage from '../pages/home';
 import AlbumsPage from '../pages/photos';
+import CreateProfilePage from '../pages/profiles/add';
 import EditProfilePage from '../pages/profiles/edit';
 import MyProfile from '../pages/profiles/me';
 import ProfilesPage from '../pages/profiles/trombi';
@@ -71,6 +72,10 @@ export default createBrowserRouter([
               {
                 path: '/profile/edit',
                 Component: EditProfilePage,
+              },
+              {
+                path: '/profile/new',
+                Component: CreateProfilePage,
               },
               {
                 path: '/groups',

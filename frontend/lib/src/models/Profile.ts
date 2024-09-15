@@ -46,18 +46,6 @@ export interface Profile {
     pictureKey: string | null;
     /**
      * 
-     * @type {number}
-     * @memberof Profile
-     */
-    instrumentId: number | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof Profile
-     */
-    email: string;
-    /**
-     * 
      * @type {string}
      * @memberof Profile
      */
@@ -67,7 +55,7 @@ export interface Profile {
      * @type {Array<MinimalGroup>}
      * @memberof Profile
      */
-    groups?: Array<MinimalGroup>;
+    groups: Array<MinimalGroup>;
     /**
      * 
      * @type {MinimalGroup}
@@ -89,9 +77,8 @@ export function instanceOfProfile(value: object): value is Profile {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
     if (!('pictureKey' in value) || value['pictureKey'] === undefined) return false;
-    if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
-    if (!('email' in value) || value['email'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('groups' in value) || value['groups'] === undefined) return false;
     if (!('pictureUrl' in value) || value['pictureUrl'] === undefined) return false;
     return true;
 }
@@ -109,10 +96,8 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'firstName': json['first_name'],
         'lastName': json['last_name'],
         'pictureKey': json['picture_key'],
-        'instrumentId': json['instrument_id'],
-        'email': json['email'],
         'id': json['id'],
-        'groups': json['groups'] == null ? undefined : ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
+        'groups': ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
         'instrument': json['instrument'] == null ? undefined : MinimalGroupFromJSON(json['instrument']),
         'pictureUrl': json['picture_url'],
     };
@@ -127,10 +112,8 @@ export function ProfileToJSON(value?: Profile | null): any {
         'first_name': value['firstName'],
         'last_name': value['lastName'],
         'picture_key': value['pictureKey'],
-        'instrument_id': value['instrumentId'],
-        'email': value['email'],
         'id': value['id'],
-        'groups': value['groups'] == null ? undefined : ((value['groups'] as Array<any>).map(MinimalGroupToJSON)),
+        'groups': ((value['groups'] as Array<any>).map(MinimalGroupToJSON)),
         'instrument': MinimalGroupToJSON(value['instrument']),
         'picture_url': value['pictureUrl'],
     };

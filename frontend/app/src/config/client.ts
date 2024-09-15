@@ -51,3 +51,13 @@ export function useUserProfile() {
   });
   return data;
 }
+
+export function usePermissions() {
+  const { usersApi } = useApiClient();
+  const { data: roles } = useQuery({
+    queryKey: ['profiles', 'me', 'permissions'],
+    queryFn: () => usersApi.getMyPermissionsApiV1ProfilesMePermissionsGet(),
+  });
+  const has = (permission: string) => roles?.includes(permission);
+  return { roles, has };
+}

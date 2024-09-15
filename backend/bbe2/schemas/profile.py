@@ -9,33 +9,31 @@ from bbe2.utils.s3 import s3
 class _ProfileBase(BaseModel):
     first_name: str
     last_name: str
-    picture_key: str | None
-    instrument_id: int | None
+    picture_key: str | None = None
 
+class MyProfileUpdate(_ProfileBase):
+    pass
 
 class ProfileCreate(_ProfileBase):
+    instrument_id: int
+    group_ids: list[int]
     email: str
-
-    pass
 
 
 class ProfileUpdate(_ProfileBase):
-    pass
+    instrument_id: int
+    group_ids: list[int]
+    email: str | None = None
 
-class Permission(BaseModel):
-    id: str
-    tag: str
-    name: str
-    description: str
 
 
 class Profile(_ProfileBase):
     model_config = ConfigDict(from_attributes=True)
 
-    email: str
+    # email: str
     id: str
 
-    groups: list["MinimalGroup"] = []
+    groups: list["MinimalGroup"]
 
     instrument: Optional["MinimalGroup"] = None
 
@@ -45,6 +43,13 @@ class Profile(_ProfileBase):
         if not self.picture_key:
             return None
         return s3.generate_get_presigned_url(object_name=self.picture_key)
+
+class Permission(BaseModel):
+    id: str
+    tag: str
+    name: str
+    description: str
+
 
 class _GroupBase(BaseModel):
     name: str

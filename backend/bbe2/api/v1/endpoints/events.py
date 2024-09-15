@@ -134,7 +134,7 @@ async def list_responses(
 async def create_response(
     event_id: int,
     response: schemas.ResponseCreate,
-    identifier: str = Security(get_current_user, scopes=[str(EventScopes.REPLY)]),
+    identifier: str = Security(get_current_user, scopes=[str(EventScopes.ANSWER)]),
     database: Session = Depends(get_db),
     event_crud: CRUDEvent = Depends(CRUDEvent),
 ):

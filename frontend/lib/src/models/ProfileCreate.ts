@@ -16,51 +16,51 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface ProfileUpdate
+ * @interface ProfileCreate
  */
-export interface ProfileUpdate {
+export interface ProfileCreate {
     /**
      * 
      * @type {string}
-     * @memberof ProfileUpdate
+     * @memberof ProfileCreate
      */
     firstName: string;
     /**
      * 
      * @type {string}
-     * @memberof ProfileUpdate
+     * @memberof ProfileCreate
      */
     lastName: string;
     /**
      * 
      * @type {string}
-     * @memberof ProfileUpdate
+     * @memberof ProfileCreate
      */
     pictureKey: string | null;
     /**
      * 
      * @type {number}
-     * @memberof ProfileUpdate
+     * @memberof ProfileCreate
      */
     instrumentId: number;
     /**
      * 
      * @type {Array<number>}
-     * @memberof ProfileUpdate
+     * @memberof ProfileCreate
      */
     groupIds: Array<number>;
     /**
      * 
      * @type {string}
-     * @memberof ProfileUpdate
+     * @memberof ProfileCreate
      */
     email: string;
 }
 
 /**
- * Check if a given object implements the ProfileUpdate interface.
+ * Check if a given object implements the ProfileCreate interface.
  */
-export function instanceOfProfileUpdate(value: object): value is ProfileUpdate {
+export function instanceOfProfileCreate(value: object): value is ProfileCreate {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
     if (!('pictureKey' in value) || value['pictureKey'] === undefined) return false;
@@ -70,11 +70,11 @@ export function instanceOfProfileUpdate(value: object): value is ProfileUpdate {
     return true;
 }
 
-export function ProfileUpdateFromJSON(json: any): ProfileUpdate {
-    return ProfileUpdateFromJSONTyped(json, false);
+export function ProfileCreateFromJSON(json: any): ProfileCreate {
+    return ProfileCreateFromJSONTyped(json, false);
 }
 
-export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProfileUpdate {
+export function ProfileCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProfileCreate {
     if (json == null) {
         return json;
     }
@@ -89,7 +89,7 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
     };
 }
 
-export function ProfileUpdateToJSON(value?: ProfileUpdate | null): any {
+export function ProfileCreateToJSON(value?: ProfileCreate | null): any {
     if (value == null) {
         return value;
     }

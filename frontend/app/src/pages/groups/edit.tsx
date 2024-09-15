@@ -47,8 +47,8 @@ export default function EditGroupPage() {
   return (
     <>
       <Header
-        title="Nouveau groupe"
-        subtitle=""
+        title="Modifier un groupe"
+        subtitle={group?.name}
         actions={[]}
         breadcrumb={[
           { title: 'Groupes', link: '/groups' },

@@ -10,7 +10,8 @@ from .profile import (
     Profile,
     ProfileCreate,
     ProfileUpdate,
-    Permission
+    Permission,
+    MyProfileUpdate
 )
 from .response import Response, ResponseCreate
 from .utils import GetUploadUrlResponse

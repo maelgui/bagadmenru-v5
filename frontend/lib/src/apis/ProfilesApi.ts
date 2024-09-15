@@ -21,9 +21,11 @@ import type {
   GroupCreate,
   GroupUpdate,
   HTTPValidationError,
+  MyProfileUpdate,
   MyStats,
   Permission,
   Profile,
+  ProfileCreate,
   ProfileUpdate,
 } from '../models/index';
 import {
@@ -39,12 +41,16 @@ import {
     GroupUpdateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    MyProfileUpdateFromJSON,
+    MyProfileUpdateToJSON,
     MyStatsFromJSON,
     MyStatsToJSON,
     PermissionFromJSON,
     PermissionToJSON,
     ProfileFromJSON,
     ProfileToJSON,
+    ProfileCreateFromJSON,
+    ProfileCreateToJSON,
     ProfileUpdateFromJSON,
     ProfileUpdateToJSON,
 } from '../models/index';
@@ -53,11 +59,11 @@ export interface CreateGroupApiV1GroupsPostRequest {
     groupCreate: GroupCreate;
 }
 
-export interface GetGroupApiV1GroupsGroupIdGetRequest {
-    groupId: number;
+export interface CreateProfileApiV1ProfilesPostRequest {
+    profileCreate: ProfileCreate;
 }
 
-export interface GetGroupMembersApiV1GroupsGroupIdMembersGetRequest {
+export interface GetGroupApiV1GroupsGroupIdGetRequest {
     groupId: number;
 }
 
@@ -71,6 +77,11 @@ export interface UpdateGroupApiV1GroupsGroupIdPutRequest {
 }
 
 export interface UpdateMyProfileApiV1ProfilesMePutRequest {
+    myProfileUpdate: MyProfileUpdate;
+}
+
+export interface UpdateProfileApiV1ProfilesProfileIdPutRequest {
+    profileId: string;
     profileUpdate: ProfileUpdate;
 }
 
@@ -112,6 +123,42 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async createGroupApiV1GroupsPost(requestParameters: CreateGroupApiV1GroupsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Group> {
         const response = await this.createGroupApiV1GroupsPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Create Profile
+     */
+    async createProfileApiV1ProfilesPostRaw(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
+        if (requestParameters['profileCreate'] == null) {
+            throw new runtime.RequiredError(
+                'profileCreate',
+                'Required parameter "profileCreate" was null or undefined when calling createProfileApiV1ProfilesPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/api/v1/profiles/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ProfileCreateToJSON(requestParameters['profileCreate']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProfileFromJSON));
+    }
+
+    /**
+     * Create Profile
+     */
+    async createProfileApiV1ProfilesPost(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Profile>> {
+        const response = await this.createProfileApiV1ProfilesPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -175,42 +222,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get Group Members
-     */
-    async getGroupMembersApiV1GroupsGroupIdMembersGetRaw(requestParameters: GetGroupMembersApiV1GroupsGroupIdMembersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
-        if (requestParameters['groupId'] == null) {
-            throw new runtime.RequiredError(
-                'groupId',
-                'Required parameter "groupId" was null or undefined when calling getGroupMembersApiV1GroupsGroupIdMembersGet().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        const response = await this.request({
-            path: `/api/v1/groups/{group_id}/members`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters['groupId']))),
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProfileFromJSON));
-    }
-
-    /**
-     * Get Group Members
-     */
-    async getGroupMembersApiV1GroupsGroupIdMembersGet(requestParameters: GetGroupMembersApiV1GroupsGroupIdMembersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Profile>> {
-        const response = await this.getGroupMembersApiV1GroupsGroupIdMembersGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
      * Get My Permissions
      */
-    async getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+    async getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -222,13 +236,13 @@ export class ProfilesApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
+        return new runtime.JSONApiResponse<any>(response);
     }
 
     /**
      * Get My Permissions
      */
-    async getMyPermissionsApiV1ProfilesMePermissionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
+    async getMyPermissionsApiV1ProfilesMePermissionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string | null>> {
         const response = await this.getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides);
         return await response.value();
     }
@@ -443,10 +457,10 @@ export class ProfilesApi extends runtime.BaseAPI {
      * Update My Profile
      */
     async updateMyProfileApiV1ProfilesMePutRaw(requestParameters: UpdateMyProfileApiV1ProfilesMePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
-        if (requestParameters['profileUpdate'] == null) {
+        if (requestParameters['myProfileUpdate'] == null) {
             throw new runtime.RequiredError(
-                'profileUpdate',
-                'Required parameter "profileUpdate" was null or undefined when calling updateMyProfileApiV1ProfilesMePut().'
+                'myProfileUpdate',
+                'Required parameter "myProfileUpdate" was null or undefined when calling updateMyProfileApiV1ProfilesMePut().'
             );
         }
 
@@ -461,7 +475,7 @@ export class ProfilesApi extends runtime.BaseAPI {
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: ProfileUpdateToJSON(requestParameters['profileUpdate']),
+            body: MyProfileUpdateToJSON(requestParameters['myProfileUpdate']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
@@ -472,6 +486,49 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async updateMyProfileApiV1ProfilesMePut(requestParameters: UpdateMyProfileApiV1ProfilesMePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
         const response = await this.updateMyProfileApiV1ProfilesMePutRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Update Profile
+     */
+    async updateProfileApiV1ProfilesProfileIdPutRaw(requestParameters: UpdateProfileApiV1ProfilesProfileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+        if (requestParameters['profileId'] == null) {
+            throw new runtime.RequiredError(
+                'profileId',
+                'Required parameter "profileId" was null or undefined when calling updateProfileApiV1ProfilesProfileIdPut().'
+            );
+        }
+
+        if (requestParameters['profileUpdate'] == null) {
+            throw new runtime.RequiredError(
+                'profileUpdate',
+                'Required parameter "profileUpdate" was null or undefined when calling updateProfileApiV1ProfilesProfileIdPut().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/api/v1/profiles/{profile_id}`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ProfileUpdateToJSON(requestParameters['profileUpdate']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Profile
+     */
+    async updateProfileApiV1ProfilesProfileIdPut(requestParameters: UpdateProfileApiV1ProfilesProfileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
+        const response = await this.updateProfileApiV1ProfilesProfileIdPutRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

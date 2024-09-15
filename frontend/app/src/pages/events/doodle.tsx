@@ -18,7 +18,11 @@ import Container from '../../components/container';
 import Header from '../../components/header';
 import { SkeletonImage, SkeletonText } from '../../components/skeleton';
 import Tooltip from '../../components/tooltip';
-import { queryClient, useApiClient, useUserProfile } from '../../config/client';
+import {
+  queryClient, useApiClient,
+  usePermissions,
+  useUserProfile,
+} from '../../config/client';
 import EventCategories from '../../utils/event-category';
 import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
@@ -71,24 +75,32 @@ export default function DoodlePage() {
     onSuccess: () => toast.success('Réponse enregistrée'),
   });
 
+  const { has } = usePermissions();
+
+  const actions = [
+    <Header.Action key="doodle-nav" as={Link} to="/events/calendar">
+      <FontAwesomeIcon icon={faCalendar} />
+      {' '}
+      Vue calendrier
+    </Header.Action>,
+  ];
+
+  if (has('EventScopes.UPDATE')) {
+    actions.push(
+      <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage">
+        <FontAwesomeIcon icon={faCalendarPlus} />
+        {' '}
+        Gérer
+      </Header.Action>,
+    );
+  }
+
   return (
     <>
       <Header
         title="Doodle"
         subtitle="Mes présences aux évènements du groupe"
-        actions={[
-          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage">
-            <FontAwesomeIcon icon={faCalendarPlus} />
-            {' '}
-            Gérer
-          </Header.Action>,
-          <Header.Action key="doodle-nav" as={Link} to="/events/calendar">
-            <FontAwesomeIcon icon={faCalendar} />
-            {' '}
-            Vue calendrier
-          </Header.Action>,
-
-        ]}
+        actions={actions}
         breadcrumb={[
           { link: '/events', title: 'Évènements' },
           { title: 'Mes présences' },

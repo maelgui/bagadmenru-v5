@@ -27,10 +27,12 @@ src/models/GroupUpdate.ts
 src/models/HTTPValidationError.ts
 src/models/LoginData.ts
 src/models/MinimalGroup.ts
+src/models/MyProfileUpdate.ts
 src/models/MyStats.ts
 src/models/Permission.ts
 src/models/Photo.ts
 src/models/Profile.ts
+src/models/ProfileCreate.ts
 src/models/ProfileUpdate.ts
 src/models/Response.ts
 src/models/ResponseCreate.ts

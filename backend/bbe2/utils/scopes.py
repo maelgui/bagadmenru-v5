@@ -19,7 +19,7 @@ class EventScopes(PermissionBase):
     CREATE = "events:create"
     DELETE = "events:delete"
     UPDATE = "events:edit"
-    REPLY = "answers:manage-own"
+    ANSWER = "answers:manage-own"
 
 
 class FileScopes(PermissionBase):
@@ -35,4 +35,12 @@ class ProfilesScopes(PermissionBase):
     """Profile managment related scopes."""
 
     VIEW = "profiles:view"
+    CREATE = "profiles:create"
     UPDATE = "profiles:edit"
+
+class GroupScopes(PermissionBase):
+    """Groups related permissions"""
+
+    VIEW = "group:view"
+    CREATE = "group.create"
+    UPDATE = "group.update"
