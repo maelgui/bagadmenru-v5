@@ -74,7 +74,7 @@ export default createBrowserRouter([
                 Component: EditProfilePage,
               },
               {
-                path: '/profile/new',
+                path: '/profile/add',
                 Component: CreateProfilePage,
               },
               {
