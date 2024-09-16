@@ -21,7 +21,9 @@ class Event(Base):
     category: Mapped[str] = mapped_column(String(30))
     is_in_doodle: Mapped[bool]
 
-    responses: Mapped[list["Response"]] = relationship(back_populates="event", cascade="all, delete")
+    responses: Mapped[list["Response"]] = relationship(
+        back_populates="event", cascade="all, delete"
+    )
 
 
 class Response(Base):

@@ -118,12 +118,12 @@ async def delete_event(
 ## Responses
 
 
-@responses_router.get("/")
+@responses_router.get("/", response_model=list[schemas.Response])
 async def list_responses(
     token: str = Security(get_current_user, scopes=[str(EventScopes.ANSWER)]),
     response_crud: CRUDResponse = Depends(CRUDResponse),
     user_id: Optional[str] = None,
-) -> list[schemas.Response]:
+):
     if user_id:
         return response_crud.find_by(models.Response.user_id == user_id)
     else:

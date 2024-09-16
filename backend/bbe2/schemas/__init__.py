@@ -5,13 +5,13 @@ from .file import FileOrFolder, FileOrFolderType, FileOrFolderUpdate, FolderCrea
 from .photo import Photo
 from .profile import (
     Group,
-    GroupUpdate,
     GroupCreate,
+    GroupUpdate,
+    MyProfileUpdate,
+    Permission,
     Profile,
     ProfileCreate,
     ProfileUpdate,
-    Permission,
-    MyProfileUpdate
 )
 from .response import Response, ResponseCreate
 from .utils import GetUploadUrlResponse

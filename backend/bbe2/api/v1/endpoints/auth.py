@@ -1,7 +1,8 @@
+from datetime import datetime
+
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
-from datetime import datetime
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
@@ -38,6 +39,7 @@ async def login(
     request.session["current_user"] = current_user.model_dump()
 
     return "OK"
+
 
 @router.post("/logout")
 async def logout(

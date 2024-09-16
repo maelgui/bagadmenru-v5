@@ -11,8 +11,10 @@ class _ProfileBase(BaseModel):
     last_name: str
     picture_key: str | None = None
 
+
 class MyProfileUpdate(_ProfileBase):
     pass
+
 
 class ProfileCreate(_ProfileBase):
     instrument_id: int
@@ -24,7 +26,6 @@ class ProfileUpdate(_ProfileBase):
     instrument_id: int
     group_ids: list[int]
     email: str | None = None
-
 
 
 class Profile(_ProfileBase):
@@ -44,6 +45,7 @@ class Profile(_ProfileBase):
             return None
         return s3.generate_get_presigned_url(object_name=self.picture_key)
 
+
 class Permission(BaseModel):
     id: str
     tag: str
@@ -55,14 +57,18 @@ class _GroupBase(BaseModel):
     name: str
     color: str = "#932a58"
 
+
 class MinimalGroup(_GroupBase):
     id: int
+
 
 class GroupCreate(_GroupBase):
     permission_ids: list[str]
 
+
 class GroupUpdate(_GroupBase):
     permission_ids: list[str]
+
 
 class Group(MinimalGroup):
     permissions: list[Permission]

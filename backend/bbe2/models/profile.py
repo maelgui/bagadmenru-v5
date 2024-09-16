@@ -2,7 +2,15 @@
 
 from typing import List
 
-from sqlalchemy import Column, ForeignKey, Integer, PickleType, String, Table, LargeBinary
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    LargeBinary,
+    PickleType,
+    String,
+    Table,
+)
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,9 +42,7 @@ class Profile(Base):
     first_name: Mapped[str] = mapped_column(String(30), nullable=False)
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)
-    instrument_id: Mapped[int] = mapped_column(
-        ForeignKey("groups.id"), nullable=True
-    )
+    instrument_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
     instrument: Mapped["Group"] = relationship("Group")
     groups: Mapped[List["Group"]] = relationship(
         secondary=profile_group_association_table, back_populates="members"

@@ -1,11 +1,12 @@
 from abc import abstractmethod
 from typing import Generic, Type, TypeVar
 
-from bbe2.database import Base
-from bbe2.dependencies.db import get_db
 from fastapi import Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
+from bbe2.database import Base
+from bbe2.dependencies.db import get_db
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -26,7 +27,13 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return self.db_session.query(self.model).filter(condition).first()
 
     def find_by(self, condition, skip: int = 0, limit: int = 100) -> list[ModelType]:
-        return self.db_session.query(self.model).filter(condition).offset(skip).limit(limit).all()
+        return (
+            self.db_session.query(self.model)
+            .filter(condition)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def find_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
         return self.db_session.query(self.model).offset(skip).limit(limit).all()
@@ -42,7 +49,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def read(self, id: int) -> ModelType:
         return self.db_session.query(self.model).get(id)
 
-    def update(self, db_object: ModelType, update_object: UpdateSchemaType) -> ModelType:
+    def update(
+        self, db_object: ModelType, update_object: UpdateSchemaType
+    ) -> ModelType:
         for key, value in update_object.dict(exclude_unset=True).items():
             setattr(db_object, key, value)
         self.db_session.commit()

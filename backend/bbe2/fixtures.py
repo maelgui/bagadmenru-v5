@@ -8,9 +8,9 @@ from bbe2.utils.scopes import (
     AlbumScopes,
     EventScopes,
     FileScopes,
+    GroupScopes,
     PermissionBase,
     ProfilesScopes,
-    GroupScopes
 )
 
 
@@ -21,7 +21,7 @@ def init_fixtures():
             EventScopes,
             FileScopes,
             ProfilesScopes,
-            GroupScopes
+            GroupScopes,
         ]
         permission_objs = []
         for g in permissions_group:

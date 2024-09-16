@@ -1,7 +1,9 @@
 from enum import Enum
 
+
 class PermissionBase(Enum):
     pass
+
 
 class AlbumScopes(PermissionBase):
     """Photo gallery related scopes."""
@@ -37,6 +39,7 @@ class ProfilesScopes(PermissionBase):
     VIEW = "profiles:view"
     CREATE = "profiles:create"
     UPDATE = "profiles:edit"
+
 
 class GroupScopes(PermissionBase):
     """Groups related permissions"""
