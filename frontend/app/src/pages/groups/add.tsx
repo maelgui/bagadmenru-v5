@@ -12,7 +12,6 @@ export default function AddGroupPage() {
   const navigate = useNavigate();
 
   const { mutate } = useMutation({
-    // eslint-disable-next-line max-len
     mutationFn: (data: GroupCreate) => usersApi.createGroupApiV1GroupsPost({ groupCreate: data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
