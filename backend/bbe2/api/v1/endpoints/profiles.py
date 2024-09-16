@@ -115,7 +115,7 @@ async def update_profile(
     profile_crud: CRUDProfile = Depends(),
     user_identifier: str = Security(get_current_user, scopes=[str(ProfilesScopes.UPDATE)]),
 ):
-    db_profile = profile_crud.find_one_by(models.Profile.id == user_identifier)
+    db_profile = profile_crud.find_one_by(models.Profile.id == profile_id)
     if not db_profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"

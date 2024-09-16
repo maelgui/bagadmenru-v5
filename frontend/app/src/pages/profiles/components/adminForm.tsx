@@ -38,7 +38,7 @@ export default function AdminEditProfileForm({ profile = undefined, onSubmit }: 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <FormProvider {...methods}>
-        <BaseProfileFormFields profile={profile} />
+        <BaseProfileFormFields profile={profile} avatar={false} />
       </FormProvider>
       {!profile ? (
         <div className="mb-6">

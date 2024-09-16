@@ -120,7 +120,7 @@ async def delete_event(
 
 @responses_router.get("/")
 async def list_responses(
-    token: str = Security(get_current_user, scopes=[]),
+    token: str = Security(get_current_user, scopes=[str(EventScopes.ANSWER)]),
     response_crud: CRUDResponse = Depends(CRUDResponse),
     user_id: Optional[str] = None,
 ) -> list[schemas.Response]:

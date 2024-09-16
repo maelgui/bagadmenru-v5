@@ -1,27 +1,24 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { useMutation } from '@tanstack/react-query';
-import { MyProfileUpdate, Profile } from 'bagad-client';
-import { FormProvider, useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
+import {
+  MyProfileUpdate, Profile,
+} from 'bagad-client';
+import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import Button from '../../../components/button';
-import { queryClient, useApiClient } from '../../../config/client';
 import BaseProfileFormFields from './base';
 
-export default function EditProfileForm({ profile = undefined }: { profile?: Profile }) {
-  const { usersApi } = useApiClient();
+interface ProfileFormProps {
+  profile: Profile
+  onSubmit: SubmitHandler<MyProfileUpdate>
+}
 
-  const methods = useForm<MyProfileUpdate>({ defaultValues: profile });
-
-  const { mutate } = useMutation({
-    mutationFn: (data: MyProfileUpdate) => usersApi.updateMyProfileApiV1ProfilesMePut({
-      myProfileUpdate: data,
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] });
-      toast.success('Profile modifié avec succès !');
+export default function EditProfileForm({ profile, onSubmit }: ProfileFormProps) {
+  const methods = useForm<MyProfileUpdate>({
+    defaultValues: {
+      pictureKey: profile.pictureKey,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
     },
   });
-  const onSubmit = (data: MyProfileUpdate) => mutate(data);
 
   return (
     <form onSubmit={methods.handleSubmit(onSubmit)}>

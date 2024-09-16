@@ -17,7 +17,7 @@ import {
   faEllipsisVertical, faFile, faFilePdf, faFolderTree, faImage, faMusic, faPencil, faTrashCan,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { FileOrFolder } from 'bagad-client';
+import { FileOrFolder, FileOrFolderType } from 'bagad-client';
 import { MouseEventHandler, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LongPressEventType, useLongPress } from 'use-long-press';
@@ -29,6 +29,26 @@ interface FileItemProps {
   big?: boolean
   deleteFn?: MouseEventHandler<HTMLButtonElement>
   noAction?: boolean
+}
+
+const faFileIconType: Map<string, IconDefinition> = new Map([
+  ['mp3', faMusic],
+  ['pdf', faFilePdf],
+  ['png', faImage],
+  ['jpg', faImage],
+]);
+
+function getIcon(file: FileOrFolder) {
+  if (file.type === FileOrFolderType.Dir) {
+    return faFolder;
+  }
+
+  const extension = file.name.toLowerCase().split('.').pop();
+  if (!extension) {
+    return faFile;
+  }
+
+  return faFileIconType.get(extension) ?? faFile;
 }
 
 export default function FileItem({
@@ -59,25 +79,17 @@ export default function FileItem({
     role,
   ]);
 
-  const faFileIconType: Record<string, IconDefinition> = {
-    mp3: faMusic,
-    pdf: faFilePdf,
-    png: faImage,
-    jpg: faImage,
-    document: faFile,
-  };
-
   return (
     <>
       <div className="relative border rounded border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm">
         {big && (
           <div className="p-4 text-center h-32 [&>svg]:max-h-16 flex justify-center items-center border-b border-gray-50">
-            <FontAwesomeIcon size="3x" icon={file.type === 'DIR' ? faFolder : faFileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} className="mr-4" />
+            <FontAwesomeIcon size="3x" icon={getIcon(file)} className="mr-4" />
           </div>
         )}
         <div className="flex justify-between p-4 items-center">
           <div className="truncate">
-            {!big && <FontAwesomeIcon icon={file.type === 'DIR' ? faFolder : faFileIconType[file.name.toLowerCase().split('.').pop() ?? 'document']} className="mr-4" />}
+            {!big && <FontAwesomeIcon icon={getIcon(file)} className="mr-4" />}
             <Link
               to={file.fileUrl ?? `/files/${file.id}`}
               className="truncate after:absolute after:top-0 after:bottom-0 after:left-0 after:right-0"

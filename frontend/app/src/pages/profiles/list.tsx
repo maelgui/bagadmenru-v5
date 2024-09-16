@@ -1,25 +1,41 @@
+import { faCirclePlus } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { useApiClient } from '../../config/client';
+import { useApiClient, usePermissions } from '../../config/client';
 
 import defaultAvatar from '../../assets/default.svg';
 
 export default function ProfilesPage() {
   const { usersApi } = useApiClient();
+  const { has } = usePermissions();
 
   const { data } = useQuery({
     queryKey: ['profiles'],
     queryFn: () => usersApi.listProfilesApiV1ProfilesGet(),
   });
 
+  const actions = [
+    <Header.Action key="edit-profile" as={Link} to="/profile/edit/me" variant="outline">Modifier mon profil</Header.Action>,
+  ];
+  if (has('ProfilesScopes.CREATE')) {
+    actions.push(
+      <Header.Action key="add-profile" as={Link} to="/profile/edit/add">
+        <FontAwesomeIcon icon={faCirclePlus} />
+        {' '}
+        Ajouter
+      </Header.Action>,
+    );
+  }
+
   return (
     <>
       <Header
         title="Liste des membres"
         subtitle="Pensez à ajouter votre photo"
-        actions={[<Header.Action key="edit-profile" as={Link} to="/profile/edit">Modifier mon profil</Header.Action>]}
+        actions={actions}
         breadcrumb={[
           { title: 'Liste des membres' },
         ]}
@@ -28,7 +44,7 @@ export default function ProfilesPage() {
       <Container>
         <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
           {data ? data.map((profile) => (
-            <div key={profile.id}>
+            <Link key={profile.id} to={`/profile/${profile.id}`}>
               <div className="rounded overflow-hidden shadow flex flex-col p-8 h-full">
                 <div className="aspect-square relative rounded-full overflow-hidden">
                   <img src={profile.pictureUrl ?? defaultAvatar} alt="profile" className="object-cover w-full h-full absolute bg-pourpre-50" />
@@ -45,7 +61,7 @@ export default function ProfilesPage() {
                 </div>
 
               </div>
-            </div>
+            </Link>
           )) : 'Loading'}
         </div>
       </Container>

@@ -77,30 +77,23 @@ export default function DoodlePage() {
 
   const { has } = usePermissions();
 
-  const actions = [
-    <Header.Action key="doodle-nav" as={Link} to="/events/calendar">
-      <FontAwesomeIcon icon={faCalendar} />
-      {' '}
-      Vue calendrier
-    </Header.Action>,
-  ];
-
-  if (has('EventScopes.UPDATE')) {
-    actions.push(
-      <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage">
-        <FontAwesomeIcon icon={faCalendarPlus} />
-        {' '}
-        Gérer
-      </Header.Action>,
-    );
-  }
-
   return (
     <>
       <Header
         title="Doodle"
         subtitle="Mes présences aux évènements du groupe"
-        actions={actions}
+        actions={[
+          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={has('EventScopes.UPDATE') ? '' : 'hidden'}>
+            <FontAwesomeIcon icon={faCalendarPlus} />
+            {' '}
+            Gérer
+          </Header.Action>,
+          <Header.Action key="doodle-nav" as={Link} to="/events/calendar">
+            <FontAwesomeIcon icon={faCalendar} />
+            {' '}
+            Vue calendrier
+          </Header.Action>,
+        ]}
         breadcrumb={[
           { link: '/events', title: 'Évènements' },
           { title: 'Mes présences' },

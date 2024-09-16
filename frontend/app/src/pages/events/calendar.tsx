@@ -8,13 +8,14 @@ import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { useApiClient } from '../../config/client';
+import { useApiClient, usePermissions } from '../../config/client';
 import groupBy from '../../utils/groupby';
 import Calendar from './components/calendar';
 import EventListItem from './components/event';
 
 export default function CalendarPage() {
   const { eventsApi } = useApiClient();
+  const { has } = usePermissions();
 
   const { data } = useQuery({
     queryKey: ['events', 'next100'],
@@ -34,7 +35,7 @@ export default function CalendarPage() {
         title="Calendrier"
         subtitle={(new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' })}
         actions={[
-          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage">
+          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={has('EventScopes.UPDATE') ? '' : 'hidden'}>
             <FontAwesomeIcon icon={faCalendarPlus} />
             {' '}
             Gérer

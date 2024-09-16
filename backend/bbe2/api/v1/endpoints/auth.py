@@ -1,6 +1,7 @@
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
@@ -14,26 +15,28 @@ async def login(
     data: schemas.LoginData,
     request: Request,
     profile_crud: CRUDProfile = Depends(),
-    session: Session = Depends(get_db),
 ):
     db_profile = profile_crud.find_one_by(models.Profile.email == data.identifier)
     if not db_profile or not bcrypt.checkpw(
-        data.password.encode(), db_profile.password.encode()
+        data.password.encode(), db_profile.password
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
         )
-    admin_group = session.get_one(models.Group, 1)
-    db_profile.groups = [admin_group]
-    profile_crud.db_session.commit()
-    profile_crud.db_session.refresh(db_profile)
 
     request.session["identifier"] = db_profile.id
     request.session["email"] = db_profile.email
     request.session["permissions"] = [
         p.id for g in db_profile.groups for p in g.permissions
     ]
+    current_user = schemas.SessionData(
+        identifier=db_profile.id,
+        email=db_profile.email,
+        permissions=[p.id for g in db_profile.groups for p in g.permissions],
+    )
+    request.session["current_user"] = current_user.model_dump()
+
     return "OK"
 
 @router.post("/logout")

@@ -7,7 +7,7 @@ import { ReactNode, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import logo from '../assets/logov2.svg';
-import { queryClient, useApiClient, useUserProfile } from '../config/client';
+import { queryClient, useApiClient, usePermissions, useUserProfile } from '../config/client';
 import Avatar from './avatar';
 import Button from './button';
 
@@ -26,6 +26,7 @@ function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
 export default function Navbar() {
   const profile = useUserProfile();
   const { auth } = useApiClient();
+  const { has } = usePermissions();
 
   const [show, setShow] = useState<boolean>();
 
@@ -65,22 +66,22 @@ export default function Navbar() {
             <FontAwesomeIcon icon={faBars} size="xl" className="mx-8" />
           </button>
         </div>
-        <div className={`${show ? '' : 'hidden'} lg:flex grow justify-between items-center`}>
+        <div className={`${show ? '' : 'hidden'} absolute bg-white w-full lg:static lg:flex grow justify-between items-center`}>
           <nav className="py-4 md:py-0">
             <ul className="flex flex-col lg:flex-row">
               <li className="px-3 py-2">
                 <CustomNavLink to="/">Dashboard</CustomNavLink>
               </li>
-              <li className="px-3 py-2 tracking-wide">
-                <CustomNavLink to="/events">Évènements</CustomNavLink>
+              <li className={`px-3 py-2 tracking-wide ${has('EventScopes.VIEW') ? '' : 'hidden'}`}>
+                <CustomNavLink to={`/events/${has('EventScopes.ANSWER') ? '' : 'calendar'}`}>Évènements</CustomNavLink>
               </li>
-              <li className="px-3 py-2 tracking-wide">
+              <li className={`px-3 py-2 tracking-wide ${has('FileScopes.VIEW') ? '' : 'hidden'}`}>
                 <CustomNavLink to="/files">Fichiers</CustomNavLink>
               </li>
-              <li className="px-3 py-2 tracking-wide">
+              <li className={`px-3 py-2 tracking-wide ${has('AlbumScopes.VIEW') ? '' : 'hidden'}`}>
                 <CustomNavLink to="/photos">Photos</CustomNavLink>
               </li>
-              <li className="px-3 py-2 tracking-wide">
+              <li className={`px-3 py-2 tracking-wide ${has('ProfilesScopes.VIEW') ? '' : 'hidden'}`}>
                 <CustomNavLink to="/profile">Trombinoscope</CustomNavLink>
               </li>
             </ul>

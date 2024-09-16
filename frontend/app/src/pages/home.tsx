@@ -11,7 +11,7 @@ import Alert from '../components/alert';
 import Container from '../components/container';
 import Counter from '../components/counter';
 import Header from '../components/header';
-import { useApiClient, useUserProfile } from '../config/client';
+import { useApiClient, usePermissions, useUserProfile } from '../config/client';
 import groupBy from '../utils/groupby';
 import Calendar from './events/components/calendar';
 import EventListItem, { EventListItemSkeleton } from './events/components/event';
@@ -20,6 +20,7 @@ import FileItem, { FileItemSkeleton } from './files/components/file-item';
 export default function HomePage() {
   const { eventsApi, filesApi, usersApi } = useApiClient();
   const profile = useUserProfile();
+  const { has } = usePermissions();
 
   const today = new Date();
 
@@ -27,6 +28,7 @@ export default function HomePage() {
     queryKey: ['events', 'next100'],
     queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 10, dateGte: today }),
     select: (data) => data.slice(0, 3),
+    enabled: has('EventScopes.VIEW'),
   });
   const { data: calendarEvents } = useQuery({
     queryKey: ['events', 'currentMonth'],
@@ -35,19 +37,23 @@ export default function HomePage() {
       dateGte: new Date(today.getFullYear(), today.getMonth(), 0),
       dateLt: new Date(today.getFullYear(), today.getMonth() + 1, 0),
     }),
+    enabled: has('EventScopes.VIEW'),
   });
   const { data: files } = useQuery({
     queryKey: ['files'],
     queryFn: () => filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File, limit: 5 }),
+    enabled: has('FileScopes.VIEW'),
   });
   const { data: responses } = useQuery({
     queryKey: ['responses'],
     queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: profile?.id }),
     select: (data) => groupBy(data, (e) => e.eventId),
+    enabled: has('EventScopes.ANSWER'),
   });
   const { data: myStats } = useQuery({
     queryKey: ['stats', 'me'],
     queryFn: () => usersApi.getMyStatsApiV1StatsMeGet(),
+    enabled: has('EventScopes.ANSWER'),
   });
   const { data: globalStats } = useQuery({
     queryKey: ['stats', 'global'],
@@ -84,8 +90,8 @@ export default function HomePage() {
               })()}
               <Counter
                 type="ghost"
-                value={`${myStats.nPositiveResponses} / ${globalStats.nEvents}`}
-                description={`Il y a ${globalStats.nEvents} sorties cette saison. Vous en avez fait ${myStats.nPositiveResponses}.`}
+                value={globalStats.nEvents}
+                description={`Il y a ${globalStats.nEvents} sorties cette saison.`}
               />
             </>
           ) : null}

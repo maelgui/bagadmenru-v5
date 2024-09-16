@@ -58,6 +58,6 @@ export function usePermissions() {
     queryKey: ['profiles', 'me', 'permissions'],
     queryFn: () => usersApi.getMyPermissionsApiV1ProfilesMePermissionsGet(),
   });
-  const has = (permission: string) => roles?.includes(permission);
+  const has = (permission: string) => roles?.includes(permission) ?? false;
   return { roles, has };
 }

@@ -60,20 +60,19 @@ function AvatarInput({
   );
 }
 
-export default function BaseProfileFormFields({ profile = undefined }: { profile?: Profile }) {
+export default function BaseProfileFormFields({ profile = undefined, avatar = true }: { profile?: Profile, avatar: boolean }) {
   const {
     register, control, formState: { errors },
   } = useFormContext<ProfileUpdate>();
 
   return (
     <div>
-      {profile ? (
+      {profile && avatar ? (
         <div className="text-center mb-6">
           <div className="inline-block m-auto relative my-8">
             <Controller
               name="pictureKey"
               control={control}
-              rules={{ required: true }}
               render={({ field: { onChange } }) => (
                 <AvatarInput
                   defaultUrl={profile?.pictureUrl}

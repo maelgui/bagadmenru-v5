@@ -2,7 +2,7 @@
 
 from typing import List
 
-from sqlalchemy import Column, ForeignKey, Integer, PickleType, String, Table
+from sqlalchemy import Column, ForeignKey, Integer, PickleType, String, Table, LargeBinary
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,7 +30,7 @@ class Profile(Base):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    password: Mapped[str] = mapped_column(String(256), nullable=False)
+    password: Mapped[bytes] = mapped_column(LargeBinary(), nullable=False)
     first_name: Mapped[str] = mapped_column(String(30), nullable=False)
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)

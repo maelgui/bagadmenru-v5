@@ -43,7 +43,8 @@ export default function EditEventPage() {
       eventId: eid,
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
+      navigate('/events/manage');
     },
   });
 

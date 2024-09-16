@@ -1,18 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import Avatar from '../../components/avatar';
 import Badge from '../../components/badge';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { useApiClient } from '../../config/client';
+import { useApiClient, usePermissions, useUserProfile } from '../../config/client';
 
-export default function MyProfile() {
+export default function ShowProfilePage() {
   const { usersApi } = useApiClient();
+  const currentUser = useUserProfile();
+  const { has } = usePermissions();
+  const { profileId } = useParams<{ profileId: string }>();
+  if (!profileId) {
+    return null;
+  }
 
   const navigate = useNavigate();
   const { data: profile } = useQuery({
-    queryKey: ['profiles', 'me'],
-    queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
+    queryKey: ['profiles', profileId],
+    queryFn: () => (profileId === 'me'
+      ? usersApi.getMyProfileApiV1ProfilesMeGet()
+      : usersApi.getProfileApiV1ProfilesProfileIdGet({ profileId })
+    ),
   });
 
   if (!profile) {
@@ -22,11 +31,14 @@ export default function MyProfile() {
   return (
     <>
       <Header
-        title="Profile"
+        title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
-        actions={[<Header.Action key="edit-profile" onClick={() => navigate('/profile/edit')}>Modifier mon profil</Header.Action>]}
+        actions={has('ProfilesScopes.UPDATE') || profileId === 'me' || profileId === currentUser?.id
+          ? [<Header.Action key="edit-profile" onClick={() => navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Header.Action>]
+          : []}
         breadcrumb={[
-          { title: 'Mon profile' },
+          { title: 'Profils', link: '/profiles' },
+          { title: `${profile.firstName} ${profile.lastName}` },
         ]}
       />
 

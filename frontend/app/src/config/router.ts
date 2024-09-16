@@ -19,8 +19,8 @@ import HomePage from '../pages/home';
 import AlbumsPage from '../pages/photos';
 import CreateProfilePage from '../pages/profiles/add';
 import EditProfilePage from '../pages/profiles/edit';
-import MyProfile from '../pages/profiles/me';
-import ProfilesPage from '../pages/profiles/trombi';
+import ProfilesPage from '../pages/profiles/list';
+import ShowProfilePage from '../pages/profiles/show';
 
 export default createBrowserRouter([
   {
@@ -66,11 +66,11 @@ export default createBrowserRouter([
                 Component: ProfilesPage,
               },
               {
-                path: '/profile/me',
-                Component: MyProfile,
+                path: '/profile/:profileId',
+                Component: ShowProfilePage,
               },
               {
-                path: '/profile/edit',
+                path: '/profile/edit/:profileId',
                 Component: EditProfilePage,
               },
               {
