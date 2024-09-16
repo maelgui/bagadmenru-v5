@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: "22.x"
       - run: yarn
-      - run: yarn workspace bagad-frontend lint
+      - run: yarn lint
   tsc:
     runs-on: ubuntu-latest
     name: Check typescript
@@ -34,4 +34,4 @@ jobs:
           node-version: "22.x"
       - run: yarn
       - run: yarn run tsc --version
-      - run: yarn workspace bagad-frontend tsc
+      - run: yarn tsc
