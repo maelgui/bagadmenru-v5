@@ -32,28 +32,34 @@ export default function EditProfilePage() {
     ),
   });
 
-  const { mutate } = useMutation({
-    mutationFn: profileId === 'me'
-      ? (data: MyProfileUpdate) => usersApi.updateMyProfileApiV1ProfilesMePut({
-        myProfileUpdate: data,
-      })
-      : (data: ProfileUpdate) => usersApi.updateProfileApiV1ProfilesProfileIdPut({
-        profileId,
-        profileUpdate: data,
-      }),
-    onSuccess: (data) => {
-      console.log(data);
-      queryClient.invalidateQueries({ queryKey: ['profiles', profileId] });
-      toast.success('Profil modifié avec succès !');
-      navigate(`/profile/${profileId}`);
-    },
-  });
-
-  const Form = profileId === 'me' ? EditProfileForm : AdminEditProfileForm;
-  const onSubmit = (data: ProfileUpdate) => mutate(data);
+  const onSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['profiles', profileId] });
+    toast.success('Profil modifié avec succès !');
+    navigate(`/profile/${profileId}`);
+  };
 
   if (!profile) {
     return null;
+  }
+
+  let form;
+  if (profileId === 'me') {
+    const { mutate } = useMutation({
+      mutationFn: (data: MyProfileUpdate) => usersApi.updateMyProfileApiV1ProfilesMePut({
+        myProfileUpdate: data,
+      }),
+      onSuccess,
+    });
+    form = <EditProfileForm profile={profile} onSubmit={(data) => mutate(data)} />;
+  } else {
+    const { mutate } = useMutation({
+      mutationFn: (data: ProfileUpdate) => usersApi.updateProfileApiV1ProfilesProfileIdPut({
+        profileId,
+        profileUpdate: data,
+      }),
+      onSuccess,
+    });
+    form = <AdminEditProfileForm profile={profile} onSubmit={(data) => mutate(data)} />;
   }
 
   return (
@@ -67,7 +73,7 @@ export default function EditProfilePage() {
         ]}
       />
       <Container>
-        {profile ? <Form profile={profile} onSubmit={onSubmit} /> : null}
+        {profile ? form : null}
       </Container>
     </>
   );

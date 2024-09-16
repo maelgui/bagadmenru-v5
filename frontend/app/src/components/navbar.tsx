@@ -7,7 +7,9 @@ import { ReactNode, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import logo from '../assets/logov2.svg';
-import { queryClient, useApiClient, usePermissions, useUserProfile } from '../config/client';
+import {
+  queryClient, useApiClient, usePermissions, useUserProfile,
+} from '../config/client';
 import Avatar from './avatar';
 import Button from './button';
 

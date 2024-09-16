@@ -60,7 +60,9 @@ function AvatarInput({
   );
 }
 
-export default function BaseProfileFormFields({ profile = undefined, avatar = true }: { profile?: Profile, avatar: boolean }) {
+export default function BaseProfileFormFields(
+  { profile = undefined, avatar = true }: { profile?: Profile, avatar?: boolean },
+) {
   const {
     register, control, formState: { errors },
   } = useFormContext<ProfileUpdate>();

@@ -15,7 +15,7 @@ export default function AuthGuard() {
     if (error instanceof ResponseError && error.response.status === 401) {
       return <Navigate to="/auth/login" />;
     }
-    throw new Response('Communication avec le backend impossible.', { status: 500 });
+    throw new Error('Communication avec le backend impossible.');
   }
 
   return (
