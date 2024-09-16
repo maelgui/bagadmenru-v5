@@ -37,7 +37,7 @@ export default function ShowProfilePage() {
           ? [<Header.Action key="edit-profile" onClick={() => navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Header.Action>]
           : []}
         breadcrumb={[
-          { title: 'Profils', link: '/profiles' },
+          { title: 'Profils', link: '/profile' },
           { title: `${profile.firstName} ${profile.lastName}` },
         ]}
       />

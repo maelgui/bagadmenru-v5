@@ -17,25 +17,19 @@ export default function ProfilesPage() {
     queryFn: () => usersApi.listProfilesApiV1ProfilesGet(),
   });
 
-  const actions = [
-    <Header.Action key="edit-profile" as={Link} to="/profile/edit/me" variant="outline">Modifier mon profil</Header.Action>,
-  ];
-  if (has('ProfilesScopes.CREATE')) {
-    actions.push(
-      <Header.Action key="add-profile" as={Link} to="/profile/edit/add">
-        <FontAwesomeIcon icon={faCirclePlus} />
-        {' '}
-        Ajouter
-      </Header.Action>,
-    );
-  }
-
   return (
     <>
       <Header
         title="Liste des membres"
         subtitle="Pensez à ajouter votre photo"
-        actions={actions}
+        actions={[
+          <Header.Action key="edit-profile" as={Link} to="/profile/edit/me" variant="outline">Modifier mon profil</Header.Action>,
+          <Header.Action key="add-profile" as={Link} to="/profile/add" className={has('ProfilesScopes.CREATE') ? '' : 'hidden'}>
+            <FontAwesomeIcon icon={faCirclePlus} />
+            {' '}
+            Ajouter
+          </Header.Action>,
+        ]}
         breadcrumb={[
           { title: 'Liste des membres' },
         ]}

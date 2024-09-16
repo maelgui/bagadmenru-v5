@@ -18,7 +18,7 @@ export default function CreateProfilePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success('Profil crée avec succès !');
-      navigate('/profiles');
+      navigate('/profile');
     },
   });
   const onSubmit = (data: ProfileCreate) => mutate(data);
