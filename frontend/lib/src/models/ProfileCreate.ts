@@ -36,7 +36,7 @@ export interface ProfileCreate {
      * @type {string}
      * @memberof ProfileCreate
      */
-    pictureKey: string | null;
+    pictureKey?: string | null;
     /**
      * 
      * @type {number}
@@ -63,7 +63,6 @@ export interface ProfileCreate {
 export function instanceOfProfileCreate(value: object): value is ProfileCreate {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('pictureKey' in value) || value['pictureKey'] === undefined) return false;
     if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
     if (!('groupIds' in value) || value['groupIds'] === undefined) return false;
     if (!('email' in value) || value['email'] === undefined) return false;
@@ -82,7 +81,7 @@ export function ProfileCreateFromJSONTyped(json: any, ignoreDiscriminator: boole
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'pictureKey': json['picture_key'],
+        'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
         'instrumentId': json['instrument_id'],
         'groupIds': json['group_ids'],
         'email': json['email'],

@@ -43,7 +43,7 @@ export interface Profile {
      * @type {string}
      * @memberof Profile
      */
-    pictureKey: string | null;
+    pictureKey?: string | null;
     /**
      * 
      * @type {string}
@@ -76,7 +76,6 @@ export interface Profile {
 export function instanceOfProfile(value: object): value is Profile {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('pictureKey' in value) || value['pictureKey'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('groups' in value) || value['groups'] === undefined) return false;
     if (!('pictureUrl' in value) || value['pictureUrl'] === undefined) return false;
@@ -95,7 +94,7 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'pictureKey': json['picture_key'],
+        'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
         'id': json['id'],
         'groups': ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
         'instrument': json['instrument'] == null ? undefined : MinimalGroupFromJSON(json['instrument']),

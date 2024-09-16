@@ -36,7 +36,7 @@ export interface MyProfileUpdate {
      * @type {string}
      * @memberof MyProfileUpdate
      */
-    pictureKey: string | null;
+    pictureKey?: string | null;
 }
 
 /**
@@ -45,7 +45,6 @@ export interface MyProfileUpdate {
 export function instanceOfMyProfileUpdate(value: object): value is MyProfileUpdate {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('pictureKey' in value) || value['pictureKey'] === undefined) return false;
     return true;
 }
 
@@ -61,7 +60,7 @@ export function MyProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boo
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'pictureKey': json['picture_key'],
+        'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
     };
 }
 

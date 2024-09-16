@@ -129,7 +129,7 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * Create Profile
      */
-    async createProfileApiV1ProfilesPostRaw(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
+    async createProfileApiV1ProfilesPostRaw(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
         if (requestParameters['profileCreate'] == null) {
             throw new runtime.RequiredError(
                 'profileCreate',
@@ -151,13 +151,13 @@ export class ProfilesApi extends runtime.BaseAPI {
             body: ProfileCreateToJSON(requestParameters['profileCreate']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProfileFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
     }
 
     /**
      * Create Profile
      */
-    async createProfileApiV1ProfilesPost(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Profile>> {
+    async createProfileApiV1ProfilesPost(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
         const response = await this.createProfileApiV1ProfilesPostRaw(requestParameters, initOverrides);
         return await response.value();
     }

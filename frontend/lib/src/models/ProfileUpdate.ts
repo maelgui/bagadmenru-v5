@@ -36,7 +36,7 @@ export interface ProfileUpdate {
      * @type {string}
      * @memberof ProfileUpdate
      */
-    pictureKey: string | null;
+    pictureKey?: string | null;
     /**
      * 
      * @type {number}
@@ -54,7 +54,7 @@ export interface ProfileUpdate {
      * @type {string}
      * @memberof ProfileUpdate
      */
-    email: string;
+    email?: string | null;
 }
 
 /**
@@ -63,10 +63,8 @@ export interface ProfileUpdate {
 export function instanceOfProfileUpdate(value: object): value is ProfileUpdate {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('pictureKey' in value) || value['pictureKey'] === undefined) return false;
     if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
     if (!('groupIds' in value) || value['groupIds'] === undefined) return false;
-    if (!('email' in value) || value['email'] === undefined) return false;
     return true;
 }
 
@@ -82,10 +80,10 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'pictureKey': json['picture_key'],
+        'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
         'instrumentId': json['instrument_id'],
         'groupIds': json['group_ids'],
-        'email': json['email'],
+        'email': json['email'] == null ? undefined : json['email'],
     };
 }
 
