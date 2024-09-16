@@ -15,14 +15,12 @@ export default function CreateProfilePage() {
     mutationFn: (data: ProfileCreate) => usersApi.createProfileApiV1ProfilesPost({
       profileCreate: data,
     }),
-    onSuccess: (data) => {
-      console.log(data);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success('Profil crée avec succès !');
       navigate('/profile');
     },
-    onError: (e) => {
-      console.log(e);
+    onError: () => {
       toast.error('Une erreur est survenue');
     },
   });
