@@ -33,7 +33,7 @@ export const queryClient = new QueryClient({
 });
 
 export function useApiClient() {
-  const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL });
+  const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL, credentials: 'include' });
 
   return {
     auth: new AuthApi(conf),
