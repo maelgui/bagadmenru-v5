@@ -36,6 +36,7 @@ const faFileIconType: Map<string, IconDefinition> = new Map([
   ['pdf', faFilePdf],
   ['png', faImage],
   ['jpg', faImage],
+  ['jepg', faImage],
 ]);
 
 function getIcon(file: FileOrFolder) {

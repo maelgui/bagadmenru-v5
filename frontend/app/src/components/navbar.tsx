@@ -72,7 +72,7 @@ export default function Navbar() {
           <nav className="py-4 md:py-0">
             <ul className="flex flex-col lg:flex-row">
               <li className="px-3 py-2">
-                <CustomNavLink to="/">Dashboard</CustomNavLink>
+                <CustomNavLink to="/">Accueil</CustomNavLink>
               </li>
               <li className={`px-3 py-2 tracking-wide ${has('EventScopes.VIEW') ? '' : 'hidden'}`}>
                 <CustomNavLink to={`/events/${has('EventScopes.ANSWER') ? '' : 'calendar'}`}>Évènements</CustomNavLink>
@@ -97,7 +97,7 @@ export default function Navbar() {
                     <Avatar src={profile.pictureUrl} size="xs" className="m-8" />
                   </Link>
                   <div className="lg:text-right lg:py-2">
-                    <div className="whitespace-nowrap">
+                    <div className="whitespace-nowrap mx-1">
                       <span>
                         {profile.firstName}
                         {' '}

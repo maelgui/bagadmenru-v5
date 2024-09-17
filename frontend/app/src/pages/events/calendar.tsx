@@ -1,5 +1,5 @@
 import { faCalendarCheck } from '@fortawesome/free-regular-svg-icons';
-import { faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarDay, faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -29,11 +29,13 @@ export default function CalendarPage() {
   const [monthOffset, setMonthOffset] = useState(0);
   const today = new Date();
 
+  const currentMonth = (new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' });
+
   return (
     <>
       <Header
         title="Calendrier"
-        subtitle={(new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' })}
+        subtitle={currentMonth}
         actions={[
           <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={has('EventScopes.UPDATE') ? '' : 'hidden'}>
             <FontAwesomeIcon icon={faCalendarPlus} />
@@ -60,11 +62,14 @@ export default function CalendarPage() {
           <div className="basis-2/3">
             <div className="flex justify-between items-center">
               <div>
-                <Button size="sm" variant="outline" onClick={() => setMonthOffset(monthOffset - 1)}>précédent</Button>
-                <Button size="sm" variant="outline" onClick={() => setMonthOffset(monthOffset + 1)}>suivant</Button>
+                <Button variant="outline" onClick={() => setMonthOffset(monthOffset - 1)}>précédent</Button>
+                <Button variant="outline" onClick={() => setMonthOffset(0)} aria-label="Aujourd'hui" title="Aujourd'hui">
+                  <FontAwesomeIcon icon={faCalendarDay} />
+                </Button>
+                <Button variant="outline" onClick={() => setMonthOffset(monthOffset + 1)}>suivant</Button>
               </div>
-              <div>
-                <Button size="sm" variant="outline" onClick={() => setMonthOffset(0)}>Reset</Button>
+              <div className="text-gray-700 uppercase font-semibold">
+                {currentMonth}
               </div>
             </div>
 

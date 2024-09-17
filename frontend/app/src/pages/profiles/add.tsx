@@ -12,16 +12,19 @@ export default function CreateProfilePage() {
   const navigate = useNavigate();
 
   const { mutate } = useMutation({
-    mutationFn: (data: ProfileCreate) => usersApi.createProfileApiV1ProfilesPost({
-      profileCreate: data,
-    }),
+    mutationFn: (data: ProfileCreate) => toast.promise(
+      usersApi.createProfileApiV1ProfilesPost({
+        profileCreate: data,
+      }),
+      {
+        loading: 'Création...',
+        success: 'Profil crée avec succès !',
+        error: 'Une erreur est survenue.',
+      },
+    ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      toast.success('Profil crée avec succès !');
       navigate('/profile');
-    },
-    onError: () => {
-      toast.error('Une erreur est survenue');
     },
   });
   const onSubmit = (data: ProfileCreate) => mutate(data);

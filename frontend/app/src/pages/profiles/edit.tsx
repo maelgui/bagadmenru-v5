@@ -34,7 +34,6 @@ export default function EditProfilePage() {
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['profiles', profileId] });
-    toast.success('Profil modifié avec succès !');
     navigate(`/profile/${profileId}`);
   };
 
@@ -42,21 +41,33 @@ export default function EditProfilePage() {
     return null;
   }
 
+  const messages = {
+    loading: 'Chargement...',
+    success: 'Profil modifié avec succès !',
+    error: 'Une erreur est survenue.',
+  };
+
   let form;
   if (profileId === 'me') {
     const { mutate } = useMutation({
-      mutationFn: (data: MyProfileUpdate) => usersApi.updateMyProfileApiV1ProfilesMePut({
-        myProfileUpdate: data,
-      }),
+      mutationFn: (data: MyProfileUpdate) => toast.promise(
+        usersApi.updateMyProfileApiV1ProfilesMePut({
+          myProfileUpdate: data,
+        }),
+        messages,
+      ),
       onSuccess,
     });
     form = <EditProfileForm profile={profile} onSubmit={(data) => mutate(data)} />;
   } else {
     const { mutate } = useMutation({
-      mutationFn: (data: ProfileUpdate) => usersApi.updateProfileApiV1ProfilesProfileIdPut({
-        profileId,
-        profileUpdate: data,
-      }),
+      mutationFn: (data: ProfileUpdate) => toast.promise(
+        usersApi.updateProfileApiV1ProfilesProfileIdPut({
+          profileId,
+          profileUpdate: data,
+        }),
+        messages,
+      ),
       onSuccess,
     });
     form = <AdminEditProfileForm profile={profile} onSubmit={(data) => mutate(data)} />;

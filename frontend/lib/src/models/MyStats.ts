@@ -37,12 +37,6 @@ export interface MyStats {
      * @memberof MyStats
      */
     avgResponseTime: string | null;
-    /**
-     * 
-     * @type {number}
-     * @memberof MyStats
-     */
-    responsesNeeded: number;
 }
 
 /**
@@ -52,7 +46,6 @@ export function instanceOfMyStats(value: object): value is MyStats {
     if (!('nResponses' in value) || value['nResponses'] === undefined) return false;
     if (!('nPositiveResponses' in value) || value['nPositiveResponses'] === undefined) return false;
     if (!('avgResponseTime' in value) || value['avgResponseTime'] === undefined) return false;
-    if (!('responsesNeeded' in value) || value['responsesNeeded'] === undefined) return false;
     return true;
 }
 
@@ -69,7 +62,6 @@ export function MyStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean): M
         'nResponses': json['n_responses'],
         'nPositiveResponses': json['n_positive_responses'],
         'avgResponseTime': json['avg_response_time'],
-        'responsesNeeded': json['responses_needed'],
     };
 }
 
@@ -82,7 +74,6 @@ export function MyStatsToJSON(value?: MyStats | null): any {
         'n_responses': value['nResponses'],
         'n_positive_responses': value['nPositiveResponses'],
         'avg_response_time': value['avgResponseTime'],
-        'responses_needed': value['responsesNeeded'],
     };
 }
 

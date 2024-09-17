@@ -5,6 +5,7 @@ type ButtonOwnProps<C extends React.ElementType> = {
   as?: C
   size?: 'sm' | 'md' | 'lg' | 'll'
   variant?: 'solid' | 'outline' | 'ghost'
+  isLoading?: boolean
 } & React.ComponentPropsWithoutRef<'button'>;
 
 export type ButtonProps<C extends React.ElementType> =
@@ -15,7 +16,7 @@ type PolymorphicRef<C extends React.ElementType> =
 
 function PrivateButton<C extends React.ElementType = 'button'>(
   {
-    as, children, size = 'md', variant = 'solid', className, ...rest
+    as, children, size = 'md', variant = 'solid', className, isLoading = false, ...rest
   }: ButtonProps<C>,
   ref: PolymorphicRef<C>,
 ) {
@@ -38,10 +39,10 @@ function PrivateButton<C extends React.ElementType = 'button'>(
 
   switch (variant) {
     case 'solid':
-      classList.push('bg-pourpre-500', 'text-white', 'hover:border-pourpre-200', 'hover:bg-white', 'hover:text-pourpre-600');
+      classList.push('bg-pourpre-500', 'text-white', 'hover:bg-white', 'hover:text-pourpre-600');
       break;
     case 'outline':
-      classList.push('text-pourpre-600', 'hover:border-pourpre-200', 'hover:bg-pourpre-400', 'hover:text-white');
+      classList.push('text-pourpre-600', 'hover:border-white', 'hover:bg-pourpre-500', 'hover:text-white');
       break;
     case 'ghost':
       classList.push('border-none', 'text-gray-900', 'hover:bg-gray-100');
@@ -50,12 +51,16 @@ function PrivateButton<C extends React.ElementType = 'button'>(
     default:
       break;
   }
+  if (isLoading) {
+    classList.push('animate-pulse');
+  }
 
   return (
     <Component
       ref={ref}
       type="button"
-      className={`${classList.join(' ')} rounded-full inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm ${className} whitespace-nowrap disabled:cursor-not-allowed`}
+      className={`${classList.join(' ')} rounded-full inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm ${className} whitespace-nowrap disabled:cursor-not-allowed hover:ring-2 hover:ring-pourpre-500 active:bg-pourpre-700 active:text-white focus:outline-none focus:ring-2 focus:ring-pourpre-300`}
+      disabled={isLoading}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}
     >

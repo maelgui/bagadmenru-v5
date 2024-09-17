@@ -196,17 +196,7 @@ async def get_my_stats(
     q = q.where(models.Event.is_in_doodle == True)
     res1 = session.execute(q).one()._mapping
 
-    q = select(
-        (count(models.Event.id) - count(models.Response.value)).label(
-            "responses_needed"
-        ),
-    ).join_from(models.Event, models.Response, isouter=True)
-    q = q.where(models.Event.date >= date_now)
-    q = q.where(or_(models.Response.user_id == None, models.Response.user_id == token))
-    q = q.where(models.Event.is_in_doodle == True)
-    res4 = session.execute(q).one()._mapping
-
-    return MyStats(**dict(**res1, **res4))
+    return MyStats(**res1)
 
 
 @stats_router.get("/")

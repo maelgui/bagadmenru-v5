@@ -31,6 +31,8 @@ class Settings(BaseSettings):
 
     secret_key: str
 
+    domain: str = "beta.bagadmenru.bzh"
+
     class Config:
         env_file = ".env"
 

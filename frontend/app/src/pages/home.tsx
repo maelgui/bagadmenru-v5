@@ -70,11 +70,11 @@ export default function HomePage() {
               <Link to="/events">
                 <Counter
                   className="h-full"
-                  type={myStats.responsesNeeded > 0 ? 'error' : 'success'}
-                  value={myStats.responsesNeeded > 0
-                    ? myStats.responsesNeeded
+                  type={globalStats.nEvents - myStats.nResponses > 0 ? 'error' : 'success'}
+                  value={globalStats.nEvents - myStats.nResponses > 0
+                    ? globalStats.nEvents - myStats.nResponses
                     : (<FontAwesomeIcon icon={faCheckCircle} />)}
-                  description={myStats.responsesNeeded > 0 ? `Vous devez répondre à ${myStats.responsesNeeded} sortie${myStats.responsesNeeded > 1 ? 's' : ''}` : 'Vous avez répondu à toutes les prochaines sorties !'}
+                  description={globalStats.nEvents - myStats.nResponses > 0 ? `Vous devez répondre à ${globalStats.nEvents - myStats.nResponses} sortie${globalStats.nEvents - myStats.nResponses > 1 ? 's' : ''}` : 'Vous avez répondu à toutes les prochaines sorties !'}
                 />
               </Link>
               {(() => {

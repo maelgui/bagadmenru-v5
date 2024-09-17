@@ -37,8 +37,10 @@ export default function AdminEditProfileForm(
   });
 
   const {
-    handleSubmit, control, register, formState: { errors },
+    handleSubmit, control, register, formState: { errors, isSubmitting },
   } = methods;
+
+  console.log(isSubmitting);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -97,7 +99,7 @@ export default function AdminEditProfileForm(
           )}
         />
       </div>
-      <Button type="submit">Enregistrer</Button>
+      <Button type="submit" isLoading={isSubmitting}>Enregistrer</Button>
     </form>
   );
 }

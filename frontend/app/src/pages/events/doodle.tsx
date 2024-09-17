@@ -104,7 +104,7 @@ export default function DoodlePage() {
         {!events?.length ? (
           <Alert type="info">Aucun évèvement prochainement.</Alert>
         ) : (
-          <div className="overflow-scroll h-96">
+          <div className="">
             <table className="table-auto min-w-full relative">
               <thead className="divide-y sticky top-0">
                 <tr className="divide-x">

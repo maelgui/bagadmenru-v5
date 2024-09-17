@@ -67,7 +67,7 @@ export default function Calendar({
                 <div className="hidden md:block w-full">
                   {eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map(
                     (event) => (
-                      <Badge key={event.id} color={EventCategories[event.category]?.bg ?? 'bg-gray-500'} className="block mb-px rounded-sm truncate">
+                      <Badge key={event.id} color={EventCategories[event.category]?.bg ?? 'bg-gray-500'} className="block mb-px rounded-sm truncate text-ellipsis w-full">
                         {event.title}
                       </Badge>
                     ),

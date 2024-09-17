@@ -44,6 +44,7 @@ services:
       - KEYCLOAK_SECRET_KEY=FvnxnD7yIwgc6m8Vwff7SdVTijPrQtnk
       - KEYCLOAK_URL=http://keycloak:8080
       - SECRET_KEY=FURIFNQVICWFEONWFIUDJSKNfrni
+      - DOMAIN=localhost
 
   frontend:
     build:
