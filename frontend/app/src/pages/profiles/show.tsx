@@ -34,7 +34,7 @@ export default function ShowProfilePage() {
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
         actions={has('ProfilesScopes.UPDATE') || profileId === 'me' || profileId === currentUser?.id
-          ? [<Header.Action key="edit-profile" onClick={() => navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Header.Action>]
+          ? [<Header.Action key="edit-profile" onClick={() => navigate(`/profile/edit/${profileId === currentUser?.id ? 'me' : profileId}`)}>Modifier le profil</Header.Action>]
           : []}
         breadcrumb={[
           { title: 'Profils', link: '/profile' },
