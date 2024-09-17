@@ -49,12 +49,6 @@ export interface ProfileUpdate {
      * @memberof ProfileUpdate
      */
     groupIds: Array<number>;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProfileUpdate
-     */
-    email?: string | null;
 }
 
 /**
@@ -83,7 +77,6 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
         'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
         'instrumentId': json['instrument_id'],
         'groupIds': json['group_ids'],
-        'email': json['email'] == null ? undefined : json['email'],
     };
 }
 
@@ -98,7 +91,6 @@ export function ProfileUpdateToJSON(value?: ProfileUpdate | null): any {
         'picture_key': value['pictureKey'],
         'instrument_id': value['instrumentId'],
         'group_ids': value['groupIds'],
-        'email': value['email'],
     };
 }
 

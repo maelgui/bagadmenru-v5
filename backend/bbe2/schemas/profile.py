@@ -25,7 +25,6 @@ class ProfileCreate(_ProfileBase):
 class ProfileUpdate(_ProfileBase):
     instrument_id: int
     group_ids: list[int]
-    email: str | None = None
 
 
 class Profile(_ProfileBase):

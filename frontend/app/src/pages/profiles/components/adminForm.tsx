@@ -10,11 +10,16 @@ import Input from '../../../components/input';
 import { useApiClient } from '../../../config/client';
 import BaseProfileFormFields from './base';
 
+interface ProfileFormData extends ProfileUpdate, ProfileCreate { }
+
 interface AdminProfileForm {
   profile?: Profile
-  onSubmit: SubmitHandler<ProfileUpdate | ProfileCreate>
+  onSubmit: SubmitHandler<ProfileFormData>
 }
-export default function AdminEditProfileForm({ profile = undefined, onSubmit }: AdminProfileForm) {
+
+export default function AdminEditProfileForm(
+  { profile = undefined, onSubmit }: AdminProfileForm,
+) {
   const { usersApi } = useApiClient();
 
   const { data: groups } = useQuery({
@@ -22,7 +27,7 @@ export default function AdminEditProfileForm({ profile = undefined, onSubmit }: 
     queryFn: () => usersApi.listGroupsApiV1GroupsGet(),
   });
 
-  const methods = useForm<ProfileUpdate | ProfileCreate>({
+  const methods = useForm<ProfileFormData>({
     defaultValues: profile ? {
       firstName: profile.firstName,
       lastName: profile.lastName,
@@ -85,7 +90,7 @@ export default function AdminEditProfileForm({ profile = undefined, onSubmit }: 
               options={groups}
               getOptionValue={(option) => option.id.toString()}
               getOptionLabel={(option) => option.name}
-              value={groups?.filter((c) => value.includes(c.id))}
+              value={groups?.filter((c) => value?.includes(c.id))}
               onChange={(val) => onChange(val.map((c) => c.id))}
             />
 
