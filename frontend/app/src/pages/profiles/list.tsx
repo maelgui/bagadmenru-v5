@@ -56,7 +56,7 @@ export default function ProfilesPage() {
                 </div>
                 <div className="pt-4 px-2 text-center">
                   <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
-                  <div>
+                  <div className="flex flex-wrap">
                     {profile.instrument ? (
                       <GroupTag name={profile.instrument.name} color={profile.instrument.color} />
                     ) : null}
