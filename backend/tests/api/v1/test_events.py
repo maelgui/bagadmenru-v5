@@ -12,6 +12,8 @@ def test_list_events(client: TestClient):
             "id": 1,
             "description": "Rendez-vous 14h au parc",
             "costume": "COSTUME",
+            "category": "TEST",
+            "is_in_doodle": True,
         }
     ]
 
@@ -25,6 +27,8 @@ def test_fetch_event(client: TestClient):
         "id": 1,
         "description": "Rendez-vous 14h au parc",
         "costume": "COSTUME",
+        "category": "TEST",
+        "is_in_doodle": True,
     }
 
 
@@ -36,6 +40,8 @@ def test_create_event(client: TestClient):
             "description": "Rendez-vous a 21h au parc",
             "date": "2022-06-21",
             "costume": "POLO",
+            "category": "CAT1",
+            "is_in_doodle": True,
         },
     )
     assert response.status_code == 201
@@ -45,6 +51,8 @@ def test_create_event(client: TestClient):
         "description": "Rendez-vous a 21h au parc",
         "date": "2022-06-21",
         "costume": "POLO",
+        "category": "CAT1",
+        "is_in_doodle": True,
     }
 
 
@@ -56,6 +64,8 @@ def test_edit_event(client: TestClient):
             "date": "2022-12-09",
             "description": "Rendez-vous 13h au foyer logement",
             "costume": "COSTUME",
+            "category": "CAT1",
+            "is_in_doodle": True,
         },
     )
     assert response.status_code == 200
@@ -65,4 +75,6 @@ def test_edit_event(client: TestClient):
         "id": 1,
         "description": "Rendez-vous 13h au foyer logement",
         "costume": "COSTUME",
+        "category": "CAT1",
+        "is_in_doodle": True,
     }

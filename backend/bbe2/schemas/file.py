@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import Optional
 
+from bbe2.config import get_settings
+from bbe2.utils.s3 import S3Helper
 from pydantic import BaseModel, ConfigDict, computed_field
-
-from bbe2.utils.s3 import s3
 
 
 class FileOrFolderType(Enum):
@@ -35,6 +35,7 @@ class FileOrFolder(_FileOrFolderBase):
     @computed_field
     @property
     def fileUrl(self) -> Optional[str]:
+        s3 = S3Helper(get_settings())
         if not self.file_key:
             return None
         return s3.generate_get_presigned_url(object_name=self.file_key)

@@ -32,9 +32,9 @@ export default function Alert({ type, children }: AlertProps) {
       break;
   }
   return (
-    <div className={`py-4 px-6 mb-8 ${className}`}>
-      {icon}
-      {children}
+    <div className={`relative py-4 px-6 mb-8 ${className}`}>
+      <span className="absolute top-0 bottom-0 flex items-center">{icon}</span>
+      <div className="pl-6">{children}</div>
     </div>
   );
 }

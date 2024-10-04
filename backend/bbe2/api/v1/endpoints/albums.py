@@ -1,3 +1,4 @@
+from typing import Annotated
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
@@ -5,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, sta
 from bbe2 import models, schemas
 from bbe2.crud.crud_album import CRUDAlbum
 from bbe2.crud.crud_photo import CRUDPhoto
-from bbe2.dependencies.auth import get_current_user
+from bbe2.utils.auth import get_current_user
 from bbe2.utils import s3
 from bbe2.utils.scopes import AlbumScopes
 
@@ -14,8 +15,8 @@ router = APIRouter(prefix="/albums")
 
 @router.get("/", response_model=list[schemas.Album])
 async def list_albums(
-    token: str = Security(get_current_user, scopes=[AlbumScopes.VIEW]),
-    album_crud: CRUDAlbum = Depends(CRUDAlbum),
+    album_crud: Annotated[CRUDAlbum, Depends()],
+    token: str = Security(get_current_user, scopes=[str(AlbumScopes.VIEW)]),
 ):
     return album_crud.find_all()
 
@@ -96,7 +97,7 @@ async def delete_album(
 async def delete_photo(
     album_id: str,
     photo_id: str,
-    token: str = Security(get_current_user, scopes=[AlbumScopes.DELETE]),
+    token: str = Security(get_current_user, scopes=[str(AlbumScopes.DELETE)]),
     photo_crud: CRUDPhoto = Depends(),
 ):
     db_photo = photo_crud.find_one_by(

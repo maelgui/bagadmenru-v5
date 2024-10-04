@@ -1,7 +1,7 @@
 """File system API."""
 
 import uuid
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
 from sqlalchemy import and_
@@ -9,10 +9,9 @@ from sqlalchemy.orm import Session
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
-from bbe2.dependencies.auth import get_current_user
-from bbe2.dependencies.db import get_db
+from bbe2.dependencies import S3Dep, SessionDep
 from bbe2.schemas.file import FileOrFolderType
-from bbe2.utils.s3 import s3
+from bbe2.utils.auth import get_current_user
 from bbe2.utils.scopes import FileScopes
 
 router = APIRouter(prefix="/files")
@@ -24,9 +23,9 @@ router = APIRouter(prefix="/files")
     response_model=list[schemas.FileOrFolder],
 )
 async def list_files(
+    session: SessionDep,
     t: Optional[FileOrFolderType] = None,
     limit: int = 10,
-    session: Session = Depends(get_db),
 ):
     """List recent files."""
     q = session.query(models.FileOrFolder)
@@ -44,7 +43,7 @@ async def list_files(
     response_model=schemas.FileOrFolder,
 )
 async def get_root(
-    file_crud: CRUDFile = Depends(),
+    file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get root folder entity."""
     root_file = file_crud.find_one_by(models.FileOrFolder.id == 1)
@@ -64,7 +63,7 @@ async def get_root(
 )
 async def get_file(
     file_id: int,
-    file_crud: CRUDFile = Depends(),
+    file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get a file or folder by id."""
     db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
@@ -82,7 +81,7 @@ async def get_file(
 )
 async def get_breadcrumb(
     file_id: int,
-    file_crud: CRUDFile = Depends(),
+    file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get breadcrumb for a file."""
     db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
@@ -110,7 +109,7 @@ async def get_breadcrumb(
 )
 async def list_children(
     folder_id: int,
-    file_crud: CRUDFile = Depends(),
+    file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get all chidren of a folder."""
     db_file = file_crud.find_one_by(models.FileOrFolder.id == folder_id)
@@ -130,7 +129,8 @@ async def list_children(
 async def upload_file(
     folder_id: int,
     file: UploadFile,
-    file_crud: CRUDFile = Depends(),
+    file_crud: Annotated[CRUDFile, Depends()],
+    s3: S3Dep,
     force: bool = False,
 ):
     """Upload a file."""
@@ -168,7 +168,7 @@ async def upload_file(
 async def create_folder(
     folder_id: int,
     new_folder: schemas.FolderCreate,
-    file_crud: CRUDFile = Depends(),
+    file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Create a new folder."""
     return file_crud.create(
@@ -184,7 +184,7 @@ async def create_folder(
 async def update_file(
     file_id: str,
     file: schemas.FileOrFolderUpdate,
-    file_crud: CRUDFile = Depends(),
+    file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Update an existing file or folder"""
     db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
@@ -203,7 +203,8 @@ async def update_file(
 )
 async def delete_file(
     file_id: int,
-    file_crud: CRUDFile = Depends(),
+    file_crud: Annotated[CRUDFile, Depends()],
+    s3: S3Dep,
 ):
     """Delete an existing file or folder."""
     db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)

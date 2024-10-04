@@ -1,4 +1,5 @@
-from typing import Any, Optional
+from functools import lru_cache
+from typing import Optional
 
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
@@ -13,17 +14,6 @@ class Settings(BaseSettings):
     s3_bucket_name: str
     s3_default_region: Optional[str] = None
 
-    jwt_audience: str = "bbe2"
-    jwt_issuer: AnyHttpUrl
-
-    oidc_authorization_url: AnyHttpUrl
-    oidc_token_url: AnyHttpUrl
-    oidc_jwks_url: AnyHttpUrl
-
-    keycloak_client_id: str
-    keycloak_secret_key: str
-    keycloak_url: str
-
     swagger_client_id: str | None = "bbe2-swagger"
 
     cors_allowed_origins: list[str] = []
@@ -33,8 +23,7 @@ class Settings(BaseSettings):
 
     domain: str = "beta.bagadmenru.bzh"
 
-    class Config:
-        env_file = ".env"
 
-
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

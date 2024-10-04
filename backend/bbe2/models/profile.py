@@ -70,7 +70,7 @@ class Permission(Base):
 
     __tablename__ = "permissions"
 
-    id: Mapped[int] = mapped_column(String(255), primary_key=True)
+    id: Mapped[str] = mapped_column(String(255), primary_key=True)
     tag: Mapped[str] = mapped_column(String(127), nullable=False)
     name: Mapped[str] = mapped_column(String(127), nullable=False)
     description: Mapped[str] = mapped_column(String(255), nullable=True)

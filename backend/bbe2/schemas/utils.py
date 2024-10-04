@@ -12,9 +12,11 @@ class MyStats(BaseModel):
     n_responses: int
     n_positive_responses: int | None
     avg_response_time: timedelta | None
+    n_upcomming_responses: int
 
 
 class GlobalStats(BaseModel):
     n_responses: int
     n_events: int
     avg_response_time: timedelta | None
+    n_upcoming_event: int

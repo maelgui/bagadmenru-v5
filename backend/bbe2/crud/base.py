@@ -1,12 +1,10 @@
 from abc import abstractmethod
 from typing import Generic, Type, TypeVar
 
-from fastapi import Depends
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from bbe2.database import Base
-from bbe2.dependencies.db import get_db
+from bbe2.dependencies import SessionDep
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -19,7 +17,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def model(self) -> Type[ModelType]:
         pass
 
-    def __init__(self, db_session: Session = Depends(get_db)):
+    def __init__(self, db_session: SessionDep):
         self.db_session = db_session
 
     # Find operation
@@ -46,7 +44,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.db_session.refresh(db_object)
         return db_object
 
-    def read(self, id: int) -> ModelType:
+    def get(self, id: int) -> ModelType | None:
         return self.db_session.query(self.model).get(id)
 
     def update(
@@ -58,8 +56,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.db_session.refresh(db_object)
         return db_object
 
-    def delete(self, id: int) -> ModelType:
+    def delete(self, id: int):
         obj = self.db_session.query(self.model).get(id)
         self.db_session.delete(obj)
         self.db_session.commit()
-        return obj

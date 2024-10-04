@@ -7,15 +7,16 @@ import { useQuery } from '@tanstack/react-query';
 import { FileOrFolderType } from 'bagad-client';
 import { Link } from 'react-router-dom';
 import { parse } from 'tinyduration';
-import Alert from '../components/alert';
-import Container from '../components/container';
-import Counter from '../components/counter';
-import Header from '../components/header';
-import { useApiClient, usePermissions, useUserProfile } from '../config/client';
-import groupBy from '../utils/groupby';
-import Calendar from './events/components/calendar';
-import EventListItem, { EventListItemSkeleton } from './events/components/event';
-import FileItem, { FileItemSkeleton } from './files/components/file-item';
+import Alert from '../../components/alert';
+import Container from '../../components/container';
+import Counter from '../../components/counter';
+import Header from '../../components/header';
+import { useApiClient, usePermissions, useUserProfile } from '../../config/client';
+import groupBy from '../../utils/groupby';
+import Calendar from '../events/components/calendar';
+import EventListItem, { EventListItemSkeleton } from '../events/components/event';
+import FileItem, { FileItemSkeleton } from '../files/components/file-item';
+import Mailbox from './components/mailbox';
 
 export default function HomePage() {
   const { eventsApi, filesApi, usersApi } = useApiClient();
@@ -64,17 +65,18 @@ export default function HomePage() {
     <>
       <Header title={`Degemer mat ${profile?.firstName}`} />
       <Container>
+        <Mailbox />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
           {myStats && globalStats ? (
             <>
               <Link to="/events">
                 <Counter
                   className="h-full"
-                  type={globalStats.nEvents - myStats.nResponses > 0 ? 'error' : 'success'}
-                  value={globalStats.nEvents - myStats.nResponses > 0
-                    ? globalStats.nEvents - myStats.nResponses
+                  type={globalStats.nUpcomingEvent - myStats.nUpcommingResponses > 0 ? 'error' : 'success'}
+                  value={globalStats.nUpcomingEvent - myStats.nUpcommingResponses > 0
+                    ? globalStats.nUpcomingEvent - myStats.nUpcommingResponses
                     : (<FontAwesomeIcon icon={faCheckCircle} />)}
-                  description={globalStats.nEvents - myStats.nResponses > 0 ? `Vous devez répondre à ${globalStats.nEvents - myStats.nResponses} sortie${globalStats.nEvents - myStats.nResponses > 1 ? 's' : ''}` : 'Vous avez répondu à toutes les prochaines sorties !'}
+                  description={globalStats.nUpcomingEvent - myStats.nUpcommingResponses > 0 ? `Vous devez répondre à ${globalStats.nUpcomingEvent - myStats.nUpcommingResponses} sortie${globalStats.nUpcomingEvent - myStats.nUpcommingResponses > 1 ? 's' : ''}` : 'Vous avez répondu à toutes les prochaines sorties !'}
                 />
               </Link>
               {(() => {

@@ -1,18 +1,19 @@
 """S3 file storage utils functions."""
 
-from typing import BinaryIO, Optional
+from typing import Annotated, BinaryIO, Optional
 from urllib.parse import urlencode
 
+from bbe2.config import Settings, get_settings
 import boto3
 from botocore.client import Config
+from fastapi import Depends
 
-from bbe2.config import settings
 
 
 class S3Helper:
     """Regroup S3 utilility functions."""
 
-    def __init__(self):
+    def __init__(self, settings: Annotated[Settings, Depends(get_settings)]):
         self.client = boto3.client(
             service_name="s3",
             endpoint_url=str(settings.s3_endpoint),
@@ -23,6 +24,8 @@ class S3Helper:
             ),
         )
         self.bucket_name = settings.s3_bucket_name
+
+    def check(self):
         self.client.head_bucket(Bucket=self.bucket_name)
 
     def upload_file(
@@ -105,6 +108,3 @@ class S3Helper:
             object_name (str): Object key to delete.
         """
         self.set_tags(object_name, {"to_delete": "true"})
-
-
-s3 = S3Helper()

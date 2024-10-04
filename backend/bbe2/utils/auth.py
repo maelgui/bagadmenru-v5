@@ -6,14 +6,6 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2AuthorizationCodeBearer, SecurityScopes
 from jose import JWTError
 
-from bbe2.config import settings
-from bbe2.utils.jwt import JWTVerifier
-
-oauth2_scheme = OAuth2AuthorizationCodeBearer(
-    tokenUrl=str(settings.oidc_token_url),
-    authorizationUrl=str(settings.oidc_authorization_url),
-)
-jwt_verifier = JWTVerifier(settings.jwt_audience, str(settings.jwt_issuer))
 
 
 async def get_current_user(

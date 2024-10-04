@@ -1,12 +1,10 @@
-from datetime import datetime
+from typing import Annotated
 
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.orm import Session
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
-from bbe2.dependencies.db import get_db
 
 router = APIRouter(prefix="/auth")
 
@@ -15,7 +13,7 @@ router = APIRouter(prefix="/auth")
 async def login(
     data: schemas.LoginData,
     request: Request,
-    profile_crud: CRUDProfile = Depends(),
+    profile_crud: Annotated[CRUDProfile, Depends()],
 ):
     db_profile = profile_crud.find_one_by(models.Profile.email == data.identifier)
     if not db_profile or not bcrypt.checkpw(

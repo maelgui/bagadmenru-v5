@@ -37,6 +37,12 @@ export interface GlobalStats {
      * @memberof GlobalStats
      */
     avgResponseTime: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof GlobalStats
+     */
+    nUpcomingEvent: number;
 }
 
 /**
@@ -46,6 +52,7 @@ export function instanceOfGlobalStats(value: object): value is GlobalStats {
     if (!('nResponses' in value) || value['nResponses'] === undefined) return false;
     if (!('nEvents' in value) || value['nEvents'] === undefined) return false;
     if (!('avgResponseTime' in value) || value['avgResponseTime'] === undefined) return false;
+    if (!('nUpcomingEvent' in value) || value['nUpcomingEvent'] === undefined) return false;
     return true;
 }
 
@@ -62,6 +69,7 @@ export function GlobalStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'nResponses': json['n_responses'],
         'nEvents': json['n_events'],
         'avgResponseTime': json['avg_response_time'],
+        'nUpcomingEvent': json['n_upcoming_event'],
     };
 }
 
@@ -74,6 +82,7 @@ export function GlobalStatsToJSON(value?: GlobalStats | null): any {
         'n_responses': value['nResponses'],
         'n_events': value['nEvents'],
         'avg_response_time': value['avgResponseTime'],
+        'n_upcoming_event': value['nUpcomingEvent'],
     };
 }
 

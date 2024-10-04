@@ -18,9 +18,5 @@ export default function AuthGuard() {
     throw new Error('Communication avec le backend impossible.');
   }
 
-  return (
-    <div>
-      {status === 'success' ? <Outlet /> : <LoadingComponent />}
-    </div>
-  );
+  return status === 'success' ? <Outlet /> : <LoadingComponent />;
 }

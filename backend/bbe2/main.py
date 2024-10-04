@@ -1,24 +1,20 @@
 import logging
+import secrets
 import time
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request, Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.utils import is_body_allowed_for_status_code
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY, WS_1008_POLICY_VIOLATION
 
 from bbe2.api.v1.api import api_router
-from bbe2.config import settings
-from bbe2.database import Base, engine
-from bbe2.fixtures import init_fixtures
 
 logging.basicConfig(level=logging.INFO)
 
-
-def init_db():
-    Base.metadata.create_all(bind=engine)
-    init_fixtures()
-
-
-init_db()
 
 tags_metadata = [
     {
@@ -29,29 +25,29 @@ tags_metadata = [
 
 app = FastAPI(
     # title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
-    swagger_ui_init_oauth={
-        "clientId": settings.swagger_client_id,
-        "appName": "Doc Tools",
-        "usePkceWithAuthorizationCodeGrant": True,
-        "scopes": "openid email",
-    },
+    # swagger_ui_init_oauth={
+    #     "clientId": settings.swagger_client_id,
+    #     "appName": "Doc Tools",
+    #     "usePkceWithAuthorizationCodeGrant": True,
+    #     "scopes": "openid email",
+    # },
     openapi_tags=tags_metadata,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_allowed_origins,
-    allow_origin_regex=settings.cors_allowed_origin_regex,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=settings.cors_allowed_origins,
+#     allow_origin_regex=settings.cors_allowed_origin_regex,
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 app.add_middleware(
     SessionMiddleware,
-    secret_key=settings.secret_key,
+    secret_key=secrets.token_hex(),
     https_only=True,
-    domain=settings.domain,
+    # domain=settings.domain,
 )
 
 

@@ -1,14 +1,29 @@
+from functools import lru_cache
+from typing import Annotated
+
+from fastapi import Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from bbe2.config import settings
+from bbe2.config import Settings, get_settings
 
-SQLALCHEMY_DATABASE_URL = settings.database_url
-# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
-
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False)
 
 
 class Base(DeclarativeBase):
     pass
+
+
+@lru_cache
+def get_engine(url: str):
+    return create_engine(url)
+
+
+def get_session(settings: Annotated[Settings, Depends(get_settings)]):
+    engine = get_engine(settings.database_url)
+    SessionLocal.configure(bind=engine)
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

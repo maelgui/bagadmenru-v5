@@ -1,14 +1,14 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
+from bbe2.dependencies import SessionDep
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 from ics import Calendar, Event
 from sqlalchemy.orm import Session
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent, CRUDResponse
-from bbe2.dependencies.auth import get_current_user
-from bbe2.dependencies.db import get_db
+from bbe2.utils.auth import get_current_user
 from bbe2.utils.scopes import EventScopes
 
 events_router = APIRouter(prefix="/events")
@@ -19,8 +19,8 @@ responses_router = APIRouter(prefix="/responses")
 
 @events_router.get("/", response_model=list[schemas.Event])
 async def list_events(
+    session: SessionDep,
     token: str = Security(get_current_user, scopes=[str(EventScopes.VIEW)]),
-    session: Session = Depends(get_db),
     limit: int = 10,
     date__gte: Optional[datetime] = None,
     date__lt: Optional[datetime] = None,
@@ -45,8 +45,8 @@ async def list_events(
 
 @events_router.get("/export/ics")
 async def export_ics(
+    session: SessionDep,
     token: str = Security(get_current_user, scopes=[str(EventScopes.VIEW)]),
-    session: Session = Depends(get_db),
 ) -> str:
     events = session.query(models.Event).order_by(models.Event.date).all()
     c = Calendar()
@@ -62,8 +62,8 @@ async def export_ics(
 @events_router.get("/{event_id}", response_model=schemas.Event)
 async def get_event(
     event_id: int,
+    event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     token: str = Security(get_current_user, scopes=[str(EventScopes.VIEW)]),
-    event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
     if not db_event:
@@ -79,8 +79,8 @@ async def get_event(
 )
 async def create_event(
     event: schemas.EventCreate,
+    event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     token: str = Security(get_current_user, scopes=[str(EventScopes.CREATE)]),
-    event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     return event_crud.create(**event.dict())
 
@@ -89,8 +89,8 @@ async def create_event(
 async def update_event(
     event_id: int,
     event: schemas.EventCreate,
+    event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     token: str = Security(get_current_user, scopes=[str(EventScopes.UPDATE)]),
-    event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
     if not db_event:
@@ -104,8 +104,8 @@ async def update_event(
 @events_router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event(
     event_id: int,
+    event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     token: str = Security(get_current_user, scopes=[str(EventScopes.DELETE)]),
-    event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
     if not db_event:
@@ -120,9 +120,9 @@ async def delete_event(
 
 @responses_router.get("/", response_model=list[schemas.Response])
 async def list_responses(
-    token: str = Security(get_current_user, scopes=[str(EventScopes.ANSWER)]),
-    response_crud: CRUDResponse = Depends(CRUDResponse),
+    response_crud: Annotated[CRUDResponse, Depends(CRUDResponse)],
     user_id: Optional[str] = None,
+    token: str = Security(get_current_user, scopes=[str(EventScopes.ANSWER)]),
 ):
     if user_id:
         return response_crud.find_by(models.Response.user_id == user_id)
@@ -134,9 +134,9 @@ async def list_responses(
 async def create_response(
     event_id: int,
     response: schemas.ResponseCreate,
+    session: SessionDep,
+    event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     identifier: str = Security(get_current_user, scopes=[str(EventScopes.ANSWER)]),
-    database: Session = Depends(get_db),
-    event_crud: CRUDEvent = Depends(CRUDEvent),
 ):
     db_event = event_crud.find_one_by(models.Event.id == event_id)
     if not db_event:
@@ -147,9 +147,8 @@ async def create_response(
     db_object = models.Response(
         event_id=event_id, user_id=identifier, date=datetime.now(), **response.dict()
     )
-    print(response, db_object)
-    database.merge(db_object)
-    database.commit()
+    session.merge(db_object)
+    session.commit()
     return db_object
 
 

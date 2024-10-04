@@ -15,7 +15,7 @@ import AddGroupPage from '../pages/groups/add';
 import EditGroupPage from '../pages/groups/edit';
 import GroupPage from '../pages/groups/group';
 import GroupListPage from '../pages/groups/list';
-import HomePage from '../pages/home';
+import HomePage from '../pages/home/home';
 import AlbumsPage from '../pages/photos';
 import CreateProfilePage from '../pages/profiles/add';
 import EditProfilePage from '../pages/profiles/edit';
