@@ -20,7 +20,7 @@ router.post('/user', bodyParser, async (ctx) => {
 
   ctx.body = await prisma.user.create({
     data: {
-      id: crypto.randomUUID(),
+      id: ctx.request.body?.id ?? crypto.randomUUID(),
       email: ctx.request.body.email,
       password: hashedPassword,
     },
