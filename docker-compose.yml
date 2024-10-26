@@ -50,8 +50,8 @@ services:
       - 6006:6006
     environment:
       - VITE_BBE2_API_URL=http://localhost:5173
-      - VITE_OIDC_PROVIDER_URL=http://localhost:8080/realms/bagadmenru
-      - VITE_OIDC_CLIENT_ID=bbe2-frontend
+      - VITE_OIDC_PROVIDER_URL=http://localhost:3000/
+      - VITE_OIDC_CLIENT_ID=bagad-frontend-dev
 
   auth-provider:
     build: auth-provider
