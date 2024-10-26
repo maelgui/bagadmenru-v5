@@ -15,10 +15,16 @@ import {
 import Avatar from './avatar';
 import Button from './button';
 
-function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
+interface CustomNavLinkProps {
+  to: string,
+  children: ReactNode,
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>
+}
+function CustomNavLink({ to, children, onClick = undefined }: CustomNavLinkProps) {
   return (
     <NavLink
       to={to}
+      onClick={onClick}
       className={({ isActive }) => `px-4 py-3 font-semibold text-gray-800 underline-offset-8 hover:underline hover:decoration-2 ${isActive ? 'text-pourpre-500 underline' : ''}`}
     >
       {children}
@@ -46,11 +52,13 @@ export default function Navbar() {
     },
   });
 
+  const close = () => setShow(false);
+
   return (
     <header className="shadow-md">
       <div className="block lg:flex items-center container m-auto transition">
         <div className="flex items-center h-24">
-          <NavLink to="/" className="flex items-center">
+          <NavLink to="/" className="flex items-center" onClick={close}>
             <div className=" w-12 mx-8 ">
               <img src={logo} alt="Vite logo" />
             </div>
@@ -65,28 +73,28 @@ export default function Navbar() {
             className="ml-auto block lg:hidden"
             aria-label="open-menu"
             onClick={() => setShow(!show)}
-            onBlur={() => setTimeout(() => setShow(false), 200)}
+            onBlur={() => setTimeout(close, 200)}
           >
             <FontAwesomeIcon icon={faBars} size="xl" className="mx-8" />
           </button>
         </div>
-        <div className={`${show ? '' : 'hidden'} absolute bg-white w-full lg:static lg:flex grow justify-between items-center`}>
+        <div className={`${show ? '' : 'hidden'} absolute bg-white w-full lg:static lg:flex grow justify-between items-center border-b-pourpre-500 border-b-2 z-50`}>
           <nav className="py-4 md:py-0">
             <ul className="flex flex-col lg:flex-row">
               <li className="px-3 py-2">
-                <CustomNavLink to="/">Accueil</CustomNavLink>
+                <CustomNavLink to="/" onClick={close}>Accueil</CustomNavLink>
               </li>
               <li className={`px-3 py-2 tracking-wide ${has('EventScopes.VIEW') ? '' : 'hidden'}`}>
-                <CustomNavLink to={`/events/${has('EventScopes.ANSWER') ? '' : 'calendar'}`}>Évènements</CustomNavLink>
+                <CustomNavLink to={`/events/${has('EventScopes.ANSWER') ? '' : 'calendar'}`} onClick={close}>Évènements</CustomNavLink>
               </li>
               <li className={`px-3 py-2 tracking-wide ${has('FileScopes.VIEW') ? '' : 'hidden'}`}>
-                <CustomNavLink to="/files">Fichiers</CustomNavLink>
+                <CustomNavLink to="/files" onClick={close}>Fichiers</CustomNavLink>
               </li>
               <li className={`px-3 py-2 tracking-wide ${has('AlbumScopes.VIEW') ? '' : 'hidden'}`}>
-                <CustomNavLink to="/photos">Photos</CustomNavLink>
+                <CustomNavLink to="/photos" onClick={close}>Photos</CustomNavLink>
               </li>
               <li className={`px-3 py-2 tracking-wide ${has('ProfilesScopes.VIEW') ? '' : 'hidden'}`}>
-                <CustomNavLink to="/profile">Trombinoscope</CustomNavLink>
+                <CustomNavLink to="/profile" onClick={close}>Trombinoscope</CustomNavLink>
               </li>
             </ul>
           </nav>
