@@ -3,6 +3,7 @@ import render from '@koa/ejs';
 import dotenv from "dotenv";
 import Koa from 'koa';
 import mount from 'koa-mount';
+import serve from 'koa-static';
 import path from "node:path";
 import provider from './provider';
 import adminRoutes from './routes/admin';
@@ -40,6 +41,7 @@ render(app, {
   cache: false,
   debug: true,
 });
+app.use(mount('/static', serve('./public')));
 
 app.use(interactionRoutes.routes());
 app.use(mount(provider.app));
