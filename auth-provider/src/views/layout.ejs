@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Sign-in</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    #root {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    #main {
+      max-width: 510px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root">
+    <div id="main">
+      <h1><%= title %></h1>
+      <%- body %>
+      <div class="login-help">
+        <a href="/interaction/<%= uid %>/abort">[ Cancel ]</a>
+        <% if (client.tosUri) { %>
+        <a href="<%= client.tosUri %>">[ Terms of Service ]</a>
+        <% } %>
+        <% if (client.policyUri) { %>
+        <a href="<%= client.policyUri %>">[ Privacy Policy ]</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

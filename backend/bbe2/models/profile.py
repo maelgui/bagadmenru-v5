@@ -38,7 +38,6 @@ class Profile(Base):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    password: Mapped[bytes] = mapped_column(LargeBinary(), nullable=False)
     first_name: Mapped[str] = mapped_column(String(30), nullable=False)
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)

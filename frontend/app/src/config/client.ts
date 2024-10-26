@@ -6,6 +6,7 @@ import {
   ResponseError,
 } from 'bagad-client';
 import toast from 'react-hot-toast';
+import { useAuth } from 'react-oidc-context';
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -33,7 +34,12 @@ export const queryClient = new QueryClient({
 });
 
 export function useApiClient() {
-  const conf = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL, credentials: 'include' });
+  const auth = useAuth();
+
+  const conf = new Configuration({
+    basePath: import.meta.env.VITE_BBE2_API_URL,
+    headers: { Authorization: `Bearer ${auth.user?.access_token}` },
+  });
 
   return {
     auth: new AuthApi(conf),
@@ -45,10 +51,14 @@ export function useApiClient() {
 
 export function useUserProfile() {
   const { usersApi } = useApiClient();
-  const { data } = useQuery({
+  const { data, error } = useQuery({
     queryKey: ['profiles', 'me'],
     queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
   });
+  const auth = useAuth();
+  if (error instanceof ResponseError && error.response.status === 401) {
+    auth.removeUser();
+  }
   return data;
 }
 

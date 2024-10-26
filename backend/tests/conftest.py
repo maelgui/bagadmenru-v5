@@ -84,7 +84,6 @@ def get_fake_settings():
         s3_access_key_id="blabla",
         s3_secret_access_key="blabla",
         s3_bucket_name="testbucket",
-        secret_key="mysecretkey",
     )
 
 

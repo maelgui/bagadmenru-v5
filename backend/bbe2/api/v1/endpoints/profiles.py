@@ -1,20 +1,18 @@
 import logging
-import secrets
 import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
-import bcrypt
+import requests
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 from sqlalchemy import cast, func, select
-from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import count, sum
 from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
-from bbe2.dependencies import S3Dep, SessionDep
+from bbe2.dependencies import S3Dep, SessionDep, SettingsDep
 from bbe2.schemas.utils import GlobalStats, MyStats
 from bbe2.utils.auth import get_current_user
 from bbe2.utils.scopes import GroupScopes, ProfilesScopes
@@ -149,12 +147,17 @@ async def list_profiles(
 async def create_profile(
     profile: schemas.ProfileCreate,
     session: SessionDep,
+    settings: SettingsDep,
     token: str = Security(get_current_user, scopes=[str(ProfilesScopes.CREATE)]),
 ):
 
+    # Create user in auth-provider
+    user_endpoint = settings.user_api_endpoint.rstrip("/") + "/user"
+    res = requests.post(user_endpoint, json={"email": profile.email}, timeout=10)
+    res.raise_for_status()
+
     profile_db = models.Profile(
-        id=secrets.token_hex(8),
-        password=bcrypt.hashpw(b"RochRoj", bcrypt.gensalt(14)),
+        id=res.json()["id"],
         **profile.dict(exclude={"group_ids"}),
     )
     groups = (
@@ -243,7 +246,6 @@ async def get_global_stats(
     q = q.where(models.Event.is_in_doodle == True)
     res4 = session.execute(q).one()._mapping
 
-
     return GlobalStats(**dict(**res2, **res3, **res4))
 
 
@@ -312,6 +314,8 @@ async def update_group(
         .all()
     )
     group_db.permissions = permissions
+    group_db.color = group.color
+    group_db.name = group.name
     session.commit()
     return group_db
 

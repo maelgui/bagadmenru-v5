@@ -29,22 +29,15 @@ services:
     ports:
       - 8000:8000
     environment:
-      - JWT_AUDIENCE=bbe2
-      - JWT_ISSUER=http://localhost:8080/realms/bagadmenru
-      - OIDC_AUTHORIZATION_URL=http://localhost:8080/realms/bagadmenru/protocol/openid-connect/auth
-      - OIDC_TOKEN_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/token
-      - OIDC_JWKS_URL=http://keycloak:8080/realms/bagadmenru/protocol/openid-connect/certs
-      - CORS_ALLOWED_ORIGINS=["http://localhost:5173", "https://bagadmenru.localhost:5173"]
+      - CORS_ALLOWED_ORIGINS=["http://localhost:5173"]
+      - DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@db/postgres
+      - DOMAIN=localhost
       - S3_ENDPOINT=http://storage:9000
       - S3_BUCKET_NAME=bagadmenru5-dev
       - S3_ACCESS_KEY_ID=minioadmin
       - S3_SECRET_ACCESS_KEY=minioadmin
-      - DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@db/postgres
-      - KEYCLOAK_CLIENT_ID=bbe2
-      - KEYCLOAK_SECRET_KEY=FvnxnD7yIwgc6m8Vwff7SdVTijPrQtnk
-      - KEYCLOAK_URL=http://keycloak:8080
-      - SECRET_KEY=FURIFNQVICWFEONWFIUDJSKNfrni
-      - DOMAIN=localhost
+      - OIDC_ISSUER=http://auth-provider:3000/
+      - USER_API_ENDPOINT=http://auth-provider:3001/
 
   frontend:
     build:
@@ -60,8 +53,19 @@ services:
       - VITE_OIDC_PROVIDER_URL=http://localhost:8080/realms/bagadmenru
       - VITE_OIDC_CLIENT_ID=bbe2-frontend
 
+  auth-provider:
+    build: auth-provider
+    ports:
+      - 3000:3000
+    environment:
+      - DATABASE_URL=postgresql://postgres:kcwRzG4coiE@db/auth
+    volumes:
+      - ./auth-provider/src:/app/src
+      - ./auth-provider/prisma:/app/prisma
+      - authdata:/data/
 
 volumes:
   s3data:
   pgdata:
   orydata:
+  authdata:

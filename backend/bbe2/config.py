@@ -19,9 +19,10 @@ class Settings(BaseSettings):
     cors_allowed_origins: list[str] = []
     cors_allowed_origin_regex: Optional[str] = None
 
-    secret_key: str
-
     domain: str = "beta.bagadmenru.bzh"
+
+    oidc_issuer: str
+    user_api_endpoint: str
 
 
 @lru_cache

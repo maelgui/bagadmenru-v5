@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
-import AuthGuard from '../layout/auth';
+import AuthGuard from '../guards/auth';
+import MyAuthProvider from '../layout/auth-provider';
 import MainLayout from '../layout/main';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
 import LoginPage from '../pages/auth/login';
@@ -21,10 +22,12 @@ import CreateProfilePage from '../pages/profiles/add';
 import EditProfilePage from '../pages/profiles/edit';
 import ProfilesPage from '../pages/profiles/list';
 import ShowProfilePage from '../pages/profiles/show';
+import Empty from '../utils/empty';
 
 export default createBrowserRouter([
   {
     path: '/',
+    Component: MyAuthProvider,
     ErrorBoundary: RoutingErrorComponent,
     children: [
       {
@@ -120,6 +123,10 @@ export default createBrowserRouter([
             Component: LoginPage,
           },
         ],
+      },
+      {
+        path: '/callback',
+        Component: Empty,
       },
     ],
   },

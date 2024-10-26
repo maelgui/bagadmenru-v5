@@ -6,9 +6,11 @@ import { ReactNode, useState } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useAuth } from 'react-oidc-context';
 import logo from '../assets/logov2.svg';
 import {
-  queryClient, useApiClient, usePermissions, useUserProfile,
+  queryClient,
+  usePermissions, useUserProfile,
 } from '../config/client';
 import Avatar from './avatar';
 import Button from './button';
@@ -27,13 +29,13 @@ function CustomNavLink({ to, children }: { to: string, children: ReactNode }) {
 
 export default function Navbar() {
   const profile = useUserProfile();
-  const { auth } = useApiClient();
+  const { signoutRedirect } = useAuth();
   const { has } = usePermissions();
 
   const [show, setShow] = useState<boolean>();
 
   const { mutate: logout } = useMutation({
-    mutationFn: () => auth.logoutApiV1AuthLogoutPost(),
+    mutationFn: () => signoutRedirect({ post_logout_redirect_uri: 'https://bagadmenru.bzh' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] }).then(() => {
         toast.success('Déconnexion réussie !');
