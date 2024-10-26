@@ -39,12 +39,19 @@ async def get_current_user(
         dict[str, Any]: access token content
     """
 
-    res = requests.post(
-        f"{settings.oidc_issuer}/token/introspection",
-        data={"token": token},
-        auth=HTTPBasicAuth("bbe2-back", "aaaa"),
-        timeout=2,
-    ).json()
+    try:
+        res = requests.post(
+            f"{settings.oidc_issuer}/token/introspection",
+            data={"token": token},
+            auth=HTTPBasicAuth("bbe2-back", "aaaa"),
+            timeout=2,
+        ).json()
+    except Exception as e:
+        logging.error("An Error occured while verifying token: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+        )
 
     if not res["active"]:
         raise HTTPException(
