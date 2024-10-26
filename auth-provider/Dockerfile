@@ -12,4 +12,5 @@ COPY tsconfig.json /app/
 COPY src /app/src
 RUN yarn build
 
+ENV NODE_ENV=production
 CMD [ "yarn", "start" ]

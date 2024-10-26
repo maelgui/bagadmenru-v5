@@ -58,6 +58,7 @@ services:
     ports:
       - 3000:3000
     environment:
+      - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:kcwRzG4coiE@db/auth
     volumes:
       - ./auth-provider/src:/app/src
