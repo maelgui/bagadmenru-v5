@@ -3,7 +3,6 @@ import AuthGuard from '../guards/auth';
 import MyAuthProvider from '../layout/auth-provider';
 import MainLayout from '../layout/main';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
-import LoginPage from '../pages/auth/login';
 import RoutingErrorComponent from '../pages/error/error';
 import AddEventPage from '../pages/events/add';
 import AnswerLinkPage from '../pages/events/answer';
@@ -116,16 +115,6 @@ export default createBrowserRouter([
           {
             path: 'answer/:eventId',
             Component: AnswerLinkPage,
-          },
-        ],
-      },
-      {
-        path: '/auth/',
-        Component: SimpleLayoutWithOutlet,
-        children: [
-          {
-            path: 'login',
-            Component: LoginPage,
           },
         ],
       },
