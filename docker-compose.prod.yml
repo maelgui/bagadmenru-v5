@@ -42,7 +42,7 @@ services:
       - S3_ENDPOINT=https://s3.fr-par.scw.cloud
       - S3_BUCKET_NAME=bagadmenru5-data-staging
       - S3_DEFAULT_REGION=fr-par
-      - OIDC_ISSUER=https://api.beta.bagadmenru.bzh
+      - OIDC_ISSUER=https://auth.beta.bagadmenru.bzh
       - USER_API_ENDPOINT=http://auth-provider:3001/
     restart: unless-stopped
     networks:
@@ -52,6 +52,10 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.bagadmenru-backend.rule=Host(`api.beta.bagadmenru.bzh`)"
       - "traefik.http.routers.bagadmenru-backend.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT"
+      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowheaders=authorization,content-type"
+      - "traefik.http.middlewares.corsheader.headers.accesscontrolalloworiginlist=https://beta.bagadmenru.bzh"
+      - "traefik.http.routers.bagadmenru-backend.middlewares=corsheader@docker"
 
   frontend:
     image: ghcr.io/maelgui/bagadmenru-v5/frontend

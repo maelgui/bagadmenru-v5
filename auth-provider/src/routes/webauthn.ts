@@ -35,7 +35,7 @@ const rpID = process.env.RP_ID;
  * 'http://localhost' and 'http://localhost:PORT' are also valid.
  * Do NOT include any trailing /
  */
-const origin = process.env.RP_ORIGIN;
+const origin = process.env.ORIGIN;
 
 
 
@@ -129,7 +129,7 @@ router.post('/verify-registration', bodyParser, async (ctx) => {
   } catch (error) {
     console.error(error);
     ctx.res.statusCode = 400
-    ctx.body = { error: error.message };
+    ctx.body = { error: "Unable to verify registration of authenticator" };
     return;
   }
 
@@ -209,7 +209,7 @@ router.post('/interaction/:uid/webauthn/verify', bodyParser, async (ctx) => {
   } catch (error) {
     console.error(error);
     ctx.res.statusCode = 400
-    ctx.body = { error: error.message };
+    ctx.body = { error: "Unable to verify authenticator with authenticator" };
     return;
   }
 
