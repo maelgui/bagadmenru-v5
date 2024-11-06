@@ -10,7 +10,6 @@ DefaultConfig.config = new Configuration({ basePath: import.meta.env.VITE_BBE2_A
 
 function App() {
   return (
-    // eslint-disable-next-line react/jsx-props-no-spreading
     <QueryClientProvider client={queryClient}>
       <Toaster position="bottom-center" />
       <RouterProvider router={router} />

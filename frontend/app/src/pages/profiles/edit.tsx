@@ -31,7 +31,6 @@ export default function EditProfilePage() {
     navigate(`/profile/${profileId}`);
   };
 
-
   const messages = {
     loading: 'Chargement...',
     success: 'Profil modifié avec succès !',
