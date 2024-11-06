@@ -1,6 +1,8 @@
 import { Configuration, errors } from "oidc-provider";
+import { findAccountById } from "./support/account";
 
 const corsProp = 'urn:custom:client:allowed-cors-origins';
+const resourcesProp = 'urn:custom:client:allowed-resources';
 const isOrigin = (value: any) => {
   if (typeof value !== 'string') {
     return false;
@@ -15,6 +17,35 @@ const isOrigin = (value: any) => {
 }
 
 export default {
+  async findAccount(ctx, sub, token) {
+    // @param ctx - koa request context
+    // @param sub {string} - account identifier (subject)
+    // @param token - is a reference to the token used for which a given account is being loaded,
+    //   is undefined in scenarios where claims are returned from authorization endpoint
+    const user = await findAccountById(sub);
+    return {
+      accountId: sub,
+      // @param use {string} - can either be "id_token" or "userinfo", depending on
+      //   where the specific claims are intended to be put in
+      // @param scope {string} - the intended scope, while oidc-provider will mask
+      //   claims depending on the scope automatically you might want to skip
+      //   loading some claims from external resources or through db projection etc. based on this
+      //   detail or not return them in ID Tokens but only UserInfo and so on
+      // @param claims {object} - the part of the claims authorization parameter for either
+      //   "id_token" or "userinfo" (depends on the "use" param)
+      // @param rejected {Array[String]} - claim names that were rejected by the end-user, you might
+      //   want to skip loading some claims from external resources or through db projection
+      async claims(use, scope, claims, rejected) {
+        return {
+          sub: user?.id,
+          email_verified: user?.emailVerified,
+          email: {
+            email: user?.email,
+          }
+        };
+      },
+    };
+  },
   clients: [
     {
       client_id: 'bagad-frontend-dev',
@@ -25,6 +56,7 @@ export default {
       redirect_uris: ['http://localhost:5173/callback'],
       post_logout_redirect_uris: ['https://bagadmenru.bzh'],
       [corsProp]: ["http://localhost:5173"],
+      [resourcesProp]: ["http://localhost:8888"]
     },
     {
       client_id: 'bbe2-back',
@@ -41,6 +73,7 @@ export default {
       redirect_uris: ['https://beta.bagadmenru.bzh/callback'],
       post_logout_redirect_uris: ['https://bagadmenru.bzh'],
       [corsProp]: ['https://beta.bagadmenru.bzh'],
+      [resourcesProp]: ["https://api.beta.bagadmenru.bzh"]
     },
     {
       client_id: 'bagad-backend',
@@ -59,25 +92,40 @@ export default {
     keys: ['some secret key', 'and also the old rotated away some time ago', 'and one more'],
   },
   claims: {
-    address: ['address'],
     email: ['email', 'email_verified'],
-    phone: ['phone_number', 'phone_number_verified'],
     profile: ['birthdate', 'family_name', 'gender', 'given_name', 'locale', 'middle_name', 'name',
       'nickname', 'picture', 'preferred_username', 'profile', 'updated_at', 'website', 'zoneinfo'],
   },
 
   features: {
     devInteractions: { enabled: false }, // defaults to true
-    resourceIndicators: {
-      enabled: true
-    },
     introspection: {
       enabled: true,
       allowedPolicy: () => true,
     },
     clientCredentials: {
       enabled: true,
-    }
+    },
+    resourceIndicators: {
+      getResourceServerInfo(ctx, resourceIndicator, client) {
+        const allowedResources = client[resourcesProp] as string[];
+        console.log(allowedResources, resourceIndicator)
+        if (!allowedResources.includes(resourceIndicator)) {
+          throw new errors.InvalidTarget();
+        }
+        console.log(resourceIndicator, client)
+        return {
+          scope: "api:read offline_access",
+          accessTokenFormat: 'jwt',
+        };
+      },
+      async useGrantedResource(ctx, model) {
+        // @param ctx - koa request context
+        // @param model - depending on the request's grant_type this can be either an AuthorizationCode, BackchannelAuthenticationRequest,
+        //                RefreshToken, or DeviceCode model instance.
+        return true;
+      },
+    },
   },
   jwks: {
     keys: [
@@ -103,7 +151,7 @@ export default {
     ],
   },
   extraClientMetadata: {
-    properties: [corsProp],
+    properties: [corsProp, resourcesProp],
     validator(ctx, key, value, metadata) {
       if (key === corsProp) {
         // set default (no CORS)

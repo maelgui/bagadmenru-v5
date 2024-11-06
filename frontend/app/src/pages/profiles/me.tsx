@@ -1,25 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { faKey } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../../components/avatar';
 import Badge from '../../components/badge';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { useApiClient, usePermissions, useUserProfile } from '../../config/client';
+import { useUserProfile } from '../../config/client';
 
-export default function ShowProfilePage() {
-  const { usersApi } = useApiClient();
-  const currentUser = useUserProfile();
-  const { has } = usePermissions();
-  const { profileId } = useParams<{ profileId: string }>();
-  if (!profileId) {
-    return null;
-  }
-
+export default function ShowMyProfilePage() {
   const navigate = useNavigate();
-  const { data: profile } = useQuery({
-    queryKey: ['profiles', profileId],
-    queryFn: () => usersApi.getProfileApiV1ProfilesProfileIdGet({ profileId }),
-  });
+  const profile = useUserProfile();
 
   if (!profile) {
     return null;
@@ -30,12 +20,15 @@ export default function ShowProfilePage() {
       <Header
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
-        actions={has('ProfilesScopes.UPDATE') || profileId === currentUser?.id
-          ? [<Header.Action key="edit-profile" onClick={() => navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Header.Action>]
-          : []}
+        actions={[
+          <Header.Action as="a" key="manage-authenticator" variant="outline" href={`${import.meta.env.VITE_OIDC_PROVIDER_URL.replace(/\/$/, '')}/webauthn/list`}>
+            <FontAwesomeIcon icon={faKey} />
+          </Header.Action>,
+          <Header.Action key="edit-profile" onClick={() => navigate('/profile/edit/me')}>Modifier mon profil</Header.Action>,
+        ]}
         breadcrumb={[
           { title: 'Profils', link: '/profile' },
-          { title: `${profile.firstName} ${profile.lastName}` },
+          { title: 'Mon profil' },
         ]}
       />
 

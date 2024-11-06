@@ -37,7 +37,7 @@ router.get('/interaction/:uid', async (ctx, next) => {
         uid,
         details: prompt.details,
         params,
-        title: 'Sign-in',
+        title: 'Connexion',
         session: session,
         dbg: {
           params: params,
@@ -65,7 +65,7 @@ router.get('/interaction/:uid', async (ctx, next) => {
 });
 
 const bodyParser = koaBody({
-  text: false, json: false, patchNode: true, patchKoa: true,
+  text: false, json: true, patchNode: true, patchKoa: true,
 });
 
 router.post('/interaction/:uid/login', bodyParser, async (ctx) => {

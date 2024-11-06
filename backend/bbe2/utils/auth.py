@@ -7,17 +7,41 @@ from typing import Annotated
 import requests
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2AuthorizationCodeBearer, SecurityScopes
+from jwt import PyJWKClient, decode
 from requests.auth import HTTPBasicAuth
 
 from bbe2 import models
 from bbe2.config import Settings, get_settings
 from bbe2.crud import CRUDProfile
 
-OAUTH_ISSUER = os.environ.get("OAUTH_ISSUER", "").lstrip("/")
+OAUTH_ISSUER = os.environ.get("OIDC_ISSUER", "").lstrip("/")
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{OAUTH_ISSUER}/auth",
     tokenUrl=f"{OAUTH_ISSUER}/token",
 )
+
+
+def verify_jwt(token: str, oidc_issuer):
+
+    oidc_config = requests.get(
+        f"{oidc_issuer}/.well-known/openid-configuration"
+    ).json()
+    signing_algos = oidc_config["id_token_signing_alg_values_supported"]
+
+    # setup a PyJWKClient to get the appropriate signing key
+    jwks_client = PyJWKClient(oidc_config["jwks_uri"])
+
+    signing_key = jwks_client.get_signing_key_from_jwt(token)
+
+    # now, decode_complete to get payload + header
+    data = decode(
+        token,
+        key=signing_key.key,
+        algorithms=signing_algos,
+        audience="http://localhost:8888",
+    )
+
+    return data
 
 
 async def get_current_user(
@@ -38,26 +62,27 @@ async def get_current_user(
     Returns:
         dict[str, Any]: access token content
     """
-
     try:
-        res = requests.post(
-            f"{settings.oidc_issuer}/token/introspection",
-            data={"token": token},
-            auth=HTTPBasicAuth("bbe2-back", "aaaa"),
-            timeout=2,
-        ).json()
+        # res = requests.post(
+        #     f"{settings.oidc_issuer}/token/introspection",
+        #     data={"token": token},
+        #     auth=HTTPBasicAuth("bbe2-back", "aaaa"),
+        #     timeout=2,
+        # ).json()
+        res = verify_jwt(token, settings.oidc_issuer)
+
     except Exception as e:
         logging.error("An Error occured while verifying token: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized",
         )
-
-    if not res["active"]:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized",
-        )
+    # logging.info(res)
+    # if not res["active"]:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Unauthorized",
+    #     )
 
     db_profile = profile_crud.find_one_by(models.Profile.id == res["sub"])
 

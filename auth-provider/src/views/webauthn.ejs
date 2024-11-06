@@ -1,0 +1,78 @@
+<dl>
+    <% authenticators.forEach(function(authenticator){ %>
+    <dt><%= authenticator.id %></dt>
+    <dd>
+        Fiendly name: <%= authenticator.friendlyName ?? 'undefined' %><br>
+        Created: <%= authenticator.createdAt.toLocaleString('fr-FR') %><br>
+        Last used: <%= authenticator.lastUsed ? authenticator.lastUsed.toLocaleString('fr-FR') : 'never' %>
+    </dd>
+    <% }); %>
+</dl>
+<button type="button" id="btnPasskey" style="width: 100%;">Register</button>
+<small id="textPasskeySuccess">
+</small>
+<small id="textPasskeyError">
+</small>
+<a href="javascript:window.history.back();">[ Retour ]</a>
+
+<script src="https://unpkg.com/@simplewebauthn/browser"></script>
+<script>
+    const { startRegistration } = SimpleWebAuthnBrowser;
+
+    // <button>
+    const elemBegin = document.getElementById('btnPasskey');
+    // <span>/<p>/etc...
+    const elemSuccess = document.getElementById('textPasskeySuccess');
+    // <span>/<p>/etc...
+    const elemError = document.getElementById('textPasskeyError');
+
+    // Start registration when the user clicks a button
+    elemBegin.addEventListener('click', async () => {
+        const authenticatorFriendlyName = prompt('Entrer un nom pour votre authenticator') ?? '';
+        // Reset success/error messages
+        elemSuccess.innerHTML = '';
+        elemError.innerHTML = '';
+
+        // GET registration options from the endpoint that calls
+        // @simplewebauthn/server -> generateRegistrationOptions()
+        const resp = await fetch('/generate-registration-options');
+        const optionsJSON = await resp.json();
+
+        let attResp;
+        try {
+            // Pass the options to the authenticator and wait for a response
+            attResp = await startRegistration({ optionsJSON });
+        } catch (error) {
+            // Some basic error handling
+            if (error.name === 'InvalidStateError') {
+                elemError.innerText = 'Error: Authenticator was probably already registered by user';
+            } else {
+                elemError.innerText = error;
+            }
+
+            throw error;
+        }
+
+        // POST the response to the endpoint that calls
+        // @simplewebauthn/server -> verifyRegistrationResponse()
+        const verificationResp = await fetch('/verify-registration', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({friendlyName: authenticatorFriendlyName, ...attResp}),
+        });
+
+        // Wait for the results of verification
+        const verificationJSON = await verificationResp.json();
+
+        // Show UI appropriate for the `verified` status
+        if (verificationJSON && verificationJSON.verified) {
+            elemSuccess.innerHTML = 'Success!';
+        } else {
+            elemError.innerHTML = `Oh no, something went wrong! Response: <pre>${JSON.stringify(
+                verificationJSON,
+            )}</pre>`;
+        }
+    });
+</script>

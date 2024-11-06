@@ -1,6 +1,5 @@
 import { QueryCache, QueryClient, useQuery } from '@tanstack/react-query';
 import {
-  AuthApi,
   Configuration, EventsApi, FilesApi,
   ProfilesApi,
   ResponseError,
@@ -42,7 +41,6 @@ export function useApiClient() {
   });
 
   return {
-    auth: new AuthApi(conf),
     eventsApi: new EventsApi(conf),
     usersApi: new ProfilesApi(conf),
     filesApi: new FilesApi(conf),

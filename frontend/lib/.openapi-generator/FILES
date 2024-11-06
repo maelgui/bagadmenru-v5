@@ -2,7 +2,6 @@
 .npmignore
 README.md
 package.json
-src/apis/AuthApi.ts
 src/apis/DefaultApi.ts
 src/apis/EventsApi.ts
 src/apis/FilesApi.ts
@@ -25,7 +24,6 @@ src/models/Group.ts
 src/models/GroupCreate.ts
 src/models/GroupUpdate.ts
 src/models/HTTPValidationError.ts
-src/models/LoginData.ts
 src/models/MinimalGroup.ts
 src/models/MyProfileUpdate.ts
 src/models/MyStats.ts

@@ -11,7 +11,28 @@ datasource db {
 }
 
 model User {
-  id    String     @id @default(uuid())
-  email String  @unique
-  password  String
+  id              String          @id @default(uuid())
+  email           String          @unique
+  emailVerified   Boolean         @default(false)
+  password        String
+  authenticators Authenticator[]
+}
+
+model Authenticator {
+  id             String  @unique
+  publicKey      Bytes
+  userId         String
+  webauthnUserID String
+  counter        Int
+  deviceType     String
+  backedUp       Boolean
+  transports     String?
+
+  createdAt      DateTime     @default(now())
+  lastUsed       DateTime?
+  friendlyName   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, webauthnUserID])
 }

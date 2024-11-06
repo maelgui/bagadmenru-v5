@@ -84,6 +84,11 @@ export class PhotosApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
         const response = await this.request({
             path: `/api/v1/albums/`,
             method: 'POST',
@@ -117,6 +122,11 @@ export class PhotosApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
 
         const response = await this.request({
             path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
@@ -157,6 +167,11 @@ export class PhotosApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
         const response = await this.request({
             path: `/api/v1/albums/{album_id}/photos/{photo_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))).replace(`{${"photo_id"}}`, encodeURIComponent(String(requestParameters['photoId']))),
             method: 'DELETE',
@@ -188,6 +203,11 @@ export class PhotosApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
 
         const response = await this.request({
             path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
@@ -222,6 +242,11 @@ export class PhotosApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
         const response = await this.request({
             path: `/api/v1/albums/{album_id}/photos`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
             method: 'GET',
@@ -247,6 +272,11 @@ export class PhotosApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
 
         const response = await this.request({
             path: `/api/v1/albums/`,
@@ -290,6 +320,11 @@ export class PhotosApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
+
         const response = await this.request({
             path: `/api/v1/albums/{album_id}`.replace(`{${"album_id"}}`, encodeURIComponent(String(requestParameters['albumId']))),
             method: 'PUT',
@@ -330,6 +365,11 @@ export class PhotosApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            // oauth required
+            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        }
 
         const consumes: runtime.Consume[] = [
             { contentType: 'multipart/form-data' },

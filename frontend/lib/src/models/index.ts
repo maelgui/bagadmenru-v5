@@ -15,7 +15,6 @@ export * from './Group';
 export * from './GroupCreate';
 export * from './GroupUpdate';
 export * from './HTTPValidationError';
-export * from './LoginData';
 export * from './MinimalGroup';
 export * from './MyProfileUpdate';
 export * from './MyStats';

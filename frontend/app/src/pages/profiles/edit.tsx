@@ -11,19 +11,13 @@ import EditProfileForm from './components/myForm';
 export default function EditProfilePage() {
   const { usersApi } = useApiClient();
   const { has } = usePermissions();
+  const navigate = useNavigate();
 
   const { profileId } = useParams<{ profileId: string }>();
   if (!profileId) {
     return null;
   }
 
-  if (!has('ProfilesScopes.UPDATE') && profileId !== 'me') {
-    const navigate = useNavigate();
-    navigate('/profile/edit/me');
-    return null;
-  }
-
-  const navigate = useNavigate();
   const { data: profile } = useQuery({
     queryKey: ['profiles', profileId],
     queryFn: () => (profileId === 'me'
@@ -37,9 +31,6 @@ export default function EditProfilePage() {
     navigate(`/profile/${profileId}`);
   };
 
-  if (!profile) {
-    return null;
-  }
 
   const messages = {
     loading: 'Chargement...',
@@ -58,7 +49,7 @@ export default function EditProfilePage() {
       ),
       onSuccess,
     });
-    form = <EditProfileForm profile={profile} onSubmit={(data) => mutate(data)} />;
+    form = <EditProfileForm profile={profile!} onSubmit={(data) => mutate(data)} />;
   } else {
     const { mutate } = useMutation({
       mutationFn: (data: ProfileUpdate) => toast.promise(
@@ -71,6 +62,15 @@ export default function EditProfilePage() {
       onSuccess,
     });
     form = <AdminEditProfileForm profile={profile} onSubmit={(data) => mutate(data)} />;
+  }
+
+  if (!profile) {
+    return null;
+  }
+
+  if (!has('ProfilesScopes.UPDATE') && profileId !== 'me') {
+    navigate('/profile/edit/me');
+    return null;
   }
 
   return (

@@ -2,12 +2,14 @@
 import render from '@koa/ejs';
 import dotenv from "dotenv";
 import Koa from 'koa';
+import session from 'koa-generic-session';
 import mount from 'koa-mount';
 import serve from 'koa-static';
 import path from "node:path";
 import provider from './provider';
 import adminRoutes from './routes/admin';
 import interactionRoutes from './routes/flows';
+import webauthnRoutes from './routes/webauthn';
 dotenv.config();
 const app = new Koa();
 const adminApp = new Koa();
@@ -39,11 +41,12 @@ render(app, {
   layout: "layout",
   viewExt: "ejs",
   cache: false,
-  debug: true,
 });
 app.use(mount('/static', serve('./public')));
-
+app.use(session());
+app.keys = ['keys', 'keykeys'];
 app.use(interactionRoutes.routes());
+app.use(webauthnRoutes.routes());
 app.use(mount(provider.app));
 adminApp.use(adminRoutes.routes())
 
