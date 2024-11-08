@@ -1,4 +1,5 @@
 import { useAuth } from 'react-oidc-context';
+import { Navigate } from 'react-router-dom';
 
 export default function Empty() {
   const auth = useAuth();
@@ -15,5 +16,5 @@ export default function Empty() {
       </div>
     );
   }
-  return (<div />);
+  return (<Navigate to="/" />);
 }

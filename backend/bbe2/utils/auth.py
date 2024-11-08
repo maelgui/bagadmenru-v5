@@ -21,7 +21,7 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
 )
 
 
-def verify_jwt(token: str, oidc_issuer):
+def verify_jwt(token: str, oidc_issuer, oidc_audience):
 
     oidc_config = requests.get(
         f"{oidc_issuer}/.well-known/openid-configuration"
@@ -38,7 +38,7 @@ def verify_jwt(token: str, oidc_issuer):
         token,
         key=signing_key.key,
         algorithms=signing_algos,
-        audience="http://localhost:8888",
+        audience=oidc_audience,
     )
 
     return data
@@ -69,7 +69,7 @@ async def get_current_user(
         #     auth=HTTPBasicAuth("bbe2-back", "aaaa"),
         #     timeout=2,
         # ).json()
-        res = verify_jwt(token, settings.oidc_issuer)
+        res = verify_jwt(token, settings.oidc_issuer, settings.oidc_audience)
 
     except Exception as e:
         logging.error("An Error occured while verifying token: %s", e)

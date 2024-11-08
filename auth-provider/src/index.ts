@@ -3,6 +3,7 @@ import render from '@koa/ejs';
 import dotenv from "dotenv";
 import Koa from 'koa';
 import session from 'koa-generic-session';
+import logger from 'koa-logger';
 import mount from 'koa-mount';
 import serve from 'koa-static';
 import path from "node:path";
@@ -10,8 +11,11 @@ import provider from './provider';
 import adminRoutes from './routes/admin';
 import interactionRoutes from './routes/flows';
 import webauthnRoutes from './routes/webauthn';
+
 dotenv.config();
 const app = new Koa();
+app.use(logger())
+
 const adminApp = new Koa();
 
 let { PORT = 3000, ISSUER = `http://localhost:${PORT}` } = process.env;

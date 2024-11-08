@@ -56,7 +56,7 @@ export default {
       redirect_uris: ['http://localhost:5173/callback'],
       post_logout_redirect_uris: ['https://bagadmenru.bzh'],
       [corsProp]: ["http://localhost:5173"],
-      [resourcesProp]: ["http://localhost:8888"]
+      [resourcesProp]: ["http://localhost:5173"]
     },
     {
       client_id: 'bbe2-back',
