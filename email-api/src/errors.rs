@@ -1,10 +1,11 @@
 use axum::{http::StatusCode, response::{IntoResponse, Response}, Json};
 use serde::Serialize;
 use thiserror::Error;
+use std::error::Error;
 
 #[derive(Debug, Error)]
 pub enum MailError {
-    #[error("IMAP request failed")]
+    #[error("IMAP request failed: {0:?}")]
     ImapError(#[from] imap::error::Error),
     #[error("IMAP response parsing failed")]
     ParseError(#[from] mailparse::MailParseError),
@@ -44,6 +45,6 @@ impl IntoResponse for MailError {
         //     }
         // };
 
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorResponse { message: "Internal Error".to_owned() })).into_response()
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorResponse { message: self.to_string() })).into_response()
     }
 }
