@@ -1,4 +1,4 @@
-name: authprovider-release
+name: emailapi-release
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/auth-provider
+  IMAGE_NAME: ${{ github.repository }}/email-api
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: auth-provider
+          context: email-api
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
@@ -40,7 +40,7 @@ jobs:
       - name: Clear old packages
         uses: actions/delete-package-versions@v5
         with:
-          package-name: bagadmenru-v5/auth-provider
+          package-name: bagadmenru-v5/email-api
           package-type: 'container'
           min-versions-to-keep: 3
           delete-only-untagged-versions: 'true'

@@ -140,15 +140,15 @@ export const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLProps<HT
 
     return (
       <FloatingPortal>
-        <FloatingOverlay className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" lockScroll>
+        <FloatingOverlay className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50" lockScroll>
           <FloatingFocusManager context={floatingContext}>
-            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div className={`flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0 ${props.className}`}>
               <div
                 ref={ref}
                 aria-labelledby={context.labelId}
                 aria-describedby={context.descriptionId}
                 {...context.getFloatingProps(props)}
-                className="relative transform overflow-hidden rounded-lg bg-white text-center shadow-xl transition-all sm:my-8 w-full sm:w-1/3 px-4 pb-4 pt-5 sm:p-6 sm:pb-4"
+                className="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:my-8 w-full sm:w-1/3 px-4 pb-4 pt-5 sm:p-6 sm:pb-4"
               >
                 {props.children}
               </div>

@@ -78,7 +78,7 @@ export default function Navbar() {
             <FontAwesomeIcon icon={faBars} size="xl" className="mx-8" />
           </button>
         </div>
-        <div className={`${show ? '' : 'hidden'} absolute bg-white w-full lg:static lg:flex grow justify-between items-center border-b-pourpre-500 border-b-2 lg:border-0 z-50`}>
+        <div className={`${show ? '' : 'hidden'} absolute bg-white w-full lg:static lg:flex grow justify-between items-center border-b-pourpre-500 border-b-2 lg:border-0 z-40`}>
           <nav className="py-4 md:py-0">
             <ul className="flex flex-col lg:flex-row">
               <li className="px-3 py-2">
