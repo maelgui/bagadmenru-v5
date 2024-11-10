@@ -1,14 +1,13 @@
 import { faInbox, faKey, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { useState } from 'react';
-import { useAuth } from 'react-oidc-context';
 import Alert from '../../../components/alert';
 import Button from '../../../components/button';
 import {
   Dialog, DialogClose, DialogContent, DialogHeading,
 } from '../../../components/dialog';
+import { useApiClient } from '../../../config/client';
 
 type EmailResponse = {
   id: string,
@@ -19,7 +18,7 @@ type EmailResponse = {
   fromSm: string,
 };
 // eslint-disable-next-line max-len
-function parseElem(data: { subject: string, datetime: string, from: string, id: string }): EmailResponse {
+function parseElem(data: any): EmailResponse {
   const parsedDate = new Date(data.datetime);
   const now = new Date();
   const ago = Math.round((now.getTime() - parsedDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -28,18 +27,17 @@ function parseElem(data: { subject: string, datetime: string, from: string, id: 
     ...data,
     ago,
     datetime: parsedDate,
-    fromSm: data.from.split(' ').map((n) => n[0].toUpperCase()).join(''),
+    fromSm: data.from.split(' ').map((n: string) => n[0].toUpperCase()).join(''),
   };
 }
 export default function Mailbox() {
-  const { user } = useAuth();
-
+  const { utilsApi } = useApiClient();
   const { data: emails } = useQuery<EmailResponse[]>({
     queryKey: ['mailbox'],
-    queryFn: () => axios.get('http://localhost:9999/emails', { headers: { Authorization: `Bearer ${user?.access_token}` } })
-      .then(({ data }: { data: Array<any> }) => data.map(parseElem).sort((a, b) => a.ago - b.ago)),
+    queryFn: () => utilsApi.getEmailsApiV1UtilsEmailsGet()
+      .then((data) => data.map(parseElem).sort((a, b) => a.ago - b.ago)),
   });
-  console.log(emails);
+
   const [dialogOpen, setdialogOpen] = useState<boolean>(false);
 
   if (!emails) {

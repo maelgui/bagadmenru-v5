@@ -3,6 +3,7 @@ import {
   Configuration, EventsApi, FilesApi,
   ProfilesApi,
   ResponseError,
+  UtilsApi,
 } from 'bagad-client';
 import toast from 'react-hot-toast';
 import { useAuth } from 'react-oidc-context';
@@ -44,6 +45,7 @@ export function useApiClient() {
     eventsApi: new EventsApi(conf),
     usersApi: new ProfilesApi(conf),
     filesApi: new FilesApi(conf),
+    utilsApi: new UtilsApi(conf),
   };
 }
 

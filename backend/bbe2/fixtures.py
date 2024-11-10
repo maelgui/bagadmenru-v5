@@ -9,6 +9,7 @@ from bbe2.utils.scopes import (
     FileScopes,
     GroupScopes,
     ProfilesScopes,
+    UtilsScopes,
 )
 
 
@@ -19,6 +20,7 @@ def init_fixtures(session):
         FileScopes,
         ProfilesScopes,
         GroupScopes,
+        UtilsScopes,
     ]
     permission_objs = []
     for g in permissions_group:

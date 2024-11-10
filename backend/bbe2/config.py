@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     oidc_issuer: str
     oidc_audience: str
     user_api_endpoint: str
-
+    email_api_endpoint: str
 
 @lru_cache
 def get_settings() -> Settings:

@@ -65,7 +65,7 @@ export default function HomePage() {
     <>
       <Header title={`Degemer mat ${profile?.firstName}`} />
       <Container>
-        <Mailbox />
+        {has('UtilsScopes.VIEW_EMAILS') ? <Mailbox /> : null}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
           {myStats && globalStats ? (
             <>

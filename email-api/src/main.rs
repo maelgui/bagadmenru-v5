@@ -3,7 +3,6 @@ mod models;
 mod settings;
 mod utils;
 
-use tower_http::cors::{Any, CorsLayer};
 use axum::{
     extract::{Request, State},
     http::{self, HeaderName},
@@ -13,12 +12,13 @@ use axum::{
     Json, Router,
 };
 use errors::MailError;
+use http::Method;
 use models::Email;
 use settings::Settings;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use utils::fetch_inbox_top;
-use http::Method;
 
 #[tokio::main]
 async fn main() {
@@ -36,12 +36,13 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(root))
-        .route("/emails", get(retrieve_emails))
-        .layer(CorsLayer::new()
-            // allow `GET` and `POST` when accessing the resource
-            .allow_methods([Method::GET, Method::POST])
-            // allow requests from any origin
-            .allow_origin(Any)
+        .route("/mailbox/emails", get(retrieve_emails))
+        .layer(
+            CorsLayer::new()
+                // allow `GET` and `POST` when accessing the resource
+                .allow_methods([Method::GET, Method::POST])
+                // allow requests from any origin
+                .allow_origin(Any),
         )
         .layer(TraceLayer::new_for_http())
         .with_state(settings);

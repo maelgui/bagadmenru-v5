@@ -47,3 +47,8 @@ class GroupScopes(PermissionBase):
     VIEW = "group:view"
     CREATE = "group.create"
     UPDATE = "group.update"
+
+class UtilsScopes(PermissionBase):
+    """Groups related permissions"""
+
+    VIEW_EMAILS = "emails:view"

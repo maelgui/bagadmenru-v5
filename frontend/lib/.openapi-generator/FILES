@@ -7,6 +7,7 @@ src/apis/EventsApi.ts
 src/apis/FilesApi.ts
 src/apis/PhotosApi.ts
 src/apis/ProfilesApi.ts
+src/apis/UtilsApi.ts
 src/apis/index.ts
 src/index.ts
 src/models/Album.ts

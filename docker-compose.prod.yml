@@ -12,7 +12,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://bagadmenru:${BACKEND_DATABASE_PASSWORD}@backend-postgres/auth
       - RP_ID=bagadmenru.bzh
-      - RP_ORIGIN=https://auth.beta.bagadmenru.bzh
+      - ORIGIN=https://auth.beta.bagadmenru.bzh
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.bagadmenru-auth.rule=Host(`auth.beta.bagadmenru.bzh`)"
@@ -43,7 +43,9 @@ services:
       - S3_BUCKET_NAME=bagadmenru5-data-staging
       - S3_DEFAULT_REGION=fr-par
       - OIDC_ISSUER=https://auth.beta.bagadmenru.bzh
+      - OIDC_AUDIENCE=https://api.beta.bagadmenru.bzh
       - USER_API_ENDPOINT=http://auth-provider:3001/
+      - EMAIL_API_ENDPOINT=http://email-api:9999/
     restart: unless-stopped
     networks:
       - default
@@ -68,6 +70,19 @@ services:
       - "traefik.http.routers.bagadmenru-frontend.rule=Host(`beta.bagadmenru.bzh`)"
       - "traefik.http.routers.bagadmenru-frontend.tls.certresolver=myresolver"
     restart: unless-stopped
+
+
+  email-api:
+    build: email-api
+    environment:
+      - APP_imap_domain=ssl0.ovh.net
+      - APP_imap_port=993
+      - APP_imap_username=contact@bagadmenru.bzh
+      - APP_listen=0.0.0.0:9999
+      - APP_oidc_issuer=http://auth-provider:3000
+      - RUST_LOG=tower_http=trace
+      - CARGO_CRATE_NAME=email-api
+      - APP_imap_password=${IMAP_PASSWORD}
 
 volumes:
   s3data:
