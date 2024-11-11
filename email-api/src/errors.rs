@@ -1,7 +1,7 @@
 use axum::{http::StatusCode, response::{IntoResponse, Response}, Json};
+use lettre::address::AddressError;
 use serde::Serialize;
 use thiserror::Error;
-use std::error::Error;
 
 #[derive(Debug, Error)]
 pub enum MailError {
@@ -13,6 +13,13 @@ pub enum MailError {
     MissingFieldError,
     #[error("Unable to parse date")]
     InvalidDateError,
+    #[error("Unable to send email")]
+    SendmailError(#[from] lettre::error::Error),
+    #[error("Invalid to send email")]
+    InvalidAddressError(#[from] AddressError),
+
+    #[error("SMTP request failed: {0:?}")]
+    SmtpError(#[from] lettre::transport::smtp::Error)
 }
 
 

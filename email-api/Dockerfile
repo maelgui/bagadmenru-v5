@@ -19,6 +19,6 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     && cp ./target/debug/$APP_NAME /bin/server
 
 FROM debian:bullseye-slim AS final
-COPY --from=build /bin/server /bin
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=build /bin/server /bin
 CMD ["/bin/server"]

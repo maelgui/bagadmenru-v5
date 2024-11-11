@@ -9,7 +9,7 @@ router = APIRouter(prefix="/utils")
 
 
 @router.get("/emails", response_model=list[dict])
-async def get_emails(
+def get_emails(
     settings: SettingsDep,
     token: str = Security(get_current_user, scopes=[str(UtilsScopes.VIEW_EMAILS)]),
 ):

@@ -3,14 +3,18 @@ use serde::Deserialize;
 
 
 #[derive(Debug, Deserialize, Clone)]
-#[allow(unused)]
 pub(crate) struct Settings {
     pub imap_domain: String,
     pub imap_port: u16,
     pub imap_username: String,
     pub imap_password: String,
     pub listen: String,
-    pub oidc_issuer: String
+    pub email_from: String,
+    pub smtp_domain: String,
+    pub smtp_port: u16,
+    pub smtp_username: Option<String>,
+    pub smtp_password: Option<String>,
+    pub smtp_tls: bool,
 }
 
 impl Settings {
@@ -22,6 +26,7 @@ impl Settings {
             // Add in settings from the environment (with a prefix of APP)
             // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
             .add_source(Environment::with_prefix("app"))
+            .set_default("smtp_tls", true)?
             // You may also programmatically change settings
             .build()?;
 
