@@ -33,6 +33,7 @@ src/models/Photo.ts
 src/models/Profile.ts
 src/models/ProfileCreate.ts
 src/models/ProfileUpdate.ts
+src/models/Res.ts
 src/models/Response.ts
 src/models/ResponseCreate.ts
 src/models/ValidationError.ts

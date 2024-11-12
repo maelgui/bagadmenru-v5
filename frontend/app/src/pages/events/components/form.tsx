@@ -3,7 +3,9 @@ import { faSquare } from '@fortawesome/free-regular-svg-icons';
 import { faCircleCheck, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Event, EventCreate } from 'bagad-client';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import {
+  Controller, SubmitHandler, useForm
+} from 'react-hook-form';
 import Input from '../../../components/input';
 
 import costume from '../../../assets/costume.svg';
@@ -19,9 +21,9 @@ interface EventFormProps {
 
 export default function EventForm({ onSubmit, data = undefined }: EventFormProps) {
   const {
-    register, control, handleSubmit, formState: { errors, dirtyFields }, setValue,
+    register, control, handleSubmit, formState: { errors, dirtyFields }, setValue, watch,
   } = useForm<EventCreate>({ defaultValues: data || { category: 'sortie', isInDoodle: true, costume: 'COSTUME' } });
-
+  console.log(watch());
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-6">
@@ -109,7 +111,7 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
       </div>
       <div className="mb-6">
         <span className="mb-2 block font-semibold">Options</span>
-        <div className="relative">
+        <div className="relative mb-2">
           <input
             type="checkbox"
             id="is_in_doodle"

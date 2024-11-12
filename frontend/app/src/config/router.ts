@@ -113,7 +113,7 @@ export default createBrowserRouter([
         Component: SimpleLayoutWithOutlet,
         children: [
           {
-            path: 'answer/:eventId',
+            path: 'answer/:token',
             Component: AnswerLinkPage,
           },
         ],

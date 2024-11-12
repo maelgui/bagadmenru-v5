@@ -23,6 +23,7 @@ export * from './Photo';
 export * from './Profile';
 export * from './ProfileCreate';
 export * from './ProfileUpdate';
+export * from './Res';
 export * from './Response';
 export * from './ResponseCreate';
 export * from './ValidationError';

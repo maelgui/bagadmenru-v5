@@ -23,9 +23,7 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
 
 def verify_jwt(token: str, oidc_issuer, oidc_audience):
 
-    oidc_config = requests.get(
-        f"{oidc_issuer}/.well-known/openid-configuration"
-    ).json()
+    oidc_config = requests.get(f"{oidc_issuer}/.well-known/openid-configuration").json()
     signing_algos = oidc_config["id_token_signing_alg_values_supported"]
 
     # setup a PyJWKClient to get the appropriate signing key

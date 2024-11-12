@@ -38,7 +38,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/mailbox/emails", get(retrieve_emails))
-        .route("/sendmail", post(sendmail))
+        .route("/batch_send_emails", post(sendmail))
         .layer(TraceLayer::new_for_http())
         .with_state(settings);
 

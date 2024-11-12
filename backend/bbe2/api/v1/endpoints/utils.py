@@ -13,8 +13,6 @@ def get_emails(
     settings: SettingsDep,
     token: str = Security(get_current_user, scopes=[str(UtilsScopes.VIEW_EMAILS)]),
 ):
-    res = requests.get(
-        settings.email_api_endpoint.rstrip("/") + "/mailbox/emails", timeout=10
-    )
+    res = requests.get(f"{settings.email_api_endpoint}/mailbox/emails", timeout=10)
     res.raise_for_status()
     return res.json()

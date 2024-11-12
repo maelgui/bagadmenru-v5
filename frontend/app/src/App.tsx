@@ -5,8 +5,9 @@ import { RouterProvider } from 'react-router-dom';
 import './App.css';
 import { queryClient } from './config/client';
 import router from './config/router';
+import env from './env';
 
-DefaultConfig.config = new Configuration({ basePath: import.meta.env.VITE_BBE2_API_URL });
+DefaultConfig.config = new Configuration({ basePath: env.VITE_BBE2_API_URL });
 
 function App() {
   return (

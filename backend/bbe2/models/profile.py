@@ -1,17 +1,9 @@
 """User profile models."""
 
+from datetime import datetime
 from typing import List
 
-from sqlalchemy import (
-    Column,
-    ForeignKey,
-    Integer,
-    LargeBinary,
-    PickleType,
-    String,
-    Table,
-)
-from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy import Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bbe2.database import Base
@@ -40,6 +32,7 @@ class Profile(Base):
     email: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     first_name: Mapped[str] = mapped_column(String(30), nullable=False)
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
+    last_synchronization: Mapped[datetime] = mapped_column(nullable=True)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)
     instrument_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
     instrument: Mapped["Group"] = relationship("Group")

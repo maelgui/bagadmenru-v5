@@ -59,7 +59,7 @@ function PrivateButton<C extends React.ElementType = 'button'>(
     <Component
       ref={ref}
       type="button"
-      className={`${classList.join(' ')} rounded-full inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm ${className} whitespace-nowrap disabled:cursor-not-allowed hover:ring-2 hover:ring-pourpre-500 active:bg-pourpre-700 active:text-white focus:outline-none focus:ring-2 focus:ring-pourpre-300`}
+      className={`${classList.join(' ')} rounded-full inline-block border border-pourpre-500 uppercase transition m-1 font-bold text-sm ${className} whitespace-nowrap disabled:cursor-not-allowed hover:ring-2 hover:ring-pourpre-500 active:bg-pourpre-700 active:text-white focus:outline-none focus:ring-2 focus:ring-pourpre-300 disabled:bg-pourpre-200 disabled:border-pourpre-200`}
       disabled={isLoading}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}

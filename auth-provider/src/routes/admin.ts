@@ -5,24 +5,6 @@ import crypto from 'crypto';
 import koaBody from 'koa-body';
 
 
-/**
- * Human-readable title for your website
- */
-const rpName = 'SimpleWebAuthn Example';
-/**
- * A unique identifier for your website. 'localhost' is okay for
- * local dev
- */
-const rpID = 'localhost';
-/**
- * The URL at which registrations and authentications should occur.
- * 'http://localhost' and 'http://localhost:PORT' are also valid.
- * Do NOT include any trailing /
- */
-const origin = `http://${rpID}:3000`;
-
-
-
 const router = new Router();
 
 const bodyParser = koaBody({
@@ -31,7 +13,20 @@ const bodyParser = koaBody({
 
 const prisma = new PrismaClient()
 
-router.post('/user', bodyParser, async (ctx) => {
+router.get('/users/:id', bodyParser, async (ctx) => {
+  ctx.body = await prisma.user.findUnique({
+    where: {
+      id: ctx.params.id,
+    },
+    select: {
+      id: true,
+      email: true,
+      emailVerified: true,
+    }
+  })
+});
+
+router.post('/users', bodyParser, async (ctx) => {
 
   const salt = await bcrypt.genSalt();
   const hashedPassword = await bcrypt.hash("blabla", salt);

@@ -9,7 +9,7 @@ settings = get_settings()
 
 
 def create_admin(session, email, firstname, lastname):
-    user_endpoint = settings.user_api_endpoint.rstrip("/") + "/user"
+    user_endpoint = f"{settings.user_api_endpoint}/users"
     res = requests.post(user_endpoint, json={"email": email}, timeout=10)
     res.raise_for_status()
 

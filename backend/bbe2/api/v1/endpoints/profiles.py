@@ -1,11 +1,12 @@
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Annotated, Any
 
+import httpx
 import requests
 from botocore.exceptions import ClientError
-from fastapi import APIRouter, Depends, HTTPException, Security, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Security, status
 from sqlalchemy import cast, func, select
 from sqlalchemy.sql.functions import count, sum
 from sqlalchemy.types import Integer
@@ -22,6 +23,7 @@ profiles_router = APIRouter(prefix="/profiles")
 
 @profiles_router.get("/me", response_model=schemas.Profile)
 async def get_my_profile(
+    settings: SettingsDep,
     profile_crud: CRUDProfile = Depends(),
     identifier: str = Security(get_current_user, scopes=[]),
 ):
@@ -30,6 +32,23 @@ async def get_my_profile(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
+
+    if (
+        not db_profile.last_synchronization
+        or db_profile.last_synchronization < datetime.now() - timedelta(minutes=2)
+    ):
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"{settings.user_api_endpoint}/users/{identifier}",
+                timeout=10,
+            )
+            r.raise_for_status()
+        idp_profile = r.json()
+        db_profile.email = idp_profile["email"]
+        db_profile.last_synchronization = datetime.now()
+        profile_crud.db_session.commit()
+        logging.info("Synchronizing profile %s: %s", identifier, r.json())
+
     return db_profile
 
 
@@ -150,9 +169,8 @@ async def create_profile(
     settings: SettingsDep,
     token: str = Security(get_current_user, scopes=[str(ProfilesScopes.CREATE)]),
 ):
-
     # Create user in auth-provider
-    user_endpoint = settings.user_api_endpoint.rstrip("/") + "/user"
+    user_endpoint = f"{settings.user_api_endpoint}/users"
     res = requests.post(user_endpoint, json={"email": profile.email}, timeout=10)
     res.raise_for_status()
 

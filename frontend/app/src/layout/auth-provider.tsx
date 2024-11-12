@@ -1,13 +1,14 @@
 import { User } from 'oidc-client-ts';
 import { AuthProvider, AuthProviderProps } from 'react-oidc-context';
 import { Outlet, useNavigate } from 'react-router-dom';
+import env from '../env';
 
 const oidcConfig: AuthProviderProps = {
-  authority: import.meta.env.VITE_OIDC_PROVIDER_URL,
-  client_id: import.meta.env.VITE_OIDC_CLIENT_ID,
+  authority: env.VITE_OIDC_PROVIDER_URL,
+  client_id: env.VITE_OIDC_CLIENT_ID,
   redirect_uri: `${window.location.origin}/callback`,
   scope: 'profile email openid offline aaa',
-  resource: import.meta.env.VITE_BBE2_API_URL,
+  resource: env.VITE_BBE2_API_URL,
 };
 
 export default function MyAuthProvider() {

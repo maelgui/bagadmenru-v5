@@ -1,13 +1,17 @@
+import logging
 from datetime import datetime
-from typing import Annotated, Any, Optional
+from typing import Annotated, Optional, Tuple
 
-from bbe2.dependencies import SessionDep
-from fastapi import APIRouter, Depends, HTTPException, Security, status
+import httpx
+from fastapi import APIRouter, Depends, Header, HTTPException, Security, status
 from ics import Calendar, Event
-from sqlalchemy.orm import Session
+from itsdangerous import BadSignature, Serializer, URLSafeTimedSerializer
+from pydantic import BaseModel
+from sqlalchemy import select
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent, CRUDResponse
+from bbe2.dependencies import SessionDep, SettingsDep, TemplateDep
 from bbe2.utils.auth import get_current_user
 from bbe2.utils.scopes import EventScopes
 
@@ -46,7 +50,6 @@ async def list_events(
 @events_router.get("/export/ics")
 async def export_ics(
     session: SessionDep,
-    token: str = Security(get_current_user, scopes=[str(EventScopes.VIEW)]),
 ) -> str:
     events = session.query(models.Event).order_by(models.Event.date).all()
     c = Calendar()
@@ -80,9 +83,52 @@ async def get_event(
 async def create_event(
     event: schemas.EventCreate,
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
+    settings: SettingsDep,
+    session: SessionDep,
+    templates: TemplateDep,
     token: str = Security(get_current_user, scopes=[str(EventScopes.CREATE)]),
 ):
-    return event_crud.create(**event.dict())
+    db_event = event_crud.create(**event.dict())
+
+    if event.is_in_doodle:
+        users = session.scalars(
+            select(models.Profile)
+            .where(
+                models.Profile.groups.any(
+                    models.Group.permissions.any(
+                        models.Permission.id == str(EventScopes.ANSWER)
+                    )
+                )
+            )
+            .order_by(models.Profile.last_name)
+        ).all()
+
+        html_template = templates.get_template("email_new_event.html")
+        token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
+        data = [
+            {
+                "subject": f"[Nouvelle sortie] {event.title}",
+                "to": user.email,
+                "body_text": "Allez remplir vos disponibilités",
+                "body_html": html_template.render(
+                    event=event,
+                    domain=settings.domain,
+                    token=token_serializer.dumps(
+                        {"user_id": user.id, "event_id": db_event.id}
+                    ),
+                ),
+            }
+            for user in users
+        ]
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                f"{settings.email_api_endpoint}/batch_send_emails",
+                timeout=10,
+                json=data,
+            )
+            r.raise_for_status()
+
+    return db_event
 
 
 @events_router.put("/{event_id}", response_model=schemas.Event)
@@ -146,6 +192,82 @@ async def create_response(
 
     db_object = models.Response(
         event_id=event_id, user_id=identifier, date=datetime.now(), **response.dict()
+    )
+    session.merge(db_object)
+    session.commit()
+    return db_object
+
+
+class Res(BaseModel):
+    event: schemas.Event
+    user: schemas.MyProfileUpdate
+    response: Optional[schemas.Response] = None
+
+
+@responses_router.get("/link/prepare", response_model=Res)
+async def get_response_by_token(
+    session: SessionDep,
+    settings: SettingsDep,
+    token: Annotated[str, Header()],
+):
+    s = URLSafeTimedSerializer(settings.token_secret_key)
+
+    try:
+        decoded_payload = s.loads(
+            token,
+            max_age=settings.token_max_age,
+        )
+        # This payload is decoded and safe
+    except BadSignature as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
+        )
+    db_event = session.get(models.Event, decoded_payload["event_id"])
+    if not db_event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+        )
+    db_user = session.get(models.Profile, decoded_payload["user_id"])
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    db_response = session.get(
+        models.Response,
+        (
+            decoded_payload["event_id"],
+            decoded_payload["user_id"],
+        ),
+    )
+
+    return {"event": db_event, "user": db_user, "response": db_response}
+
+
+@responses_router.put("/link/save", response_model=schemas.Response)
+async def create_response_by_token(
+    session: SessionDep,
+    settings: SettingsDep,
+    response: schemas.ResponseCreate,
+    token: Annotated[str, Header()],
+):
+    s = URLSafeTimedSerializer(settings.token_secret_key)
+
+    try:
+        decoded_payload = s.loads(
+            token,
+            max_age=settings.token_max_age,
+        )
+        # This payload is decoded and safe
+    except BadSignature as e:
+        logging.error("Unable to decode token: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
+        )
+    db_object = models.Response(
+        event_id=decoded_payload["event_id"],
+        user_id=decoded_payload["user_id"],
+        date=datetime.now(),
+        **response.dict(),
     )
     session.merge(db_object)
     session.commit()

@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     oidc_audience: str
     user_api_endpoint: str
     email_api_endpoint: str
+
+    token_secret_key: str
+    token_max_age: int = 60 * 60 * 24 * 7  # 7 days
+
+    @field_validator("user_api_endpoint", "email_api_endpoint")
+    @classmethod
+    def name_must_contain_space(cls, v: str) -> str:
+        return v.rstrip("/")
+
 
 @lru_cache
 def get_settings() -> Settings:

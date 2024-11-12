@@ -7,6 +7,7 @@ import {
 } from 'bagad-client';
 import toast from 'react-hot-toast';
 import { useAuth } from 'react-oidc-context';
+import env from '../env';
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -37,7 +38,7 @@ export function useApiClient() {
   const auth = useAuth();
 
   const conf = new Configuration({
-    basePath: import.meta.env.VITE_BBE2_API_URL,
+    basePath: env.VITE_BBE2_API_URL,
     headers: { Authorization: `Bearer ${auth.user?.access_token}` },
   });
 
@@ -51,6 +52,7 @@ export function useApiClient() {
 
 export function useUserProfile() {
   const { usersApi } = useApiClient();
+
   const { data, error } = useQuery({
     queryKey: ['profiles', 'me'],
     queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),

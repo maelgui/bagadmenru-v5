@@ -25,5 +25,7 @@ RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn bui
 FROM nginx:alpine AS prod
 
 COPY .docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY .docker/config.sh /docker-entrypoint.d/
+COPY .docker/app-config.js.template /
 
 COPY --from=node-build /project/app/dist /usr/share/nginx/html

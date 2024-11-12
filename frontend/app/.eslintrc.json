@@ -17,6 +17,9 @@
   "plugins": [
     "react"
   ],
+  "ignorePatterns": [
+    "public"
+  ],
   "rules": {
     "react/require-default-props": [
       "error",

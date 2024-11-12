@@ -18,6 +18,7 @@ import type {
   Event,
   EventCreate,
   HTTPValidationError,
+  Res,
   Response,
   ResponseCreate,
 } from '../models/index';
@@ -28,6 +29,8 @@ import {
     EventCreateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    ResFromJSON,
+    ResToJSON,
     ResponseFromJSON,
     ResponseToJSON,
     ResponseCreateFromJSON,
@@ -43,12 +46,21 @@ export interface CreateResponseApiV1EventsEventIdResponsesPutRequest {
     responseCreate: ResponseCreate;
 }
 
+export interface CreateResponseByTokenApiV1ResponsesLinkSavePutRequest {
+    token: string;
+    responseCreate: ResponseCreate;
+}
+
 export interface DeleteEventApiV1EventsEventIdDeleteRequest {
     eventId: number;
 }
 
 export interface GetEventApiV1EventsEventIdGetRequest {
     eventId: number;
+}
+
+export interface GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest {
+    token: string;
 }
 
 export interface ListEventsApiV1EventsGetRequest {
@@ -163,6 +175,53 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Create Response By Token
+     */
+    async createResponseByTokenApiV1ResponsesLinkSavePutRaw(requestParameters: CreateResponseByTokenApiV1ResponsesLinkSavePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Response>> {
+        if (requestParameters['token'] == null) {
+            throw new runtime.RequiredError(
+                'token',
+                'Required parameter "token" was null or undefined when calling createResponseByTokenApiV1ResponsesLinkSavePut().'
+            );
+        }
+
+        if (requestParameters['responseCreate'] == null) {
+            throw new runtime.RequiredError(
+                'responseCreate',
+                'Required parameter "responseCreate" was null or undefined when calling createResponseByTokenApiV1ResponsesLinkSavePut().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['token'] != null) {
+            headerParameters['token'] = String(requestParameters['token']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/responses/link/save`,
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ResponseCreateToJSON(requestParameters['responseCreate']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Response By Token
+     */
+    async createResponseByTokenApiV1ResponsesLinkSavePut(requestParameters: CreateResponseByTokenApiV1ResponsesLinkSavePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Response> {
+        const response = await this.createResponseByTokenApiV1ResponsesLinkSavePutRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Delete Event
      */
     async deleteEventApiV1EventsEventIdDeleteRaw(requestParameters: DeleteEventApiV1EventsEventIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
@@ -206,11 +265,6 @@ export class EventsApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
 
         const response = await this.request({
             path: `/api/v1/events/export/ics`,
@@ -269,6 +323,43 @@ export class EventsApi extends runtime.BaseAPI {
      */
     async getEventApiV1EventsEventIdGet(requestParameters: GetEventApiV1EventsEventIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Event> {
         const response = await this.getEventApiV1EventsEventIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get Response By Token
+     */
+    async getResponseByTokenApiV1ResponsesLinkPrepareGetRaw(requestParameters: GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Res>> {
+        if (requestParameters['token'] == null) {
+            throw new runtime.RequiredError(
+                'token',
+                'Required parameter "token" was null or undefined when calling getResponseByTokenApiV1ResponsesLinkPrepareGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['token'] != null) {
+            headerParameters['token'] = String(requestParameters['token']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/responses/link/prepare`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ResFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Response By Token
+     */
+    async getResponseByTokenApiV1ResponsesLinkPrepareGet(requestParameters: GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Res> {
+        const response = await this.getResponseByTokenApiV1ResponsesLinkPrepareGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

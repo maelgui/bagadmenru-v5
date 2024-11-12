@@ -6,6 +6,7 @@ import Badge from '../../components/badge';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { useUserProfile } from '../../config/client';
+import env from '../../env';
 
 export default function ShowMyProfilePage() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function ShowMyProfilePage() {
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
         actions={[
-          <Header.Action as="a" key="manage-authenticator" variant="outline" href={`${import.meta.env.VITE_OIDC_PROVIDER_URL.replace(/\/$/, '')}/webauthn/list`}>
+          <Header.Action as="a" key="manage-authenticator" variant="outline" href={`${env.VITE_OIDC_PROVIDER_URL.replace(/\/$/, '')}/webauthn/list`}>
             <FontAwesomeIcon icon={faKey} />
           </Header.Action>,
           <Header.Action key="edit-profile" onClick={() => navigate('/profile/edit/me')}>Modifier mon profil</Header.Action>,
