@@ -46,6 +46,7 @@ services:
       - OIDC_AUDIENCE=https://api.beta.bagadmenru.bzh
       - USER_API_ENDPOINT=http://auth-provider:3001/
       - EMAIL_API_ENDPOINT=http://email-api:9999/
+      - TOKEN_SECRET_KEY=${TOKEN_SECRET_KEY}
     restart: unless-stopped
     networks:
       - default
@@ -55,7 +56,7 @@ services:
       - "traefik.http.routers.bagadmenru-backend.rule=Host(`api.beta.bagadmenru.bzh`)"
       - "traefik.http.routers.bagadmenru-backend.tls.certresolver=myresolver"
       - "traefik.http.middlewares.corsheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowheaders=authorization,content-type"
+      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowheaders=authorization,content-type,token"
       - "traefik.http.middlewares.corsheader.headers.accesscontrolalloworiginlist=https://beta.bagadmenru.bzh"
       - "traefik.http.routers.bagadmenru-backend.middlewares=corsheader@docker"
 
@@ -70,19 +71,28 @@ services:
       - "traefik.http.routers.bagadmenru-frontend.rule=Host(`beta.bagadmenru.bzh`)"
       - "traefik.http.routers.bagadmenru-frontend.tls.certresolver=myresolver"
     restart: unless-stopped
+    environment:
+      - VITE_BBE2_API_URL=https://api.beta.bagadmenru.bzh
+      - VITE_OIDC_PROVIDER_URL=https://auth.beta.bagadmenru.bzh
+      - VITE_OIDC_CLIENT_ID=bagad-frontend
 
 
   email-api:
-    build: email-api
+    image: ghcr.io/maelgui/bagadmenru-v5/email-api
     environment:
+      - RUST_LOG=tower_http=trace
+      - APP_listen=0.0.0.0:9999
+      - APP_email_from=contact@bagadmenru.bzh
+
       - APP_imap_domain=ssl0.ovh.net
       - APP_imap_port=993
       - APP_imap_username=contact@bagadmenru.bzh
-      - APP_listen=0.0.0.0:9999
-      - APP_oidc_issuer=http://auth-provider:3000
-      - RUST_LOG=tower_http=trace
-      - CARGO_CRATE_NAME=email-api
       - APP_imap_password=${IMAP_PASSWORD}
+
+      - APP_smtp_domain=ssl0.ovh.net
+      - APP_smtp_port=465
+      - APP_smtp_username=contact@bagadmenru.bzh
+      - APP_smtp_password=${IMAP_PASSWORD}
 
 volumes:
   s3data:

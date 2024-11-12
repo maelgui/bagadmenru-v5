@@ -15,11 +15,18 @@ services:
     environment:
       - POSTGRES_PASSWORD=kcwRzG4coiE
 
-  mailhog:
-    image: mailhog/mailhog
+  mailpit:
+    image: axllent/mailpit
     ports:
       - 1025:1025
       - 8025:8025
+    environment:
+      - MP_SMTP_RELAY_HOST=ssl0.ovh.net
+      - MP_SMTP_RELAY_PORT=587
+      - MP_SMTP_RELAY_STARTTLS=true
+      - MP_SMTP_RELAY_AUTH=plain     # optional - default none
+      - MP_SMTP_RELAY_USERNAME=contact@bagadmenru.bzh                  # required for plain, login and cram-md5 auth
+      - MP_SMTP_RELAY_PASSWORD=${EMAIL_PASSWORD}
 
   backend:
     build: backend
@@ -74,16 +81,20 @@ services:
     ports:
       - 9999:9999
     environment:
+      - RUST_LOG=debug
+      - APP_listen=0.0.0.0:9999
+
       - APP_email_from=contact@bagadmenru.bzh
+
       - APP_imap_domain=ssl0.ovh.net
       - APP_imap_port=993
       - APP_imap_username=contact@bagadmenru.bzh
-      - APP_listen=0.0.0.0:9999
-      - APP_oidc_issuer=http://auth-provider:3000
-      - RUST_LOG=debug
-      - APP_smtp_domain=mailhog
+
+      - APP_smtp_domain=mailpit
       - APP_smtp_port=1025
       - APP_smtp_tls=false
+
+      - APP_imap_password=${EMAIL_PASSWORD}
 
 volumes:
   s3data:
