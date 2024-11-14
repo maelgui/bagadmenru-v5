@@ -9,6 +9,36 @@ env:
   REPO: ghcr.io/${{ github.repository }}
 
 jobs:
+
+  lint-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+        with:
+          use_pyproject: true
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: poetry
+      - name: Install dependencies
+        run: poetry install
+      - name: Run test
+        run: poetry run pylint
+      - name: Run test
+        run: poetry run black --check
+      - name: Run test
+        run: poetry run mypy
+      - name: Run test
+        run: poetry run pytest
+
   build:
     runs-on: ubuntu-latest
     strategy:
