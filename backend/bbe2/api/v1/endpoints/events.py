@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
-from typing import Annotated, Optional, Tuple
+from typing import Annotated, Optional
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Security, status
-from ics import Calendar, Event
-from itsdangerous import BadSignature, Serializer, URLSafeTimedSerializer
+from ics import Calendar, Event  # type: ignore
+from itsdangerous import BadSignature, URLSafeTimedSerializer
 from pydantic import BaseModel
 from sqlalchemy import select
 

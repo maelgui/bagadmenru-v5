@@ -1,4 +1,4 @@
-import requests
+import httpx
 from fastapi import APIRouter, Security
 
 from bbe2.dependencies import SettingsDep
@@ -13,6 +13,6 @@ def get_emails(
     settings: SettingsDep,
     token: str = Security(get_current_user, scopes=[str(UtilsScopes.VIEW_EMAILS)]),
 ):
-    res = requests.get(f"{settings.email_api_endpoint}/mailbox/emails", timeout=10)
+    res = httpx.get(f"{settings.email_api_endpoint}/mailbox/emails", timeout=10)
     res.raise_for_status()
     return res.json()

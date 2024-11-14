@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Optional
 
+from pydantic import BaseModel, ConfigDict, computed_field
+
 from bbe2.config import get_settings
 from bbe2.utils.s3 import S3Helper
-from pydantic import BaseModel, ConfigDict, computed_field
 
 
 class FileOrFolderType(Enum):
@@ -20,8 +21,7 @@ class FolderCreate(_FileOrFolderBase):
 
 
 class FileOrFolderUpdate(_FileOrFolderBase):
-    name: Optional[str] = None
-    parent_id: Optional[int] = None
+    parent_id: int
 
 
 class FileOrFolder(_FileOrFolderBase):
@@ -32,7 +32,7 @@ class FileOrFolder(_FileOrFolderBase):
     parent_id: Optional[int] = None
     file_key: Optional[str] = None
 
-    @computed_field
+    @computed_field  # type: ignore[misc]
     @property
     def fileUrl(self) -> Optional[str]:
         s3 = S3Helper(get_settings())

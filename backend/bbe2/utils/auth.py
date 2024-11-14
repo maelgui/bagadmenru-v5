@@ -4,11 +4,10 @@ import logging
 import os
 from typing import Annotated
 
-import requests
+import httpx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2AuthorizationCodeBearer, SecurityScopes
 from jwt import PyJWKClient, decode
-from requests.auth import HTTPBasicAuth
 
 from bbe2 import models
 from bbe2.config import Settings, get_settings
@@ -23,7 +22,7 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
 
 def verify_jwt(token: str, oidc_issuer, oidc_audience):
 
-    oidc_config = requests.get(f"{oidc_issuer}/.well-known/openid-configuration").json()
+    oidc_config = httpx.get(f"{oidc_issuer}/.well-known/openid-configuration").json()
     signing_algos = oidc_config["id_token_signing_alg_values_supported"]
 
     # setup a PyJWKClient to get the appropriate signing key

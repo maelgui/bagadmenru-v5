@@ -9,7 +9,6 @@ from botocore.client import Config
 from fastapi import Depends
 
 
-
 class S3Helper:
     """Regroup S3 utilility functions."""
 

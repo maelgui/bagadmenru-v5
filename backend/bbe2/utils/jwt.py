@@ -2,10 +2,10 @@
 
 import time
 
-import requests
+import httpx
 from jose import jwt
 
-from bbe2.config import settings
+from bbe2.config import get_settings
 
 
 class JWTVerifier:
@@ -17,17 +17,17 @@ class JWTVerifier:
         self.last_update = None
         self.lifespan = lifespan
         self.load_keys()
-        self.jwks = []
+        self.jwks: list[dict] = []
 
     def load_keys(self):
         """Loads keys from oidc provider."""
         try:
-            req2 = requests.get(str(settings.oidc_jwks_url), timeout=10)
+            req2 = httpx.get(str(get_settings().oidc_jwks_url), timeout=10)
             req2.raise_for_status()
             self.jwks = req2.json()["keys"]
             print(self.jwks)
             self.last_update = time.monotonic()
-        except requests.RequestException:
+        except httpx.HTTPError:
             pass
 
     def is_expired(self) -> bool:

@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from typing import Annotated, Any
 
 import httpx
-import requests
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, Header, HTTPException, Security, status
 from sqlalchemy import cast, func, select
@@ -171,7 +170,7 @@ async def create_profile(
 ):
     # Create user in auth-provider
     user_endpoint = f"{settings.user_api_endpoint}/users"
-    res = requests.post(user_endpoint, json={"email": profile.email}, timeout=10)
+    res = httpx.post(user_endpoint, json={"email": profile.email}, timeout=10)
     res.raise_for_status()
 
     profile_db = models.Profile(

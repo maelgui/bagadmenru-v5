@@ -2,12 +2,12 @@
 import logging
 import sys
 
-import requests
+import httpx
 
 try:
-    res = requests.get("http://localhost:8000", timeout=3)
+    res = httpx.get("http://localhost:8000", timeout=3)
     res.raise_for_status()
-except requests.RequestException as exc:
+except httpx.HTTPError as exc:
     logging.error("Healthcheck error: %s", exc)
     sys.exit(1)
 else:

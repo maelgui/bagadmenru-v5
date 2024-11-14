@@ -48,6 +48,7 @@ class GroupScopes(PermissionBase):
     CREATE = "group.create"
     UPDATE = "group.update"
 
+
 class UtilsScopes(PermissionBase):
     """Groups related permissions"""
 

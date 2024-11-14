@@ -1,9 +1,10 @@
 import uuid
 from typing import Optional
 
+from pydantic import BaseModel, ConfigDict, EmailStr, computed_field
+
 from bbe2.config import get_settings
 from bbe2.utils.s3 import S3Helper
-from pydantic import BaseModel, ConfigDict, EmailStr, computed_field
 
 
 class _ProfileBase(BaseModel):
@@ -37,7 +38,7 @@ class Profile(_ProfileBase):
 
     instrument: Optional["MinimalGroup"] = None
 
-    @computed_field
+    @computed_field  # type: ignore[misc]
     @property
     def picture_url(self) -> Optional[str]:
         s3 = S3Helper(get_settings())

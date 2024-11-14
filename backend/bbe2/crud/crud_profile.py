@@ -4,6 +4,10 @@ from bbe2.crud.base import CRUDBase
 
 
 class CRUDProfile(
-    CRUDBase[models.Profile, schemas.ProfileCreate, Union[schemas.ProfileUpdate, schemas.MyProfileUpdate]]
+    CRUDBase[
+        models.Profile,
+        schemas.ProfileCreate,
+        Union[schemas.ProfileUpdate, schemas.MyProfileUpdate],
+    ]
 ):
     model = models.Profile
