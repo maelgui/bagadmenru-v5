@@ -5,10 +5,11 @@ import { Link } from 'react-router-dom';
 import Badge from '../../components/badge';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { useApiClient } from '../../config/client';
+import { useApiClient, usePermissions } from '../../config/client';
 
 export default function GroupListPage() {
   const { usersApi } = useApiClient();
+  const { has } = usePermissions();
 
   const { data: groups } = useQuery({
     queryKey: ['groups'],
@@ -20,13 +21,13 @@ export default function GroupListPage() {
       <Header
         title="Liste des groupes"
         subtitle=""
-        actions={[
+        actions={has('GroupScopes.CREATE') ? [
           <Header.Action key="add-event" as={Link} to="/groups/add">
             <FontAwesomeIcon icon={faPlusCircle} />
             {' '}
             Ajouter
           </Header.Action>,
-        ]}
+        ] : []}
         breadcrumb={[
           { title: 'Groupes' },
         ]}

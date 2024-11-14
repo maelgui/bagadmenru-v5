@@ -29,7 +29,7 @@ router.get('/users/:id', bodyParser, async (ctx) => {
 router.post('/users', bodyParser, async (ctx) => {
 
   const salt = await bcrypt.genSalt();
-  const hashedPassword = await bcrypt.hash("blabla", salt);
+  const hashedPassword = await bcrypt.hash("RochRoj", salt);
 
   ctx.body = await prisma.user.create({
     data: {
