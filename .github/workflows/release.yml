@@ -10,14 +10,6 @@ env:
 
 jobs:
 
-  lint-backend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: psf/black@stable
-        with:
-          use_pyproject: true
-
   test-backend:
     runs-on: ubuntu-latest
     steps:
@@ -33,13 +25,15 @@ jobs:
       - name: Run test
         run: poetry run pylint
       - name: Run test
-        run: poetry run black --check
+        run: poetry run black --check bbe2
       - name: Run test
-        run: poetry run mypy
+        run: poetry run mypy bbe2
       - name: Run test
         run: poetry run pytest
 
   build:
+    needs:
+      - test-backend
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -67,7 +61,7 @@ jobs:
         with:
           context: ${{ matrix.image_name }}
           push: true
-          tags: ${{ env.REPO }}/${{ matrix.image_name }}:${{ github.sha }}
+          tags: ${{ env.REPO }}/${{ matrix.image_name }}:latest-beta, ${{ env.REPO }}/${{ matrix.image_name }}:${{ github.sha }}
           cache-from: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache
           cache-to: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache,mode=max
           sbom: false
