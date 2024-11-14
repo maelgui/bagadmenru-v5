@@ -1,4 +1,4 @@
-name: authprovider-release
+name: Release images
 
 on:
   push:
@@ -6,12 +6,18 @@ on:
       - "main"
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/auth-provider
+  REPO: ghcr.io/${{ github.repository }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image_name: backend
+          - image_name: frontend
+          - image_name: authprovider
+          - image_name: email-api
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,28 +25,28 @@ jobs:
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build and push ${{ matrix.image_name }}
         uses: docker/build-push-action@v5
         with:
-          context: auth-provider
+          context: ${{ matrix.image_name }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          tags: ${{ env.REPO }}/${{ matrix.image_name }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache
+          cache-to: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache,mode=max
           sbom: false
           provenance: false
 
       - name: Clear old packages
         uses: actions/delete-package-versions@v5
         with:
-          package-name: bagadmenru-v5/auth-provider
+          package-name: ${{ github.repository }}/${{ matrix.image_name }}
           package-type: 'container'
           min-versions-to-keep: 3
           delete-only-untagged-versions: 'true'
