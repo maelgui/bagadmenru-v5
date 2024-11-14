@@ -16,7 +16,7 @@ jobs:
         include:
           - image_name: backend
           - image_name: frontend
-          - image_name: authprovider
+          - image_name: auth-provider
           - image_name: email-api
     steps:
       - name: Checkout
