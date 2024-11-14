@@ -14,7 +14,9 @@ import {
 import { faFolder } from '@fortawesome/free-regular-svg-icons';
 import {
   IconDefinition,
-  faEllipsisVertical, faFile, faFilePdf, faFolderTree, faImage, faMusic, faPencil, faTrashCan,
+  faEllipsisVertical, faFile, faFilePdf,
+  faImage, faMusic,
+  faTrashCan,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FileOrFolder, FileOrFolderType } from 'bagad-client';
@@ -122,7 +124,7 @@ export default function FileItem({
             style={floatingStyles}
             {...getFloatingProps()}
           >
-            <Button variant="ghost" className="text-left capitalize font-medium">
+            {/* <Button variant="ghost" className="text-left capitalize font-medium">
               <FontAwesomeIcon icon={faPencil} className="mr-3 w-4" />
               {' '}
               Renommer...
@@ -131,7 +133,7 @@ export default function FileItem({
               <FontAwesomeIcon icon={faFolderTree} className="mr-3 w-4" />
               {' '}
               Déplacer...
-            </Button>
+            </Button> */}
             <hr className="mx-2 my-1" />
             <Button variant="ghost" className="text-left text-red-600 capitalize font-medium" onClick={deleteFn}>
               <FontAwesomeIcon icon={faTrashCan} className="mr-3 w-4" />
