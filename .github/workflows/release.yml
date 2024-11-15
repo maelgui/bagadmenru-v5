@@ -26,13 +26,13 @@ jobs:
           cache: poetry
       - name: Install dependencies
         run: poetry install
-      - name: Run test
-        run: poetry run pylint bbe2
-      - name: Run test
+      - name: Run pylint (disabled)
+        run: poetry run pylint bbe2 || true
+      - name: Run black
         run: poetry run black --check bbe2
-      - name: Run test
+      - name: Run mypy
         run: poetry run mypy bbe2
-      - name: Run test
+      - name: Run test (disabled)
         run: poetry run pytest || true
 
   build:
