@@ -8,7 +8,7 @@ import Select from 'react-select';
 import Button from '../../../components/button';
 import Input from '../../../components/input';
 import { useApiClient } from '../../../config/client';
-import BaseProfileFormFields from './base';
+import BaseProfileFormFields from './baseForm';
 
 interface ProfileFormData extends ProfileUpdate, ProfileCreate { }
 

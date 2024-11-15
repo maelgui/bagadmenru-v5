@@ -1,12 +1,11 @@
 import { faKey } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link, useNavigate } from 'react-router-dom';
-import Avatar from '../../components/avatar';
-import Badge from '../../components/badge';
+import { useNavigate } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { useUserProfile } from '../../config/client';
 import env from '../../env';
+import ProfileView from './components/profile';
 
 export default function ShowMyProfilePage() {
   const navigate = useNavigate();
@@ -34,18 +33,7 @@ export default function ShowMyProfilePage() {
       />
 
       <Container>
-        {profile ? (
-          <div className="text-center">
-            <div className="inline-block m-auto">
-              <Avatar src={profile.pictureUrl} size="lg" className="m-8" />
-            </div>
-            <h1 className="text-4xl">{`${profile.firstName} ${profile.lastName}`}</h1>
-            <ul className="mt-8">
-              {profile.instrument ? (<Badge className="m-2" style={{ backgroundColor: profile.instrument.color }}>{profile.instrument.name}</Badge>) : null}
-              {profile.groups?.map((g) => <Link key={g.id} to={`/groups/${g.id}`}><Badge className="bg-pourpre-500 m-2">{g.name}</Badge></Link>)}
-            </ul>
-          </div>
-        ) : 'Loading'}
+        {profile ? <ProfileView profile={profile} /> : 'Loading'}
       </Container>
     </>
   );

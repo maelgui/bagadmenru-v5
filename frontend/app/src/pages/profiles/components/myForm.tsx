@@ -4,7 +4,7 @@ import {
 } from 'bagad-client';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import Button from '../../../components/button';
-import BaseProfileFormFields from './base';
+import BaseProfileFormFields from './baseForm';
 
 interface ProfileFormProps {
   profile: Profile
