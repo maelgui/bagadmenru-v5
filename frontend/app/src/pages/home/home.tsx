@@ -121,7 +121,7 @@ export default function HomePage() {
                     <EventListItem
                       event={event}
                       response={responses?.get(event.id)?.at(0)?.value}
-                      showResponse
+                      showResponse={has('EventScopes.ANSWER')}
                     />
                   </div>
                 ))}
