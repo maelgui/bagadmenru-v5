@@ -34,7 +34,7 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
-#init_db()
+# init_db()
 
 
 @app.middleware("http")
