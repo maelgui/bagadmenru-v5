@@ -1,7 +1,6 @@
 from datetime import date
 from typing import Generator
 
-import bcrypt
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
@@ -24,7 +23,6 @@ def populate_db(session):
         first_name="john",
         last_name="doe",
         instrument_id=1,
-        password=bcrypt.hashpw(b"blabla", bcrypt.gensalt()),
         # picture_key="blbabla.jpg",
     )
     session.merge(user)
@@ -84,6 +82,11 @@ def get_fake_settings():
         s3_access_key_id="blabla",
         s3_secret_access_key="blabla",
         s3_bucket_name="testbucket",
+        oidc_issuer="http://fakeoidcpeovider",
+        oidc_audience="bbe2",
+        user_api_endpoint="http://user-api",
+        email_api_endpoint="http://email-api",
+        token_secret_key="fakesecretkay",
     )
 
 

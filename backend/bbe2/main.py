@@ -12,7 +12,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY, WS_1008_POLICY_VIOLATION
 
 from bbe2.api.v1.api import api_router
-from bbe2.fixtures import init_db
 
 logging.basicConfig(level=logging.INFO)
 
@@ -35,7 +34,7 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
-init_db()
+#init_db()
 
 
 @app.middleware("http")
