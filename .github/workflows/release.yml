@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Run test
-        run: poetry run pylint
+        run: poetry run pylint bbe2
       - name: Run test
         run: poetry run black --check bbe2
       - name: Run test
