@@ -131,12 +131,14 @@ export default function HomePage() {
                 <EventListItemSkeleton />
               </div>
             )}
-            <div className="mt-auto">
-              <Link to="/events" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
-                Accéder au doodle
-                <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
-              </Link>
-            </div>
+            {has('EventScopes.ANSWER') ? (
+              <div className="mt-auto">
+                <Link to="/events" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
+                  Accéder au doodle
+                  <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
+                </Link>
+              </div>
+            ) : null}
           </div>
           <div className="flex flex-col">
             <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Derniers fichiers ajoutés</h3>

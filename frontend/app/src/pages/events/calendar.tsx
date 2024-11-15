@@ -42,7 +42,7 @@ export default function CalendarPage() {
             {' '}
             Gérer
           </Header.Action>,
-          <Header.Action key="doodle-nav" as={Link} to="/events">
+          <Header.Action key="doodle-nav" as={Link} to="/events" className={has('EventScopes.ANSWER') ? '' : 'hidden'}>
             <FontAwesomeIcon icon={faCalendarCheck} />
             {' '}
             Mes Présences
