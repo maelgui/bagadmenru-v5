@@ -46,7 +46,7 @@ export default function HomePage() {
     enabled: has('FileScopes.VIEW'),
   });
   const { data: responses } = useQuery({
-    queryKey: ['responses'],
+    queryKey: ['responses', 'me'],
     queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: profile?.id }),
     select: (data) => groupBy(data, (e) => e.eventId),
     enabled: has('EventScopes.ANSWER'),

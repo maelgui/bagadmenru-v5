@@ -44,13 +44,15 @@ function keyFunc(eventId: number, userId: string) {
 interface ResponsesData {
   responsesByUserAndEvent: Map<string, Response[]>;
   responsesSumByEvent: Map<number, number>;
+  existingUsers: Set<string>;
 }
 
 function responseFormat(responses: Response[]): ResponsesData {
+  const existingUsers = new Set(responses.map((r) => r.userId));
   const responsesByUserAndEvent = groupby(responses, (r) => keyFunc(r.eventId, r.userId));
   const responsesSumByEvent = sumByEvents(responses);
   return {
-    responsesByUserAndEvent, responsesSumByEvent,
+    responsesByUserAndEvent, responsesSumByEvent, existingUsers,
   };
 }
 
@@ -61,7 +63,7 @@ export default function DoodlePage() {
   const [editing, setEditing] = useState<boolean>(false);
 
   const { data: events } = useQuery({
-    queryKey: ['events', 'next100'],
+    queryKey: ['events', 'next100doodle'],
     queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date(), isInDoodle: true }),
   });
   const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: () => usersApi.listProfilesApiV1ProfilesGet() });
@@ -104,7 +106,7 @@ export default function DoodlePage() {
         {!events?.length ? (
           <Alert type="info">Aucun évèvement prochainement.</Alert>
         ) : (
-          <div className="">
+          <div className="overflow-x-auto">
             <table className="table-auto min-w-full relative">
               <thead className="divide-y sticky top-0">
                 <tr className="divide-x">
@@ -189,7 +191,7 @@ export default function DoodlePage() {
                     </>
                   )}
                 </tr>
-                {profiles ? profiles.map((user) => (
+                {profiles ? profiles.filter((p) => responses?.existingUsers.has(p.id)).map((user) => (
                   <tr key={user.id}>
                     <th className={`text-right whitespace-nowrap ${profile?.id === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
                       <Avatar src={user.pictureUrl} size="sm" className="rounded-full border-2 w-6 h-6 mr-2" style={{ borderColor: user.instrument?.color ?? '' }} />

@@ -133,8 +133,8 @@ export default function FileItem({
               <FontAwesomeIcon icon={faFolderTree} className="mr-3 w-4" />
               {' '}
               Déplacer...
-            </Button> */}
-            <hr className="mx-2 my-1" />
+            </Button>
+            <hr className="mx-2 my-1" /> */}
             <Button variant="ghost" className="text-left text-red-600 capitalize font-medium" onClick={deleteFn}>
               <FontAwesomeIcon icon={faTrashCan} className="mr-3 w-4" />
               {' '}

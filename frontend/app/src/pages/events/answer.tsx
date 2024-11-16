@@ -1,8 +1,12 @@
-import { faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowLeft,
+  faCheck, faCircleCheck, faCircleXmark,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ResponseCreate } from 'bagad-client';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import { queryClient, useApiClient } from '../../config/client';
@@ -50,15 +54,26 @@ export default function AnswerLinkPage() {
                   Vous ne serez pas présent
                 </>
               )}
+              <div className="mt-4">
+                <Button as={Link} to="/" variant="ghost">
+                  <FontAwesomeIcon icon={faArrowLeft} className="mr-4" />
+                  Retour au site
+                </Button>
+              </div>
             </div>
 
           ) : (
             <>
               <h4 className="mb-4 font-medium">Serez-vous présent ?</h4>
               <div className="flex justify-center ">
-                <Button type="button" className="rounded-full" onClick={() => mutation.mutate({ r: { value: true } })}>Oui</Button>
-                <Button type="button" className="rounded-full" onClick={() => mutation.mutate({ r: { value: false } })}>Non</Button>
-                <Button type="button" className="rounded-full" disabled title="Faudrait se décider quand même !">Peut-être</Button>
+                <Button type="button" className="rounded-full" onClick={() => mutation.mutate({ r: { value: true } })}>
+                  <FontAwesomeIcon icon={faCheck} className="mr-4" />
+                  Oui
+                </Button>
+                <Button type="button" variant="outline" className="rounded-full" onClick={() => mutation.mutate({ r: { value: false } })}>
+                  <FontAwesomeIcon icon={faTimes} className="mr-4" />
+                  Non
+                </Button>
               </div>
             </>
           )}

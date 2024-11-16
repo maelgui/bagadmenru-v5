@@ -79,7 +79,7 @@ export default function EditProfilePage() {
         subtitle={`${profile.firstName} ${profile.lastName}`}
         breadcrumb={[
           { title: 'Liste des membres', link: '/profile' },
-          { title: 'Modifier un profile' },
+          { title: 'Modifier un profil' },
         ]}
       />
       <Container>
