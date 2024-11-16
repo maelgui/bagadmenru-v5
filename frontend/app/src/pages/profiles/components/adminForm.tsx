@@ -40,8 +40,6 @@ export default function AdminEditProfileForm(
     handleSubmit, control, register, formState: { errors, isSubmitting },
   } = methods;
 
-  console.log(isSubmitting);
-
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <FormProvider {...methods}>

@@ -4,7 +4,7 @@ import { faCircleCheck, faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Event, EventCreate } from 'bagad-client';
 import {
-  Controller, SubmitHandler, useForm
+  Controller, SubmitHandler, useForm,
 } from 'react-hook-form';
 import Input from '../../../components/input';
 
@@ -21,9 +21,9 @@ interface EventFormProps {
 
 export default function EventForm({ onSubmit, data = undefined }: EventFormProps) {
   const {
-    register, control, handleSubmit, formState: { errors, dirtyFields }, setValue, watch,
+    register, control, handleSubmit, formState: { errors, dirtyFields }, setValue,
   } = useForm<EventCreate>({ defaultValues: data || { category: 'sortie', isInDoodle: true, costume: 'COSTUME' } });
-  console.log(watch());
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-6">

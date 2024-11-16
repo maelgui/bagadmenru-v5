@@ -17,7 +17,7 @@ type EmailResponse = {
   from: string,
   fromSm: string,
 };
-// eslint-disable-next-line max-len
+
 function parseElem(data: any): EmailResponse {
   const parsedDate = new Date(data.datetime);
   const now = new Date();
