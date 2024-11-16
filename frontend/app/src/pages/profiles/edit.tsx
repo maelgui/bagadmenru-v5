@@ -75,7 +75,7 @@ export default function EditProfilePage() {
   return (
     <>
       <Header
-        title="Modifier un profile"
+        title="Modifier un profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
         breadcrumb={[
           { title: 'Liste des membres', link: '/profile' },
