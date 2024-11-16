@@ -114,7 +114,11 @@ async def create_event(
                     event=event,
                     domain=settings.domain,
                     token=token_serializer.dumps(
-                        {"user_id": user.id, "event_id": db_event.id}
+                        {
+                            "user_id": user.id,
+                            "event_id": db_event.id,
+                            "action": "CreateResponseByToken",
+                        }
                     ),
                 ),
             }
@@ -217,6 +221,7 @@ async def get_response_by_token(
             token,
             max_age=settings.token_max_age,
         )
+        assert decoded_payload["action"] == "CreateResponseByToken"
         # This payload is decoded and safe
     except BadSignature as e:
         raise HTTPException(
@@ -257,6 +262,7 @@ async def create_response_by_token(
             token,
             max_age=settings.token_max_age,
         )
+        assert decoded_payload["action"] == "CreateResponseByToken"
         # This payload is decoded and safe
     except BadSignature as e:
         logging.error("Unable to decode token: %s", e)

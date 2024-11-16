@@ -1,10 +1,10 @@
 import { Configuration, errors } from "oidc-provider";
 import { findAccountById } from "./support/account";
 
-const corsProp = 'urn:custom:client:allowed-cors-origins';
-const resourcesProp = 'urn:custom:client:allowed-resources';
-const isOrigin = (value: any) => {
-  if (typeof value !== 'string') {
+const corsProp = "urn:custom:client:allowed-cors-origins";
+const resourcesProp = "urn:custom:client:allowed-resources";
+const isOrigin = (value: unknown) => {
+  if (typeof value !== "string") {
     return false;
   }
   try {
@@ -12,12 +12,13 @@ const isOrigin = (value: any) => {
     // Origin: <scheme> "://" <hostname> [ ":" <port> ]
     return value === origin;
   } catch (err) {
+    console.error(err);
     return false;
   }
-}
+};
 
 export default {
-  async findAccount(ctx, sub, token) {
+  async findAccount(_ctx, sub, _token) {
     // @param ctx - koa request context
     // @param sub {string} - account identifier (subject)
     // @param token - is a reference to the token used for which a given account is being loaded,
@@ -35,66 +36,93 @@ export default {
       //   "id_token" or "userinfo" (depends on the "use" param)
       // @param rejected {Array[String]} - claim names that were rejected by the end-user, you might
       //   want to skip loading some claims from external resources or through db projection
-      async claims(use, scope, claims, rejected) {
+      async claims(_use, _scope, _claims, _rejected) {
         return {
           sub: user?.id,
           email_verified: user?.emailVerified,
           email: {
             email: user?.email,
-          }
+          },
         };
       },
     };
   },
   clients: [
     {
-      client_id: 'bagad-frontend-dev',
-      client_secret: 'aaaa',
-      application_type: 'web',
-      token_endpoint_auth_method: 'none',
-      grant_types: ['refresh_token', 'authorization_code'],
-      redirect_uris: ['http://localhost:5173/callback'],
-      post_logout_redirect_uris: ['https://bagadmenru.bzh'],
+      client_id: "bagad-frontend-dev",
+      client_secret: "aaaa",
+      application_type: "web",
+      token_endpoint_auth_method: "none",
+      grant_types: ["refresh_token", "authorization_code"],
+      redirect_uris: ["http://localhost:5173/callback"],
+      post_logout_redirect_uris: ["https://bagadmenru.bzh"],
       [corsProp]: ["http://localhost:5173"],
-      [resourcesProp]: ["http://localhost:5173"]
+      [resourcesProp]: ["http://localhost:5173"],
     },
     {
-      client_id: 'bbe2-back',
-      client_secret: 'aaaa',
+      client_id: "bbe2-back",
+      client_secret: "aaaa",
       redirect_uris: [],
       response_types: [],
-      grant_types: ['client_credentials']
+      grant_types: ["client_credentials"],
     },
     {
-      client_id: 'bagad-frontend',
-      application_type: 'web',
-      token_endpoint_auth_method: 'none',
-      grant_types: ['refresh_token', 'authorization_code'],
-      redirect_uris: ['https://beta.bagadmenru.bzh/callback'],
-      post_logout_redirect_uris: ['https://bagadmenru.bzh'],
-      [corsProp]: ['https://beta.bagadmenru.bzh'],
-      [resourcesProp]: ["https://api.beta.bagadmenru.bzh"]
+      client_id: "bagad-frontend",
+      application_type: "web",
+      token_endpoint_auth_method: "none",
+      grant_types: ["refresh_token", "authorization_code"],
+      redirect_uris: ["https://beta.bagadmenru.bzh/callback"],
+      post_logout_redirect_uris: ["https://bagadmenru.bzh"],
+      [corsProp]: ["https://beta.bagadmenru.bzh"],
+      [resourcesProp]: ["https://api.beta.bagadmenru.bzh"],
     },
     {
-      client_id: 'bagad-backend',
-      client_secret: 'b299326082d350a0311a6323cea7fd8bf02220b5a0126b48a83c3f272f20f59a',
+      client_id: "bagad-backend",
+      client_secret:
+        "b299326082d350a0311a6323cea7fd8bf02220b5a0126b48a83c3f272f20f59a",
       redirect_uris: [],
       response_types: [],
-      grant_types: ['client_credentials']
+      grant_types: ["client_credentials"],
+    },
+    {
+      client_id: "postman",
+      client_secret: "aaaa",
+      redirect_uris: ["https://oauth.pstmn.io/v1/callback"],
+      grant_types: ["authorization_code"],
+      [resourcesProp]: ["http://localhost:5173", "http://localhost:9999"],
     },
   ],
   interactions: {
-    url(ctx, interaction) { // eslint-disable-line no-unused-vars
+    url(ctx, interaction) {
       return `/interaction/${interaction.uid}`;
     },
   },
   cookies: {
-    keys: ['some secret key', 'and also the old rotated away some time ago', 'and one more'],
+    keys: [
+      "some secret key",
+      "and also the old rotated away some time ago",
+      "and one more",
+    ],
   },
   claims: {
-    email: ['email', 'email_verified'],
-    profile: ['birthdate', 'family_name', 'gender', 'given_name', 'locale', 'middle_name', 'name',
-      'nickname', 'picture', 'preferred_username', 'profile', 'updated_at', 'website', 'zoneinfo'],
+    nbf: null,
+    email: ["email", "email_verified"],
+    profile: [
+      "birthdate",
+      "family_name",
+      "gender",
+      "given_name",
+      "locale",
+      "middle_name",
+      "name",
+      "nickname",
+      "picture",
+      "preferred_username",
+      "profile",
+      "updated_at",
+      "website",
+      "zoneinfo",
+    ],
   },
 
   features: {
@@ -109,17 +137,17 @@ export default {
     resourceIndicators: {
       getResourceServerInfo(ctx, resourceIndicator, client) {
         const allowedResources = client[resourcesProp] as string[];
-        console.log(allowedResources, resourceIndicator)
+        console.log(allowedResources, resourceIndicator);
         if (!allowedResources.includes(resourceIndicator)) {
           throw new errors.InvalidTarget();
         }
-        console.log(resourceIndicator, client)
+        console.log(resourceIndicator, client);
         return {
           scope: "api:read offline_access",
-          accessTokenFormat: 'jwt',
+          accessTokenFormat: "jwt",
         };
       },
-      async useGrantedResource(ctx, model) {
+      async useGrantedResource(_ctx, _model) {
         // @param ctx - koa request context
         // @param model - depending on the request's grant_type this can be either an AuthorizationCode, BackchannelAuthenticationRequest,
         //                RefreshToken, or DeviceCode model instance.
@@ -130,23 +158,24 @@ export default {
   jwks: {
     keys: [
       {
-        d: 'VEZOsY07JTFzGTqv6cC2Y32vsfChind2I_TTuvV225_-0zrSej3XLRg8iE_u0-3GSgiGi4WImmTwmEgLo4Qp3uEcxCYbt4NMJC7fwT2i3dfRZjtZ4yJwFl0SIj8TgfQ8ptwZbFZUlcHGXZIr4nL8GXyQT0CK8wy4COfmymHrrUoyfZA154ql_OsoiupSUCRcKVvZj2JHL2KILsq_sh_l7g2dqAN8D7jYfJ58MkqlknBMa2-zi5I0-1JUOwztVNml_zGrp27UbEU60RqV3GHjoqwI6m01U7K0a8Q_SQAKYGqgepbAYOA-P4_TLl5KC4-WWBZu_rVfwgSENwWNEhw8oQ',
-        dp: 'E1Y-SN4bQqX7kP-bNgZ_gEv-pixJ5F_EGocHKfS56jtzRqQdTurrk4jIVpI-ZITA88lWAHxjD-OaoJUh9Jupd_lwD5Si80PyVxOMI2xaGQiF0lbKJfD38Sh8frRpgelZVaK_gm834B6SLfxKdNsP04DsJqGKktODF_fZeaGFPH0',
-        dq: 'F90JPxevQYOlAgEH0TUt1-3_hyxY6cfPRU2HQBaahyWrtCWpaOzenKZnvGFZdg-BuLVKjCchq3G_70OLE-XDP_ol0UTJmDTT-WyuJQdEMpt_WFF9yJGoeIu8yohfeLatU-67ukjghJ0s9CBzNE_LrGEV6Cup3FXywpSYZAV3iqc',
-        e: 'AQAB',
-        kty: 'RSA',
-        n: 'xwQ72P9z9OYshiQ-ntDYaPnnfwG6u9JAdLMZ5o0dmjlcyrvwQRdoFIKPnO65Q8mh6F_LDSxjxa2Yzo_wdjhbPZLjfUJXgCzm54cClXzT5twzo7lzoAfaJlkTsoZc2HFWqmcri0BuzmTFLZx2Q7wYBm0pXHmQKF0V-C1O6NWfd4mfBhbM-I1tHYSpAMgarSm22WDMDx-WWI7TEzy2QhaBVaENW9BKaKkJklocAZCxk18WhR0fckIGiWiSM5FcU1PY2jfGsTmX505Ub7P5Dz75Ygqrutd5tFrcqyPAtPTFDk8X1InxkkUwpP3nFU5o50DGhwQolGYKPGtQ-ZtmbOfcWQ',
-        p: '5wC6nY6Ev5FqcLPCqn9fC6R9KUuBej6NaAVOKW7GXiOJAq2WrileGKfMc9kIny20zW3uWkRLm-O-3Yzze1zFpxmqvsvCxZ5ERVZ6leiNXSu3tez71ZZwp0O9gys4knjrI-9w46l_vFuRtjL6XEeFfHEZFaNJpz-lcnb3w0okrbM',
-        q: '3I1qeEDslZFB8iNfpKAdWtz_Wzm6-jayT_V6aIvhvMj5mnU-Xpj75zLPQSGa9wunMlOoZW9w1wDO1FVuDhwzeOJaTm-Ds0MezeC4U6nVGyyDHb4CUA3ml2tzt4yLrqGYMT7XbADSvuWYADHw79OFjEi4T3s3tJymhaBvy1ulv8M',
-        qi: 'wSbXte9PcPtr788e713KHQ4waE26CzoXx-JNOgN0iqJMN6C4_XJEX-cSvCZDf4rh7xpXN6SGLVd5ibIyDJi7bbi5EQ5AXjazPbLBjRthcGXsIuZ3AtQyR0CEWNSdM7EyM5TRdyZQ9kftfz9nI03guW3iKKASETqX2vh0Z8XRjyU',
-        use: 'sig',
-      }, {
-        crv: 'P-256',
-        d: 'K9xfPv773dZR22TVUB80xouzdF7qCg5cWjPjkHyv7Ws',
-        kty: 'EC',
-        use: 'sig',
-        x: 'FWZ9rSkLt6Dx9E3pxLybhdM6xgR5obGsj5_pqmnz5J4',
-        y: '_n8G69C-A2Xl4xUW2lF0i8ZGZnk_KPYrhv4GbTGu5G4',
+        crv: "P-256",
+        d: "hyKRoPP8LCp80620H-JNfB7oil8_XKRjF3DATl9a9hs",
+        kty: "EC",
+        use: "sig",
+        x: "BQIn4SaAyFvo7e8wN7Pv_oAVrBF91vElako4J5vpPyA",
+        y: "tI790Gj0gtHAIZS-1mU3o9yJ3CMS4K0C85w-eW0C_kI",
+      },
+      {
+        d: "ENOEDZYhkEOZWirUCqVTXdqw_z6xCxfF4by8rFCYLpcrygQgmkvRAYpXoKDW0l0yKw5VEugrJgsOGddymJy487Arn699WJe7m8BTEop76RRfK7J68c3tQoBC0ZbEm03mRq-vn764eYwgRQiw1CNWIWw9zqdObRwHYOcHD63xpIMEt1D-1vA_0q_1hgGYIjg2QHZYNKSG1ca9dMLFpwSSkfpmxIz9LPmNvfgBrXvNm9zufE7hdhkEv9uwkgRrHFaehUH6VVRkHv28ndaXmnlJOnvxvygffy9BttRaZXV3FLodEU_e_TgQW0w_U5nFZQcl9CfEaMQmfh5Xt_Ra8VcrcQ",
+        dp: "RotDzkuO6X3ITSPdpGjgMFoCZwEv10epE4PKQTABfKxKuJuLM6wrmIojTeiv1XZ23JOZZJMZYF0IvNO62yR-DGZ_t0XaaLWR3kqi-b-l9qvXgVWDw5_A33xACKwdTRUzB61J4duHz-5D41f9BwEcMG9lDAiC2P8qC2O13Rb5wgk",
+        dq: "gpnPrRc8LewW6ij1vA0aK3lLkaIS1VkGz61RThT7gQz3Fe-uiT1w4dUXzIJuwoOA0eazNSdKoIOmRfakJptkqJzZT0atq6UKb95MeWaVJ-VpjCKuCiV-0o6v9V77cmn0vgrqIfs5Du4m6Ybz-Zc4CtKqH2LFHOIIrCiVoFNrfOE",
+        e: "AQAB",
+        kty: "RSA",
+        n: "rV3SD_ccinSj1d5sJGXdft7SENStAy6ijq4GDynoKURnmlVJrcXBP9sFGaA15g_HLn7DOhNr3CX1ZAumIZlK7QniEhhzgv8c036PIeZw-bPiGXErcqXhP576TyD1wAH-1hdqgBlx4Q3jSlMA6KIgAbSRC5sQbWjAf3ATbWvYIj4qrv-F6mmgEo9WdxkDYwSAKValmOu1JNzMtzZ4m1vDELK6YnZyhJmnARY9AetQl6VJ0r268-mbXZCOH2IPWjev6YR_qY5plADnivNSdMT6wX8Yb_Fa4DqLhPC3SarR8aa0ab-Q-hb1W7BiFhptWJbkYM5QBQeJ3-pQHznLJ43mMQ",
+        p: "2G8NW35j_KcVtwRDjDZeYV02UFCeGsRt9aHAX86PagYa1P2vSYqFAxOqJNcR6yaO0bvIutHSw6OjEiNZsK3WO54ENz5BZNlVRIuP7QxN-Yar5SrDADKtHkxV0dyS2RGI3GwFyk12rPXrPPzH1zsDh6vKfpk4SPxJCjhFIs0KTok",
+        q: "zQ8_tHs2LPIemzGhFrXTjNCrmbuUsJxl0MZtb-7JpdH6LdHbTfcVQ_fQ6CSsDfLSYKgIN7RwBANHq5aSJlFF0gjkhiU421cOIvByw0A-G5c0YxbnB9j_rnAIRJZXlzqajoiZjnIlNHiKgqYSZyfTqDz4SOR6K9wFF3xRmgxKMGk",
+        qi: "p560QEi5sLjtdWirdyRc2LLJ6ZwDwqGmP9nwXvxLWgXtXJ3iIvIWGs7ZX0kLs77sINko2QHOe8KKclsPFqgVSB0WmGHLUM3rDnskjb3w27NxTRu33_0fOXhNeyXC6FyPEBuEnFJ8iSX6R74u67EYssFy72YIX0vKtRa4FEEbqYo",
+        use: "sig",
       },
     ],
   },
@@ -161,7 +190,9 @@ export default {
         }
         // validate an array of Origin strings
         if (!Array.isArray(value) || !value.every(isOrigin)) {
-          throw new errors.InvalidClientMetadata(`${corsProp} must be an array of origins`);
+          throw new errors.InvalidClientMetadata(
+            `${corsProp} must be an array of origins`,
+          );
         }
       }
     },
@@ -170,6 +201,7 @@ export default {
     // ctx.oidc.route can be used to exclude endpoints from this behaviour, in that case just return
     // true to always allow CORS on them, false to deny
     // you may also allow some known internal origins if you want to
+    console.log("ici");
     const allowedOrigins = client[corsProp] as string[];
     return allowedOrigins.includes(origin);
   },

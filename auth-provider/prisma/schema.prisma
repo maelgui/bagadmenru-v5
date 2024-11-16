@@ -14,8 +14,8 @@ model User {
   id              String          @id @default(uuid())
   email           String          @unique
   emailVerified   Boolean         @default(false)
-  password        String
-  authenticators Authenticator[]
+  password        String?
+  authenticators  Authenticator[]
 }
 
 model Authenticator {
