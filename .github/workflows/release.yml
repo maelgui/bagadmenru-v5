@@ -9,8 +9,18 @@ env:
   REPO: ghcr.io/${{ github.repository }}
 
 jobs:
-
   lint-frontend:
+    runs-on: ubuntu-latest
+    name: Run eslint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+      - run: yarn
+      - run: yarn lint
+
+  lint-authprovider:
     runs-on: ubuntu-latest
     name: Run eslint
     steps:
@@ -88,6 +98,6 @@ jobs:
         uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ github.event.repository.name }}/${{ matrix.image_name }}
-          package-type: 'container'
+          package-type: "container"
           min-versions-to-keep: 3
-          delete-only-untagged-versions: 'true'
+          delete-only-untagged-versions: "true"
