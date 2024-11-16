@@ -10,6 +10,9 @@ env:
 
 jobs:
   lint-frontend:
+    defaults:
+      run:
+        working-directory: frontend
     runs-on: ubuntu-latest
     name: Run eslint
     steps:
@@ -21,6 +24,9 @@ jobs:
       - run: yarn lint
 
   lint-authprovider:
+    defaults:
+      run:
+        working-directory: auth-provider
     runs-on: ubuntu-latest
     name: Run eslint
     steps:
