@@ -99,47 +99,51 @@ export default function HomePage() {
           ) : null}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 content-stretch">
-          <div className="flex flex-col">
-            <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Calendrier</h3>
-            <div className="mb-5">
-              <Calendar events={calendarEvents ?? []} />
-            </div>
-            <div className="mt-auto">
-              <Link to="/events/calendar" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
-                Accéder au calendrier
-                <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
-              </Link>
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Prochains évènements</h3>
-            {nextEvents ? (
-              <div>
-                {!nextEvents.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
-                {nextEvents.slice(0, 4).map((event) => (
-                  <div className="mb-5" key={event.id}>
-                    <EventListItem
-                      event={event}
-                      response={responses?.get(event.id)?.at(0)?.value}
-                      showResponse={has('EventScopes.ANSWER')}
-                    />
+          {has('EventScopes.ANSWER') ? (
+            <>
+              <div className="flex flex-col">
+                <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Calendrier</h3>
+                <div className="mb-5">
+                  <Calendar events={calendarEvents ?? []} />
+                </div>
+                <div className="mt-auto">
+                  <Link to="/events/calendar" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
+                    Accéder au calendrier
+                    <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
+                  </Link>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Prochains évènements</h3>
+                {nextEvents ? (
+                  <div>
+                    {!nextEvents.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
+                    {nextEvents.slice(0, 4).map((event) => (
+                      <div className="mb-5" key={event.id}>
+                        <EventListItem
+                          event={event}
+                          response={responses?.get(event.id)?.at(0)?.value}
+                          showResponse={has('EventScopes.ANSWER')}
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div>
+                    <EventListItemSkeleton />
+                  </div>
+                )}
+                {has('EventScopes.ANSWER') ? (
+                  <div className="mt-auto">
+                    <Link to="/events" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
+                      Accéder au doodle
+                      <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
+                    </Link>
+                  </div>
+                ) : null}
               </div>
-            ) : (
-              <div>
-                <EventListItemSkeleton />
-              </div>
-            )}
-            {has('EventScopes.ANSWER') ? (
-              <div className="mt-auto">
-                <Link to="/events" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
-                  Accéder au doodle
-                  <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
-                </Link>
-              </div>
-            ) : null}
-          </div>
+            </>
+          ) : null}
           <div className="flex flex-col">
             <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Derniers fichiers ajoutés</h3>
             {files ? (

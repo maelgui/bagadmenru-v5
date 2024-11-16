@@ -75,7 +75,7 @@ export default function Mailbox() {
           <ul className="divide-y">
             {emails.map((email) => (
               <li key={email.id} className="flex items-center py-4 px-2">
-                <div className="h-12 w-12 mr-2 grid place-items-center bg-pourpre-100 rounded-full font-bold" title={email.from}>{email.fromSm}</div>
+                <div className="h-12 w-12 shrink-0 mr-2 grid place-items-center bg-pourpre-100 rounded-full font-bold" title={email.from}>{email.fromSm}</div>
                 <div>
                   {email.subject}
                   <br />
