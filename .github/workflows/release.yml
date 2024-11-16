@@ -65,6 +65,8 @@ jobs:
   build:
     needs:
       - test-backend
+      - lint-authprovider
+      - lint-frontend
     runs-on: ubuntu-latest
     strategy:
       matrix:
