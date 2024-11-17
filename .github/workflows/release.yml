@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: "22.x"
           cache: yarn
+          cache-dependency-path: frontend/yarn.lock
       - run: yarn
       - run: yarn lint
 
@@ -36,6 +37,7 @@ jobs:
         with:
           node-version: "22.x"
           cache: yarn
+          cache-dependency-path: auth-provider/yarn.lock
       - run: yarn
       - run: yarn lint
 
