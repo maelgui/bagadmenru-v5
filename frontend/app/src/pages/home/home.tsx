@@ -99,7 +99,7 @@ export default function HomePage() {
           ) : null}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 content-stretch">
-          {has('EventScopes.ANSWER') ? (
+          {has('EventScopes.VIEW') ? (
             <>
               <div className="flex flex-col">
                 <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Calendrier</h3>
