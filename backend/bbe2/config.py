@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     domain: str = "beta.bagadmenru.bzh"
 
+    oidc_jwks_endpoint: str
     oidc_issuer: str
     oidc_audience: str
     user_api_endpoint: str
