@@ -12,7 +12,6 @@ function LostPasswordPage() {
   } = useForm<{ email: string }>();
 
   const onSubmit = (data: { email: string }) => {
-    console.log(data);
     authApi.resetPasswordApiV1AuthResetPost({ resetPasswordRequest: { email: data.email } });
   };
 

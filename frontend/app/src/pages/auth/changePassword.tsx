@@ -14,7 +14,6 @@ function ChangePasswordPage() {
   } = useForm<{ email: string, password: string, passwordConfirm: string }>();
 
   const onSubmit = (data: { email: string }) => {
-    console.log(data);
     authApi.resetPasswordApiV1AuthResetPost({ resetPasswordRequest: { email: data.email } });
   };
 

@@ -90,6 +90,7 @@ export function usePermissions() {
       const res = policy.evaluate({ action, resource, user: { roles } });
       allow = res[0].result.allow;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to evaluate policy');
     }
     return allow;
