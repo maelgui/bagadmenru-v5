@@ -77,7 +77,7 @@ jobs:
       with:
         version: latest
 
-    - run: ls -la
+    - run: mkdir ${{ runner.temp }}/policies
     - name: Run OPA Tests
       run: opa build -t wasm -e bbe2/policies ./opa --output ${{ runner.temp }}/policies/bundle.tar.gz
 
