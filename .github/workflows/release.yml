@@ -66,11 +66,36 @@ jobs:
       - name: Run test (disabled)
         run: poetry run pytest || true
 
+  build-auth-policy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v3
+
+    - name: Setup OPA
+      uses: open-policy-agent/setup-opa@v2
+      with:
+        version: latest
+
+    - name: Run OPA Tests
+      run: opa build -t wasm -e bbe2/policies ./opa --output ${{ runner.temp }}/policies/bundle.tar.gz
+
+    - name: Untar OPA bundle
+      run: tar -xzf ${{ runner.temp }}/policies/bundle.tar.gz -C ${{ runner.temp }}/policies
+
+    - name: Upload OPA bundle
+      uses: actions/upload-artifact@v3
+      with:
+        name: opa-bundle
+        path: ${{ runner.temp }}/policies/policy.wasm
+
+
   build:
     needs:
       - test-backend
       - lint-authprovider
       - lint-frontend
+      - build-auth-policy
     runs-on: ubuntu-latest
     strategy:
       matrix:
