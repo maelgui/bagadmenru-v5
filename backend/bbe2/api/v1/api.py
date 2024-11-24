@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from bbe2.api.v1.endpoints import albums, events, files, profiles, utils
+from bbe2.api.v1.endpoints import albums, auth, events, files, profiles, utils
 
 api_router = APIRouter()
 api_router.include_router(profiles.router, tags=["Profiles"])
@@ -8,3 +8,4 @@ api_router.include_router(events.router, tags=["Events"])
 api_router.include_router(albums.router, tags=["Photos"])
 api_router.include_router(files.router, tags=["Files"])
 api_router.include_router(utils.router, tags=["Utils"])
+api_router.include_router(auth.router, tags=["Authentication"])

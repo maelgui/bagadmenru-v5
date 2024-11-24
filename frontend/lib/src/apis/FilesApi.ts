@@ -37,38 +37,59 @@ import {
 export interface CreateFolderApiV1FilesFolderIdPostRequest {
     folderId: number;
     folderCreate: FolderCreate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface DeleteFileApiV1FilesFileIdDeleteRequest {
     fileId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest {
     fileId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface GetFileApiV1FilesFileIdGetRequest {
     fileId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface GetRootApiV1FilesRootGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
     folderId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface ListFilesApiV1FilesGetRequest {
     t?: FileOrFolderType | null;
     limit?: number;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
     fileId: string;
     fileOrFolderUpdate: FileOrFolderUpdate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface UploadFileApiV1FilesFolderIdUploadPostRequest {
     folderId: number;
     file: Blob;
     force?: boolean;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 /**
@@ -101,9 +122,8 @@ export class FilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -142,9 +162,8 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -181,9 +200,8 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -221,9 +239,8 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -249,14 +266,13 @@ export class FilesApi extends runtime.BaseAPI {
      * Get root folder entity.
      * Get Root
      */
-    async getRootApiV1FilesRootGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async getRootApiV1FilesRootGetRaw(requestParameters: GetRootApiV1FilesRootGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -273,8 +289,8 @@ export class FilesApi extends runtime.BaseAPI {
      * Get root folder entity.
      * Get Root
      */
-    async getRootApiV1FilesRootGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
-        const response = await this.getRootApiV1FilesRootGetRaw(initOverrides);
+    async getRootApiV1FilesRootGet(requestParameters: GetRootApiV1FilesRootGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
+        const response = await this.getRootApiV1FilesRootGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -294,9 +310,8 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -335,9 +350,8 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -384,9 +398,8 @@ export class FilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -436,9 +449,8 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const consumes: runtime.Consume[] = [

@@ -15,7 +15,7 @@ import EventListItem from './components/event';
 
 export default function CalendarPage() {
   const { eventsApi } = useApiClient();
-  const { has } = usePermissions();
+  const { can } = usePermissions();
 
   const { data } = useQuery({
     queryKey: ['events', 'next100'],
@@ -37,12 +37,12 @@ export default function CalendarPage() {
         title="Calendrier"
         subtitle={currentMonth}
         actions={[
-          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={has('EventScopes.UPDATE') ? '' : 'hidden'}>
+          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={can('update', 'event') ? '' : 'hidden'}>
             <FontAwesomeIcon icon={faCalendarPlus} />
             {' '}
             Gérer
           </Header.Action>,
-          <Header.Action key="doodle-nav" as={Link} to="/events" className={has('EventScopes.ANSWER') ? '' : 'hidden'}>
+          <Header.Action key="doodle-nav" as={Link} to="/events" className={can('create', 'response') ? '' : 'hidden'}>
             <FontAwesomeIcon icon={faCalendarCheck} />
             {' '}
             Mes Présences

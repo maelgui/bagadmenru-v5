@@ -1,7 +1,16 @@
-import { withAuthenticationRequired } from 'react-oidc-context';
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../config/client';
+import { AuthStatus } from '../utils/authStore';
 
-export default withAuthenticationRequired(Outlet, {
-  OnRedirecting: () => (<div>Redirecting to the login page...</div>),
-  signinRedirectArgs: { url_state: window.location.pathname },
-});
+export default function AuthGuard() {
+  const { status } = useAuth();
+
+  switch (status) {
+    case AuthStatus.Authenticated:
+      return <Outlet />;
+    case AuthStatus.Guest:
+      return <Navigate to="/auth/login" />;
+    default:
+      return <p>Chargement...</p>;
+  }
+}

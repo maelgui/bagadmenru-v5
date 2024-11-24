@@ -47,3 +47,7 @@ export function FileOrFolderTypeToJSON(value?: FileOrFolderType | null): any {
     return value as any;
 }
 
+export function FileOrFolderTypeToJSONTyped(value: any, ignoreDiscriminator: boolean): FileOrFolderType {
+    return value as FileOrFolderType;
+}
+

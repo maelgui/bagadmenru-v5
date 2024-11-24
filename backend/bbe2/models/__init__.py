@@ -1,6 +1,7 @@
 """ORM models."""
 
 from .album import Album, Photo
+from .base import Base
 from .event import Event, Response
 from .file import FileOrFolder
-from .profile import Group, Permission, Profile
+from .user import Group, Role, User

@@ -4,8 +4,8 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from bbe2.database import Base
-from bbe2.models.profile import Profile
+from bbe2.models.base import Base
+from bbe2.models.user import User
 from bbe2.schemas import Costume
 
 
@@ -34,5 +34,5 @@ class Response(Base):
 
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id"), primary_key=True)
     event: Mapped["Event"] = relationship(back_populates="responses")
-    user_id: Mapped[str] = mapped_column(ForeignKey("profiles.id"), primary_key=True)
-    user: Mapped["Profile"] = relationship()
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    user: Mapped["User"] = relationship()

@@ -18,18 +18,21 @@ import {
     ResponseFromJSON,
     ResponseFromJSONTyped,
     ResponseToJSON,
+    ResponseToJSONTyped,
 } from './Response';
 import type { Event } from './Event';
 import {
     EventFromJSON,
     EventFromJSONTyped,
     EventToJSON,
+    EventToJSONTyped,
 } from './Event';
 import type { MyProfileUpdate } from './MyProfileUpdate';
 import {
     MyProfileUpdateFromJSON,
     MyProfileUpdateFromJSONTyped,
     MyProfileUpdateToJSON,
+    MyProfileUpdateToJSONTyped,
 } from './MyProfileUpdate';
 
 /**
@@ -83,10 +86,15 @@ export function ResFromJSONTyped(json: any, ignoreDiscriminator: boolean): Res {
     };
 }
 
-export function ResToJSON(value?: Res | null): any {
+export function ResToJSON(json: any): Res {
+    return ResToJSONTyped(json, false);
+}
+
+export function ResToJSONTyped(value?: Res | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'event': EventToJSON(value['event']),

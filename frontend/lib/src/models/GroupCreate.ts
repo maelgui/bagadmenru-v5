@@ -36,7 +36,7 @@ export interface GroupCreate {
      * @type {Array<string>}
      * @memberof GroupCreate
      */
-    permissionIds: Array<string>;
+    roleIds: Array<string>;
 }
 
 /**
@@ -44,7 +44,7 @@ export interface GroupCreate {
  */
 export function instanceOfGroupCreate(value: object): value is GroupCreate {
     if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('permissionIds' in value) || value['permissionIds'] === undefined) return false;
+    if (!('roleIds' in value) || value['roleIds'] === undefined) return false;
     return true;
 }
 
@@ -60,19 +60,24 @@ export function GroupCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
-        'permissionIds': json['permission_ids'],
+        'roleIds': json['role_ids'],
     };
 }
 
-export function GroupCreateToJSON(value?: GroupCreate | null): any {
+export function GroupCreateToJSON(json: any): GroupCreate {
+    return GroupCreateToJSONTyped(json, false);
+}
+
+export function GroupCreateToJSONTyped(value?: GroupCreate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'name': value['name'],
         'color': value['color'],
-        'permission_ids': value['permissionIds'],
+        'role_ids': value['roleIds'],
     };
 }
 

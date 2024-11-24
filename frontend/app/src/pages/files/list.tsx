@@ -20,7 +20,7 @@ import FileItem, { FileItemSkeleton } from './components/file-item';
 
 export default function ListFilesPage() {
   const { filesApi } = useApiClient();
-  const { has } = usePermissions();
+  const { can } = usePermissions();
 
   const params = useParams();
   const { data: folder } = useQuery({
@@ -114,7 +114,7 @@ export default function ListFilesPage() {
           ...(breadcrumb?.slice(1, -1).map((item) => ({ title: item.name, link: `/files/${item.id}` })) ?? []),
           ...(breadcrumb?.slice(-1).map((item) => ({ title: item.name })) ?? []),
         ] : [{ title: 'Fichiers' }]}
-        actions={has('FileScopes.CREATE')
+        actions={can('create', 'file')
           ? [
             <Header.Action as="label" key="upload-file" variant="outline">
               Ajouter un fichier

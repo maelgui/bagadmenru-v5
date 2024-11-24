@@ -18,6 +18,7 @@ import {
     FileOrFolderTypeFromJSON,
     FileOrFolderTypeFromJSONTyped,
     FileOrFolderTypeToJSON,
+    FileOrFolderTypeToJSONTyped,
 } from './FileOrFolderType';
 
 /**
@@ -96,10 +97,15 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
     };
 }
 
-export function FileOrFolderToJSON(value?: FileOrFolder | null): any {
+export function FileOrFolderToJSON(json: any): FileOrFolder {
+    return FileOrFolderToJSONTyped(json, false);
+}
+
+export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'name': value['name'],

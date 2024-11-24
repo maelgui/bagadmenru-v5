@@ -36,7 +36,7 @@ export interface GroupUpdate {
      * @type {Array<string>}
      * @memberof GroupUpdate
      */
-    permissionIds: Array<string>;
+    roleIds: Array<string>;
 }
 
 /**
@@ -44,7 +44,7 @@ export interface GroupUpdate {
  */
 export function instanceOfGroupUpdate(value: object): value is GroupUpdate {
     if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('permissionIds' in value) || value['permissionIds'] === undefined) return false;
+    if (!('roleIds' in value) || value['roleIds'] === undefined) return false;
     return true;
 }
 
@@ -60,19 +60,24 @@ export function GroupUpdateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
-        'permissionIds': json['permission_ids'],
+        'roleIds': json['role_ids'],
     };
 }
 
-export function GroupUpdateToJSON(value?: GroupUpdate | null): any {
+export function GroupUpdateToJSON(json: any): GroupUpdate {
+    return GroupUpdateToJSONTyped(json, false);
+}
+
+export function GroupUpdateToJSONTyped(value?: GroupUpdate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'name': value['name'],
         'color': value['color'],
-        'permission_ids': value['permissionIds'],
+        'role_ids': value['roleIds'],
     };
 }
 

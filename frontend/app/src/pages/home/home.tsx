@@ -21,7 +21,7 @@ import Mailbox from './components/mailbox';
 export default function HomePage() {
   const { eventsApi, filesApi, usersApi } = useApiClient();
   const profile = useUserProfile();
-  const { has } = usePermissions();
+  const { can } = usePermissions();
 
   const today = new Date();
 
@@ -29,7 +29,7 @@ export default function HomePage() {
     queryKey: ['events', 'next100'],
     queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 10, dateGte: today }),
     select: (data) => data.slice(0, 3),
-    enabled: has('EventScopes.VIEW'),
+    enabled: can('view', 'event'),
   });
   const { data: calendarEvents } = useQuery({
     queryKey: ['events', 'currentMonth'],
@@ -38,23 +38,23 @@ export default function HomePage() {
       dateGte: new Date(today.getFullYear(), today.getMonth(), 0),
       dateLt: new Date(today.getFullYear(), today.getMonth() + 1, 0),
     }),
-    enabled: has('EventScopes.VIEW'),
+    enabled: can('view', 'event'),
   });
   const { data: files } = useQuery({
     queryKey: ['files'],
     queryFn: () => filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File, limit: 5 }),
-    enabled: has('FileScopes.VIEW'),
+    enabled: can('view', 'file'),
   });
   const { data: responses } = useQuery({
     queryKey: ['responses', 'me'],
     queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: profile?.id }),
     select: (data) => groupBy(data, (e) => e.eventId),
-    enabled: has('EventScopes.ANSWER'),
+    enabled: can('create', 'response'),
   });
   const { data: myStats } = useQuery({
     queryKey: ['stats', 'me'],
     queryFn: () => usersApi.getMyStatsApiV1StatsMeGet(),
-    enabled: has('EventScopes.ANSWER'),
+    enabled: can('create', 'response'),
   });
   const { data: globalStats } = useQuery({
     queryKey: ['stats', 'global'],
@@ -65,7 +65,7 @@ export default function HomePage() {
     <>
       <Header title={`Degemer mat ${profile?.firstName}`} />
       <Container>
-        {has('UtilsScopes.VIEW_EMAILS') ? <Mailbox /> : null}
+        {can('view', 'email') ? <Mailbox /> : null}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
           {myStats && globalStats ? (
             <>
@@ -99,7 +99,7 @@ export default function HomePage() {
           ) : null}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 content-stretch">
-          {has('EventScopes.VIEW') ? (
+          {can('view', 'event') ? (
             <>
               <div className="flex flex-col">
                 <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Calendrier</h3>
@@ -123,7 +123,7 @@ export default function HomePage() {
                         <EventListItem
                           event={event}
                           response={responses?.get(event.id)?.at(0)?.value}
-                          showResponse={has('EventScopes.ANSWER')}
+                          showResponse={can('create', 'response')}
                         />
                       </div>
                     ))}
@@ -133,7 +133,7 @@ export default function HomePage() {
                     <EventListItemSkeleton />
                   </div>
                 )}
-                {has('EventScopes.ANSWER') ? (
+                {can('create', 'response') ? (
                   <div className="mt-auto">
                     <Link to="/events" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
                       Accéder au doodle
@@ -144,28 +144,30 @@ export default function HomePage() {
               </div>
             </>
           ) : null}
-          <div className="flex flex-col">
-            <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Derniers fichiers ajoutés</h3>
-            {files ? (
-              <div className="flex flex-col gap-4 mb-5">
-                {files.length ? files.map((file) => (
-                  <FileItem key={file.id} file={file} noAction />
-                )) : 'Aucun fichier ajouté récemment'}
+          {can('view', 'file') ? (
+            <div className="flex flex-col">
+              <h3 className="text-lg whitespace-nowrap tracking-tight font-semibold uppercase mb-5">Derniers fichiers ajoutés</h3>
+              {files ? (
+                <div className="flex flex-col gap-4 mb-5">
+                  {files.length ? files.map((file) => (
+                    <FileItem key={file.id} file={file} noAction />
+                  )) : 'Aucun fichier ajouté récemment'}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4 mb-5">
+                  <FileItemSkeleton />
+                  <FileItemSkeleton />
+                  <FileItemSkeleton />
+                </div>
+              )}
+              <div className="mt-auto">
+                <Link to="/files" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
+                  Accéder aux fichiers
+                  <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
+                </Link>
               </div>
-            ) : (
-              <div className="flex flex-col gap-4 mb-5">
-                <FileItemSkeleton />
-                <FileItemSkeleton />
-                <FileItemSkeleton />
-              </div>
-            )}
-            <div className="mt-auto">
-              <Link to="/files" className="whitespace-nowrap underline underline-offset-4 hover:decoration-2">
-                Accéder aux fichiers
-                <FontAwesomeIcon icon={faArrowRight} className="pl-2" />
-              </Link>
             </div>
-          </div>
+          ) : null}
         </div>
       </Container>
     </>

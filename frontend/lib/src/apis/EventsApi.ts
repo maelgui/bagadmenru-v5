@@ -39,11 +39,15 @@ import {
 
 export interface CreateEventApiV1EventsPostRequest {
     eventCreate: EventCreate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface CreateResponseApiV1EventsEventIdResponsesPutRequest {
     eventId: number;
     responseCreate: ResponseCreate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface CreateResponseByTokenApiV1ResponsesLinkSavePutRequest {
@@ -53,10 +57,14 @@ export interface CreateResponseByTokenApiV1ResponsesLinkSavePutRequest {
 
 export interface DeleteEventApiV1EventsEventIdDeleteRequest {
     eventId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface GetEventApiV1EventsEventIdGetRequest {
     eventId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest {
@@ -69,15 +77,21 @@ export interface ListEventsApiV1EventsGetRequest {
     dateLt?: Date | null;
     isInDoodle?: boolean | null;
     ordering?: string;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface ListResponsesApiV1ResponsesGetRequest {
     userId?: string | null;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface UpdateEventApiV1EventsEventIdPutRequest {
     eventId: number;
     eventCreate: EventCreate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 /**
@@ -102,9 +116,8 @@ export class EventsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -150,9 +163,8 @@ export class EventsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -236,9 +248,8 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -303,9 +314,8 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -391,9 +401,8 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -426,9 +435,8 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -473,9 +481,8 @@ export class EventsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({

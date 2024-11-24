@@ -57,10 +57,15 @@ export function GetUploadUrlResponseFromJSONTyped(json: any, ignoreDiscriminator
     };
 }
 
-export function GetUploadUrlResponseToJSON(value?: GetUploadUrlResponse | null): any {
+export function GetUploadUrlResponseToJSON(json: any): GetUploadUrlResponse {
+    return GetUploadUrlResponseToJSONTyped(json, false);
+}
+
+export function GetUploadUrlResponseToJSONTyped(value?: GetUploadUrlResponse | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'url': value['url'],

@@ -1,15 +1,7 @@
 import logging
-import secrets
 import time
 
-from fastapi import FastAPI, Request, Response
-from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from fastapi.utils import is_body_allowed_for_status_code
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.sessions import SessionMiddleware
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY, WS_1008_POLICY_VIOLATION
+from fastapi import FastAPI, Request
 
 from bbe2.api.v1.api import api_router
 
@@ -33,8 +25,6 @@ app = FastAPI(
     # },
     openapi_tags=tags_metadata,
 )
-
-# init_db()
 
 
 @app.middleware("http")

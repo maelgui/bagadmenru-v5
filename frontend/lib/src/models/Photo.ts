@@ -49,10 +49,15 @@ export function PhotoFromJSONTyped(json: any, ignoreDiscriminator: boolean): Pho
     };
 }
 
-export function PhotoToJSON(value?: Photo | null): any {
+export function PhotoToJSON(json: any): Photo {
+    return PhotoToJSONTyped(json, false);
+}
+
+export function PhotoToJSONTyped(value?: Photo | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'url': value['url'],

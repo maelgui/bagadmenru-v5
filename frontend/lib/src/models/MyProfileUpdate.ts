@@ -64,10 +64,15 @@ export function MyProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boo
     };
 }
 
-export function MyProfileUpdateToJSON(value?: MyProfileUpdate | null): any {
+export function MyProfileUpdateToJSON(json: any): MyProfileUpdate {
+    return MyProfileUpdateToJSONTyped(json, false);
+}
+
+export function MyProfileUpdateToJSONTyped(value?: MyProfileUpdate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'first_name': value['firstName'],

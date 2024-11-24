@@ -48,3 +48,7 @@ export function CostumeToJSON(value?: Costume | null): any {
     return value as any;
 }
 
+export function CostumeToJSONTyped(value: any, ignoreDiscriminator: boolean): Costume {
+    return value as Costume;
+}
+

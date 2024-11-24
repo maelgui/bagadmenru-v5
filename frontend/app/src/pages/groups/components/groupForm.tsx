@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   GroupCreate,
-  Permission,
+  Role,
 } from 'bagad-client';
 import {
   Controller,
@@ -12,9 +12,8 @@ import Badge from '../../../components/badge';
 import Button from '../../../components/button';
 import Input from '../../../components/input';
 import { useApiClient } from '../../../config/client';
-import groupBy from '../../../utils/groupby';
 
-function formatOptionLabel(data: Permission, { context }: FormatOptionLabelMeta<Permission>) {
+function formatOptionLabel(data: Role, { context }: FormatOptionLabelMeta<Role>) {
   if (context === 'value') {
     return data.id;
   }
@@ -38,18 +37,15 @@ export default function PermissionsForm({
   const { usersApi } = useApiClient();
   const {
     register, handleSubmit, formState: { errors }, control, watch,
-  } = useForm<GroupCreate>({ defaultValues: data || { color: '#932a58', permissionIds: [] } });
+  } = useForm<GroupCreate>({ defaultValues: data || { color: '#932a58', roleIds: [] } });
 
   const watchName = watch('name', 'groupe');
   const watchColor = watch('color', '');
 
-  const { data: permissions } = useQuery({
-    queryKey: ['permissions'],
-    queryFn: () => usersApi.listPermissionsApiV1PermissionsGet(),
+  const { data: roles } = useQuery({
+    queryKey: ['roles'],
+    queryFn: () => usersApi.listRolesApiV1RolesGet(),
   });
-  const permissionsPerTag = Array.from(groupBy(permissions ?? [], (e) => e.tag).entries()).map(
-    ([tag, perms]) => ({ label: tag, options: perms }),
-  );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -83,18 +79,18 @@ export default function PermissionsForm({
       </div>
 
       <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="permissionIds">Permissions</label>
+        <label className="mb-2 block font-semibold" htmlFor="roleIds">Permissions</label>
         <Controller
-          name="permissionIds"
+          name="roleIds"
           control={control}
           render={({ field: { onChange, value, ref } }) => (
             <Select
               isMulti
               ref={ref}
-              options={permissionsPerTag}
+              options={roles}
               getOptionValue={(option) => option.id}
               formatOptionLabel={formatOptionLabel}
-              value={permissions?.filter((c) => value.includes(c.id))}
+              value={roles?.filter((c) => value.includes(c.id))}
               onChange={(val) => onChange(val.map((c) => c.id))}
               className="basic-multi-select"
               classNamePrefix="select"

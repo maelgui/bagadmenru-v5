@@ -12,5 +12,7 @@ RUN --mount=type=cache,target=/root/.cache poetry install --no-ansi --no-root
 
 COPY . .
 
+RUN --mount=type=cache,target=/root/.cache poetry install --only-root
+
 HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 CMD [ "./check.py" ]
 CMD [ "uvicorn", "bbe2.main:app", "--reload", "--host", "0.0.0.0" ]

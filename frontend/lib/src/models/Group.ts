@@ -13,17 +13,19 @@
  */
 
 import { mapValues } from '../runtime';
-import type { Permission } from './Permission';
+import type { Role } from './Role';
 import {
-    PermissionFromJSON,
-    PermissionFromJSONTyped,
-    PermissionToJSON,
-} from './Permission';
+    RoleFromJSON,
+    RoleFromJSONTyped,
+    RoleToJSON,
+    RoleToJSONTyped,
+} from './Role';
 import type { Profile } from './Profile';
 import {
     ProfileFromJSON,
     ProfileFromJSONTyped,
     ProfileToJSON,
+    ProfileToJSONTyped,
 } from './Profile';
 
 /**
@@ -52,10 +54,10 @@ export interface Group {
     id: number;
     /**
      * 
-     * @type {Array<Permission>}
+     * @type {Array<Role>}
      * @memberof Group
      */
-    permissions: Array<Permission>;
+    roles: Array<Role>;
     /**
      * 
      * @type {Array<Profile>}
@@ -70,7 +72,7 @@ export interface Group {
 export function instanceOfGroup(value: object): value is Group {
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('permissions' in value) || value['permissions'] === undefined) return false;
+    if (!('roles' in value) || value['roles'] === undefined) return false;
     if (!('members' in value) || value['members'] === undefined) return false;
     return true;
 }
@@ -88,21 +90,26 @@ export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Gro
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
         'id': json['id'],
-        'permissions': ((json['permissions'] as Array<any>).map(PermissionFromJSON)),
+        'roles': ((json['roles'] as Array<any>).map(RoleFromJSON)),
         'members': ((json['members'] as Array<any>).map(ProfileFromJSON)),
     };
 }
 
-export function GroupToJSON(value?: Group | null): any {
+export function GroupToJSON(json: any): Group {
+    return GroupToJSONTyped(json, false);
+}
+
+export function GroupToJSONTyped(value?: Group | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'name': value['name'],
         'color': value['color'],
         'id': value['id'],
-        'permissions': ((value['permissions'] as Array<any>).map(PermissionToJSON)),
+        'roles': ((value['roles'] as Array<any>).map(RoleToJSON)),
         'members': ((value['members'] as Array<any>).map(ProfileToJSON)),
     };
 }

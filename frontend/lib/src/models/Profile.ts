@@ -18,6 +18,7 @@ import {
     MinimalGroupFromJSON,
     MinimalGroupFromJSONTyped,
     MinimalGroupToJSON,
+    MinimalGroupToJSONTyped,
 } from './MinimalGroup';
 
 /**
@@ -102,10 +103,15 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
     };
 }
 
-export function ProfileToJSON(value?: Profile | null): any {
+export function ProfileToJSON(json: any): Profile {
+    return ProfileToJSONTyped(json, false);
+}
+
+export function ProfileToJSONTyped(value?: Profile | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'first_name': value['firstName'],

@@ -21,9 +21,7 @@ const config: StorybookConfig = {
     name: getAbsolutePath("@storybook/react-vite"),
     options: {},
   },
-  docs: {
-    autodocs: "tag",
-  },
+  docs: {},
   typescript: {
     // Overrides the default Typescript configuration to allow multi-package components to be documented via Autodocs.
     reactDocgen: 'react-docgen',

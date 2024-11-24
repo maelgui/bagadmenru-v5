@@ -88,10 +88,15 @@ export function ProfileCreateFromJSONTyped(json: any, ignoreDiscriminator: boole
     };
 }
 
-export function ProfileCreateToJSON(value?: ProfileCreate | null): any {
+export function ProfileCreateToJSON(json: any): ProfileCreate {
+    return ProfileCreateToJSONTyped(json, false);
+}
+
+export function ProfileCreateToJSONTyped(value?: ProfileCreate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'first_name': value['firstName'],

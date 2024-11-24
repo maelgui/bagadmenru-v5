@@ -7,17 +7,18 @@ from sqlalchemy.orm import sessionmaker
 
 from bbe2 import models
 from bbe2.config import Settings, get_settings
-from bbe2.database import Base, get_engine
+from bbe2.database import get_engine
 from bbe2.main import app
+from bbe2.models.base import Base
 from bbe2.schemas import Costume, FileOrFolderType
-from bbe2.utils.auth import get_current_user
+from bbe2.utils.auth import get_current_user2
 
 
 def populate_db(session):
     # Profile
     instrument = models.Group(id=1, name="Piccolo", color="#fff")
     session.merge(instrument)
-    user = models.Profile(
+    user = models.User(
         id="a8e2d3249e9d997e",
         email="john.doe@example.com",
         first_name="john",
@@ -102,6 +103,6 @@ def client() -> Generator:
     with TestingSessionLocal() as session:
         populate_db(session)
     app.dependency_overrides[get_settings] = get_fake_settings
-    app.dependency_overrides[get_current_user] = get_fake_user
+    app.dependency_overrides[get_current_user2] = get_fake_user
     with TestClient(app) as cli:
         yield cli

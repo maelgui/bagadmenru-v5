@@ -73,10 +73,15 @@ export function MyStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean): M
     };
 }
 
-export function MyStatsToJSON(value?: MyStats | null): any {
+export function MyStatsToJSON(json: any): MyStats {
+    return MyStatsToJSONTyped(json, false);
+}
+
+export function MyStatsToJSONTyped(value?: MyStats | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'n_responses': value['nResponses'],

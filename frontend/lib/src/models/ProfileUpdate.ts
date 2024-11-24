@@ -80,10 +80,15 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
     };
 }
 
-export function ProfileUpdateToJSON(value?: ProfileUpdate | null): any {
+export function ProfileUpdateToJSON(json: any): ProfileUpdate {
+    return ProfileUpdateToJSONTyped(json, false);
+}
+
+export function ProfileUpdateToJSONTyped(value?: ProfileUpdate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'first_name': value['firstName'],

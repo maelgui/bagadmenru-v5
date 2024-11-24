@@ -6,7 +6,7 @@ from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from bbe2.database import Base
+from bbe2.models import Base
 from bbe2.schemas import FileOrFolderType
 
 
@@ -20,7 +20,7 @@ class FileOrFolder(Base):
     file_key: Mapped[str] = mapped_column(String(128), nullable=True)
     type: Mapped[FileOrFolderType]
     children: Mapped[list["FileOrFolder"]] = relationship()
-    uploaded_at: Mapped[datetime] = mapped_column(default=func.now())
+    uploaded_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     parent_id: Mapped[int] = mapped_column(
         ForeignKey("files.id", ondelete="cascade"), nullable=True

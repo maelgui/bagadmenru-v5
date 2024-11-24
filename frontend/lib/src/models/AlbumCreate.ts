@@ -57,10 +57,15 @@ export function AlbumCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
     };
 }
 
-export function AlbumCreateToJSON(value?: AlbumCreate | null): any {
+export function AlbumCreateToJSON(json: any): AlbumCreate {
+    return AlbumCreateToJSONTyped(json, false);
+}
+
+export function AlbumCreateToJSONTyped(value?: AlbumCreate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'title': value['title'],

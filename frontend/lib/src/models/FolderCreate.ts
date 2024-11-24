@@ -49,10 +49,15 @@ export function FolderCreateFromJSONTyped(json: any, ignoreDiscriminator: boolea
     };
 }
 
-export function FolderCreateToJSON(value?: FolderCreate | null): any {
+export function FolderCreateToJSON(json: any): FolderCreate {
+    return FolderCreateToJSONTyped(json, false);
+}
+
+export function FolderCreateToJSONTyped(value?: FolderCreate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'name': value['name'],

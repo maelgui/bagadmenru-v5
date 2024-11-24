@@ -3,23 +3,21 @@
 import uuid
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Security, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from sqlalchemy import and_
-from sqlalchemy.orm import Session
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
 from bbe2.dependencies import S3Dep, SessionDep
 from bbe2.schemas.file import FileOrFolderType
-from bbe2.utils.auth import get_current_user
-from bbe2.utils.scopes import FileScopes
+from bbe2.utils.auth import Action, Authorization, Resource
 
 router = APIRouter(prefix="/files")
 
 
 @router.get(
     "/",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
     response_model=list[schemas.FileOrFolder],
 )
 async def list_files(
@@ -39,7 +37,7 @@ async def list_files(
 
 @router.get(
     "/root",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
     response_model=schemas.FileOrFolder,
 )
 async def get_root(
@@ -58,7 +56,7 @@ async def get_root(
 
 @router.get(
     "/{file_id}",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
     response_model=schemas.FileOrFolder,
 )
 async def get_file(
@@ -76,7 +74,7 @@ async def get_file(
 
 @router.get(
     "/{file_id}/breadcrumb",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
     response_model=list[schemas.FileOrFolder],
 )
 async def get_breadcrumb(
@@ -104,7 +102,7 @@ async def get_breadcrumb(
 
 @router.get(
     "/{folder_id}/children",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
     response_model=list[schemas.FileOrFolder],
 )
 async def list_children(
@@ -122,7 +120,7 @@ async def list_children(
 
 @router.post(
     "/{folder_id}/upload",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
+    dependencies=[Depends(Authorization(Action.CREATE, Resource.FILE))],
     response_model=schemas.FileOrFolder,
     status_code=status.HTTP_201_CREATED,
 )
@@ -161,7 +159,7 @@ async def upload_file(
 
 @router.post(
     "/{folder_id}",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.CREATE)])],
+    dependencies=[Depends(Authorization(Action.CREATE, Resource.FILE))],
     response_model=schemas.FileOrFolder,
     status_code=status.HTTP_201_CREATED,
 )
@@ -178,7 +176,7 @@ async def create_folder(
 
 @router.put(
     "/{file_id}",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
+    dependencies=[Depends(Authorization(Action.EDIT, Resource.FILE))],
     response_model=schemas.FileOrFolder,
 )
 async def update_file(
@@ -198,7 +196,7 @@ async def update_file(
 
 @router.delete(
     "/{file_id}",
-    dependencies=[Security(get_current_user, scopes=[str(FileScopes.VIEW)])],
+    dependencies=[Depends(Authorization(Action.DELETE, Resource.FILE))],
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_file(

@@ -45,7 +45,7 @@ function PrivateButton<C extends React.ElementType = 'button'>(
       classList.push('text-pourpre-600', 'hover:border-white', 'hover:bg-pourpre-500', 'hover:text-white');
       break;
     case 'ghost':
-      classList.push('border-none', 'text-gray-900', 'hover:bg-gray-100');
+      classList.push('border-none', 'text-gray-900');
       break;
 
     default:

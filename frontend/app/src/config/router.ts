@@ -1,8 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import AuthGuard from '../guards/auth';
-import MyAuthProvider from '../layout/auth-provider';
 import MainLayout from '../layout/main';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
+import ChangePasswordPage from '../pages/auth/changePassword';
+import AuthPage from '../pages/auth/login';
+import LostPasswordPage from '../pages/auth/lostPassword';
 import RoutingErrorComponent from '../pages/error/error';
 import AddEventPage from '../pages/events/add';
 import AnswerLinkPage from '../pages/events/answer';
@@ -22,12 +24,10 @@ import EditProfilePage from '../pages/profiles/edit';
 import ProfilesPage from '../pages/profiles/list';
 import ShowMyProfilePage from '../pages/profiles/me';
 import ShowProfilePage from '../pages/profiles/show';
-import Empty from '../utils/empty';
 
 export default createBrowserRouter([
   {
     path: '/',
-    Component: MyAuthProvider,
     ErrorBoundary: RoutingErrorComponent,
     children: [
       {
@@ -119,8 +119,22 @@ export default createBrowserRouter([
         ],
       },
       {
-        path: '/callback',
-        Component: Empty,
+        path: '/auth/',
+        Component: SimpleLayoutWithOutlet,
+        children: [
+          {
+            path: 'login',
+            Component: AuthPage,
+          },
+          {
+            path: 'reset',
+            Component: LostPasswordPage,
+          },
+          {
+            path: 'reset/:token',
+            Component: ChangePasswordPage,
+          },
+        ],
       },
     ],
   },

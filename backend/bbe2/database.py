@@ -3,15 +3,11 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from bbe2.config import Settings, get_settings
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False)
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 @lru_cache

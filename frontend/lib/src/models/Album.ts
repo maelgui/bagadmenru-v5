@@ -65,10 +65,15 @@ export function AlbumFromJSONTyped(json: any, ignoreDiscriminator: boolean): Alb
     };
 }
 
-export function AlbumToJSON(value?: Album | null): any {
+export function AlbumToJSON(json: any): Album {
+    return AlbumToJSONTyped(json, false);
+}
+
+export function AlbumToJSONTyped(value?: Album | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'title': value['title'],

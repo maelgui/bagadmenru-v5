@@ -21,18 +21,16 @@ class Settings(BaseSettings):
 
     domain: str = "beta.bagadmenru.bzh"
 
-    oidc_jwks_endpoint: str
-    oidc_issuer: str
-    oidc_audience: str
-    user_api_endpoint: str
+    jwt_secret_key: str
     email_api_endpoint: str
+    authorizer_api_endpoint: str
 
     token_secret_key: str
     token_max_age: int = 60 * 60 * 24 * 7  # 7 days
 
-    @field_validator("user_api_endpoint", "email_api_endpoint")
+    @field_validator("email_api_endpoint", "authorizer_api_endpoint")
     @classmethod
-    def name_must_contain_space(cls, v: str) -> str:
+    def strip_traialing_slash(cls, v: str) -> str:
         return v.rstrip("/")
 
 

@@ -24,7 +24,7 @@ export default function EditGroupPage() {
     select: (data) => ({
       name: data.name,
       color: data.color,
-      permissionIds: data.permissions.map((p) => p.id),
+      roleIds: data.roles.map((p) => p.id),
     }),
   });
 
@@ -42,7 +42,6 @@ export default function EditGroupPage() {
     },
   });
   const onSubmit = (data: GroupCreate) => mutate(data);
-  // const onSubmit = (data: GroupCreate) => console.log(data);
 
   return (
     <>

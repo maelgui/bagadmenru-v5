@@ -9,7 +9,7 @@ import { useApiClient, usePermissions } from '../../config/client';
 
 export default function GroupListPage() {
   const { usersApi } = useApiClient();
-  const { has } = usePermissions();
+  const { can } = usePermissions();
 
   const { data: groups } = useQuery({
     queryKey: ['groups'],
@@ -21,7 +21,7 @@ export default function GroupListPage() {
       <Header
         title="Liste des groupes"
         subtitle=""
-        actions={has('GroupScopes.CREATE') ? [
+        actions={can('create', 'group') ? [
           <Header.Action key="add-event" as={Link} to="/groups/add">
             <FontAwesomeIcon icon={faPlusCircle} />
             {' '}
@@ -39,9 +39,9 @@ export default function GroupListPage() {
             <Link to={`/groups/${group.id}`}>
               <Badge className="text-lg" style={{ backgroundColor: group.color }}>{group.name}</Badge>
               <p className="text-gray-500 italic">
-                {group.permissions.length}
+                {group.roles.length}
                 {' '}
-                permissions
+                roles
                 {' / '}
                 {group.members.length}
                 {' '}

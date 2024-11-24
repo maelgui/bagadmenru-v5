@@ -18,6 +18,7 @@ import {
     CostumeFromJSON,
     CostumeFromJSONTyped,
     CostumeToJSON,
+    CostumeToJSONTyped,
 } from './Costume';
 
 /**
@@ -98,10 +99,15 @@ export function EventCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
     };
 }
 
-export function EventCreateToJSON(value?: EventCreate | null): any {
+export function EventCreateToJSON(json: any): EventCreate {
+    return EventCreateToJSONTyped(json, false);
+}
+
+export function EventCreateToJSONTyped(value?: EventCreate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'title': value['title'],

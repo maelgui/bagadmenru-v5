@@ -51,12 +51,12 @@ export default function GroupPage() {
         </div>
         <div className="mb-12">
 
-          <h3 className="text-2xl mb-4">Permissions</h3>
+          <h3 className="text-2xl mb-4">Roles</h3>
           <ul className="list-disc">
-            {group?.permissions.map((p) => (
-              <li key={p.id} className="mb-2">
-                <h6>{p.id}</h6>
-                <p className="text-sm text-gray-500">{p.description}</p>
+            {group?.roles.map((role) => (
+              <li key={role.id} className="mb-2">
+                <h6>{role.id}</h6>
+                <p className="text-sm text-gray-500">{role.description}</p>
               </li>
             ))}
 

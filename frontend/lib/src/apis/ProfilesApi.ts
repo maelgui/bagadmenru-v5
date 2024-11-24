@@ -23,10 +23,10 @@ import type {
   HTTPValidationError,
   MyProfileUpdate,
   MyStats,
-  Permission,
   Profile,
   ProfileCreate,
   ProfileUpdate,
+  Role,
 } from '../models/index';
 import {
     GetUploadUrlResponseFromJSON,
@@ -45,44 +45,98 @@ import {
     MyProfileUpdateToJSON,
     MyStatsFromJSON,
     MyStatsToJSON,
-    PermissionFromJSON,
-    PermissionToJSON,
     ProfileFromJSON,
     ProfileToJSON,
     ProfileCreateFromJSON,
     ProfileCreateToJSON,
     ProfileUpdateFromJSON,
     ProfileUpdateToJSON,
+    RoleFromJSON,
+    RoleToJSON,
 } from '../models/index';
 
 export interface CreateGroupApiV1GroupsPostRequest {
     groupCreate: GroupCreate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface CreateProfileApiV1ProfilesPostRequest {
     profileCreate: ProfileCreate;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface GetGlobalStatsApiV1StatsGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface GetGroupApiV1GroupsGroupIdGetRequest {
     groupId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface GetMyProfileApiV1ProfilesMeGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface GetMyRolesApiV1ProfilesMeRolesGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface GetMyStatsApiV1StatsMeGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface GetProfileApiV1ProfilesProfileIdGetRequest {
     profileId: string;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface ListGroupsApiV1GroupsGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface ListProfilesApiV1ProfilesGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface ListRolesApiV1RolesGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface UpdateGroupApiV1GroupsGroupIdPutRequest {
     groupId: number;
     groupUpdate: GroupUpdate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface UpdateMyProfileApiV1ProfilesMePutRequest {
     myProfileUpdate: MyProfileUpdate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface UpdateProfileApiV1ProfilesProfileIdPutRequest {
     profileId: string;
     profileUpdate: ProfileUpdate;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface UploadAvatarApiV1ProfilesMeAvatarPostRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 /**
@@ -107,9 +161,8 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -148,9 +201,8 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -175,14 +227,13 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * Get Global Stats
      */
-    async getGlobalStatsApiV1StatsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GlobalStats>> {
+    async getGlobalStatsApiV1StatsGetRaw(requestParameters: GetGlobalStatsApiV1StatsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GlobalStats>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -198,8 +249,8 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * Get Global Stats
      */
-    async getGlobalStatsApiV1StatsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GlobalStats> {
-        const response = await this.getGlobalStatsApiV1StatsGetRaw(initOverrides);
+    async getGlobalStatsApiV1StatsGet(requestParameters: GetGlobalStatsApiV1StatsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GlobalStats> {
+        const response = await this.getGlobalStatsApiV1StatsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -218,9 +269,8 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -242,47 +292,15 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get My Permissions
-     */
-    async getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
-        const response = await this.request({
-            path: `/api/v1/profiles/me/permissions`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse<any>(response);
-    }
-
-    /**
-     * Get My Permissions
-     */
-    async getMyPermissionsApiV1ProfilesMePermissionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string | null>> {
-        const response = await this.getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides);
-        return await response.value();
-    }
-
-    /**
      * Get My Profile
      */
-    async getMyProfileApiV1ProfilesMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+    async getMyProfileApiV1ProfilesMeGetRaw(requestParameters: GetMyProfileApiV1ProfilesMeGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -298,22 +316,51 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * Get My Profile
      */
-    async getMyProfileApiV1ProfilesMeGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
-        const response = await this.getMyProfileApiV1ProfilesMeGetRaw(initOverrides);
+    async getMyProfileApiV1ProfilesMeGet(requestParameters: GetMyProfileApiV1ProfilesMeGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
+        const response = await this.getMyProfileApiV1ProfilesMeGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get My Roles
+     */
+    async getMyRolesApiV1ProfilesMeRolesGetRaw(requestParameters: GetMyRolesApiV1ProfilesMeRolesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/profiles/me/roles`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     * Get My Roles
+     */
+    async getMyRolesApiV1ProfilesMeRolesGet(requestParameters: GetMyRolesApiV1ProfilesMeRolesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string | null>> {
+        const response = await this.getMyRolesApiV1ProfilesMeRolesGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      * Get My Stats
      */
-    async getMyStatsApiV1StatsMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MyStats>> {
+    async getMyStatsApiV1StatsMeGetRaw(requestParameters: GetMyStatsApiV1StatsMeGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MyStats>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -329,8 +376,8 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * Get My Stats
      */
-    async getMyStatsApiV1StatsMeGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MyStats> {
-        const response = await this.getMyStatsApiV1StatsMeGetRaw(initOverrides);
+    async getMyStatsApiV1StatsMeGet(requestParameters: GetMyStatsApiV1StatsMeGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MyStats> {
+        const response = await this.getMyStatsApiV1StatsMeGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -349,9 +396,8 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -375,14 +421,13 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * List Groups
      */
-    async listGroupsApiV1GroupsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Group>>> {
+    async listGroupsApiV1GroupsGetRaw(requestParameters: ListGroupsApiV1GroupsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Group>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -398,53 +443,21 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * List Groups
      */
-    async listGroupsApiV1GroupsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Group>> {
-        const response = await this.listGroupsApiV1GroupsGetRaw(initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * List Permissions
-     */
-    async listPermissionsApiV1PermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Permission>>> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
-        }
-
-        const response = await this.request({
-            path: `/api/v1/permissions/`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PermissionFromJSON));
-    }
-
-    /**
-     * List Permissions
-     */
-    async listPermissionsApiV1PermissionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Permission>> {
-        const response = await this.listPermissionsApiV1PermissionsGetRaw(initOverrides);
+    async listGroupsApiV1GroupsGet(requestParameters: ListGroupsApiV1GroupsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Group>> {
+        const response = await this.listGroupsApiV1GroupsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      * List Profiles
      */
-    async listProfilesApiV1ProfilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
+    async listProfilesApiV1ProfilesGetRaw(requestParameters: ListProfilesApiV1ProfilesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -460,8 +473,38 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * List Profiles
      */
-    async listProfilesApiV1ProfilesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Profile>> {
-        const response = await this.listProfilesApiV1ProfilesGetRaw(initOverrides);
+    async listProfilesApiV1ProfilesGet(requestParameters: ListProfilesApiV1ProfilesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Profile>> {
+        const response = await this.listProfilesApiV1ProfilesGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * List Roles
+     */
+    async listRolesApiV1RolesGetRaw(requestParameters: ListRolesApiV1RolesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Role>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/roles/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(RoleFromJSON));
+    }
+
+    /**
+     * List Roles
+     */
+    async listRolesApiV1RolesGet(requestParameters: ListRolesApiV1RolesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Role>> {
+        const response = await this.listRolesApiV1RolesGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -489,9 +532,8 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -530,9 +572,8 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -578,9 +619,8 @@ export class ProfilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -605,14 +645,13 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * Upload Avatar
      */
-    async uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetUploadUrlResponse>> {
+    async uploadAvatarApiV1ProfilesMeAvatarPostRaw(requestParameters: UploadAvatarApiV1ProfilesMeAvatarPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetUploadUrlResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -628,8 +667,8 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * Upload Avatar
      */
-    async uploadAvatarApiV1ProfilesMeAvatarPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetUploadUrlResponse> {
-        const response = await this.uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides);
+    async uploadAvatarApiV1ProfilesMeAvatarPost(requestParameters: UploadAvatarApiV1ProfilesMeAvatarPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetUploadUrlResponse> {
+        const response = await this.uploadAvatarApiV1ProfilesMeAvatarPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

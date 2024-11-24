@@ -55,7 +55,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.bagadmenru-backend.rule=Host(`api.beta.bagadmenru.bzh`)"
       - "traefik.http.routers.bagadmenru-backend.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT"
+      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,DELETE"
       - "traefik.http.middlewares.corsheader.headers.accesscontrolallowheaders=authorization,content-type,token"
       - "traefik.http.middlewares.corsheader.headers.accesscontrolalloworiginlist=https://beta.bagadmenru.bzh"
       - "traefik.http.routers.bagadmenru-backend.middlewares=corsheader@docker"

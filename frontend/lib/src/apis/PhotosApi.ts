@@ -33,33 +33,52 @@ import {
 
 export interface CreateAlbumApiV1AlbumsPostRequest {
     albumCreate: AlbumCreate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface DeleteAlbumApiV1AlbumsAlbumIdDeleteRequest {
-    albumId: string;
+    albumId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface DeletePhotoApiV1AlbumsAlbumIdPhotosPhotoIdDeleteRequest {
     albumId: string;
-    photoId: string;
+    photoId: number;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface GetAlbumApiV1AlbumsAlbumIdGetRequest {
     albumId: string;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface ListAlbumPhotosApiV1AlbumsAlbumIdPhotosGetRequest {
     albumId: string;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface ListAlbumsApiV1AlbumsGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface UpdateAlbumApiV1AlbumsAlbumIdPutRequest {
-    albumId: string;
+    albumId: number;
     albumCreate: AlbumCreate;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface UploadFileApiV1AlbumsAlbumIdPhotosPostRequest {
-    albumId: string;
+    albumId: number;
     file: Blob;
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 /**
@@ -84,9 +103,8 @@ export class PhotosApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -123,9 +141,8 @@ export class PhotosApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -167,9 +184,8 @@ export class PhotosApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -204,9 +220,8 @@ export class PhotosApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -242,9 +257,8 @@ export class PhotosApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -268,14 +282,13 @@ export class PhotosApi extends runtime.BaseAPI {
     /**
      * List Albums
      */
-    async listAlbumsApiV1AlbumsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Album>>> {
+    async listAlbumsApiV1AlbumsGetRaw(requestParameters: ListAlbumsApiV1AlbumsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Album>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -291,8 +304,8 @@ export class PhotosApi extends runtime.BaseAPI {
     /**
      * List Albums
      */
-    async listAlbumsApiV1AlbumsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Album>> {
-        const response = await this.listAlbumsApiV1AlbumsGetRaw(initOverrides);
+    async listAlbumsApiV1AlbumsGet(requestParameters: ListAlbumsApiV1AlbumsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Album>> {
+        const response = await this.listAlbumsApiV1AlbumsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -320,9 +333,8 @@ export class PhotosApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -366,9 +378,8 @@ export class PhotosApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const consumes: runtime.Consume[] = [

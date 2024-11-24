@@ -73,10 +73,15 @@ export function GlobalStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean
     };
 }
 
-export function GlobalStatsToJSON(value?: GlobalStats | null): any {
+export function GlobalStatsToJSON(json: any): GlobalStats {
+    return GlobalStatsToJSONTyped(json, false);
+}
+
+export function GlobalStatsToJSONTyped(value?: GlobalStats | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'n_responses': value['nResponses'],

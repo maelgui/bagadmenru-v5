@@ -78,7 +78,7 @@ export default function DoodlePage() {
     onSuccess: () => toast.success('Réponse enregistrée'),
   });
 
-  const { has } = usePermissions();
+  const { can } = usePermissions();
 
   return (
     <>
@@ -86,7 +86,7 @@ export default function DoodlePage() {
         title="Doodle"
         subtitle="Mes présences aux évènements du groupe"
         actions={[
-          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={has('EventScopes.UPDATE') ? '' : 'hidden'}>
+          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={can('edit', 'event') ? '' : 'hidden'}>
             <FontAwesomeIcon icon={faCalendarPlus} />
             {' '}
             Gérer

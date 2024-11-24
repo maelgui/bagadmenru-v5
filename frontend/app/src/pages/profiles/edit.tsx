@@ -10,7 +10,7 @@ import EditProfileForm from './components/myForm';
 
 export default function EditProfilePage() {
   const { usersApi } = useApiClient();
-  const { has } = usePermissions();
+  const { can } = usePermissions();
   const navigate = useNavigate();
 
   const { profileId } = useParams<{ profileId: string }>();
@@ -67,7 +67,7 @@ export default function EditProfilePage() {
     return null;
   }
 
-  if (!has('ProfilesScopes.UPDATE') && profileId !== 'me') {
+  if (!can('edit', 'profile') && profileId !== 'me') {
     navigate('/profile/edit/me');
     return null;
   }

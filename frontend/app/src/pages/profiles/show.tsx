@@ -8,7 +8,7 @@ import ProfileView from './components/profile';
 export default function ShowProfilePage() {
   const { usersApi } = useApiClient();
   const currentUser = useUserProfile();
-  const { has } = usePermissions();
+  const { can } = usePermissions();
   const { profileId } = useParams<{ profileId: string }>();
   if (!profileId) {
     return null;
@@ -29,7 +29,7 @@ export default function ShowProfilePage() {
       <Header
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
-        actions={has('ProfilesScopes.UPDATE') || profileId === currentUser?.id
+        actions={can('edit', 'profile') || profileId === currentUser?.id
           ? [<Header.Action key="edit-profile" onClick={() => navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Header.Action>]
           : []}
         breadcrumb={[

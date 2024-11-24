@@ -73,10 +73,15 @@ export function ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     };
 }
 
-export function ResponseToJSON(value?: Response | null): any {
+export function ResponseToJSON(json: any): Response {
+    return ResponseToJSONTyped(json, false);
+}
+
+export function ResponseToJSONTyped(value?: Response | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'value': value['value'],

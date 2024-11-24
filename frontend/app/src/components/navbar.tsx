@@ -4,12 +4,9 @@ import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ReactNode, useState } from 'react';
 
-import { useMutation } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
-import { useAuth } from 'react-oidc-context';
 import logo from '../assets/logov2.svg';
 import {
-  queryClient,
+  useAuth,
   usePermissions, useUserProfile,
 } from '../config/client';
 import Avatar from './avatar';
@@ -35,22 +32,10 @@ function CustomNavLink({ to, children, onClick = undefined }: CustomNavLinkProps
 
 export default function Navbar() {
   const profile = useUserProfile();
-  const { signoutRedirect } = useAuth();
-  const { has } = usePermissions();
+  const { can } = usePermissions();
+  const { logout } = useAuth();
 
   const [show, setShow] = useState<boolean>();
-
-  const { mutate: logout } = useMutation({
-    mutationFn: () => signoutRedirect({ post_logout_redirect_uri: 'https://bagadmenru.bzh' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] }).then(() => {
-        toast.success('Déconnexion réussie !');
-      });
-    },
-    onError: (error) => {
-      toast.error(`Erreur lors de la déconnexion : ${error.message}`);
-    },
-  });
 
   const close = () => setShow(false);
 
@@ -84,16 +69,16 @@ export default function Navbar() {
               <li className="px-3 py-2">
                 <CustomNavLink to="/" onClick={close}>Accueil</CustomNavLink>
               </li>
-              <li className={`px-3 py-2 tracking-wide ${has('EventScopes.VIEW') ? '' : 'hidden'}`}>
-                <CustomNavLink to={`/events/${has('EventScopes.ANSWER') ? '' : 'calendar'}`} onClick={close}>Évènements</CustomNavLink>
+              <li className={`px-3 py-2 tracking-wide ${can('view', 'event') ? '' : 'hidden'}`}>
+                <CustomNavLink to={`/events/${can('create', 'response') ? '' : 'calendar'}`} onClick={close}>Évènements</CustomNavLink>
               </li>
-              <li className={`px-3 py-2 tracking-wide ${has('FileScopes.VIEW') ? '' : 'hidden'}`}>
+              <li className={`px-3 py-2 tracking-wide ${can('view', 'file') ? '' : 'hidden'}`}>
                 <CustomNavLink to="/files" onClick={close}>Fichiers</CustomNavLink>
               </li>
-              <li className={`px-3 py-2 tracking-wide ${has('AlbumScopes.VIEW') ? '' : 'hidden'}`}>
+              <li className={`px-3 py-2 tracking-wide ${can('view', 'photo') ? '' : 'hidden'}`}>
                 <CustomNavLink to="/photos" onClick={close}>Photos</CustomNavLink>
               </li>
-              <li className={`px-3 py-2 tracking-wide ${has('ProfilesScopes.VIEW') ? '' : 'hidden'}`}>
+              <li className={`px-3 py-2 tracking-wide ${can('view', 'profile') ? '' : 'hidden'}`}>
                 <CustomNavLink to="/profile" onClick={close}>Trombinoscope</CustomNavLink>
               </li>
             </ul>
@@ -114,7 +99,9 @@ export default function Navbar() {
                       </span>
                       <span>{profile.lastName}</span>
                     </div>
-                    <Button type="button" size="sm" variant="outline" onClick={() => logout()}>Déconnexion</Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => logout({ redirectTo: 'https://bagadmenru.bzh' })}>
+                      Déconnexion
+                    </Button>
                   </div>
                 </>
               )

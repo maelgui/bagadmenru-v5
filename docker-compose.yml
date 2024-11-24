@@ -24,13 +24,30 @@ services:
       - MP_SMTP_RELAY_HOST=ssl0.ovh.net
       - MP_SMTP_RELAY_PORT=587
       - MP_SMTP_RELAY_STARTTLS=true
-      - MP_SMTP_RELAY_AUTH=plain     # optional - default none
-      - MP_SMTP_RELAY_USERNAME=contact@bagadmenru.bzh                  # required for plain, login and cram-md5 auth
+      - MP_SMTP_RELAY_AUTH=plain # optional - default none
+      - MP_SMTP_RELAY_USERNAME=contact@bagadmenru.bzh # required for plain, login and cram-md5 auth
       - MP_SMTP_RELAY_PASSWORD=${EMAIL_PASSWORD}
+
+  backend-migrate:
+    build: backend
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      - DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@db/postgres
+    volumes:
+      - ./backend:/project
 
   backend:
     build: backend
-    command:  [ "uvicorn", "bbe2.main:app", "--reload", "--reload-dir", "bbe2", "--host", "0.0.0.0" ]
+    command:
+      [
+        "uvicorn",
+        "bbe2.main:app",
+        "--reload",
+        "--reload-dir",
+        "bbe2",
+        "--host",
+        "0.0.0.0",
+      ]
     volumes:
       - ./backend:/project
     ports:
@@ -42,11 +59,13 @@ services:
       - S3_BUCKET_NAME=bagadmenru5-dev
       - S3_ACCESS_KEY_ID=minioadmin
       - S3_SECRET_ACCESS_KEY=minioadmin
-      - OIDC_ISSUER=http://auth-provider:3000/
-      - OIDC_AUDIENCE=http://localhost:5173
-      - USER_API_ENDPOINT=http://auth-provider:3001/
+      - JWT_SECRET_KEY=my-super-secret-key
       - EMAIL_API_ENDPOINT=http://email-api:9999/
+      - AUTHORIZER_API_ENDPOINT=http://authorizer:8181/
       - TOKEN_SECRET_KEY=my-super-secret-key
+    depends_on:
+      backend-migrate:
+        condition: service_completed_successfully
 
   frontend:
     build:
@@ -59,22 +78,8 @@ services:
       - 6006:6006
     environment:
       - VITE_BBE2_API_URL=http://localhost:5173
-      - VITE_OIDC_PROVIDER_URL=http://localhost:3000/
+      - VITE_OIDC_PROVIDER_URL=http://localhost:3000
       - VITE_OIDC_CLIENT_ID=bagad-frontend-dev
-
-  auth-provider:
-    build: auth-provider
-    command: yarn dev
-    ports:
-      - 3000:3000
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:kcwRzG4coiE@db/auth
-      - RP_ID=localhost
-      - ORIGIN=http://localhost:3000
-    volumes:
-      - ./auth-provider/src:/app/src
-      - authdata:/data/
 
   email-api:
     build: email-api
@@ -95,6 +100,14 @@ services:
       - APP_smtp_tls=false
 
       - APP_imap_password=${EMAIL_PASSWORD}
+
+  authorizer:
+    image: openpolicyagent/opa
+    command: ["run", "-s", "/policies", "-w", "-c", "/policies/config.yaml"]
+    ports:
+      - 8181:8181
+    volumes:
+      - ./opa:/policies
 
 volumes:
   s3data:

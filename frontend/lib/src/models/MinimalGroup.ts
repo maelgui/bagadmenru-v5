@@ -64,10 +64,15 @@ export function MinimalGroupFromJSONTyped(json: any, ignoreDiscriminator: boolea
     };
 }
 
-export function MinimalGroupToJSON(value?: MinimalGroup | null): any {
+export function MinimalGroupToJSON(json: any): MinimalGroup {
+    return MinimalGroupToJSONTyped(json, false);
+}
+
+export function MinimalGroupToJSONTyped(value?: MinimalGroup | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'name': value['name'],

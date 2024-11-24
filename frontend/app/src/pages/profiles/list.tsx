@@ -19,7 +19,7 @@ function GroupTag({ name, color }: { name: string, color: string | undefined }) 
 
 export default function ProfilesPage() {
   const { usersApi } = useApiClient();
-  const { has } = usePermissions();
+  const { can } = usePermissions();
 
   const { data } = useQuery({
     queryKey: ['profiles'],
@@ -33,7 +33,7 @@ export default function ProfilesPage() {
         subtitle="Pensez à ajouter votre photo"
         actions={[
           <Header.Action key="edit-profile" as={Link} to="/profile/edit/me" variant="outline">Modifier mon profil</Header.Action>,
-          <Header.Action key="add-profile" as={Link} to="/profile/add" className={has('ProfilesScopes.CREATE') ? '' : 'hidden'}>
+          <Header.Action key="add-profile" as={Link} to="/profile/add" className={can('create', 'profile') ? '' : 'hidden'}>
             <FontAwesomeIcon icon={faCirclePlus} />
             {' '}
             Ajouter

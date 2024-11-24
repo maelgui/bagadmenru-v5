@@ -3,8 +3,8 @@ from typing import Generic, Type, TypeVar
 
 from pydantic import BaseModel
 
-from bbe2.database import Base
 from bbe2.dependencies import SessionDep
+from bbe2.models.base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)

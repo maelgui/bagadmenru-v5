@@ -49,10 +49,15 @@ export function ResponseCreateFromJSONTyped(json: any, ignoreDiscriminator: bool
     };
 }
 
-export function ResponseCreateToJSON(value?: ResponseCreate | null): any {
+export function ResponseCreateToJSON(json: any): ResponseCreate {
+    return ResponseCreateToJSONTyped(json, false);
+}
+
+export function ResponseCreateToJSONTyped(value?: ResponseCreate | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
+
     return {
         
         'value': value['value'],

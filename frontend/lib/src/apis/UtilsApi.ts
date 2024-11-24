@@ -14,6 +14,18 @@
 
 
 import * as runtime from '../runtime';
+import type {
+  HTTPValidationError,
+} from '../models/index';
+import {
+    HTTPValidationErrorFromJSON,
+    HTTPValidationErrorToJSON,
+} from '../models/index';
+
+export interface GetEmailsApiV1UtilsEmailsGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
+}
 
 /**
  * 
@@ -23,14 +35,13 @@ export class UtilsApi extends runtime.BaseAPI {
     /**
      * Get Emails
      */
-    async getEmailsApiV1UtilsEmailsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<object>>> {
+    async getEmailsApiV1UtilsEmailsGetRaw(requestParameters: GetEmailsApiV1UtilsEmailsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<object>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            // oauth required
-            headerParameters["Authorization"] = await this.configuration.accessToken("OAuth2AuthorizationCodeBearer", []);
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
         }
 
         const response = await this.request({
@@ -46,8 +57,8 @@ export class UtilsApi extends runtime.BaseAPI {
     /**
      * Get Emails
      */
-    async getEmailsApiV1UtilsEmailsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<object>> {
-        const response = await this.getEmailsApiV1UtilsEmailsGetRaw(initOverrides);
+    async getEmailsApiV1UtilsEmailsGet(requestParameters: GetEmailsApiV1UtilsEmailsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<object>> {
+        const response = await this.getEmailsApiV1UtilsEmailsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

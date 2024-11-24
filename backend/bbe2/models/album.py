@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from bbe2.database import Base
+from bbe2.models.base import Base
 
 
 class Album(Base):
