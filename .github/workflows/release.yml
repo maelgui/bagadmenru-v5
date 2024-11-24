@@ -70,13 +70,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup OPA
       uses: open-policy-agent/setup-opa@v2
       with:
         version: latest
 
+    - run: ls -la
     - name: Run OPA Tests
       run: opa build -t wasm -e bbe2/policies ./opa --output ${{ runner.temp }}/policies/bundle.tar.gz
 
