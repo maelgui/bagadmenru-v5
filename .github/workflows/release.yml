@@ -91,7 +91,7 @@ jobs:
         path: ${{ runner.temp }}/policies/policy.wasm
 
     - name: Copy OPA wasm
-      run: cp ${{ runner.temp }}/policies/policy.wasm frontend/app/src/assets
+      run: cp ${{ runner.temp }}/policies/policy.wasm frontend/app/src/assets/policy.wasm
 
 
   build:
