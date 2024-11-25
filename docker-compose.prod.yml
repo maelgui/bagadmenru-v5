@@ -2,23 +2,6 @@ version: '3.8'
 
 services:
 
-  auth-provider:
-    image: ghcr.io/maelgui/bagadmenru-v5/auth-provider
-    expose:
-      - 3000
-    networks:
-      - default
-      - traefik
-    environment:
-      - DATABASE_URL=postgresql://bagadmenru:${BACKEND_DATABASE_PASSWORD}@backend-postgres/auth
-      - RP_ID=bagadmenru.bzh
-      - ORIGIN=https://auth.beta.bagadmenru.bzh
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.bagadmenru-auth.rule=Host(`auth.beta.bagadmenru.bzh`)"
-      - "traefik.http.routers.bagadmenru-auth.tls.certresolver=myresolver"
-    restart: unless-stopped
-
   backend-postgres:
     image: postgres:15-alpine
     volumes:
@@ -30,8 +13,14 @@ services:
     networks:
       - default
 
+  backend-migrate:
+    image: ghcr.io/maelgui/bagadmenru-v5/backend:beta
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      - DATABASE_URL=postgresql+psycopg://bagadmenru:${BACKEND_DATABASE_PASSWORD}@backend-postgres/bagadmenru
+
   backend:
-    image: ghcr.io/maelgui/bagadmenru-v5/backend
+    image: ghcr.io/maelgui/bagadmenru-v5/backend:beta
     expose:
       - 8000
     environment:
@@ -42,11 +31,10 @@ services:
       - S3_ENDPOINT=https://s3.fr-par.scw.cloud
       - S3_BUCKET_NAME=bagadmenru5-data-staging
       - S3_DEFAULT_REGION=fr-par
-      - OIDC_ISSUER=https://auth.beta.bagadmenru.bzh
-      - OIDC_AUDIENCE=https://api.beta.bagadmenru.bzh
-      - USER_API_ENDPOINT=http://auth-provider:3001/
       - EMAIL_API_ENDPOINT=http://email-api:9999/
       - TOKEN_SECRET_KEY=${TOKEN_SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - AUTHORIZER_API_ENDPOINT=http://authorizer:8181/
     restart: unless-stopped
     networks:
       - default
@@ -58,7 +46,11 @@ services:
       - "traefik.http.middlewares.corsheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,DELETE"
       - "traefik.http.middlewares.corsheader.headers.accesscontrolallowheaders=authorization,content-type,token"
       - "traefik.http.middlewares.corsheader.headers.accesscontrolalloworiginlist=https://beta.bagadmenru.bzh"
+      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowcredentials=true"
       - "traefik.http.routers.bagadmenru-backend.middlewares=corsheader@docker"
+    depends_on:
+      backend-migrate:
+        condition: service_completed_successfully
 
   frontend:
     image: ghcr.io/maelgui/bagadmenru-v5/frontend
@@ -93,6 +85,14 @@ services:
       - APP_smtp_port=465
       - APP_smtp_username=contact@bagadmenru.bzh
       - APP_smtp_password=${IMAP_PASSWORD}
+
+  authorizer:
+    image: openpolicyagent/opa
+    command: ["run", "-s", "/policies", "-w", "-c", "/policies/config.yaml"]
+    ports:
+      - 8181:8181
+    volumes:
+      - ./opa:/policies
 
 volumes:
   s3data:

@@ -9,9 +9,11 @@ import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Input from '../../components/input';
 import { useApiClient } from '../../config/client';
+import { useProfileStore } from '../../utils/authStore';
 
 function AuthPage() {
-  const { authApi } = useApiClient();
+  const { authApi, usersApi } = useApiClient();
+  const { setAccount } = useProfileStore();
 
   const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
 
@@ -31,6 +33,8 @@ function AuthPage() {
           password: data.password,
         },
       });
+      const res = await usersApi.getMyProfileApiV1ProfilesMeGet();
+      setAccount(res);
       navigate('/');
     } catch (error) {
       if (error instanceof ResponseError) {
