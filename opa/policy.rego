@@ -23,6 +23,22 @@ role_permissions := {
 		p.can_create_response,
 		p.can_view_profile,
 		p.can_view_file,
+	],
+	"manager": [
+		p.can_view_me,
+		p.can_view_event,
+		p.can_create_response,
+		p.can_view_profile,
+		p.can_view_file,
+
+		p.can_create_file,
+		p.can_edit_file,
+
+		p.can_create_event,
+		p.can_edit_event,
+
+		p.can_create_user,
+		p.can_edit_user,
 	]
 }
 
