@@ -118,7 +118,7 @@ jobs:
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2
 
-      - name: Setup oras
+      - name: Setup ORAS
         uses: oras-project/setup-oras@v1
 
       - name: Log in to the Container registry
@@ -127,6 +127,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build OPA bundle
+        run: opa build -b ./opa -o build/bundle.tar.gz
 
       - run: oras push ${{ env.REPO }}/policy:beta --config config.yaml:application/vnd.oci.image.config.v1+json bundle.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip
 
