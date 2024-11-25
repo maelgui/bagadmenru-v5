@@ -90,6 +90,10 @@ jobs:
         name: opa-policy-wasm
         path: ${{ runner.temp }}/policies/policy.wasm
 
+    - name: Build OPA bundle
+      run: opa build -b ./opa
+    - name: tree
+
 
   build:
     needs:
