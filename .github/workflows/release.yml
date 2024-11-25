@@ -135,7 +135,7 @@ jobs:
       - test-backend
       - lint-authprovider
       - lint-frontend
-      - build-auth-policy
+      - build-auth-policy-wasm
     runs-on: ubuntu-latest
     strategy:
       matrix:
