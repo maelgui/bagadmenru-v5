@@ -87,7 +87,7 @@ jobs:
     - name: Upload OPA bundle
       uses: actions/upload-artifact@v3
       with:
-        name: opa-bundle
+        name: opa-policy-wasm
         path: ${{ runner.temp }}/policies/policy.wasm
 
     - name: Copy OPA wasm
@@ -111,6 +111,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Opa Policy
+        uses: actions/download-artifact@v4
+        with:
+          name: opa-policy-wasm
+          path: frontend/app/src/assets/policy.wasm
+
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
