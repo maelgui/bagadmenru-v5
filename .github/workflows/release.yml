@@ -114,7 +114,7 @@ jobs:
         with:
           name: opa-policy-wasm
           path: frontend/app/src/assets/policy.wasm
-
+      - run: tree ${{ matrix.image_name }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
