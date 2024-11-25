@@ -71,40 +71,64 @@ jobs:
       - name: Run test (disabled)
         run: poetry run pytest || true
 
-  build-auth-policy:
+  build-auth-policy-wasm:
     runs-on: ubuntu-latest
     steps:
-    - name: Check out repository code
-      uses: actions/checkout@v4
+      - name: Check out repository code
+        uses: actions/checkout@v4
 
-    - name: Setup OPA
-      uses: open-policy-agent/setup-opa@v2
-      with:
-        version: latest
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
 
-    - run: mkdir ${{ runner.temp }}/policies
-    - name: Run OPA Tests
-      run: opa build -t wasm -e bbe2/policies ./opa --output ${{ runner.temp }}/policies/bundle.tar.gz
+      - run: mkdir ${{ runner.temp }}/policies
+      - name: Run OPA Tests
+        run: opa build -t wasm -e bbe2/policies ./opa --output ${{ runner.temp }}/policies/bundle.tar.gz
 
-    - name: Untar OPA bundle
-      run: tar -xzf ${{ runner.temp }}/policies/bundle.tar.gz -C ${{ runner.temp }}/policies
+      - name: Untar OPA bundle
+        run: tar -xzf ${{ runner.temp }}/policies/bundle.tar.gz -C ${{ runner.temp }}/policies
 
-    - name: Upload OPA bundle
-      uses: actions/upload-artifact@v4
-      with:
-        name: opa-policy-wasm
-        path: ${{ runner.temp }}/policies/policy.wasm
+      - name: Upload OPA bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: opa-policy-wasm
+          path: ${{ runner.temp }}/policies/policy.wasm
 
-    - run: mkdir build
+      - run: mkdir build
 
-    - name: Build OPA bundle
-      run: opa build -b ./opa -o build/bundle.tar.gz
+      - name: Build OPA bundle
+        run: opa build -b ./opa -o build/bundle.tar.gz
 
-    - name: Upload static files as artifact
-      id: deployment
-      uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
-      with:
-        path: build
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
+        with:
+          path: build
+  build-auth-policy-oci:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./opa
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+
+      - name: Setup oras
+        uses: oras-project/setup-oras@v1
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: oras push ${{ env.REPO }}/policy:beta --manifest-config config.yaml:application/vnd.oci.image.config.v1+json bundle.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip
 
   build:
     needs:
