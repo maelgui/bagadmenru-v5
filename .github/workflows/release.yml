@@ -129,7 +129,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build OPA bundle
-        run: opa build -b ./opa -o build/bundle.tar.gz
+        run: opa build -b . -o bundle.tar.gz
 
       - run: oras push ${{ env.REPO }}/policy:beta --config config.yaml:application/vnd.oci.image.config.v1+json bundle.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip
 
