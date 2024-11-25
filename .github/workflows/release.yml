@@ -92,7 +92,7 @@ jobs:
 
     - name: Build OPA bundle
       run: opa build -b ./opa
-    - name: tree
+    - run: tree
     - name: Upload static files as artifact
       id: deployment
       uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
