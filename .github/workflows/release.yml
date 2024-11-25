@@ -91,7 +91,7 @@ jobs:
         path: ${{ runner.temp }}/policies/policy.wasm
 
     - name: Build OPA bundle
-      run: opa build -b ./opa
+      run: opa build -b ./opa -o build/bundle.tar.gz
     - run: tree
     - name: Upload static files as artifact
       id: deployment
