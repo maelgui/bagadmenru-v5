@@ -85,13 +85,10 @@ jobs:
       run: tar -xzf ${{ runner.temp }}/policies/bundle.tar.gz -C ${{ runner.temp }}/policies
 
     - name: Upload OPA bundle
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: opa-policy-wasm
         path: ${{ runner.temp }}/policies/policy.wasm
-
-    - name: Copy OPA wasm
-      run: cp ${{ runner.temp }}/policies/policy.wasm frontend/app/src/assets/policy.wasm
 
 
   build:
