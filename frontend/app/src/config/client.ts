@@ -42,6 +42,7 @@ export const queryClient = new QueryClient({
 export function useApiClient() {
   const conf = new Configuration({
     basePath: env.VITE_BBE2_API_URL,
+    credentials: 'include',
     // headers: { Authorization: `Bearer ${auth.user?.access_token}` },
   });
 
