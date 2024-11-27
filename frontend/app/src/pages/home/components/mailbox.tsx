@@ -22,12 +22,13 @@ function parseElem(data: any): EmailResponse {
   const parsedDate = new Date(data.datetime);
   const now = new Date();
   const ago = Math.round((now.getTime() - parsedDate.getTime()) / (1000 * 60 * 60 * 24));
+  const from = data.from as string | null;
 
   return {
     ...data,
     ago,
     datetime: parsedDate,
-    fromSm: data.from.split(' ').map((n: string) => n[0].toUpperCase()).join(''),
+    fromSm: from?.split(' ').map((n: string) => n[0].toUpperCase()).slice(0, 2).join(''),
   };
 }
 export default function Mailbox() {
