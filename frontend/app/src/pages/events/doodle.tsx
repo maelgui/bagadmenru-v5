@@ -191,7 +191,7 @@ export default function DoodlePage() {
                     </>
                   )}
                 </tr>
-                {profiles ? profiles.filter((p) => responses?.existingUsers.has(p.id)).map((user) => (
+                {profiles ? profiles.filter((p) => p.id === profile?.id || responses?.existingUsers.has(p.id)).map((user) => (
                   <tr key={user.id}>
                     <th className={`text-right whitespace-nowrap ${profile?.id === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
                       <Avatar src={user.pictureUrl} size="sm" className="rounded-full border-2 w-6 h-6 mr-2" style={{ borderColor: user.instrument?.color ?? '' }} />
