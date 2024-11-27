@@ -51,31 +51,34 @@ function AuthPage() {
     <div>
       <form onSubmit={handleSubmit(onSubmit)}>
         {errorMsg ? <Alert type="error">{errorMsg}</Alert> : null}
-        <div className="mb-6">
-          <label className="mb-2 block font-semibold" htmlFor="email">Email</label>
-          <Input
-            type="email"
-            id="email"
-            error={errors.email?.message}
-            {...register('email', { required: 'Ce champ est obligatoire.' })}
-          />
-        </div>
-        <div className="mb-6">
-          <label className="mb-2 block font-semibold" htmlFor="password">Mot de passe</label>
-          <Input
-            type="password"
-            id="password"
-            error={errors.password?.message}
-            {...register('password', { required: 'Ce champ est obligatoire.' })}
-          />
-        </div>
-        <div className="flex justify-between">
-          <Button as={Link} to="/auth/reset" type="button" variant="ghost">Mot de passe oublié</Button>
-          <Button type="submit" disabled={isSubmitting}>
-            <FontAwesomeIcon icon={faKey} className="mr-2" />
-            Connexion
-          </Button>
-        </div>
+        <fieldset disabled={isSubmitting}>
+
+          <div className="mb-6">
+            <label className="mb-2 block font-semibold" htmlFor="email">Email</label>
+            <Input
+              type="email"
+              id="email"
+              error={errors.email?.message}
+              {...register('email', { required: 'Ce champ est obligatoire.' })}
+            />
+          </div>
+          <div className="mb-6">
+            <label className="mb-2 block font-semibold" htmlFor="password">Mot de passe</label>
+            <Input
+              type="password"
+              id="password"
+              error={errors.password?.message}
+              {...register('password', { required: 'Ce champ est obligatoire.' })}
+            />
+          </div>
+          <div className="flex justify-between">
+            <Button as={Link} to="/auth/reset" type="button" variant="ghost">Mot de passe oublié</Button>
+            <Button type="submit" isLoading={isSubmitting}>
+              <FontAwesomeIcon icon={faKey} className="mr-2" />
+              Connexion
+            </Button>
+          </div>
+        </fieldset>
       </form>
     </div>
   );
