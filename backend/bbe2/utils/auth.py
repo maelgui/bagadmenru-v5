@@ -7,6 +7,7 @@ from typing import Annotated
 import httpx
 import jwt
 from fastapi import Cookie, Depends, Header, HTTPException, status
+from itsdangerous import BadSignature, URLSafeTimedSerializer
 from passlib.context import CryptContext
 
 from bbe2.config import Settings, get_settings
@@ -33,6 +34,11 @@ class Resource(Enum):
     PROFILE = "profile"
     GROUP = "group"
     EMAIL = "email"
+
+
+class ActionTokenValue(Enum):
+    CreateResponseByToken = "CreateResponseByToken"
+    ResetPassword = "ResetPassword"
 
 
 def credentials(
@@ -142,3 +148,34 @@ myctx = CryptContext(
     schemes=["argon2", "bcrypt"],
     deprecated=["bcrypt"],
 )
+
+
+class ActionTokenAuthorization:
+    def __init__(self, action: ActionTokenValue):
+        self.action = action.value
+
+    async def __call__(
+        self,
+        settings: Annotated[Settings, Depends(get_settings)],
+        token: Annotated[str, Header()],
+    ) -> dict:
+
+        # Check user has a valid token
+        serializer = URLSafeTimedSerializer(settings.token_secret_key)
+
+        try:
+            decoded_payload = serializer.loads(
+                token,
+                max_age=settings.token_max_age,
+            )
+        except BadSignature as e:
+            logging.error(f"Invalid token {e=}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
+            )
+        if decoded_payload.get("action") != self.action:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
+            )
+
+        return decoded_payload

@@ -11,9 +11,16 @@ class ResetPasswordRequest(BaseModel):
 
 class ResetPassword(BaseModel):
     email: str
-    password: Optional[str]
-    password_confirm: Optional[str]
-    token: Optional[str]
+    password: str
+    password_confirm: str
+
+    @model_validator(mode='after')
+    def check_passwords_match(self) -> Self:
+        pw1 = self.password
+        pw2 = self.password_confirm
+        if pw1 is not None and pw2 is not None and pw1 != pw2:
+            raise ValueError('passwords do not match')
+        return self
 
 
 class LoginType(Enum):

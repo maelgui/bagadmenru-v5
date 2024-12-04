@@ -17,7 +17,7 @@ import * as runtime from '../runtime';
 import type {
   HTTPValidationError,
   LoginData,
-  ResetPasswordRequest,
+  ResetPassword,
   Token,
 } from '../models/index';
 import {
@@ -25,8 +25,8 @@ import {
     HTTPValidationErrorToJSON,
     LoginDataFromJSON,
     LoginDataToJSON,
-    ResetPasswordRequestFromJSON,
-    ResetPasswordRequestToJSON,
+    ResetPasswordFromJSON,
+    ResetPasswordToJSON,
     TokenFromJSON,
     TokenToJSON,
 } from '../models/index';
@@ -36,7 +36,8 @@ export interface ProcessLoginApiV1AuthLoginPostRequest {
 }
 
 export interface ResetPasswordApiV1AuthResetPostRequest {
-    resetPasswordRequest: ResetPasswordRequest;
+    token: string;
+    resetPassword: ResetPassword;
 }
 
 /**
@@ -144,10 +145,17 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Reset Password
      */
     async resetPasswordApiV1AuthResetPostRaw(requestParameters: ResetPasswordApiV1AuthResetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
-        if (requestParameters['resetPasswordRequest'] == null) {
+        if (requestParameters['token'] == null) {
             throw new runtime.RequiredError(
-                'resetPasswordRequest',
-                'Required parameter "resetPasswordRequest" was null or undefined when calling resetPasswordApiV1AuthResetPost().'
+                'token',
+                'Required parameter "token" was null or undefined when calling resetPasswordApiV1AuthResetPost().'
+            );
+        }
+
+        if (requestParameters['resetPassword'] == null) {
+            throw new runtime.RequiredError(
+                'resetPassword',
+                'Required parameter "resetPassword" was null or undefined when calling resetPasswordApiV1AuthResetPost().'
             );
         }
 
@@ -157,12 +165,16 @@ export class AuthenticationApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (requestParameters['token'] != null) {
+            headerParameters['token'] = String(requestParameters['token']);
+        }
+
         const response = await this.request({
             path: `/api/v1/auth/reset`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: ResetPasswordRequestToJSON(requestParameters['resetPasswordRequest']),
+            body: ResetPasswordToJSON(requestParameters['resetPassword']),
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {

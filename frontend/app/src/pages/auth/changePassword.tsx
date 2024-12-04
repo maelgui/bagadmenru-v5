@@ -1,20 +1,28 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { ResetPassword } from 'bagad-client';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Button from '../../components/button';
 import Input from '../../components/input';
 import { useApiClient } from '../../config/client';
 
+type ChangePasswordPageParams = {
+  token: string;
+};
+
 function ChangePasswordPage() {
   const { authApi } = useApiClient();
+
+  const params = useParams<ChangePasswordPageParams>();
+
   const {
     register, handleSubmit, formState: { errors },
-  } = useForm<{ email: string, password: string, passwordConfirm: string }>();
+  } = useForm<ResetPassword>();
 
-  const onSubmit = (data: { email: string }) => {
-    authApi.resetPasswordApiV1AuthResetPost({ resetPasswordRequest: { email: data.email } });
+  const onSubmit = (data: ResetPassword) => {
+    authApi.resetPasswordApiV1AuthResetPost({ resetPassword: data, token: params.token! });
   };
 
   return (

@@ -12,7 +12,15 @@ from sqlalchemy import select
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent, CRUDResponse
 from bbe2.dependencies import SessionDep, SettingsDep, TemplateDep
-from bbe2.utils.auth import Action, Authorization, Resource, get_current_user2
+from bbe2.utils.auth import (
+    Action,
+    ActionTokenAuthorization,
+    ActionTokenValue,
+    Authorization,
+    Resource,
+    get_current_user2,
+    is_authorized,
+)
 from bbe2.utils.scopes import EventScopes
 
 events_router = APIRouter(prefix="/events")
@@ -102,14 +110,24 @@ async def create_event(
 
     if event.is_in_doodle:
         users = session.scalars(
-            select(models.User)
-            .where(
-                models.User.groups.any(
-                    models.Group.roles.any(models.Role.id == "bagad")
-                )
-            )
-            .order_by(models.User.last_name)
+            select(models.User).order_by(models.User.last_name)
         ).all()
+
+        users = [
+            user
+            for user in users
+            if await is_authorized(
+                {
+                    "user": {
+                        "id": user.id,
+                        "roles": [r.id for g in user.groups for r in g.roles],
+                    },
+                    "action": Action.CREATE,
+                    "resource": Resource.RESPONSE,
+                },
+                settings,
+            )
+        ]
 
         html_template = templates.get_template("email_new_event.html")
         token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
@@ -235,28 +253,16 @@ class Res(BaseModel):
 )
 async def get_response_by_token(
     session: SessionDep,
-    settings: SettingsDep,
-    token: Annotated[str, Header()],
+    token_payload: Annotated[
+        dict, Depends(ActionTokenAuthorization(ActionTokenValue.CreateResponseByToken))
+    ],
 ):
-    s = URLSafeTimedSerializer(settings.token_secret_key)
-
-    try:
-        decoded_payload = s.loads(
-            token,
-            max_age=settings.token_max_age,
-        )
-        assert decoded_payload["action"] == "CreateResponseByToken"
-        # This payload is decoded and safe
-    except BadSignature as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
-        )
-    db_event = session.get(models.Event, decoded_payload["event_id"])
+    db_event = session.get(models.Event, token_payload["event_id"])
     if not db_event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
-    db_user = session.get(models.User, decoded_payload["user_id"])
+    db_user = session.get(models.User, token_payload["user_id"])
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -264,8 +270,8 @@ async def get_response_by_token(
     db_response = session.get(
         models.Response,
         (
-            decoded_payload["event_id"],
-            decoded_payload["user_id"],
+            token_payload["event_id"],
+            token_payload["user_id"],
         ),
     )
 
@@ -278,27 +284,14 @@ async def get_response_by_token(
 )
 async def create_response_by_token(
     session: SessionDep,
-    settings: SettingsDep,
     response: schemas.ResponseCreate,
-    token: Annotated[str, Header()],
+    token_payload: Annotated[
+        dict, Depends(ActionTokenAuthorization(ActionTokenValue.CreateResponseByToken))
+    ],
 ):
-    s = URLSafeTimedSerializer(settings.token_secret_key)
-
-    try:
-        decoded_payload = s.loads(
-            token,
-            max_age=settings.token_max_age,
-        )
-        assert decoded_payload["action"] == "CreateResponseByToken"
-        # This payload is decoded and safe
-    except BadSignature as e:
-        logging.error("Unable to decode token: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
-        )
     db_object = models.Response(
-        event_id=decoded_payload["event_id"],
-        user_id=decoded_payload["user_id"],
+        event_id=token_payload["event_id"],
+        user_id=token_payload["user_id"],
         date=datetime.now(),
         **response.dict(),
     )

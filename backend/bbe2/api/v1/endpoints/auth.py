@@ -1,8 +1,9 @@
 import time
 from datetime import datetime, timedelta
+from typing import Annotated
 
 import jwt
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select, update
 
 from bbe2.dependencies import SessionDep, SettingsDep
@@ -11,10 +12,11 @@ from bbe2.schemas.auth import (
     JwtPayload,
     LoginData,
     LoginType,
+    ResetPassword,
     ResetPasswordRequest,
     Token,
 )
-from bbe2.utils.auth import myctx
+from bbe2.utils.auth import ActionTokenAuthorization, ActionTokenValue, myctx
 
 router = APIRouter()
 
@@ -34,6 +36,7 @@ def process_login(
     time.sleep(3)
     user = session.scalars(select(User).where(User.email == data.email)).first()
     if not user:
+        myctx.dummy_verify()
         raise HTTPException(status_code=401, detail="Bad credentials")
     match data.type:
         case LoginType.PASSWORD:
@@ -63,8 +66,27 @@ def process_login(
 
 
 @router.post("/auth/reset")
-def reset_password(body: ResetPasswordRequest):
-    return {}
+def reset_password(
+    body: ResetPassword,
+    token_payload: Annotated[
+        dict, Depends(ActionTokenAuthorization(ActionTokenValue.ResetPassword))
+    ],
+    session: SessionDep,
+):
+    if body.password != body.password_confirm:
+        raise HTTPException(status_code=400, detail="password mismatch")
+
+    hashed_password = myctx.hash(body.password)
+    stmt = (
+        update(User)
+        .where(User.id == token_payload["user_id"])
+        .values(password=hashed_password)
+    )
+    print(token_payload["user_id"], hashed_password)
+    res = session.execute(stmt)
+    session.commit()
+
+    return "OK"
 
 
 @router.post("/auth/logout")

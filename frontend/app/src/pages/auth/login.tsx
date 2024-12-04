@@ -50,9 +50,8 @@ function AuthPage() {
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)}>
-        {errorMsg ? <Alert type="error">{errorMsg}</Alert> : null}
         <fieldset disabled={isSubmitting}>
-
+          {errorMsg ? <Alert type="error">{errorMsg}</Alert> : null}
           <div className="mb-6">
             <label className="mb-2 block font-semibold" htmlFor="email">Email</label>
             <Input

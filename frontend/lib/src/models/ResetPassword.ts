@@ -36,7 +36,7 @@ export interface ResetPassword {
      * @type {string}
      * @memberof ResetPassword
      */
-    token: string;
+    passwordConfirm: string;
 }
 
 /**
@@ -45,7 +45,7 @@ export interface ResetPassword {
 export function instanceOfResetPassword(value: object): value is ResetPassword {
     if (!('email' in value) || value['email'] === undefined) return false;
     if (!('password' in value) || value['password'] === undefined) return false;
-    if (!('token' in value) || value['token'] === undefined) return false;
+    if (!('passwordConfirm' in value) || value['passwordConfirm'] === undefined) return false;
     return true;
 }
 
@@ -61,7 +61,7 @@ export function ResetPasswordFromJSONTyped(json: any, ignoreDiscriminator: boole
         
         'email': json['email'],
         'password': json['password'],
-        'token': json['token'],
+        'passwordConfirm': json['password_confirm'],
     };
 }
 
@@ -78,7 +78,7 @@ export function ResetPasswordToJSONTyped(value?: ResetPassword | null, ignoreDis
         
         'email': value['email'],
         'password': value['password'],
-        'token': value['token'],
+        'password_confirm': value['passwordConfirm'],
     };
 }
 

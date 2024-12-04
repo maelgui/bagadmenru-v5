@@ -3,15 +3,17 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
+import httpx
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
+from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import cast, func, select
 from sqlalchemy.sql.functions import count, sum
 from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
-from bbe2.dependencies import S3Dep, SessionDep
+from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, TemplateDep
 from bbe2.schemas.utils import GlobalStats, MyStats
 from bbe2.utils.auth import Action, Authorization, Resource, get_current_user2
 
@@ -171,6 +173,8 @@ async def list_profiles(
 async def create_profile(
     profile: schemas.ProfileCreate,
     session: SessionDep,
+    settings: SettingsDep,
+    templates: TemplateDep,
 ):
 
     profile_db = models.User(
@@ -183,6 +187,34 @@ async def create_profile(
     session.add(profile_db)
     session.commit()
     session.refresh(profile_db)
+
+    token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
+    template_payload = {
+        "user": profile_db,
+        "domain": settings.domain,
+        "token": token_serializer.dumps(
+            {
+                "user_id": profile_db.id,
+                "action": "ResetPassword",
+            }
+        ),
+    }
+    html_template = templates.get_template("email_welcome.html")
+    text_template = templates.get_template("email_welcome.txt")
+    email = {
+        "subject": f"[bagadmenru] Bienvenue !",
+        "to": profile_db.email,
+        "body_text": text_template.render(**template_payload),
+        "body_html": html_template.render(**template_payload),
+    }
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            f"{settings.email_api_endpoint}/batch_send_emails",
+            timeout=10,
+            json=[email],
+        )
+        r.raise_for_status()
+
     return profile_db
 
 

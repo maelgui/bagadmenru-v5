@@ -22,4 +22,5 @@ def get_session(settings: Annotated[Settings, Depends(get_settings)]):
     try:
         yield db
     finally:
+        db.commit()
         db.close()

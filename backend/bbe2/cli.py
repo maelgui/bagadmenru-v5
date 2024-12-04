@@ -1,13 +1,15 @@
 import os
 from contextlib import contextmanager
+from time import sleep
 
 import typer
 from rich.console import Console
 from rich.table import Table
-from sqlalchemy import create_engine, insert, select
+from sqlalchemy import Connection, create_engine, delete, insert, select, update
 
 from bbe2 import models
 from bbe2.database import SessionLocal, get_engine
+from bbe2.models.user import Role
 from bbe2.utils.auth import myctx
 
 console = Console()
@@ -19,9 +21,9 @@ def session():
     # Code to acquire resource, e.g.:
     engine = get_engine(os.environ["DATABASE_URL"])
     SessionLocal.configure(bind=engine)
-    with engine.connect() as conn:
-        yield conn
-        conn.commit()
+    with SessionLocal() as s:
+        yield s
+        s.close()
 
 
 @users.command("list", help="List users")
@@ -70,22 +72,6 @@ def list_roles():
     console.print(table)
 
 
-@roles.command("sync", help="Synchronize roles")
-def sync_roles():
-    with session() as s:
-        s.execute(
-            insert(models.Role).values(
-                [
-                    {"id": "admin", "description": "Administrateur"},
-                    {"id": "bagad", "description": "Bagad"},
-                    {"id": "eleves", "description": "Eleves"},
-                    {"id": "intervenants", "description": "Profs"},
-                ]
-            )
-        )
-    print("Roles synchronized")
-
-
 app = typer.Typer()
 app.add_typer(users, name="users", help="Manage users CLI")
 app.add_typer(roles, name="roles", help="Manage roles CLI")
@@ -94,6 +80,29 @@ app.add_typer(roles, name="roles", help="Manage roles CLI")
 @app.command()
 def hello(name: str):
     print(f"Hello {name}")
+
+
+@app.command("bootstrap", help="Bootstrap default data")
+def bootstrap():
+    console = Console()
+    with console.status("Bootstraping data") as status, session() as s:
+        default_roles = [
+            Role(id="admin", description="Administrateur"),
+            Role(id="bagad", description="Bagad"),
+            Role(id="eleves", description="Eleves"),
+            Role(id="intervenants", description="Profs"),
+        ]
+        for role in default_roles:
+            s.merge(role)
+        console.log("Default roles created")
+        sleep(3)
+        s.merge(
+            models.Group(
+                id=1, name="Administrateur", color="#000", roles=[default_roles[0]]
+            )
+        )
+        console.log("Admin group created")
+    console.print("[bold green]Bootstrap successfully")
 
 
 if __name__ == "__main__":
