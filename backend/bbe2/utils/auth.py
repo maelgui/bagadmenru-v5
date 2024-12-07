@@ -39,6 +39,19 @@ class Resource(Enum):
 class ActionTokenValue(Enum):
     CreateResponseByToken = "CreateResponseByToken"
     ResetPassword = "ResetPassword"
+    Unsubscribe = "Unsubscribe"
+
+    @property
+    def max_age(self) -> int:
+        match self:
+            case ActionTokenValue.CreateResponseByToken:
+                return 3600 * 24 * 7  # 7 jours
+            case ActionTokenValue.ResetPassword:
+                return 3600  # 1h
+            case ActionTokenValue.Unsubscribe:
+                return 3600 * 24 * 7  # 7 jours
+            case _:
+                return 0
 
 
 def credentials(
@@ -152,7 +165,7 @@ myctx = CryptContext(
 
 class ActionTokenAuthorization:
     def __init__(self, action: ActionTokenValue):
-        self.action = action.value
+        self.action = action
 
     async def __call__(
         self,
@@ -166,14 +179,14 @@ class ActionTokenAuthorization:
         try:
             decoded_payload = serializer.loads(
                 token,
-                max_age=settings.token_max_age,
+                max_age=self.action.max_age,
             )
         except BadSignature as e:
             logging.error(f"Invalid token {e=}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
             )
-        if decoded_payload.get("action") != self.action:
+        if decoded_payload.get("action") != self.action.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
             )

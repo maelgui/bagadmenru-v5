@@ -114,6 +114,11 @@ export interface ListRolesApiV1RolesGetRequest {
     accessToken?: string | null;
 }
 
+export interface UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest {
+    profileId: string;
+    token: string;
+}
+
 export interface UpdateGroupApiV1GroupsGroupIdPutRequest {
     groupId: number;
     groupUpdate: GroupUpdate;
@@ -505,6 +510,54 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async listRolesApiV1RolesGet(requestParameters: ListRolesApiV1RolesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Role>> {
         const response = await this.listRolesApiV1RolesGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Unsubscribe
+     */
+    async unsubscribeApiV1ProfilesProfileIdUnsubscribePostRaw(requestParameters: UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['profileId'] == null) {
+            throw new runtime.RequiredError(
+                'profileId',
+                'Required parameter "profileId" was null or undefined when calling unsubscribeApiV1ProfilesProfileIdUnsubscribePost().'
+            );
+        }
+
+        if (requestParameters['token'] == null) {
+            throw new runtime.RequiredError(
+                'token',
+                'Required parameter "token" was null or undefined when calling unsubscribeApiV1ProfilesProfileIdUnsubscribePost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['token'] != null) {
+            headerParameters['token'] = String(requestParameters['token']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/profiles/{profile_id}/unsubscribe`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Unsubscribe
+     */
+    async unsubscribeApiV1ProfilesProfileIdUnsubscribePost(requestParameters: UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.unsubscribeApiV1ProfilesProfileIdUnsubscribePostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

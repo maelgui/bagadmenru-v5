@@ -3,7 +3,7 @@
 import uuid
 from typing import List
 
-from sqlalchemy import Column, ForeignKey, String, Table, Text
+from sqlalchemy import Column, ForeignKey, String, Table, Text, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bbe2.models.base import Base
@@ -41,6 +41,7 @@ class User(Base):
     groups: Mapped[List["Group"]] = relationship(
         secondary=user_group_association_table, back_populates="members"
     )
+    receives_emails: Mapped[bool] = mapped_column(default=True, server_default=true())
 
 
 class Group(Base):

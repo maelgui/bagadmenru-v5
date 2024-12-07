@@ -1,0 +1,5 @@
+Une sortie a été ajoutée, pensez à remplir vos disponibilités !
+
+Utiliser le lien ci-dessous pour répondre.
+
+{{ domain }}/s/answer/{{ token }}

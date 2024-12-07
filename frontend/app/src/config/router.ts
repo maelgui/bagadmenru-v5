@@ -5,6 +5,7 @@ import { SimpleLayoutWithOutlet } from '../layout/simple';
 import ChangePasswordPage from '../pages/auth/changePassword';
 import AuthPage from '../pages/auth/login';
 import LostPasswordPage from '../pages/auth/lostPassword';
+import UnsubscribePage from '../pages/auth/unsubscribe';
 import RoutingErrorComponent from '../pages/error/error';
 import AddEventPage from '../pages/events/add';
 import AnswerLinkPage from '../pages/events/answer';
@@ -115,6 +116,10 @@ export default createBrowserRouter([
           {
             path: 'answer/:token',
             Component: AnswerLinkPage,
+          },
+          {
+            path: 'unsubscribe/:token',
+            Component: UnsubscribePage,
           },
         ],
       },

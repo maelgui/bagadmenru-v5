@@ -19,14 +19,13 @@ class Settings(BaseSettings):
     cors_allowed_origins: list[str] = []
     cors_allowed_origin_regex: Optional[str] = None
 
-    domain: str = "beta.bagadmenru.bzh"
+    frontend_base_url: str = "https://beta.bagadmenru.bzh"
 
     jwt_secret_key: str
     email_api_endpoint: str
     authorizer_api_endpoint: str
 
     token_secret_key: str
-    token_max_age: int = 60 * 60 * 24 * 7  # 7 days
 
     @field_validator("email_api_endpoint", "authorizer_api_endpoint")
     @classmethod

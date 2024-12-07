@@ -122,8 +122,8 @@ async def create_event(
                         "id": user.id,
                         "roles": [r.id for g in user.groups for r in g.roles],
                     },
-                    "action": Action.CREATE,
-                    "resource": Resource.RESPONSE,
+                    "action": Action.CREATE.value,
+                    "resource": Resource.RESPONSE.value,
                 },
                 settings,
             )
@@ -138,12 +138,18 @@ async def create_event(
                 "body_text": "Allez remplir vos disponibilités",
                 "body_html": html_template.render(
                     event=event,
-                    domain=settings.domain,
+                    domain=settings.frontend_base_url,
                     token=token_serializer.dumps(
                         {
                             "user_id": user.id,
                             "event_id": db_event.id,
-                            "action": "CreateResponseByToken",
+                            "action": ActionTokenValue.CreateResponseByToken.value,
+                        }
+                    ),
+                    unsubscribe_token=token_serializer.dumps(
+                        {
+                            "user_id": user.id,
+                            "action": ActionTokenValue.Unsubscribe.value,
                         }
                     ),
                 ),

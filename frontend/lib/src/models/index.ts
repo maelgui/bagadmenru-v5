@@ -26,6 +26,7 @@ export * from './ProfileCreate';
 export * from './ProfileUpdate';
 export * from './Res';
 export * from './ResetPassword';
+export * from './ResetPasswordRequest';
 export * from './Response';
 export * from './ResponseCreate';
 export * from './Role';

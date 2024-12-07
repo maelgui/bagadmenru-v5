@@ -9,9 +9,10 @@ from bbe2.database import get_session
 
 # from bbe2.utils.auth import get_current_user
 from bbe2.utils.s3 import S3Helper
-from bbe2.utils.templates import get_templating
+from bbe2.utils.templates import EmailSender, get_templating
 
 SessionDep = Annotated[Session, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 S3Dep = Annotated[S3Helper, Depends(S3Helper)]
 TemplateDep = Annotated[Environment, Depends(get_templating)]
+SenderDep = Annotated[EmailSender, Depends(EmailSender)]

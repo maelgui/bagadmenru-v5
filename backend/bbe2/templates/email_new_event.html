@@ -34,7 +34,7 @@
                 </ul>
                 <p style="margin-top: 1em;margin-bottom: 1em;">Pour répondre rapidement :</p>
                 <p style="text-align: center;margin-top: 1em;margin-bottom: 1em;">
-                    <a href="https://{{ domain }}/s/answer/{{ token }}"
+                    <a href="{{ domain }}/s/answer/{{ token }}"
                         style="display: inline-block;border: 1px solid #3498db;background-color: #fff;padding: 12px 25px;text-decoration: none;color: #3498db;margin: 0px;">
                         Répondre maintenant !
                     </a>
@@ -56,7 +56,7 @@
                 <p style="margin-top: 1em;margin-bottom: 1em;">
                     Vous recevez ce mail car vous êtes membre du Bagad Men Ru.<br>
                     Vous ne souhaitez plus recevoir d'emails ?
-                    <a href="http://<?php echo DOMAINE; ?>/membre/unsubscribe/<?php echo $user->getId(); ?>"
+                    <a href="{{ domain }}/s/unsubscribe/{{ unsubscribe_token }}"
                         style="color: #999999;">Désabonnez-vous</a>
                 </p>
             </div>

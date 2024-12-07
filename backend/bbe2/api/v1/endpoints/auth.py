@@ -4,9 +4,10 @@ from typing import Annotated
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Response
+from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import select, update
 
-from bbe2.dependencies import SessionDep, SettingsDep
+from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
 from bbe2.models.user import User
 from bbe2.schemas.auth import (
     JwtPayload,
@@ -17,6 +18,7 @@ from bbe2.schemas.auth import (
     Token,
 )
 from bbe2.utils.auth import ActionTokenAuthorization, ActionTokenValue, myctx
+from bbe2.utils.templates import EmailData
 
 router = APIRouter()
 
@@ -93,3 +95,40 @@ def reset_password(
 def logout(response: Response):
     response.delete_cookie(key="access_token")
     return {}
+
+
+@router.post("/auth/reset_password_request")
+async def reset_password_request(
+    body: ResetPasswordRequest,
+    settings: SettingsDep,
+    session: SessionDep,
+    sender: SenderDep,
+):
+    user = session.scalars(select(User).where(User.email == body.email)).first()
+    if not user:
+        return "OK"
+
+    serializer = URLSafeTimedSerializer(settings.token_secret_key)
+    token = serializer.dumps(
+        {
+            "user_id": user.id,
+            "action": ActionTokenValue.ResetPassword.value,
+        }
+    )
+
+    await sender.batch_send_emails(
+        "Reinitialisation de votre mot de passe.",
+        "reset_password",
+        [
+            EmailData(
+                to=user.email,
+                template_data={
+                    "token": token,
+                    "user": user,
+                    "frontend_url": settings.frontend_base_url,
+                },
+            )
+        ],
+    )
+
+    return "OK"

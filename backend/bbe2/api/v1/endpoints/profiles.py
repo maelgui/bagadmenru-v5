@@ -7,7 +7,7 @@ import httpx
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
 from itsdangerous import URLSafeTimedSerializer
-from sqlalchemy import cast, func, select
+from sqlalchemy import cast, func, select, update
 from sqlalchemy.sql.functions import count, sum
 from sqlalchemy.types import Integer
 
@@ -15,7 +15,14 @@ from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
 from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, TemplateDep
 from bbe2.schemas.utils import GlobalStats, MyStats
-from bbe2.utils.auth import Action, Authorization, Resource, get_current_user2
+from bbe2.utils.auth import (
+    Action,
+    ActionTokenAuthorization,
+    ActionTokenValue,
+    Authorization,
+    Resource,
+    get_current_user2,
+)
 
 profiles_router = APIRouter(prefix="/profiles")
 
@@ -191,14 +198,21 @@ async def create_profile(
     token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
     template_payload = {
         "user": profile_db,
-        "domain": settings.domain,
+        "domain": settings.frontend_base_url,
         "token": token_serializer.dumps(
             {
                 "user_id": profile_db.id,
-                "action": "ResetPassword",
+                "action": ActionTokenValue.ResetPassword.value,
+            }
+        ),
+        "unsubscribe_token": token_serializer.dumps(
+            {
+                "user_id": profile_db.id,
+                "action": ActionTokenValue.Unsubscribe.value,
             }
         ),
     }
+
     html_template = templates.get_template("email_welcome.html")
     text_template = templates.get_template("email_welcome.txt")
     email = {
@@ -216,6 +230,38 @@ async def create_profile(
         r.raise_for_status()
 
     return profile_db
+
+
+@profiles_router.post(
+    "/{profile_id}/unsubscribe",
+)
+def unsubscribe(
+    profile_id: str,
+    session: SessionDep,
+    token_payload: Annotated[
+        dict, Depends(ActionTokenAuthorization(ActionTokenValue.Unsubscribe))
+    ],
+):
+    if token_payload["user_id"] != profile_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+    profile_db = (
+        session.query(models.User)
+        .filter(models.User.id == token_payload["user_id"])
+        .first()
+    )
+    if not profile_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
+
+    stmt = (
+        update(models.User)
+        .values(receives_emails=False)
+        .where(models.User.id == token_payload["user_id"])
+    )
+    session.execute(stmt)
+
+    return "OK"
 
 
 stats_router = APIRouter(prefix="/stats")

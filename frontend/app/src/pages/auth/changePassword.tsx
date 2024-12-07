@@ -18,7 +18,7 @@ function ChangePasswordPage() {
   const params = useParams<ChangePasswordPageParams>();
 
   const {
-    register, handleSubmit, formState: { errors },
+    register, handleSubmit, formState: { errors, isSubmitSuccessful },
   } = useForm<ResetPassword>();
 
   const onSubmit = (data: ResetPassword) => {
@@ -27,42 +27,52 @@ function ChangePasswordPage() {
 
   return (
     <div>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          type="hidden"
-          id="email"
-          {...register('email')}
-        />
+      {isSubmitSuccessful ? (
+        <>
+          <div className="mb-6">
+            Mot de passe changé avec succès !
+          </div>
+          <Button as={Link} to="/" type="button" variant="ghost">Retour</Button>
+        </>
+      ) : (
 
-        <div className="mb-6">
-          <label className="mb-2 block font-semibold" htmlFor="password">Mot de passe</label>
-          <Input
-            type="password"
-            id="password"
-            error={errors.password?.message}
-            {...register('password', { required: 'Ce champ est obligatoire.' })}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <input
+            type="hidden"
+            id="email"
+            {...register('email')}
           />
-        </div>
 
-        <div className="mb-6">
-          <label className="mb-2 block font-semibold" htmlFor="passwordConfirm">Confirmation</label>
-          <Input
-            type="password"
-            id="passwordConfirm"
-            error={errors.passwordConfirm?.message}
-            {...register('passwordConfirm', { required: 'Ce champ est obligatoire.' })}
-          />
-        </div>
+          <div className="mb-6">
+            <label className="mb-2 block font-semibold" htmlFor="password">Mot de passe</label>
+            <Input
+              type="password"
+              id="password"
+              error={errors.password?.message}
+              {...register('password', { required: 'Ce champ est obligatoire.' })}
+            />
+          </div>
 
-        <div className="flex justify-between">
-          <Button as={Link} to="/auth/login" type="button" variant="ghost">Retour</Button>
-          <Button type="submit">
-            <FontAwesomeIcon icon={faWandMagicSparkles} className="mr-2" />
-            Changer
-          </Button>
-        </div>
+          <div className="mb-6">
+            <label className="mb-2 block font-semibold" htmlFor="passwordConfirm">Confirmation</label>
+            <Input
+              type="password"
+              id="passwordConfirm"
+              error={errors.passwordConfirm?.message}
+              {...register('passwordConfirm', { required: 'Ce champ est obligatoire.' })}
+            />
+          </div>
 
-      </form>
+          <div className="flex justify-between">
+            <Button as={Link} to="/auth/login" type="button" variant="ghost">Retour</Button>
+            <Button type="submit">
+              <FontAwesomeIcon icon={faWandMagicSparkles} className="mr-2" />
+              Changer
+            </Button>
+          </div>
+
+        </form>
+      )}
     </div>
   );
 }
