@@ -14,12 +14,12 @@ class ResetPassword(BaseModel):
     password: str
     password_confirm: str
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def check_passwords_match(self) -> Self:
         pw1 = self.password
         pw2 = self.password_confirm
         if pw1 is not None and pw2 is not None and pw1 != pw2:
-            raise ValueError('passwords do not match')
+            raise ValueError("passwords do not match")
         return self
 
 
