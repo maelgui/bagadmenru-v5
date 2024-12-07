@@ -127,7 +127,7 @@ async def reset_password_request(
                     "user": user,
                     "frontend_url": settings.frontend_base_url,
                 },
-            )
+            ),
         ],
     )
 
