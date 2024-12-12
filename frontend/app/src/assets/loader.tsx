@@ -1,6 +1,7 @@
 // By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL
 export default function LoaderAudio(props: React.SVGProps<SVGSVGElement>) {
   return (
+    // eslint-disable-next-line react/jsx-props-no-spreading
     <svg {...props} width="55" height="80" viewBox="0 0 55 80" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
       <g transform="matrix(1 0 0 -1 0 80)">
         <rect width="10" height="20" rx="3">

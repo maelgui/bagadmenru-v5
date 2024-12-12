@@ -80,7 +80,7 @@ export function usePermissions() {
 
   useEffect(() => {
     const b = 'policy';
-    import(`../assets/${b}.wasm?url`).then(fetch).then(loadPolicy).then(setPolicy)
+    import(`../assets/${b}.wasm?url`).then(fetch).then(loadPolicy).then(setPolicy);
     // loadPolicy(fetch(policyBundleUrl)).then((p) => setPolicy(p));
   }, []);
 

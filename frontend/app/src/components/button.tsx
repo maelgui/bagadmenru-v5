@@ -1,6 +1,7 @@
 /* eslint-disable react/require-default-props */
 import { forwardRef } from 'react';
 import LoaderAudio from '../assets/loader';
+
 type ButtonOwnProps<C extends React.ElementType> = {
   as?: C
   size?: 'sm' | 'md' | 'lg' | 'll'
