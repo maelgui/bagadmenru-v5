@@ -10,7 +10,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import policyBundleUrl from '../assets/policy.wasm?url';
+// import policyBundleUrl from '../assets/policy.wasm?url';
 import env from '../env';
 import { AuthStatus, useProfileStore } from '../utils/authStore';
 
@@ -79,12 +79,14 @@ export function usePermissions() {
   const [policy, setPolicy] = useState<LoadedPolicy | undefined>(undefined);
 
   useEffect(() => {
-    loadPolicy(fetch(policyBundleUrl)).then((p) => setPolicy(p));
+    const b = 'policy';
+    import(`../assets/${b}.wasm?url`).then(fetch).then(loadPolicy).then(setPolicy)
+    // loadPolicy(fetch(policyBundleUrl)).then((p) => setPolicy(p));
   }, []);
 
   const can = useCallback((action: string, resource: string) => {
     if (policy === undefined) {
-      return false;
+      return true;
     }
     let allow = false;
     try {

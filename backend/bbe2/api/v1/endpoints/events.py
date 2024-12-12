@@ -156,13 +156,16 @@ async def create_event(
             }
             for user in users
         ]
-        async with httpx.AsyncClient() as client:
-            r = await client.post(
-                f"{settings.email_api_endpoint}/batch_send_emails",
-                timeout=10,
-                json=data,
-            )
-            r.raise_for_status()
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    f"{settings.email_api_endpoint}/batch_send_emails",
+                    timeout=10,
+                    json=data,
+                )
+                r.raise_for_status()
+        except httpx.HTTPError as exc:
+            logging.error("Unable to send batch email: %s", exc)
 
     return db_event
 

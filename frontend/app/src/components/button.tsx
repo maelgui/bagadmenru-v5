@@ -1,6 +1,6 @@
 /* eslint-disable react/require-default-props */
 import { forwardRef } from 'react';
-
+import LoaderAudio from '../assets/loader';
 type ButtonOwnProps<C extends React.ElementType> = {
   as?: C
   size?: 'sm' | 'md' | 'lg' | 'll'
@@ -64,7 +64,12 @@ function PrivateButton<C extends React.ElementType = 'button'>(
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}
     >
-      {children}
+      <div className="relative">
+        <span className="w-full absolute">
+          <LoaderAudio className={`m-auto h-4 ${!isLoading ? 'invisible' : ''}`} />
+        </span>
+        <span className={isLoading ? 'invisible' : ''}>{children}</span>
+      </div>
     </Component>
   );
 }

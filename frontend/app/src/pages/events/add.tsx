@@ -12,7 +12,7 @@ export default function AddEventPage() {
   const { eventsApi } = useApiClient();
 
   const navigate = useNavigate();
-  const { mutate } = useMutation({
+  const { mutateAsync } = useMutation({
     mutationFn: (data: EventCreate) => eventsApi.createEventApiV1EventsPost({ eventCreate: data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
@@ -22,7 +22,7 @@ export default function AddEventPage() {
       toast.error(`Erreur lors de la création de l'évènement : ${error.message}`);
     },
   });
-  const onSubmit = (data: EventCreate) => mutate(data);
+  const onSubmit = (data: EventCreate) => mutateAsync(data);
 
   return (
     <>

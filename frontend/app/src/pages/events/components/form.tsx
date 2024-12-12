@@ -21,7 +21,7 @@ interface EventFormProps {
 
 export default function EventForm({ onSubmit, data = undefined }: EventFormProps) {
   const {
-    register, control, handleSubmit, formState: { errors, dirtyFields }, setValue,
+    register, control, handleSubmit, formState: { errors, dirtyFields, isSubmitting }, setValue,
   } = useForm<EventCreate>({ defaultValues: data || { category: 'sortie', isInDoodle: true, costume: 'COSTUME' } });
 
   return (
@@ -131,7 +131,7 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
         </div>
       </div>
       <div className="mb-6">
-        <Button type="submit">Enregistrer</Button>
+        <Button type="submit" isLoading={isSubmitting}>Enregistrer</Button>
       </div>
     </form>
   );

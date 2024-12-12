@@ -5,7 +5,7 @@ from time import sleep
 import typer
 from rich.console import Console
 from rich.table import Table
-from sqlalchemy import Connection, create_engine, delete, insert, select, update
+from sqlalchemy import insert, select
 
 from bbe2 import models
 from bbe2.database import SessionLocal, get_engine
@@ -23,6 +23,7 @@ def session():
     SessionLocal.configure(bind=engine)
     with SessionLocal() as s:
         yield s
+        s.commit()
         s.close()
 
 
@@ -31,11 +32,11 @@ def list_users():
     with session() as s:
         users = s.scalars(select(models.User)).all()
 
-    table = Table("Firstname", "Lastname", "Email")
-    for user in users:
-        table.add_row(user.first_name, user.last_name, user.email)
+        table = Table("Firstname", "Lastname", "Email")
+        for user in users:
+            table.add_row(user.first_name, user.last_name, user.email)
 
-    console.print(table)
+        console.print(table)
 
 
 @users.command("create", help="List users")
@@ -63,13 +64,13 @@ roles = typer.Typer()
 @roles.command("list", help="List roles")
 def list_roles():
     with session() as s:
-        roles = s.execute(select(models.Role)).all()
+        roles = s.scalars(select(models.Role)).all()
 
-    table = Table("Role", "Description")
-    for role in roles:
-        table.add_row(role.id, role.description)
+        table = Table("Role", "Description")
+        for role in roles:
+            table.add_row(role.id, role.description)
 
-    console.print(table)
+        console.print(table)
 
 
 app = typer.Typer()
@@ -94,6 +95,7 @@ def bootstrap():
         ]
         for role in default_roles:
             s.merge(role)
+        s.commit()
         console.log("Default roles created")
         sleep(3)
         s.merge(
