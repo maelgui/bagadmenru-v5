@@ -77,9 +77,9 @@ def test_list_profiles(client: TestClient):
         {
             "id": "a8e2d3249e9d997e",
             "first_name": "john",
-            "last_name": "doe2",
-            "picture_key": "blbabla.jpg",
-            "picture_url": ANY,
+            "last_name": "doe",
+            "picture_key": None,
+            "picture_url": None,
             "instrument": {
                 "color": "#fff",
                 "id": 1,

@@ -1,18 +1,18 @@
 """S3 file storage utils functions."""
 
-from typing import Annotated, BinaryIO, Optional
+from typing import BinaryIO, Optional
 from urllib.parse import urlencode
 
-from bbe2.config import Settings, get_settings
 import boto3
 from botocore.client import Config
-from fastapi import Depends
+
+from bbe2.config import Settings
 
 
 class S3Helper:
     """Regroup S3 utilility functions."""
 
-    def __init__(self, settings: Annotated[Settings, Depends(get_settings)]):
+    def __init__(self, settings: Settings):
         self.client = boto3.client(
             service_name="s3",
             endpoint_url=str(settings.s3_endpoint),

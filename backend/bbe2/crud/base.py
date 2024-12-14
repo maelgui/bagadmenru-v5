@@ -50,13 +50,13 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def update(
         self, db_object: ModelType, update_object: UpdateSchemaType
     ) -> ModelType:
-        for key, value in update_object.dict(exclude_unset=True).items():
+        for key, value in update_object.model_dump(exclude_unset=True).items():
             setattr(db_object, key, value)
         self.db_session.commit()
         self.db_session.refresh(db_object)
         return db_object
 
     def delete(self, id: int):
-        obj = self.db_session.query(self.model).get(id)
+        obj = self.db_session.get(self.model, id)
         self.db_session.delete(obj)
         self.db_session.commit()

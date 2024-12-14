@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, computed_field
 
@@ -30,6 +30,8 @@ class ProfileUpdate(_ProfileBase):
 
 class Profile(_ProfileBase):
     model_config = ConfigDict(from_attributes=True)
+    # s3_helper must be set in S3Helper and S3HelperDependencies must be used in route
+    s3_helper: ClassVar[S3Helper]
 
     # email: str
     id: str
@@ -41,10 +43,9 @@ class Profile(_ProfileBase):
     @computed_field  # type: ignore[misc]
     @property
     def picture_url(self) -> Optional[str]:
-        s3 = S3Helper(get_settings())
         if not self.picture_key:
             return None
-        return s3.generate_get_presigned_url(object_name=self.picture_key)
+        return self.s3_helper.generate_get_presigned_url(object_name=self.picture_key)
 
 
 class Role(BaseModel):

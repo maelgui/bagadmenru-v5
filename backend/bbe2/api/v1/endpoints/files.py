@@ -22,6 +22,7 @@ router = APIRouter(prefix="/files")
 )
 async def list_files(
     session: SessionDep,
+    s3: S3Dep,
     t: Optional[FileOrFolderType] = None,
     limit: int = 10,
 ):
@@ -170,7 +171,7 @@ async def create_folder(
 ):
     """Create a new folder."""
     return file_crud.create(
-        parent_id=folder_id, type=FileOrFolderType.DIRECTORY, **new_folder.dict()
+        parent_id=folder_id, type=FileOrFolderType.DIRECTORY, **new_folder.model_dump()
     )
 
 

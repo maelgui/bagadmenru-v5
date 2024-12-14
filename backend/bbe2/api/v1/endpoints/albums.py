@@ -78,7 +78,7 @@ async def create_album(
     album: schemas.AlbumCreate,
     album_crud: CRUDAlbum = Depends(),
 ):
-    return album_crud.create(**album.dict())
+    return album_crud.create(**album.model_dump())
 
 
 @router.put(

@@ -89,9 +89,12 @@ def bootstrap():
     with console.status("Bootstraping data") as status, session() as s:
         default_roles = [
             Role(id="admin", description="Administrateur"),
-            Role(id="bagad", description="Bagad"),
-            Role(id="eleves", description="Eleves"),
-            Role(id="intervenants", description="Profs"),
+            Role(
+                id="bagad",
+                description="Voit les partitions et peut répondre aux évènements",
+            ),
+            Role(id="eleves", description="Voit les partitions et évènements"),
+            Role(id="intervenants", description="Voit seulement les partitions"),
         ]
         for role in default_roles:
             s.merge(role)

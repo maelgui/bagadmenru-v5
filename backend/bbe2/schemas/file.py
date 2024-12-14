@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict, computed_field
 
@@ -26,6 +26,8 @@ class FileOrFolderUpdate(_FileOrFolderBase):
 
 class FileOrFolder(_FileOrFolderBase):
     model_config = ConfigDict(from_attributes=True)
+    # s3_helper must be set in S3Helper and S3HelperDependencies must be used in route
+    s3_helper: ClassVar[S3Helper]
 
     type: FileOrFolderType
     id: int
@@ -35,7 +37,6 @@ class FileOrFolder(_FileOrFolderBase):
     @computed_field  # type: ignore[misc]
     @property
     def fileUrl(self) -> Optional[str]:
-        s3 = S3Helper(get_settings())
         if not self.file_key:
             return None
-        return s3.generate_get_presigned_url(object_name=self.file_key)
+        return self.s3_helper.generate_get_presigned_url(object_name=self.file_key)

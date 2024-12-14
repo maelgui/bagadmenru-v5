@@ -1,4 +1,4 @@
-from importlib.resources import open_binary
+from importlib.resources import files, open_binary
 from unittest.mock import ANY, MagicMock, patch
 
 from fastapi.testclient import TestClient
@@ -50,7 +50,7 @@ def test_get_children(client: TestClient):
 def test_upload_file(mock_upload_file: MagicMock, client: TestClient):
     response = client.post(
         "/api/v1/files/1/upload",
-        files={"file": open_binary("tests.assets", "lena.jpg")},
+        files={"file": (files("tests.assets") / "lena.jpg").open("rb")},
     )
 
     assert response.status_code == 201
@@ -77,6 +77,7 @@ def test_edit_file(client: TestClient):
         "/api/v1/files/2",
         json={
             "name": "Suite 2021",
+            "parent_id": 1,
         },
     )
     assert response.status_code == 200

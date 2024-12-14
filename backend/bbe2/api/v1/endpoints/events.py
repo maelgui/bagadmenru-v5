@@ -106,7 +106,7 @@ async def create_event(
     session: SessionDep,
     templates: TemplateDep,
 ):
-    db_event = event_crud.create(**event.dict())
+    db_event = event_crud.create(**event.model_dump())
 
     if event.is_in_doodle:
         users = session.scalars(
@@ -243,7 +243,10 @@ async def create_response(
         )
 
     db_object = models.Response(
-        event_id=event_id, user_id=identifier, date=datetime.now(), **response.dict()
+        event_id=event_id,
+        user_id=identifier,
+        date=datetime.now(),
+        **response.model_dump(),
     )
     session.merge(db_object)
     session.commit()
@@ -302,7 +305,7 @@ async def create_response_by_token(
         event_id=token_payload["event_id"],
         user_id=token_payload["user_id"],
         date=datetime.now(),
-        **response.dict(),
+        **response.model_dump(),
     )
     session.merge(db_object)
     session.commit()

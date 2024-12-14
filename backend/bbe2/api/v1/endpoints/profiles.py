@@ -185,7 +185,7 @@ async def create_profile(
 ):
 
     profile_db = models.User(
-        **profile.dict(exclude={"group_ids"}),
+        **profile.model_dump(exclude={"group_ids"}),
     )
     groups = (
         session.query(models.Group).filter(models.Group.id.in_(profile.group_ids)).all()
