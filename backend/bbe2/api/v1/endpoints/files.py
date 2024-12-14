@@ -8,7 +8,7 @@ from sqlalchemy import and_
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
-from bbe2.dependencies import S3Dep, SessionDep
+from bbe2.dependencies import S3Dep, SessionDep, get_s3_helper
 from bbe2.schemas.file import FileOrFolderType
 from bbe2.utils.auth import Action, Authorization, Resource
 
@@ -17,12 +17,14 @@ router = APIRouter(prefix="/files")
 
 @router.get(
     "/",
-    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
+    dependencies=[
+        Depends(Authorization(Action.VIEW, Resource.FILE)),
+        Depends(get_s3_helper),
+    ],
     response_model=list[schemas.FileOrFolder],
 )
 async def list_files(
     session: SessionDep,
-    s3: S3Dep,
     t: Optional[FileOrFolderType] = None,
     limit: int = 10,
 ):
@@ -103,7 +105,10 @@ async def get_breadcrumb(
 
 @router.get(
     "/{folder_id}/children",
-    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
+    dependencies=[
+        Depends(Authorization(Action.VIEW, Resource.FILE)),
+        Depends(get_s3_helper),
+    ],
     response_model=list[schemas.FileOrFolder],
 )
 async def list_children(

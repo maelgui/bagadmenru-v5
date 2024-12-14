@@ -20,6 +20,7 @@ class FileOrFolder(Base):
     file_key: Mapped[str] = mapped_column(String(128), nullable=True)
     type: Mapped[FileOrFolderType]
     children: Mapped[list["FileOrFolder"]] = relationship()
+    # pylint: disable=not-callable
     uploaded_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     parent_id: Mapped[int] = mapped_column(

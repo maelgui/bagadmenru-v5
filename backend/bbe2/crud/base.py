@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Generic, Type, TypeVar
 
 from pydantic import BaseModel
+from sqlalchemy import ColumnExpressionArgument
 
 from bbe2.dependencies import SessionDep
 from bbe2.models.base import Base
@@ -21,8 +22,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.db_session = db_session
 
     # Find operation
-    def find_one_by(self, condition) -> ModelType | None:
-        return self.db_session.query(self.model).filter(condition).first()
+    def find_one_by(self, *condition: ColumnExpressionArgument[bool]) -> ModelType | None:
+        return self.db_session.query(self.model).filter(*condition).first()
 
     def find_by(self, condition, skip: int = 0, limit: int = 100) -> list[ModelType]:
         return (
@@ -44,8 +45,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.db_session.refresh(db_object)
         return db_object
 
-    def get(self, id: int) -> ModelType | None:
-        return self.db_session.query(self.model).get(id)
+    def get(self, pk: int) -> ModelType | None:
+        return self.db_session.query(self.model).get(pk)
 
     def update(
         self, db_object: ModelType, update_object: UpdateSchemaType
@@ -56,7 +57,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.db_session.refresh(db_object)
         return db_object
 
-    def delete(self, id: int):
-        obj = self.db_session.get(self.model, id)
+    def delete(self, pk: int):
+        obj = self.db_session.get(self.model, pk)
         self.db_session.delete(obj)
         self.db_session.commit()

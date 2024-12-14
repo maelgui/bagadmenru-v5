@@ -2,9 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from bbe2.schemas.event import Event
-from bbe2.schemas.profile import Profile
-
 
 class ResponseBase(BaseModel):
     value: bool

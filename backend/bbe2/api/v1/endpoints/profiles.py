@@ -8,7 +8,8 @@ from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
 from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import cast, func, select, update
-from sqlalchemy.sql.functions import count, sum
+from sqlalchemy.sql.functions import count as sql_count
+from sqlalchemy.sql.functions import sum as sql_sum
 from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
@@ -102,11 +103,9 @@ async def update_my_profile(
     dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
 )
 async def upload_avatar(
-    profile_crud: Annotated[CRUDProfile, Depends()],
     s3: S3Dep,
     identifier: Annotated[str, Depends(get_current_user2)],
 ) -> schemas.GetUploadUrlResponse:
-    db_profile = profile_crud.find_one_by(models.User.id == identifier)
     object_name = f"pp/{uuid.uuid4()}"
     return schemas.GetUploadUrlResponse(
         url=s3.generate_put_presigned_url(
@@ -216,7 +215,7 @@ async def create_profile(
     html_template = templates.get_template("email_welcome.html")
     text_template = templates.get_template("email_welcome.txt")
     email = {
-        "subject": f"[bagadmenru] Bienvenue !",
+        "subject": "[bagadmenru] Bienvenue !",
         "to": profile_db.email,
         "body_text": text_template.render(**template_payload),
         "body_html": html_template.render(**template_payload),
@@ -283,28 +282,33 @@ async def get_my_stats(
     )
 
     q = select(
-        func.coalesce(sum(cast(models.Response.value, Integer)), 0).label(
+        func.coalesce(sql_sum(cast(models.Response.value, Integer)), 0).label(
             "n_positive_responses"
         ),
         func.avg(models.Response.date - models.Event.created_at).label(
             "avg_response_time"
         ),
-        count(models.Response.value).label("n_responses"),
+        sql_count(models.Response.value).label("n_responses"),
     ).join_from(models.Event, models.Response)
     q = q.where(models.Event.date >= date_debut_saison)
     q = q.where(models.Response.user_id == identifier)
     q = q.where(models.Event.is_in_doodle == True)
-    res1 = session.execute(q).one()._mapping
+    n_positive_responses, avg_response_time, n_responses = session.execute(q).one()
 
     q = select(
-        count(models.Response.value).label("n_upcomming_responses"),
+        sql_count(models.Response.value).label("n_upcomming_responses"),
     ).join_from(models.Event, models.Response)
     q = q.where(models.Event.date >= date_now)
     q = q.where(models.Response.user_id == identifier)
     q = q.where(models.Event.is_in_doodle == True)
-    res2 = session.execute(q).one()._mapping
+    n_upcomming_responses = session.scalars(q).one()
 
-    return MyStats(**res1, **res2)
+    return MyStats(
+        n_positive_responses=n_positive_responses,
+        avg_response_time=avg_response_time,
+        n_responses=n_responses,
+        n_upcomming_responses=n_upcomming_responses,
+    )
 
 
 @stats_router.get(
@@ -313,7 +317,6 @@ async def get_my_stats(
 )
 async def get_global_stats(
     session: SessionDep,
-    identifier: Annotated[str, Depends(get_current_user2)],
 ) -> GlobalStats:
     date_now = datetime.now()
     date_debut_saison = datetime(
@@ -323,30 +326,37 @@ async def get_global_stats(
     )
 
     q = select(
-        count(models.Response.value).label("n_responses"),
+        sql_count(models.Response.value).label("n_responses"),
         func.avg(models.Response.date - models.Event.created_at).label(
             "avg_response_time"
         ),
     ).join_from(models.Event, models.Response)
     q = q.where(models.Event.date >= date_debut_saison)
     q = q.where(models.Event.is_in_doodle == True)
-    res2 = session.execute(q).one()._mapping
+    (n_responses, avg_response_time) = session.execute(q).one()
 
     q = select(
-        count(models.Event.id).label("n_events"),
+        sql_count(models.Event.id).label("n_events"),
     ).select_from(models.Event)
     q = q.where(models.Event.date >= date_debut_saison)
     q = q.where(models.Event.is_in_doodle == True)
-    res3 = session.execute(q).one()._mapping
+    res3 = session.scalar(q)
 
     q = select(
-        count(models.Event.id).label("n_upcoming_event"),
+        sql_count(models.Event.id).label("n_upcoming_event"),
     ).select_from(models.Event)
     q = q.where(models.Event.date >= date_now)
     q = q.where(models.Event.is_in_doodle == True)
-    res4 = session.execute(q).one()._mapping
+    res4 = session.scalar(q)
 
-    return GlobalStats(**dict(**res2, **res3, **res4))
+    return GlobalStats(
+        **dict(
+            n_responses=n_responses,
+            avg_response_time=avg_response_time,
+            n_events=res3,
+            n_upcoming_event=res4,
+        )
+    )
 
 
 groups_router = APIRouter(prefix="/groups")

@@ -28,7 +28,11 @@ class S3Helper:
         self.client.head_bucket(Bucket=self.bucket_name)
 
     def upload_file(
-        self, file_obj: BinaryIO, object_name: str, content_type: Optional[str] = None
+        self,
+        file_obj: BinaryIO,
+        object_name: str,
+        content_type: Optional[str] = None,
+        tags: Optional[dict[str, str | int]] = None,
     ):
         """Upload a file to an S3 bucket
 
@@ -37,14 +41,19 @@ class S3Helper:
         :return: True if file was uploaded, else False
         """
         extra_args = {}
+
+        if tags:
+            extra_args["Tagging"] = urlencode(tags)
         if content_type:
             extra_args["ContentType"] = content_type
+
         response = self.client.upload_fileobj(
             Fileobj=file_obj,
             Bucket=self.bucket_name,
             Key=object_name,
             ExtraArgs=extra_args,
         )
+
         return response
 
     def generate_get_presigned_url(self, object_name, expiration=3600):

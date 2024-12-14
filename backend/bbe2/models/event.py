@@ -16,6 +16,7 @@ class Event(Base):
     title: Mapped[str] = mapped_column(String(100))
     description: Mapped[str]
     date: Mapped[datetime]
+    # pylint: disable=not-callable
     created_at: Mapped[datetime] = mapped_column(default=func.now())
     costume: Mapped[Costume]
     category: Mapped[str] = mapped_column(String(30))

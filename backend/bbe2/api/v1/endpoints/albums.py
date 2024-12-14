@@ -64,7 +64,7 @@ async def upload_file(
     photo_crud: CRUDPhoto = Depends(),
 ):
     filename = str(uuid.uuid4())
-    s3_helper.upload_file(file.file, "photos", filename)
+    s3_helper.upload_file(file.file, "photos", filename, {"album_id": album_id})
     return photo_crud.create(url=filename)
 
 
@@ -125,7 +125,9 @@ async def delete_photo(
     photo_id: int,
     photo_crud: CRUDPhoto = Depends(),
 ):
-    db_photo = photo_crud.find_one_by(models.Photo.id == photo_id)
+    db_photo = photo_crud.find_one_by(
+        (models.Photo.id == photo_id) & (models.Photo.album_id == album_id)
+    )
     if not db_photo:
         raise HTTPException(status_code=404, detail="Album not found")
     photo_crud.delete(photo_id)

@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import Annotated, Optional
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from ics import Calendar, Event  # type: ignore
-from itsdangerous import BadSignature, URLSafeTimedSerializer
+from itsdangerous import URLSafeTimedSerializer
 from pydantic import BaseModel
 from sqlalchemy import select
 
@@ -21,7 +21,6 @@ from bbe2.utils.auth import (
     get_current_user2,
     is_authorized,
 )
-from bbe2.utils.scopes import EventScopes
 
 events_router = APIRouter(prefix="/events")
 responses_router = APIRouter(prefix="/responses")

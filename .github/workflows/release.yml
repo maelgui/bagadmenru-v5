@@ -63,7 +63,7 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Run pylint (disabled)
-        run: poetry run pylint bbe2 || true
+        run: poetry run pylint bbe2 --fail-under 8 --fail-on F,E,W
       - name: Run black
         run: poetry run black --check bbe2
       - name: Run mypy

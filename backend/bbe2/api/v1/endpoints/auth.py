@@ -85,7 +85,7 @@ def reset_password(
         .values(password=hashed_password)
     )
     print(token_payload["user_id"], hashed_password)
-    res = session.execute(stmt)
+    session.execute(stmt)
     session.commit()
 
     return "OK"

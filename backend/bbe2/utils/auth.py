@@ -81,7 +81,7 @@ def verify_token(token: str, settings: Settings) -> JwtPayload | None:
             algorithms=["HS256"],
         )
         payload = JwtPayload(**res)
-    except Exception as e:
+    except jwt.PyJWTError as e:
         logging.error("An Error occured while verifying token: %s", e)
         return None
 
@@ -182,10 +182,10 @@ class ActionTokenAuthorization:
                 max_age=self.action.max_age,
             )
         except BadSignature as e:
-            logging.error(f"Invalid token {e=}")
+            logging.error("Invalid token %s", e)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
-            )
+            ) from e
         if decoded_payload.get("action") != self.action.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"

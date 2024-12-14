@@ -3,7 +3,6 @@ from typing import ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict, computed_field
 
-from bbe2.config import get_settings
 from bbe2.utils.s3 import S3Helper
 
 

@@ -1,4 +1,4 @@
-from bbe2 import models, schemas
+from bbe2 import models
 from bbe2.crud.base import CRUDBase
 
 

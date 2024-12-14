@@ -13,7 +13,7 @@ from bbe2.models.user import Role
 from bbe2.utils.auth import myctx
 
 console = Console()
-users = typer.Typer()
+users_cli = typer.Typer()
 
 
 @contextmanager
@@ -27,7 +27,7 @@ def session():
         s.close()
 
 
-@users.command("list", help="List users")
+@users_cli.command("list", help="List users")
 def list_users():
     with session() as s:
         users = s.scalars(select(models.User)).all()
@@ -39,7 +39,7 @@ def list_users():
         console.print(table)
 
 
-@users.command("create", help="List users")
+@users_cli.command("create", help="List users")
 def create_user():
     first_name = typer.prompt("What's your first name?")
     last_name = typer.prompt("What's your last name?")
@@ -58,10 +58,10 @@ def create_user():
     print(result)
 
 
-roles = typer.Typer()
+roles_cli = typer.Typer()
 
 
-@roles.command("list", help="List roles")
+@roles_cli.command("list", help="List roles")
 def list_roles():
     with session() as s:
         roles = s.scalars(select(models.Role)).all()
@@ -74,8 +74,8 @@ def list_roles():
 
 
 app = typer.Typer()
-app.add_typer(users, name="users", help="Manage users CLI")
-app.add_typer(roles, name="roles", help="Manage roles CLI")
+app.add_typer(users_cli, name="users", help="Manage users CLI")
+app.add_typer(roles_cli, name="roles", help="Manage roles CLI")
 
 
 @app.command()
@@ -85,8 +85,7 @@ def hello(name: str):
 
 @app.command("bootstrap", help="Bootstrap default data")
 def bootstrap():
-    console = Console()
-    with console.status("Bootstraping data") as status, session() as s:
+    with console.status("Bootstraping data"), session() as s:
         default_roles = [
             Role(id="admin", description="Administrateur"),
             Role(
