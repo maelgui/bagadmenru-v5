@@ -22,7 +22,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.db_session = db_session
 
     # Find operation
-    def find_one_by(self, *condition: ColumnExpressionArgument[bool]) -> ModelType | None:
+    def find_one_by(
+        self,
+        *condition: ColumnExpressionArgument[bool],
+    ) -> ModelType | None:
         return self.db_session.query(self.model).filter(*condition).first()
 
     def find_by(self, condition, skip: int = 0, limit: int = 100) -> list[ModelType]:
