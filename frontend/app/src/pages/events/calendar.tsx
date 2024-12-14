@@ -55,9 +55,6 @@ export default function CalendarPage() {
 
       />
       <Container>
-        {!data?.events.length ? (
-          <Alert type="warning">Aucun évèvement prochainement.</Alert>
-        ) : null}
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="basis-2/3">
             <div className="flex justify-between items-center">
