@@ -1,6 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { faKey } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { LoginType, ResponseError } from 'bagad-client';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -72,8 +71,7 @@ function AuthPage() {
           </div>
           <div className="flex justify-between">
             <Button as={Link} to="/auth/reset" type="button" variant="ghost">Mot de passe oublié</Button>
-            <Button type="submit" isLoading={isSubmitting}>
-              <FontAwesomeIcon icon={faKey} className="mr-2" />
+            <Button type="submit" icon={faKey} isLoading={isSubmitting}>
               Connexion
             </Button>
           </div>

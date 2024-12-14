@@ -1,4 +1,6 @@
 /* eslint-disable react/require-default-props */
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { forwardRef } from 'react';
 import LoaderAudio from '../assets/loader';
 
@@ -7,6 +9,7 @@ type ButtonOwnProps<C extends React.ElementType> = {
   size?: 'sm' | 'md' | 'lg' | 'll'
   variant?: 'solid' | 'outline' | 'ghost'
   isLoading?: boolean
+  icon?: IconProp
 } & React.ComponentPropsWithoutRef<'button'>;
 
 export type ButtonProps<C extends React.ElementType> =
@@ -17,7 +20,7 @@ type PolymorphicRef<C extends React.ElementType> =
 
 function PrivateButton<C extends React.ElementType = 'button'>(
   {
-    as, children, size = 'md', variant = 'solid', className, isLoading = false, ...rest
+    as, children, size = 'md', variant = 'solid', icon, className, isLoading = false, ...rest
   }: ButtonProps<C>,
   ref: PolymorphicRef<C>,
 ) {
@@ -66,6 +69,7 @@ function PrivateButton<C extends React.ElementType = 'button'>(
       {...rest}
     >
       <div className="relative">
+        {icon ? <span className="pr-3"><FontAwesomeIcon icon={icon} /></span> : null}
         <span className="w-full absolute">
           <LoaderAudio className={`m-auto h-4 ${!isLoading ? 'invisible' : ''}`} />
         </span>

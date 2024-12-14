@@ -1,5 +1,4 @@
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Badge from '../../components/badge';
@@ -22,9 +21,7 @@ export default function GroupListPage() {
         title="Liste des groupes"
         subtitle=""
         actions={can('create', 'group') ? [
-          <Header.Action key="add-event" as={Link} to="/groups/add">
-            <FontAwesomeIcon icon={faPlusCircle} />
-            {' '}
+          <Header.Action key="add-event" icon={faPlusCircle} as={Link} to="/groups/add">
             Ajouter
           </Header.Action>,
         ] : []}

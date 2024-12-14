@@ -66,12 +66,10 @@ export default function AnswerLinkPage() {
             <>
               <h4 className="mb-4 font-medium">Serez-vous présent ?</h4>
               <div className="flex justify-center ">
-                <Button type="button" className="rounded-full" onClick={() => mutation.mutate({ r: { value: true } })}>
-                  <FontAwesomeIcon icon={faCheck} className="mr-4" />
+                <Button type="button" icon={faCheck} className="rounded-full" onClick={() => mutation.mutate({ r: { value: true } })}>
                   Oui
                 </Button>
-                <Button type="button" variant="outline" className="rounded-full" onClick={() => mutation.mutate({ r: { value: false } })}>
-                  <FontAwesomeIcon icon={faTimes} className="mr-4" />
+                <Button type="button" icon={faTimes} variant="outline" className="rounded-full" onClick={() => mutation.mutate({ r: { value: false } })}>
                   Non
                 </Button>
               </div>

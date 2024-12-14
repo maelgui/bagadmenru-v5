@@ -108,7 +108,7 @@ export default function ListFilesPage() {
     <>
       <Header
         title="Fichiers"
-        subtitle={folder?.name ? folder.name : <SkeletonText className="w-32" />}
+        subtitle={folder?.name ?? <SkeletonText className="w-32" />}
         breadcrumb={params.folderId ? [
           { title: 'Fichiers', link: '/files' },
           ...(breadcrumb?.slice(1, -1).map((item) => ({ title: item.name, link: `/files/${item.id}` })) ?? []),

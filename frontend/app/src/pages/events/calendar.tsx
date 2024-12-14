@@ -37,14 +37,10 @@ export default function CalendarPage() {
         title="Calendrier"
         subtitle={currentMonth}
         actions={[
-          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={can('update', 'event') ? '' : 'hidden'}>
-            <FontAwesomeIcon icon={faCalendarPlus} />
-            {' '}
+          <Header.Action variant="outline" key="add-event" icon={faCalendarPlus} as={Link} to="/events/manage" className={can('update', 'event') ? '' : 'hidden'}>
             Gérer
           </Header.Action>,
-          <Header.Action key="doodle-nav" as={Link} to="/events" className={can('create', 'response') ? '' : 'hidden'}>
-            <FontAwesomeIcon icon={faCalendarCheck} />
-            {' '}
+          <Header.Action key="doodle-nav" icon={faCalendarCheck} as={Link} to="/events" className={can('create', 'response') ? '' : 'hidden'}>
             Mes Présences
           </Header.Action>,
         ]}

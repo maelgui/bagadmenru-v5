@@ -1,5 +1,4 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { EventCreate } from 'bagad-client';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -71,9 +70,8 @@ export default function EditEventPage() {
             }}
             size="sm"
             variant="outline"
+            icon={faTrash}
           >
-            <FontAwesomeIcon icon={faTrash} />
-            {' '}
             Supprimer
           </Header.Action>,
 

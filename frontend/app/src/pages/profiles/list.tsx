@@ -1,5 +1,4 @@
 import { faCirclePlus } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Container from '../../components/container';
@@ -33,9 +32,7 @@ export default function ProfilesPage() {
         subtitle="Pensez à ajouter votre photo"
         actions={[
           <Header.Action key="edit-profile" as={Link} to="/profile/edit/me" variant="outline">Modifier mon profil</Header.Action>,
-          <Header.Action key="add-profile" as={Link} to="/profile/add" className={can('create', 'profile') ? '' : 'hidden'}>
-            <FontAwesomeIcon icon={faCirclePlus} />
-            {' '}
+          <Header.Action key="add-profile" icon={faCirclePlus} as={Link} to="/profile/add" className={can('create', 'profile') ? '' : 'hidden'}>
             Ajouter
           </Header.Action>,
         ]}

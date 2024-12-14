@@ -1,5 +1,4 @@
 import { faPen } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import Avatar from '../../components/avatar';
@@ -28,9 +27,7 @@ export default function GroupPage() {
         title={`Groupe ${group?.name}`}
         subtitle={`${group?.members.length} membres`}
         actions={[
-          <Header.Action key="add-event" as={Link} to={`/groups/edit/${group?.id}`}>
-            <FontAwesomeIcon icon={faPen} />
-            {' '}
+          <Header.Action key="add-event" icon={faPen} as={Link} to={`/groups/edit/${group?.id}`}>
             Modifier
           </Header.Action>,
         ]}

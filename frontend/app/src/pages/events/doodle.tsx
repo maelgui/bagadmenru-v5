@@ -86,14 +86,10 @@ export default function DoodlePage() {
         title="Doodle"
         subtitle="Mes présences aux évènements du groupe"
         actions={[
-          <Header.Action variant="outline" key="add-event" as={Link} to="/events/manage" className={can('edit', 'event') ? '' : 'hidden'}>
-            <FontAwesomeIcon icon={faCalendarPlus} />
-            {' '}
+          <Header.Action variant="outline" icon={faCalendarPlus} key="add-event" as={Link} to="/events/manage" className={can('edit', 'event') ? '' : 'hidden'}>
             Gérer
           </Header.Action>,
-          <Header.Action key="doodle-nav" as={Link} to="/events/calendar">
-            <FontAwesomeIcon icon={faCalendar} />
-            {' '}
+          <Header.Action key="doodle-nav" icon={faCalendar} as={Link} to="/events/calendar">
             Vue calendrier
           </Header.Action>,
         ]}

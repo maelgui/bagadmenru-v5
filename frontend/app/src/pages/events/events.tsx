@@ -23,9 +23,7 @@ export default function EventsManagePage() {
         title="Gestion des évènements"
         subtitle="Ajouter, modifier, supprimer..."
         actions={[
-          <Header.Action key="add-event" as={Link} to="/events/add">
-            <FontAwesomeIcon icon={faPlusCircle} />
-            {' '}
+          <Header.Action key="add-event" icon={faPlusCircle} as={Link} to="/events/add">
             Ajouter
           </Header.Action>,
         ]}

@@ -1,6 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ResetPassword } from 'bagad-client';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router-dom';
@@ -65,8 +64,7 @@ function ChangePasswordPage() {
 
           <div className="flex justify-between">
             <Button as={Link} to="/auth/login" type="button" variant="ghost">Retour</Button>
-            <Button type="submit">
-              <FontAwesomeIcon icon={faWandMagicSparkles} className="mr-2" />
+            <Button type="submit" icon={faWandMagicSparkles}>
               Changer
             </Button>
           </div>
