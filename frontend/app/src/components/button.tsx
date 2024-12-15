@@ -69,11 +69,13 @@ function PrivateButton<C extends React.ElementType = 'button'>(
       {...rest}
     >
       <div className="relative">
-        {icon ? <span className="pr-3"><FontAwesomeIcon icon={icon} /></span> : null}
         <span className="w-full absolute">
           <LoaderAudio className={`m-auto h-4 ${!isLoading ? 'invisible' : ''}`} />
         </span>
-        <span className={isLoading ? 'invisible' : ''}>{children}</span>
+        <span className={isLoading ? 'invisible' : ''}>
+          {icon ? <span className="pr-3"><FontAwesomeIcon icon={icon} /></span> : null}
+          {children}
+        </span>
       </div>
     </Component>
   );

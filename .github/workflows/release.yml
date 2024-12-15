@@ -77,7 +77,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: opa-policy-wasm
-          path: ${{ runner.temp }}/build/policy.wasm
+          path: |
+            ${{ runner.temp }}/build/policy.wasm
+            ${{ runner.temp }}/build/data.json
 
       - run: mkdir build
 
