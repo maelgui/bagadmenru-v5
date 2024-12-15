@@ -1,10 +1,14 @@
-package bbe2.policies
+package bbe2.authz
 
 import rego.v1
 
 import data.permissions as p
 
 default allow := false
+
+allow if {
+    "admin" in input.user.roles
+}
 
 role_permissions := {
 	"eleves": [
@@ -42,10 +46,18 @@ role_permissions := {
 	]
 }
 
-allow if {
-    "admin" in input.user.roles
-}
+# allow if {
+# 	count(data.endpoints[input.path][input.method]) == 0
+# }
 
+# allow if {
+# 	some path, methods in data.endpoints
+# 	glob.match(path, ["/"], input.path)
+# 	some role in input.user_roles
+# 	role in methods[input.method]
+# }
+
+# role_permissions := {"blabal": ["dqd", p.can_view_me]}
 allow if {
 	some role in input.user.roles
 	print("User Roles", role, role_permissions)
