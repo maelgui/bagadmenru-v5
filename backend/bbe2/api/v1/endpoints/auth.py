@@ -84,7 +84,7 @@ def reset_password(
         .where(User.id == token_payload["user_id"])
         .values(password=hashed_password)
     )
-    print(token_payload["user_id"], hashed_password)
+
     session.execute(stmt)
     session.commit()
 
