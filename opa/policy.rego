@@ -37,25 +37,14 @@ role_permissions := {
 		p.can_create_event,
 		p.can_edit_event,
 
-		p.can_create_user,
-		p.can_edit_user,
+		p.can_create_profile,
+		p.can_edit_profile,
 	]
 }
 
 allow if {
     "admin" in input.user.roles
 }
-
-# allow if {
-# 	count(data.endpoints[input.path][input.method]) == 0
-# }
-
-# allow if {
-# 	some path, methods in data.endpoints
-# 	glob.match(path, ["/"], input.path)
-# 	some role in input.user_roles
-# 	role in methods[input.method]
-# }
 
 allow if {
 	some role in input.user.roles
