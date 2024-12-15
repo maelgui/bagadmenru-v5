@@ -48,6 +48,8 @@ allow if {
 
 allow if {
 	some role in input.user.roles
+	print("User Roles", role, role_permissions)
 	some perm in role_permissions[role]
+	print("Checking perm", perm)
     perm == {"action": input.action, "resource": input.resource}
 }
