@@ -88,7 +88,6 @@ export function usePermissions() {
 
   const can = useCallback((action: string, resource: string) => {
     if (policy === undefined) {
-      console.log('policy undefined');
       return false;
     }
     let allow = false;
