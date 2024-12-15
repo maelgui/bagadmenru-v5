@@ -30,22 +30,6 @@ jobs:
       - run: yarn
       - run: yarn lint
 
-  lint-authprovider:
-    defaults:
-      run:
-        working-directory: auth-provider
-    runs-on: ubuntu-latest
-    name: Run linting auth-provider
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22.x"
-          cache: yarn
-          cache-dependency-path: auth-provider/yarn.lock
-      - run: yarn
-      - run: yarn lint
-
   test-backend:
     runs-on: ubuntu-latest
     defaults:
@@ -71,7 +55,7 @@ jobs:
       - name: Run test (disabled)
         run: poetry run pytest
 
-  build-auth-policy-wasm:
+  build-authz-policy-wasm:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -97,7 +81,7 @@ jobs:
 
       - run: mkdir build
 
-  build-auth-policy-oci:
+  build-authz-policy-oci:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -128,16 +112,14 @@ jobs:
   build:
     needs:
       - test-backend
-      - lint-authprovider
       - lint-frontend
-      - build-auth-policy-wasm
+      - build-authz-policy-wasm
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
           - image_name: backend
           - image_name: frontend
-          - image_name: auth-provider
           - image_name: email-api
     steps:
       - name: Checkout
