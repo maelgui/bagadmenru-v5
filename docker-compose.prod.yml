@@ -53,7 +53,7 @@ services:
         condition: service_completed_successfully
 
   frontend:
-    image: ghcr.io/maelgui/bagadmenru-v5/frontend
+    image: ghcr.io/maelgui/bagadmenru-v5/frontend:beta
     expose:
       - 80
     networks:
@@ -70,11 +70,11 @@ services:
 
 
   email-api:
-    image: ghcr.io/maelgui/bagadmenru-v5/email-api
+    image: ghcr.io/maelgui/bagadmenru-v5/email-api:beta
     environment:
       - RUST_LOG=tower_http=trace
       - APP_listen=0.0.0.0:9999
-      - APP_email_from=contact@bagadmenru.bzh
+      - APP_email_from=Bagad Men Ru <contact@bagadmenru.bzh>
 
       - APP_imap_domain=ssl0.ovh.net
       - APP_imap_port=993
