@@ -82,29 +82,21 @@ jobs:
         with:
           version: latest
 
-      - run: mkdir ${{ runner.temp }}/policies
+      - run: mkdir ${{ runner.temp }}/build
       - name: Run OPA Tests
-        run: opa build -t wasm -e bbe2/policies ./opa --output ${{ runner.temp }}/policies/bundle.tar.gz
+        run: opa build -t wasm -e bbe2/authz ./opa --output ${{ runner.temp }}/build/bundle.tar.gz
 
       - name: Untar OPA bundle
-        run: tar -xzf ${{ runner.temp }}/policies/bundle.tar.gz -C ${{ runner.temp }}/policies
+        run: tar -xzf ${{ runner.temp }}/build/bundle.tar.gz -C ${{ runner.temp }}/build
 
       - name: Upload OPA bundle
         uses: actions/upload-artifact@v4
         with:
           name: opa-policy-wasm
-          path: ${{ runner.temp }}/policies/policy.wasm
+          path: ${{ runner.temp }}/build/policy.wasm
 
       - run: mkdir build
 
-      - name: Build OPA bundle
-        run: opa build -b ./opa -o build/bundle.tar.gz
-
-      - name: Upload static files as artifact
-        id: deployment
-        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
-        with:
-          path: build
   build-auth-policy-oci:
     runs-on: ubuntu-latest
     defaults:
