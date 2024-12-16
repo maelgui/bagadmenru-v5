@@ -23,7 +23,7 @@ group_role_association_table = Table(
 )
 
 
-class User(Base):
+class UserDB(Base):
     """User profile ORM model."""
 
     __tablename__ = "users"
@@ -37,14 +37,14 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)
     instrument_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
-    instrument: Mapped["Group"] = relationship("Group")
-    groups: Mapped[List["Group"]] = relationship(
+    instrument: Mapped["GroupDB"] = relationship()
+    groups: Mapped[List["GroupDB"]] = relationship(
         secondary=user_group_association_table, back_populates="members"
     )
     receives_emails: Mapped[bool] = mapped_column(default=True, server_default=true())
 
 
-class Group(Base):
+class GroupDB(Base):
     """Group ORM model."""
 
     __tablename__ = "groups"
@@ -52,13 +52,13 @@ class Group(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False, default="#fff")
-    roles: Mapped[List["Role"]] = relationship(secondary=group_role_association_table)
-    members: Mapped[List[User]] = relationship(
+    roles: Mapped[List["RoleDB"]] = relationship(secondary=group_role_association_table)
+    members: Mapped[List[UserDB]] = relationship(
         secondary=user_group_association_table, back_populates="groups"
     )
 
 
-class Role(Base):
+class RoleDB(Base):
     """Roles ORM model."""
 
     __tablename__ = "roles"

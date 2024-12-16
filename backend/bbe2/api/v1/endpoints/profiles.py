@@ -37,7 +37,7 @@ async def get_my_profile(
     profile_crud: Annotated[CRUDProfile, Depends()],
     identifier: Annotated[str, Depends(get_current_user2)],
 ):
-    db_profile = profile_crud.find_one_by(models.User.id == identifier)
+    db_profile = profile_crud.find_one_by(models.UserDB.id == identifier)
     if not db_profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
@@ -55,7 +55,7 @@ async def get_my_roles(
     profile_crud: Annotated[CRUDProfile, Depends()],
     identifier: Annotated[str, Depends(get_current_user2)],
 ):
-    db_profile = profile_crud.find_one_by(models.User.id == identifier)
+    db_profile = profile_crud.find_one_by(models.UserDB.id == identifier)
     if not db_profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
@@ -75,7 +75,7 @@ async def update_my_profile(
     s3: S3Dep,
     identifier: Annotated[str, Depends(get_current_user2)],
 ):
-    db_profile = profile_crud.find_one_by(models.User.id == identifier)
+    db_profile = profile_crud.find_one_by(models.UserDB.id == identifier)
     if not db_profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
@@ -125,7 +125,7 @@ async def get_profile(
     profile_id: str,
     profile_crud: Annotated[CRUDProfile, Depends()],
 ):
-    db_profile = profile_crud.find_one_by(models.User.id == profile_id)
+    db_profile = profile_crud.find_one_by(models.UserDB.id == profile_id)
     if not db_profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
@@ -143,14 +143,14 @@ async def update_profile(
     profile: schemas.ProfileUpdate,
     profile_crud: Annotated[CRUDProfile, Depends()],
 ):
-    db_profile = profile_crud.find_one_by(models.User.id == profile_id)
+    db_profile = profile_crud.find_one_by(models.UserDB.id == profile_id)
     if not db_profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
     groups = (
-        profile_crud.db_session.query(models.Group)
-        .filter(models.Group.id.in_(profile.group_ids))
+        profile_crud.db_session.query(models.GroupDB)
+        .filter(models.GroupDB.id.in_(profile.group_ids))
         .all()
     )
     db_profile.groups = groups
@@ -166,7 +166,7 @@ async def update_profile(
 async def list_profiles(
     session: SessionDep,
 ):
-    q = select(models.User).order_by(models.User.instrument_id)
+    q = select(models.UserDB).order_by(models.UserDB.instrument_id)
     res = session.scalars(q).all()
     return res
 
@@ -183,11 +183,13 @@ async def create_profile(
     templates: TemplateDep,
 ):
 
-    profile_db = models.User(
+    profile_db = models.UserDB(
         **profile.model_dump(exclude={"group_ids"}),
     )
     groups = (
-        session.query(models.Group).filter(models.Group.id.in_(profile.group_ids)).all()
+        session.query(models.GroupDB)
+        .filter(models.GroupDB.id.in_(profile.group_ids))
+        .all()
     )
     profile_db.groups = groups
     session.add(profile_db)
@@ -244,8 +246,8 @@ def unsubscribe(
     if token_payload["user_id"] != profile_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
     profile_db = (
-        session.query(models.User)
-        .filter(models.User.id == token_payload["user_id"])
+        session.query(models.UserDB)
+        .filter(models.UserDB.id == token_payload["user_id"])
         .first()
     )
     if not profile_db:
@@ -254,9 +256,9 @@ def unsubscribe(
         )
 
     stmt = (
-        update(models.User)
+        update(models.UserDB)
         .values(receives_emails=False)
-        .where(models.User.id == token_payload["user_id"])
+        .where(models.UserDB.id == token_payload["user_id"])
     )
     session.execute(stmt)
 
@@ -282,25 +284,25 @@ async def get_my_stats(
     )
 
     q = select(
-        func.coalesce(sql_sum(cast(models.Response.value, Integer)), 0).label(
+        func.coalesce(sql_sum(cast(models.ResponseDB.value, Integer)), 0).label(
             "n_positive_responses"
         ),
-        func.avg(models.Response.date - models.Event.created_at).label(
+        func.avg(models.ResponseDB.date - models.EventDB.created_at).label(
             "avg_response_time"
         ),
-        sql_count(models.Response.value).label("n_responses"),
-    ).join_from(models.Event, models.Response)
-    q = q.where(models.Event.date >= date_debut_saison)
-    q = q.where(models.Response.user_id == identifier)
-    q = q.where(models.Event.is_in_doodle == True)
+        sql_count(models.ResponseDB.value).label("n_responses"),
+    ).join_from(models.EventDB, models.ResponseDB)
+    q = q.where(models.EventDB.date >= date_debut_saison)
+    q = q.where(models.ResponseDB.user_id == identifier)
+    q = q.where(models.EventDB.is_in_doodle == True)
     n_positive_responses, avg_response_time, n_responses = session.execute(q).one()
 
     q = select(
-        sql_count(models.Response.value).label("n_upcomming_responses"),
-    ).join_from(models.Event, models.Response)
-    q = q.where(models.Event.date >= date_now)
-    q = q.where(models.Response.user_id == identifier)
-    q = q.where(models.Event.is_in_doodle == True)
+        sql_count(models.ResponseDB.value).label("n_upcomming_responses"),
+    ).join_from(models.EventDB, models.ResponseDB)
+    q = q.where(models.EventDB.date >= date_now)
+    q = q.where(models.ResponseDB.user_id == identifier)
+    q = q.where(models.EventDB.is_in_doodle == True)
     n_upcomming_responses = session.scalars(q).one()
 
     return MyStats(
@@ -326,27 +328,27 @@ async def get_global_stats(
     )
 
     q = select(
-        sql_count(models.Response.value).label("n_responses"),
-        func.avg(models.Response.date - models.Event.created_at).label(
+        sql_count(models.ResponseDB.value).label("n_responses"),
+        func.avg(models.ResponseDB.date - models.EventDB.created_at).label(
             "avg_response_time"
         ),
-    ).join_from(models.Event, models.Response)
-    q = q.where(models.Event.date >= date_debut_saison)
-    q = q.where(models.Event.is_in_doodle == True)
+    ).join_from(models.EventDB, models.ResponseDB)
+    q = q.where(models.EventDB.date >= date_debut_saison)
+    q = q.where(models.EventDB.is_in_doodle == True)
     (n_responses, avg_response_time) = session.execute(q).one()
 
     q = select(
-        sql_count(models.Event.id).label("n_events"),
-    ).select_from(models.Event)
-    q = q.where(models.Event.date >= date_debut_saison)
-    q = q.where(models.Event.is_in_doodle == True)
+        sql_count(models.EventDB.id).label("n_events"),
+    ).select_from(models.EventDB)
+    q = q.where(models.EventDB.date >= date_debut_saison)
+    q = q.where(models.EventDB.is_in_doodle == True)
     res3 = session.scalar(q)
 
     q = select(
-        sql_count(models.Event.id).label("n_upcoming_event"),
-    ).select_from(models.Event)
-    q = q.where(models.Event.date >= date_now)
-    q = q.where(models.Event.is_in_doodle == True)
+        sql_count(models.EventDB.id).label("n_upcoming_event"),
+    ).select_from(models.EventDB)
+    q = q.where(models.EventDB.date >= date_now)
+    q = q.where(models.EventDB.is_in_doodle == True)
     res4 = session.scalar(q)
 
     return GlobalStats(
@@ -370,7 +372,7 @@ groups_router = APIRouter(prefix="/groups")
 async def list_groups(
     session: SessionDep,
 ):
-    q = select(models.Group).order_by(models.Group.name)
+    q = select(models.GroupDB).order_by(models.GroupDB.name)
     res = session.scalars(q).all()
 
     return res
@@ -385,7 +387,7 @@ async def get_group(
     group_id: int,
     session: SessionDep,
 ):
-    q = session.get(models.Group, group_id)
+    q = session.get(models.GroupDB, group_id)
 
     return q
 
@@ -399,8 +401,10 @@ async def create_group(
     group: schemas.GroupCreate,
     session: SessionDep,
 ):
-    group_db = models.Group(name=group.name, color=group.color)
-    roles = session.query(models.Role).filter(models.Role.id.in_(group.role_ids)).all()
+    group_db = models.GroupDB(name=group.name, color=group.color)
+    roles = (
+        session.query(models.RoleDB).filter(models.RoleDB.id.in_(group.role_ids)).all()
+    )
     group_db.roles = roles
     session.add(group_db)
     session.commit()
@@ -419,12 +423,14 @@ async def update_group(
     group: schemas.GroupUpdate,
     session: SessionDep,
 ):
-    group_db = session.get(models.Group, group_id)
+    group_db = session.get(models.GroupDB, group_id)
     if not group_db:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
-    roles = session.query(models.Role).filter(models.Role.id.in_(group.role_ids)).all()
+    roles = (
+        session.query(models.RoleDB).filter(models.RoleDB.id.in_(group.role_ids)).all()
+    )
     group_db.roles = roles
     group_db.color = group.color
     group_db.name = group.name
@@ -443,7 +449,7 @@ permissions_router = APIRouter(prefix="/roles")
 async def list_roles(
     session: SessionDep,
 ):
-    q = select(models.Role).order_by(models.Role.id)
+    q = select(models.RoleDB).order_by(models.RoleDB.id)
     res = session.scalars(q).all()
 
     return res

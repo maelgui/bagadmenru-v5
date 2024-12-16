@@ -8,7 +8,7 @@ from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import select, update
 
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
-from bbe2.models.user import User
+from bbe2.models.user import UserDB
 from bbe2.schemas.auth import (
     JwtPayload,
     LoginData,
@@ -36,7 +36,7 @@ def process_login(
     response: Response,
 ) -> Token:
     time.sleep(3)
-    user = session.scalars(select(User).where(User.email == data.email)).first()
+    user = session.scalars(select(UserDB).where(UserDB.email == data.email)).first()
     if not user:
         myctx.dummy_verify()
         raise HTTPException(status_code=401, detail="Bad credentials")
@@ -49,7 +49,7 @@ def process_login(
                 raise HTTPException(status_code=401, detail="Bad credentials")
             if new_hash:
                 session.execute(
-                    update(User).where(User.id == user.id).values(password=new_hash)
+                    update(UserDB).where(UserDB.id == user.id).values(password=new_hash)
                 )
         case LoginType.PASSKEY:
             raise HTTPException(status_code=501, detail="Not implemented")
@@ -80,8 +80,8 @@ def reset_password(
 
     hashed_password = myctx.hash(body.password)
     stmt = (
-        update(User)
-        .where(User.id == token_payload["user_id"])
+        update(UserDB)
+        .where(UserDB.id == token_payload["user_id"])
         .values(password=hashed_password)
     )
 
@@ -104,7 +104,7 @@ async def reset_password_request(
     session: SessionDep,
     sender: SenderDep,
 ):
-    user = session.scalars(select(User).where(User.email == body.email)).first()
+    user = session.scalars(select(UserDB).where(UserDB.email == body.email)).first()
     if not user:
         return "OK"
 

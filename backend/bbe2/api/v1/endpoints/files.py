@@ -29,10 +29,10 @@ async def list_files(
     limit: int = 10,
 ):
     """List recent files."""
-    q = session.query(models.FileOrFolder)
+    q = session.query(models.FileOrFolderDB)
     if t:
-        q = q.filter(models.FileOrFolder.type == t)
-    q = q.order_by(models.FileOrFolder.uploaded_at.asc())
+        q = q.filter(models.FileOrFolderDB.type == t)
+    q = q.order_by(models.FileOrFolderDB.uploaded_at.asc())
     q = q.limit(limit)
 
     return q.all()
@@ -47,7 +47,7 @@ async def get_root(
     file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get root folder entity."""
-    root_file = file_crud.find_one_by(models.FileOrFolder.id == 1)
+    root_file = file_crud.find_one_by(models.FileOrFolderDB.id == 1)
     if not root_file:
         root_file = file_crud.create(
             id=1,
@@ -67,7 +67,7 @@ async def get_file(
     file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get a file or folder by id."""
-    db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
+    db_file = file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
     if not db_file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
@@ -85,7 +85,7 @@ async def get_breadcrumb(
     file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get breadcrumb for a file."""
-    db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
+    db_file = file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
     if not db_file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
@@ -93,7 +93,7 @@ async def get_breadcrumb(
     breadcrumb = [db_file]
     while breadcrumb[-1].parent_id:
         next_file = file_crud.find_one_by(
-            models.FileOrFolder.id == breadcrumb[-1].parent_id
+            models.FileOrFolderDB.id == breadcrumb[-1].parent_id
         )
         if not next_file:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -116,7 +116,7 @@ async def list_children(
     file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get all chidren of a folder."""
-    db_file = file_crud.find_one_by(models.FileOrFolder.id == folder_id)
+    db_file = file_crud.find_one_by(models.FileOrFolderDB.id == folder_id)
     if not db_file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
@@ -140,8 +140,8 @@ async def upload_file(
     """Upload a file."""
     db_file = file_crud.find_one_by(
         and_(
-            models.FileOrFolder.name == file.filename,
-            models.FileOrFolder.parent_id == folder_id,
+            models.FileOrFolderDB.name == file.filename,
+            models.FileOrFolderDB.parent_id == folder_id,
         )
     )
     if db_file:
@@ -191,7 +191,7 @@ async def update_file(
     file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Update an existing file or folder"""
-    db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
+    db_file = file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
     if not db_file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
@@ -211,7 +211,7 @@ async def delete_file(
     s3: S3Dep,
 ):
     """Delete an existing file or folder."""
-    db_file = file_crud.find_one_by(models.FileOrFolder.id == file_id)
+    db_file = file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
     if not db_file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"

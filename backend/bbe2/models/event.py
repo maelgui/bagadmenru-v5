@@ -5,11 +5,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from bbe2.models.base import Base
-from bbe2.models.user import User
+from bbe2.models.user import UserDB
 from bbe2.schemas import Costume
 
 
-class Event(Base):
+class EventDB(Base):
     __tablename__ = "events"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -22,18 +22,18 @@ class Event(Base):
     category: Mapped[str] = mapped_column(String(30))
     is_in_doodle: Mapped[bool]
 
-    responses: Mapped[list["Response"]] = relationship(
+    responses: Mapped[list["ResponseDB"]] = relationship(
         back_populates="event", cascade="all, delete"
     )
 
 
-class Response(Base):
+class ResponseDB(Base):
     __tablename__ = "responses"
 
     value: Mapped[bool] = mapped_column(nullable=True)
     date: Mapped[datetime]
 
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id"), primary_key=True)
-    event: Mapped["Event"] = relationship(back_populates="responses")
+    event: Mapped["EventDB"] = relationship(back_populates="responses")
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    user: Mapped["User"] = relationship()
+    user: Mapped["UserDB"] = relationship()

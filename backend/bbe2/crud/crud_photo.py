@@ -3,4 +3,4 @@ from bbe2.crud.base import CRUDBase
 
 
 class CRUDPhoto(CRUDBase):
-    model = models.Photo
+    model = models.PhotoDB

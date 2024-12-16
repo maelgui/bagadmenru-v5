@@ -21,9 +21,9 @@ from bbe2.utils.auth import Action, Authorization, Resource, get_current_user2
 
 def populate_db(session):
     # Profile
-    instrument = models.Group(id=1, name="Piccolo", color="#fff")
+    instrument = models.GroupDB(id=1, name="Piccolo", color="#fff")
     session.merge(instrument)
-    user = models.User(
+    user = models.UserDB(
         id="a8e2d3249e9d997e",
         email="john.doe@example.com",
         first_name="john",
@@ -33,14 +33,14 @@ def populate_db(session):
     )
     session.merge(user)
     # Albums
-    album = models.Album(
+    album = models.AlbumDB(
         id=1,
         title="Mon Album",
         date=date(2022, 6, 3),
     )
     session.merge(album)
     # Events
-    event = models.Event(
+    event = models.EventDB(
         id=1,
         title="Saint Nicolas",
         description="Rendez-vous 14h au parc",
@@ -51,18 +51,18 @@ def populate_db(session):
     )
     session.merge(event)
     # Files
-    root = models.FileOrFolder(
+    root = models.FileOrFolderDB(
         id=1,
         type=FileOrFolderType.DIRECTORY,
         name="root",
     )
-    file1 = models.FileOrFolder(
+    file1 = models.FileOrFolderDB(
         id=2,
         type=FileOrFolderType.DIRECTORY,
         name="file1",
         parent_id=1,
     )
-    file2 = models.FileOrFolder(
+    file2 = models.FileOrFolderDB(
         id=3,
         type=FileOrFolderType.DIRECTORY,
         name="file2",

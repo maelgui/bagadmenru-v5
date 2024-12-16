@@ -3,6 +3,6 @@ from bbe2.crud.base import CRUDBase
 
 
 class CRUDResponse(
-    CRUDBase[models.Response, schemas.ResponseCreate, schemas.ResponseCreate]
+    CRUDBase[models.ResponseDB, schemas.ResponseCreate, schemas.ResponseCreate]
 ):
-    model = models.Response
+    model = models.ResponseDB

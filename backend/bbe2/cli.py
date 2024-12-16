@@ -9,7 +9,7 @@ from sqlalchemy import insert, select
 
 from bbe2 import models
 from bbe2.database import SessionLocal, get_engine
-from bbe2.models.user import Role
+from bbe2.models.user import RoleDB
 from bbe2.utils.auth import myctx
 
 console = Console()
@@ -30,7 +30,7 @@ def session():
 @users_cli.command("list", help="List users")
 def list_users():
     with session() as s:
-        users = s.scalars(select(models.User)).all()
+        users = s.scalars(select(models.UserDB)).all()
 
         table = Table("Firstname", "Lastname", "Email")
         for user in users:
@@ -48,7 +48,7 @@ def create_user():
 
     with session() as s:
         result = s.execute(
-            insert(models.User).values(
+            insert(models.UserDB).values(
                 first_name=first_name,
                 last_name=last_name,
                 email=email,
@@ -64,7 +64,7 @@ roles_cli = typer.Typer()
 @roles_cli.command("list", help="List roles")
 def list_roles():
     with session() as s:
-        roles = s.scalars(select(models.Role)).all()
+        roles = s.scalars(select(models.RoleDB)).all()
 
         table = Table("Role", "Description")
         for role in roles:
@@ -87,13 +87,13 @@ def hello(name: str):
 def bootstrap():
     with console.status("Bootstraping data"), session() as s:
         default_roles = [
-            Role(id="admin", description="Administrateur"),
-            Role(
+            RoleDB(id="admin", description="Administrateur"),
+            RoleDB(
                 id="bagad",
                 description="Voit les partitions et peut répondre aux évènements",
             ),
-            Role(id="eleves", description="Voit les partitions et évènements"),
-            Role(id="intervenants", description="Voit seulement les partitions"),
+            RoleDB(id="eleves", description="Voit les partitions et évènements"),
+            RoleDB(id="intervenants", description="Voit seulement les partitions"),
         ]
         for role in default_roles:
             s.merge(role)
@@ -101,7 +101,7 @@ def bootstrap():
         console.log("Default roles created")
         sleep(3)
         s.merge(
-            models.Group(
+            models.GroupDB(
                 id=1, name="Administrateur", color="#000", roles=[default_roles[0]]
             )
         )

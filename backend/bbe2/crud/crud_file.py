@@ -3,6 +3,6 @@ from bbe2.crud.base import CRUDBase
 
 
 class CRUDFile(
-    CRUDBase[models.FileOrFolder, schemas.FolderCreate, schemas.FileOrFolderUpdate]
+    CRUDBase[models.FileOrFolderDB, schemas.FolderCreate, schemas.FileOrFolderUpdate]
 ):
-    model = models.FileOrFolder
+    model = models.FileOrFolderDB

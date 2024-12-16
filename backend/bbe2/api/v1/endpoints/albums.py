@@ -32,7 +32,7 @@ async def get_album(
     album_id: str,
     album_crud: CRUDAlbum = Depends(),
 ):
-    db_album = album_crud.find_one_by(models.Album.id == album_id)
+    db_album = album_crud.find_one_by(models.AlbumDB.id == album_id)
     if not db_album:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Album not found"
@@ -49,7 +49,7 @@ async def list_album_photos(
     album_id: str,
     photo_crud: CRUDPhoto = Depends(),
 ):
-    return photo_crud.find_by(models.Photo.album_id == album_id)
+    return photo_crud.find_by(models.PhotoDB.album_id == album_id)
 
 
 @router.post(
@@ -91,7 +91,7 @@ async def update_album(
     album: schemas.AlbumCreate,
     album_crud: CRUDAlbum = Depends(),
 ):
-    db_album = album_crud.find_one_by(models.Album.id == album_id)
+    db_album = album_crud.find_one_by(models.AlbumDB.id == album_id)
     if not db_album:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
@@ -109,7 +109,7 @@ async def delete_album(
     album_id: int,
     album_crud: CRUDAlbum = Depends(),
 ):
-    db_album = album_crud.find_one_by(models.Album.id == album_id)
+    db_album = album_crud.find_one_by(models.AlbumDB.id == album_id)
     if not db_album:
         raise HTTPException(status_code=404, detail="Album not found")
     album_crud.delete(album_id)
@@ -126,7 +126,7 @@ async def delete_photo(
     photo_crud: CRUDPhoto = Depends(),
 ):
     db_photo = photo_crud.find_one_by(
-        (models.Photo.id == photo_id) & (models.Photo.album_id == album_id)
+        (models.PhotoDB.id == photo_id) & (models.PhotoDB.album_id == album_id)
     )
     if not db_photo:
         raise HTTPException(status_code=404, detail="Album not found")

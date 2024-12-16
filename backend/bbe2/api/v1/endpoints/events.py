@@ -41,16 +41,16 @@ async def list_events(
     is_in_doodle: Optional[bool] = None,
     ordering: str = "date",
 ):
-    q = session.query(models.Event)
+    q = session.query(models.EventDB)
     if date__gte:
-        q = q.filter(models.Event.date >= date__gte)
+        q = q.filter(models.EventDB.date >= date__gte)
     if date__lt:
-        q = q.filter(models.Event.date < date__lt)
+        q = q.filter(models.EventDB.date < date__lt)
     if is_in_doodle:
-        q = q.filter(models.Event.is_in_doodle == is_in_doodle)
+        q = q.filter(models.EventDB.is_in_doodle == is_in_doodle)
     if ordering:
         order = "desc" if ordering.startswith("-") else "asc"
-        col = getattr(models.Event, ordering.lstrip("-"))
+        col = getattr(models.EventDB, ordering.lstrip("-"))
         order = getattr(col, order)()
         q = q.order_by(order)
     q = q.limit(limit)
@@ -63,7 +63,7 @@ async def list_events(
 async def export_ics(
     session: SessionDep,
 ) -> str:
-    events = session.query(models.Event).order_by(models.Event.date).all()
+    events = session.query(models.EventDB).order_by(models.EventDB.date).all()
     c = Calendar()
     for event in events:
         e = Event()
@@ -83,7 +83,7 @@ async def get_event(
     event_id: int,
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
 ):
-    db_event = event_crud.find_one_by(models.Event.id == event_id)
+    db_event = event_crud.find_one_by(models.EventDB.id == event_id)
     if not db_event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
@@ -109,7 +109,7 @@ async def create_event(
 
     if event.is_in_doodle:
         users = session.scalars(
-            select(models.User).order_by(models.User.last_name)
+            select(models.UserDB).order_by(models.UserDB.last_name)
         ).all()
 
         users = [
@@ -179,7 +179,7 @@ async def update_event(
     event: schemas.EventCreate,
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
 ):
-    db_event = event_crud.find_one_by(models.Event.id == event_id)
+    db_event = event_crud.find_one_by(models.EventDB.id == event_id)
     if not db_event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
@@ -197,7 +197,7 @@ async def delete_event(
     event_id: int,
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
 ):
-    db_event = event_crud.find_one_by(models.Event.id == event_id)
+    db_event = event_crud.find_one_by(models.EventDB.id == event_id)
     if not db_event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
@@ -218,7 +218,7 @@ async def list_responses(
     user_id: Optional[str] = None,
 ):
     if user_id:
-        return response_crud.find_by(models.Response.user_id == user_id)
+        return response_crud.find_by(models.ResponseDB.user_id == user_id)
     else:
         return response_crud.find_all()
 
@@ -235,13 +235,13 @@ async def create_response(
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     identifier: Annotated[str, Depends(get_current_user2)],
 ):
-    db_event = event_crud.find_one_by(models.Event.id == event_id)
+    db_event = event_crud.find_one_by(models.EventDB.id == event_id)
     if not db_event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
 
-    db_object = models.Response(
+    db_object = models.ResponseDB(
         event_id=event_id,
         user_id=identifier,
         date=datetime.now(),
@@ -268,18 +268,18 @@ async def get_response_by_token(
         dict, Depends(ActionTokenAuthorization(ActionTokenValue.CreateResponseByToken))
     ],
 ):
-    db_event = session.get(models.Event, token_payload["event_id"])
+    db_event = session.get(models.EventDB, token_payload["event_id"])
     if not db_event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
-    db_user = session.get(models.User, token_payload["user_id"])
+    db_user = session.get(models.UserDB, token_payload["user_id"])
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     db_response = session.get(
-        models.Response,
+        models.ResponseDB,
         (
             token_payload["event_id"],
             token_payload["user_id"],
@@ -300,7 +300,7 @@ async def create_response_by_token(
         dict, Depends(ActionTokenAuthorization(ActionTokenValue.CreateResponseByToken))
     ],
 ):
-    db_object = models.Response(
+    db_object = models.ResponseDB(
         event_id=token_payload["event_id"],
         user_id=token_payload["user_id"],
         date=datetime.now(),

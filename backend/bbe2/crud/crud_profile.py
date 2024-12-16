@@ -6,9 +6,9 @@ from bbe2.crud.base import CRUDBase
 
 class CRUDProfile(
     CRUDBase[
-        models.User,
+        models.UserDB,
         schemas.ProfileCreate,
         Union[schemas.ProfileUpdate, schemas.MyProfileUpdate],
     ]
 ):
-    model = models.User
+    model = models.UserDB

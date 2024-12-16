@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from bbe2.models.base import Base
 
 
-class Album(Base):
+class AlbumDB(Base):
     """Photo album ORM model."""
 
     __tablename__ = "albums"
@@ -18,7 +18,7 @@ class Album(Base):
     date: Mapped[datetime]
 
 
-class Photo(Base):
+class PhotoDB(Base):
     """Photo ORM model."""
 
     __tablename__ = "photos"
@@ -29,4 +29,4 @@ class Photo(Base):
     is_root: Mapped[bool]
 
     album_id: Mapped[int] = mapped_column(ForeignKey("albums.id"))
-    album: Mapped["Album"] = relationship("Album")
+    album: Mapped["AlbumDB"] = relationship()
