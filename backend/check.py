@@ -4,11 +4,12 @@ import sys
 
 import httpx
 
-try:
-    res = httpx.get("http://localhost:8000", timeout=3)
-    res.raise_for_status()
-except httpx.HTTPError as exc:
-    logging.error("Healthcheck error: %s", exc)
-    sys.exit(1)
-else:
-    sys.exit(0)
+if __name__ == "__main__":
+    try:
+        res = httpx.get("http://localhost:8000", timeout=3)
+        res.raise_for_status()
+    except httpx.HTTPError as exc:
+        logging.error("Healthcheck error: %s", exc)
+        sys.exit(1)
+    else:
+        sys.exit(0)
