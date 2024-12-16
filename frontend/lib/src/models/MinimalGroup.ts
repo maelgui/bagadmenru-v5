@@ -33,6 +33,12 @@ export interface MinimalGroup {
     color?: string;
     /**
      * 
+     * @type {string}
+     * @memberof MinimalGroup
+     */
+    mailingList: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof MinimalGroup
      */
@@ -44,6 +50,7 @@ export interface MinimalGroup {
  */
 export function instanceOfMinimalGroup(value: object): value is MinimalGroup {
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('mailingList' in value) || value['mailingList'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     return true;
 }
@@ -60,6 +67,7 @@ export function MinimalGroupFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
+        'mailingList': json['mailing_list'],
         'id': json['id'],
     };
 }
@@ -77,6 +85,7 @@ export function MinimalGroupToJSONTyped(value?: MinimalGroup | null, ignoreDiscr
         
         'name': value['name'],
         'color': value['color'],
+        'mailing_list': value['mailingList'],
         'id': value['id'],
     };
 }

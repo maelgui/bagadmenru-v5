@@ -61,13 +61,16 @@ class MinimalGroup(_GroupBase):
 
 
 class GroupCreate(_GroupBase):
+    mailing_list: Optional[str]
     role_ids: list[str]
 
 
 class GroupUpdate(_GroupBase):
+    mailing_list: Optional[str]
     role_ids: list[str]
 
 
 class Group(MinimalGroup):
+    mailing_list: Optional[str]
     roles: list[Role]
     members: list[Profile]

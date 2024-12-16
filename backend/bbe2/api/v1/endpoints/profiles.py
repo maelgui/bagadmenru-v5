@@ -434,6 +434,7 @@ async def update_group(
     group_db.roles = roles
     group_db.color = group.color
     group_db.name = group.name
+    group_db.mailing_list = group.mailing_list
     session.commit()
     return group_db
 

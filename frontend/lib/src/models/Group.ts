@@ -48,6 +48,12 @@ export interface Group {
     color?: string;
     /**
      * 
+     * @type {string}
+     * @memberof Group
+     */
+    mailingList: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof Group
      */
@@ -71,6 +77,7 @@ export interface Group {
  */
 export function instanceOfGroup(value: object): value is Group {
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('mailingList' in value) || value['mailingList'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('roles' in value) || value['roles'] === undefined) return false;
     if (!('members' in value) || value['members'] === undefined) return false;
@@ -89,6 +96,7 @@ export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Gro
         
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
+        'mailingList': json['mailing_list'],
         'id': json['id'],
         'roles': ((json['roles'] as Array<any>).map(RoleFromJSON)),
         'members': ((json['members'] as Array<any>).map(ProfileFromJSON)),
@@ -108,6 +116,7 @@ export function GroupToJSONTyped(value?: Group | null, ignoreDiscriminator: bool
         
         'name': value['name'],
         'color': value['color'],
+        'mailing_list': value['mailingList'],
         'id': value['id'],
         'roles': ((value['roles'] as Array<any>).map(RoleToJSON)),
         'members': ((value['members'] as Array<any>).map(ProfileToJSON)),

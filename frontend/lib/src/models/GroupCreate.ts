@@ -33,6 +33,12 @@ export interface GroupCreate {
     color?: string;
     /**
      * 
+     * @type {string}
+     * @memberof GroupCreate
+     */
+    mailingList: string | null;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof GroupCreate
      */
@@ -44,6 +50,7 @@ export interface GroupCreate {
  */
 export function instanceOfGroupCreate(value: object): value is GroupCreate {
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('mailingList' in value) || value['mailingList'] === undefined) return false;
     if (!('roleIds' in value) || value['roleIds'] === undefined) return false;
     return true;
 }
@@ -60,6 +67,7 @@ export function GroupCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
+        'mailingList': json['mailing_list'],
         'roleIds': json['role_ids'],
     };
 }
@@ -77,6 +85,7 @@ export function GroupCreateToJSONTyped(value?: GroupCreate | null, ignoreDiscrim
         
         'name': value['name'],
         'color': value['color'],
+        'mailing_list': value['mailingList'],
         'role_ids': value['roleIds'],
     };
 }

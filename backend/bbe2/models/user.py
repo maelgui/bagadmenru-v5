@@ -1,7 +1,7 @@
 """User profile models."""
 
 import uuid
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import Column, ForeignKey, String, Table, Text, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -52,6 +52,9 @@ class GroupDB(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False, default="#fff")
+    mailing_list: Mapped[Optional[str]] = mapped_column(
+        String(100), unique=True, nullable=True
+    )
     roles: Mapped[List["RoleDB"]] = relationship(secondary=group_role_association_table)
     members: Mapped[List[UserDB]] = relationship(
         secondary=user_group_association_table, back_populates="groups"

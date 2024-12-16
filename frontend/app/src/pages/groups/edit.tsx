@@ -22,9 +22,8 @@ export default function EditGroupPage() {
     queryKey: ['groups', groupId],
     queryFn: () => usersApi.getGroupApiV1GroupsGroupIdGet({ groupId }),
     select: (data) => ({
-      name: data.name,
-      color: data.color,
       roleIds: data.roles.map((p) => p.id),
+      ...data,
     }),
   });
 

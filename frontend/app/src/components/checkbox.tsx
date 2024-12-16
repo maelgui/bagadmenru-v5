@@ -1,21 +1,25 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { faSquare, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { forwardRef } from 'react';
 
-interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface PrivateCheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   title: string
   description: string
   id: string
 }
 
-export default function Checkbox({
-  title, description, className, id, ...rest
-}: CheckboxProps) {
+function PrivateCheckbox(
+  {
+    title, description, className, id, ...rest
+  }: PrivateCheckboxProps,
+  ref: React.ForwardedRef<HTMLInputElement>,
+) {
   return (
     <div className="relative">
       <input
         type="checkbox"
-        id={id}
+        ref={ref}
         {...rest}
         className="hidden peer"
       />
@@ -29,3 +33,6 @@ export default function Checkbox({
     </div>
   );
 }
+
+const Checkbox = forwardRef<HTMLInputElement, PrivateCheckboxProps>(PrivateCheckbox);
+export default Checkbox;

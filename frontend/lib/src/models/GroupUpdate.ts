@@ -33,6 +33,12 @@ export interface GroupUpdate {
     color?: string;
     /**
      * 
+     * @type {string}
+     * @memberof GroupUpdate
+     */
+    mailingList: string | null;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof GroupUpdate
      */
@@ -44,6 +50,7 @@ export interface GroupUpdate {
  */
 export function instanceOfGroupUpdate(value: object): value is GroupUpdate {
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('mailingList' in value) || value['mailingList'] === undefined) return false;
     if (!('roleIds' in value) || value['roleIds'] === undefined) return false;
     return true;
 }
@@ -60,6 +67,7 @@ export function GroupUpdateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
+        'mailingList': json['mailing_list'],
         'roleIds': json['role_ids'],
     };
 }
@@ -77,6 +85,7 @@ export function GroupUpdateToJSONTyped(value?: GroupUpdate | null, ignoreDiscrim
         
         'name': value['name'],
         'color': value['color'],
+        'mailing_list': value['mailingList'],
         'role_ids': value['roleIds'],
     };
 }
