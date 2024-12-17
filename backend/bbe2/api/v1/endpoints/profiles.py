@@ -36,6 +36,7 @@ profiles_router = APIRouter(prefix="/profiles")
 async def get_my_profile(
     profile_crud: Annotated[CRUDProfile, Depends()],
     identifier: Annotated[str, Depends(get_current_user2)],
+    s3: S3Dep,
 ):
     db_profile = profile_crud.find_one_by(models.UserDB.id == identifier)
     if not db_profile:
