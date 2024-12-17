@@ -1,5 +1,6 @@
 import logging
 import time
+import os
 
 from fastapi import FastAPI, Request
 
@@ -27,6 +28,7 @@ sentry_sdk.init(
         # possible.
         "continuous_profiling_auto_start": True,
     },
+    environment=os.environ.get("ENVIRONMENT", "development"),
 )
 
 app = FastAPI(
