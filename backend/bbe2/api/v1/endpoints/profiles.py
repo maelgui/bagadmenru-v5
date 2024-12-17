@@ -35,7 +35,6 @@ profiles_router = APIRouter(prefix="/profiles")
         Depends(Authorization(Action.VIEW, Resource.ME)),
         Depends(get_s3_helper),
     ],
-        
 )
 async def get_my_profile(
     profile_crud: Annotated[CRUDProfile, Depends()],
