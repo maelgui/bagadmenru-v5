@@ -63,7 +63,6 @@ services:
       - EMAIL_API_ENDPOINT=http://email-api:9999/
       - AUTHORIZER_API_ENDPOINT=http://authorizer:8181/
       - TOKEN_SECRET_KEY=my-super-secret-key
-      - SENTRY_ENVIRONMENT=dev
     depends_on:
       backend-migrate:
         condition: service_completed_successfully
