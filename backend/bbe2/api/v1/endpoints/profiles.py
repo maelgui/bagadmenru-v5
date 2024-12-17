@@ -14,7 +14,7 @@ from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
-from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, TemplateDep
+from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, TemplateDep, ge_s3_helper
 from bbe2.schemas.utils import GlobalStats, MyStats
 from bbe2.utils.auth import (
     Action,
@@ -31,7 +31,11 @@ profiles_router = APIRouter(prefix="/profiles")
 @profiles_router.get(
     "/me",
     response_model=schemas.Profile,
-    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
+    dependencies=[
+        Depends(Authorization(Action.VIEW, Resource.ME)),
+        Depends(get_s3_helper),
+    ],
+        
 )
 async def get_my_profile(
     profile_crud: Annotated[CRUDProfile, Depends()],
