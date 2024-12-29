@@ -32,7 +32,7 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
           type="text"
           id="title"
           error={errors.title?.message}
-          {...register('title', { required: 'Ce champ est obligatoire.', maxLength: { value: 30, message: 'Titre trop long.' } })}
+          {...register('title', { required: 'Ce champ est obligatoire.', maxLength: { value: 100, message: 'Titre trop long.' } })}
         />
       </div>
       <div className="mb-6">
