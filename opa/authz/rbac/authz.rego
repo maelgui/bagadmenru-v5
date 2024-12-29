@@ -4,7 +4,7 @@ import rego.v1
 
 # this is provided as data!
 # regal ignore:unresolved-import
-import data.permissions as p
+import data.auth.rbac.permissions as p
 
 role_permissions := {
 	"eleves": [
