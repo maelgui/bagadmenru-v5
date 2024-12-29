@@ -151,6 +151,7 @@ async def update_profile(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
+    profile.group_ids.append(profile.instrument_id)
     groups = (
         profile_crud.db_session.query(models.GroupDB)
         .filter(models.GroupDB.id.in_(profile.group_ids))
@@ -189,6 +190,7 @@ async def create_profile(
     profile_db = models.UserDB(
         **profile.model_dump(exclude={"group_ids"}),
     )
+    profile.group_ids.append(profile.instrument_id)
     groups = (
         session.query(models.GroupDB)
         .filter(models.GroupDB.id.in_(profile.group_ids))
