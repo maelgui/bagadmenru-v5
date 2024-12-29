@@ -45,7 +45,7 @@ export default function CalendarPage() {
           </Header.Action>,
         ]}
         breadcrumb={[
-          { title: 'Évènements', link: '/events' },
+          { title: 'Évènements', link: can('view', 'response') ? '/events' : undefined },
           { title: 'Calendrier' },
         ]}
 
