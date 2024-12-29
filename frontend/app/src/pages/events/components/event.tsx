@@ -28,8 +28,8 @@ export default function EventListItem({
 
       </div>
       <div className="overflow-hidden">
-        <div className="truncate">{event.title}</div>
-        <div className="text-sm truncate">{event.description}</div>
+        <div className="truncate" title={event.title}>{event.title}</div>
+        <div className="text-sm truncate" title={event.description}>{event.description}</div>
         <div className="ml-auto flex items-center">
           <div className="p-1">
             <Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
