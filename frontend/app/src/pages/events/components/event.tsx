@@ -34,7 +34,7 @@ export default function EventListItem({
           <div className="p-1">
             <Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
           </div>
-          {showResponse ? (
+          {showResponse && event.isInDoodle ? (
             <div className="w-6 h-6 flex items-center justify-center">
               {(() => {
                 if (response === undefined) {
