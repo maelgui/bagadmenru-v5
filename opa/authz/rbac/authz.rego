@@ -4,7 +4,7 @@ import rego.v1
 
 # this is provided as data!
 # regal ignore:unresolved-import
-import data.auth.rbac.permissions as p
+import data.authz.rbac.permissions as p
 
 role_permissions := {
 	"eleves": [
@@ -52,6 +52,7 @@ allow if {
 }
 
 allow if {
+	print(p)
 	some role in input.user.roles
 	some perm in role_permissions[role]
 	perm == {"action": input.action, "resource": input.resource}
