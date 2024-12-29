@@ -52,7 +52,6 @@ allow if {
 }
 
 allow if {
-	print(p)
 	some role in input.user.roles
 	some perm in role_permissions[role]
 	perm == {"action": input.action, "resource": input.resource}
