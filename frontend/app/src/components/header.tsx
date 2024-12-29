@@ -31,8 +31,8 @@ export default function Header({
           <Container>
             <ul className="flex text-sm overflow-x-auto">
               <li className="mx-2"><Link to="/" className="underline underline-offset-4 hover:decoration-2"><FontAwesomeIcon icon={faHouse} /></Link></li>
-              {breadcrumb.map((item) => (
-                <React.Fragment key={item.link ?? 'final'}>
+              {breadcrumb.map((item, index) => (
+                <React.Fragment key={item.link ?? `final-${index}`}>
                   <li className="mx-2 text-gray-600"><FontAwesomeIcon icon={faCaretRight} className="px-2" /></li>
                   <li className="mx-2 text-nowrap">
                     {item.link ? <Link to={item.link} className="underline underline-offset-4 hover:decoration-2">{item.title}</Link> : item.title}
