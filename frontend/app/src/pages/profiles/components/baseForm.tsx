@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Profile, ProfileUpdate } from 'bagad-client';
 import { useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import Avatar from '../../../components/avatar';
 import Input from '../../../components/input';
 import { useApiClient } from '../../../config/client';
@@ -21,22 +22,33 @@ function AvatarInput({
 
   const [pictureUrl, setPictureUrl] = useState<string | null>(defaultUrl);
 
-  const onUploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadAvatar = async (file: File) => {
     // API call to generate a pre-signed url to upload file object
-    Array.from(event.target.files ?? [])?.map(async (file) => {
-      const presignedUploadUrl = await usersApi.uploadAvatarApiV1ProfilesMeAvatarPost();
-      await axios.put(
-        presignedUploadUrl.url,
-        file,
+    const presignedUploadUrl = await usersApi.uploadAvatarApiV1ProfilesMeAvatarPost();
+    await axios.put(
+      presignedUploadUrl.url,
+      file,
+      {
+        headers: {
+          'X-Amz-Tagging': new URLSearchParams({ user_id: profileId, temp: 'true' }).toString(),
+        },
+      },
+    );
+    setPictureUrl(URL.createObjectURL(file));
+    onChange(presignedUploadUrl.key);
+  };
+
+  const onAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files?.length === 1) {
+      toast.promise(
+        uploadAvatar(event.target.files[0]),
         {
-          headers: {
-            'X-Amz-Tagging': new URLSearchParams({ user_id: profileId, temp: 'true' }).toString(),
-          },
+          loading: 'Envoie...',
+          success: <b>Fichier téléchargé !</b>,
+          error: <b>Erreur.</b>,
         },
       );
-      setPictureUrl(URL.createObjectURL(file));
-      onChange(presignedUploadUrl.key);
-    });
+    }
   };
 
   return (
@@ -53,7 +65,7 @@ function AvatarInput({
         type="file"
         id="pictureFileInput"
         accept="image/*"
-        onChange={onUploadAvatar}
+        onChange={onAvatarChange}
         className="hidden"
       />
     </>
