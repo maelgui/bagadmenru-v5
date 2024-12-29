@@ -69,7 +69,7 @@ export default function CalendarPage() {
             <Calendar events={data?.events ?? []} monthOffset={monthOffset} displayContent />
 
           </div>
-          <div className="basis-1/3">
+          <div className="basis-1/3 overflow-hidden">
             <div>
               {data && !data.events.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
               {Array.from(data?.eventsByMonth ?? []).map(([month, events]) => (
