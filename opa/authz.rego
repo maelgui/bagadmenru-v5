@@ -24,6 +24,7 @@ role_permissions := {
 	"bagad": [
 		p.can_view_me,
 		p.can_view_event,
+		p.can_view_response,
 		p.can_create_response,
 		p.can_view_profile,
 		p.can_view_file,
@@ -31,6 +32,7 @@ role_permissions := {
 	"manager": [
 		p.can_view_me,
 		p.can_view_event,
+		p.can_view_response,
 		p.can_create_response,
 		p.can_view_profile,
 		p.can_view_file,
