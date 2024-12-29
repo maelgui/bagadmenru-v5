@@ -1,7 +1,6 @@
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
 
-
 #[derive(Debug, Deserialize, Clone)]
 pub(crate) struct Settings {
     pub imap_domain: String,
@@ -15,11 +14,11 @@ pub(crate) struct Settings {
     pub smtp_username: Option<String>,
     pub smtp_password: Option<String>,
     pub smtp_tls: bool,
+    pub dry_run: Option<bool>,
 }
 
 impl Settings {
     pub(crate) fn new() -> Result<Self, ConfigError> {
-
         let s = Config::builder()
             // Start off by merging in the "default" configuration file
             .add_source(File::with_name("settings.toml").required(false))

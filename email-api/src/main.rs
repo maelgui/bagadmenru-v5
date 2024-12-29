@@ -18,6 +18,7 @@ use lettre::{
 use models::{Email, Sendmail};
 use settings::Settings;
 use tower_http::trace::TraceLayer;
+use tracing::warn;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use utils::fetch_inbox_top;
 
@@ -112,9 +113,8 @@ async fn sendmail(
     State(settings): State<Settings>,
     Json(payload): Json<Vec<Sendmail>>,
 ) -> Result<Json<Vec<SmtpResponse>>, MailError> {
-    let mut builder =
-        AsyncSmtpTransport::<Tokio1Executor>::relay(&settings.smtp_domain)?
-            .port(settings.smtp_port);
+    let mut builder = AsyncSmtpTransport::<Tokio1Executor>::relay(&settings.smtp_domain)?
+        .port(settings.smtp_port);
     if let (Some(username), Some(password)) = (settings.smtp_username, settings.smtp_password) {
         let creds = Credentials::new(username, password);
         builder = builder.credentials(creds);
@@ -128,7 +128,11 @@ async fn sendmail(
         .iter()
         .map(|e| parse_email_payload(e.clone(), settings.email_from.clone()))
         .collect::<Result<Vec<_>, _>>()?;
-    let res = future::try_join_all(messages.iter().map(|m| mailer.send(m.clone()))).await?;
-
-    Ok(Json(res))
+    if Some(true) == settings.dry_run {
+        warn!("Dry mode on! Not sending emails.");
+        Ok(Json(vec![]))
+    } else {
+        let res = future::try_join_all(messages.iter().map(|m| mailer.send(m.clone()))).await?;
+        Ok(Json(res))
+    }
 }
