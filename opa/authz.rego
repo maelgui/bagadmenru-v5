@@ -13,16 +13,19 @@ allow if {
 role_permissions := {
 	"eleves": [
 		p.can_view_me,
+		p.can_edit_me,
 		p.can_view_event,
 		p.can_view_profile,
 		p.can_view_file,
 	],
 	"intervenants": [
 		p.can_view_me,
+		p.can_edit_me,
 		p.can_view_file,
 	],
 	"bagad": [
 		p.can_view_me,
+		p.can_edit_me,
 		p.can_view_event,
 		p.can_view_response,
 		p.can_create_response,
@@ -31,6 +34,7 @@ role_permissions := {
 	],
 	"manager": [
 		p.can_view_me,
+		p.can_edit_me,
 		p.can_view_event,
 		p.can_view_response,
 		p.can_create_response,
