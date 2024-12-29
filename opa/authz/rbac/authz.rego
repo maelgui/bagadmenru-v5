@@ -1,14 +1,10 @@
-package bbe2.authz
+package authz.rbac
 
 import rego.v1
 
+# this is provided as data!
+# regal ignore:unresolved-import
 import data.permissions as p
-
-default allow := false
-
-allow if {
-    "admin" in input.user.roles
-}
 
 role_permissions := {
 	"eleves": [
@@ -40,34 +36,23 @@ role_permissions := {
 		p.can_create_response,
 		p.can_view_profile,
 		p.can_view_file,
-
 		p.can_create_file,
 		p.can_edit_file,
-
 		p.can_create_event,
 		p.can_edit_event,
-
 		p.can_create_profile,
 		p.can_edit_profile,
-	]
+	],
 }
 
-# allow if {
-# 	count(data.endpoints[input.path][input.method]) == 0
-# }
+default allow := false
 
-# allow if {
-# 	some path, methods in data.endpoints
-# 	glob.match(path, ["/"], input.path)
-# 	some role in input.user_roles
-# 	role in methods[input.method]
-# }
+allow if {
+	"admin" in input.user.roles
+}
 
-# role_permissions := {"blabal": ["dqd", p.can_view_me]}
 allow if {
 	some role in input.user.roles
-	print("User Roles", role, role_permissions)
 	some perm in role_permissions[role]
-	print("Checking perm", perm)
-    perm == {"action": input.action, "resource": input.resource}
+	perm == {"action": input.action, "resource": input.resource}
 }

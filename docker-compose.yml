@@ -103,7 +103,7 @@ services:
 
   authorizer:
     image: openpolicyagent/opa
-    command: ["run", "-s", "/policies", "-w", "-c", "/policies/config.yaml"]
+    command: ["run", "-s", "-b", "/policies", "-w", "-c", "/policies/config.yaml", "--addr", "0.0.0.0:8181"]
     ports:
       - 8181:8181
     volumes:

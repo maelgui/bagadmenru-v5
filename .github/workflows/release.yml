@@ -14,6 +14,18 @@ permissions:
   id-token: write
   packages: write
 jobs:
+  lint-authorizer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: StyraInc/setup-regal@v1
+      with:
+        # For production workflows, use a specific version, like v0.22.0
+        version: latest
+
+    - name: Lint
+      run: regal lint --format=github ./opa
+
   lint-frontend:
     defaults:
       run:
@@ -70,7 +82,7 @@ jobs:
 
       - run: mkdir ${{ runner.temp }}/build
       - name: Run OPA Tests
-        run: opa build -t wasm -e bbe2/authz ./opa --output ${{ runner.temp }}/build/bundle.tar.gz
+        run: opa build -t wasm -e authz/rbac ./opa --output ${{ runner.temp }}/build/bundle.tar.gz
 
       - name: Untar OPA bundle
         run: tar -xzf ${{ runner.temp }}/build/bundle.tar.gz -C ${{ runner.temp }}/build
