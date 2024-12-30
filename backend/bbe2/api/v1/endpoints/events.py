@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Annotated, Optional
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from ics import Calendar, Event  # type: ignore
 from itsdangerous import URLSafeTimedSerializer
 from pydantic import BaseModel
@@ -62,7 +62,7 @@ async def list_events(
 )
 async def export_ics(
     session: SessionDep,
-) -> str:
+):
     events = session.query(models.EventDB).order_by(models.EventDB.date).all()
     c = Calendar()
     for event in events:
@@ -71,7 +71,7 @@ async def export_ics(
         e.begin = event.date
         c.events.add(e)
 
-    return c.serialize()
+    return Response(content=c.serialize(), media_type="text/calendar")
 
 
 @events_router.get(
