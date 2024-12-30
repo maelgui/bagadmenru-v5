@@ -11,7 +11,7 @@ export default function ProfileView({ profile }: { profile: Profile }) {
       </div>
       <h1 className="text-4xl">{`${profile.firstName} ${profile.lastName}`}</h1>
       <ul className="mt-8">
-        {profile.groups?.map((g) => <Link key={g.id} to={`/groups/${g.id}`}><Badge className="bg-pourpre-500 m-2">{g.name}</Badge></Link>)}
+        {profile.groups?.map((g) => <Link key={g.id} to={`/groups/${g.id}`}><Badge className="m-2" style={{ backgroundColor: g.color }}>{g.name}</Badge></Link>)}
       </ul>
     </div>
   );
