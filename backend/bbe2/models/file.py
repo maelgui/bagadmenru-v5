@@ -19,7 +19,9 @@ class FileOrFolderDB(Base):
     name: Mapped[str] = mapped_column(String(128))
     file_key: Mapped[str] = mapped_column(String(128), nullable=True)
     type: Mapped[FileOrFolderType]
-    children: Mapped[list["FileOrFolderDB"]] = relationship()
+    children: Mapped[list["FileOrFolderDB"]] = relationship(
+        order_by="FileOrFolderDB.name"
+    )
     # pylint: disable=not-callable
     uploaded_at: Mapped[datetime] = mapped_column(server_default=func.now())
 

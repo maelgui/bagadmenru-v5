@@ -170,7 +170,9 @@ async def update_profile(
 async def list_profiles(
     session: SessionDep,
 ):
-    q = select(models.UserDB).order_by(models.UserDB.instrument_id)
+    q = select(models.UserDB).order_by(
+        models.UserDB.instrument_id, models.UserDB.first_name
+    )
     res = session.scalars(q).all()
     return res
 
