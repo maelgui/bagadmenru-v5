@@ -1,6 +1,8 @@
 import { faCheckCircle } from '@fortawesome/free-regular-svg-icons';
 import {
   faArrowRight,
+  faCalendarDay,
+  faCameraRetro,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
@@ -8,6 +10,7 @@ import { FileOrFolderType } from 'bagad-client';
 import { Link } from 'react-router-dom';
 import { parse } from 'tinyduration';
 import Alert from '../../components/alert';
+import Button from '../../components/button';
 import Container from '../../components/container';
 import Counter from '../../components/counter';
 import Header from '../../components/header';
@@ -65,6 +68,33 @@ export default function HomePage() {
     <>
       <Header title={`Degemer mat ${profile?.firstName}`} />
       <Container>
+        <Alert type="info" style={{ backgroundImage: 'linear-gradient(to right, #ffe3f3, #f5e0f8, #e7dffd, #d5dfff, #c1dfff)' }}>
+          <p className="py-4 font-semibold">
+            Bienvenue sur le nouveau site du Bagad Men Ru.
+            C&apos;est pareil qu&apos;avant, mais en plus joli.
+          </p>
+          <p className="pb-4">
+            Voici quelques nouveautés :
+            <ul className="list-disc ml-8">
+              <li>
+                Une page d&apos;accueil qui contient les principales
+                informations dont vous pourriez avoir besoin.
+              </li>
+              <li>
+                Un calendrier amélioré, avec tous types d&apos;évènements
+                dedans. Allez y faire un tour !
+              </li>
+              <li>Des photos de profil, comme ça les nouveaux adhérents ne sont pas perdus</li>
+            </ul>
+          </p>
+          <p className="pb-4">
+            N&apos;hésitez pas à faire des retours et à signaler ce qui ne fonctionne pas !
+          </p>
+          <p className="pb-2">
+            <Button as={Link} to="/profile/edit/me" variant="ghost" icon={faCameraRetro}>Ajouter ma photo</Button>
+            <Button as={Link} to="/events/calendar" variant="ghost" icon={faCalendarDay}>Voir le calendrier</Button>
+          </p>
+        </Alert>
         {can('view', 'email') ? <Mailbox /> : null}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 content-stretch mb-16 mt-8">
           {myStats && globalStats ? (

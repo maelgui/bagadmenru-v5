@@ -4,11 +4,11 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ReactNode } from 'react';
 
-interface AlertProps {
+interface AlertProps extends React.ComponentPropsWithoutRef<'div'> {
   type: 'error' | 'warning' | 'success' | 'info';
   children: ReactNode;
 }
-export default function Alert({ type, children }: AlertProps) {
+export default function Alert({ type, children, ...rest }: AlertProps) {
   let icon = null;
   let className = '';
   switch (type) {
@@ -32,7 +32,8 @@ export default function Alert({ type, children }: AlertProps) {
       break;
   }
   return (
-    <div className={`relative py-4 px-6 mb-8 ${className}`}>
+    // eslint-disable-next-line react/jsx-props-no-spreading
+    <div className={`relative py-4 px-6 mb-8 ${className}`} {...rest}>
       <span className="absolute top-0 bottom-0 flex items-center">{icon}</span>
       <div className="pl-6">{children}</div>
     </div>
