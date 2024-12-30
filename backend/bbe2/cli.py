@@ -94,6 +94,7 @@ def bootstrap():
             ),
             RoleDB(id="eleves", description="Voit les partitions et évènements"),
             RoleDB(id="intervenants", description="Voit seulement les partitions"),
+            RoleDB(id="staff", description="Presque un administrateur"),
         ]
         for role in default_roles:
             s.merge(role)

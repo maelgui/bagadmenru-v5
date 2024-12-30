@@ -28,7 +28,7 @@ role_permissions := {
 		p.can_view_profile,
 		p.can_view_file,
 	],
-	"manager": [
+	"staff": [
 		p.can_view_me,
 		p.can_edit_me,
 		p.can_view_event,
