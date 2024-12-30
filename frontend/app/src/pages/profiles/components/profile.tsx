@@ -2,8 +2,11 @@ import { Profile } from 'bagad-client';
 import { Link } from 'react-router-dom';
 import Avatar from '../../../components/avatar';
 import Badge from '../../../components/badge';
+import { usePermissions } from '../../../config/client';
 
 export default function ProfileView({ profile }: { profile: Profile }) {
+  const { can } = usePermissions();
+
   return (
     <div className="text-center">
       <div className="inline-block m-auto">
@@ -11,7 +14,13 @@ export default function ProfileView({ profile }: { profile: Profile }) {
       </div>
       <h1 className="text-4xl">{`${profile.firstName} ${profile.lastName}`}</h1>
       <ul className="mt-8">
-        {profile.groups?.map((g) => <Link key={g.id} to={`/groups/${g.id}`}><Badge className="m-2" style={{ backgroundColor: g.color }}>{g.name}</Badge></Link>)}
+        {profile.groups?.map((g) => (
+          <span key={g.id} className="m-2">
+            {can('view', 'group')
+              ? <Link to={`/groups/${g.id}`}><Badge style={{ backgroundColor: g.color }}>{g.name}</Badge></Link>
+              : <Badge style={{ backgroundColor: g.color }}>{g.name}</Badge>}
+          </span>
+        ))}
       </ul>
     </div>
   );
