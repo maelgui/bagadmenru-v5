@@ -68,7 +68,7 @@ export default function HomePage() {
     <>
       <Header title={`Degemer mat ${profile?.firstName}`} />
       <Container>
-        <Alert type="info" style={{ backgroundImage: 'linear-gradient(to right, #ffe3f3, #f5e0f8, #e7dffd, #d5dfff, #c1dfff)' }}>
+        <Alert type="gradient">
           <p className="py-4 font-semibold">
             Bienvenue sur le nouveau site du Bagad Men Ru.
             C&apos;est pareil qu&apos;avant, mais en plus joli.

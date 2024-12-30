@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ReactNode } from 'react';
 
 interface AlertProps extends React.ComponentPropsWithoutRef<'div'> {
-  type: 'error' | 'warning' | 'success' | 'info';
+  type: 'error' | 'warning' | 'success' | 'info' | 'gradient';
   children: ReactNode;
 }
 export default function Alert({ type, children, ...rest }: AlertProps) {
@@ -27,6 +27,10 @@ export default function Alert({ type, children, ...rest }: AlertProps) {
     case 'info':
       icon = <FontAwesomeIcon icon={faInfo} className="mr-4" />;
       className = 'bg-sky-100 text-sky-950';
+      break;
+    case 'gradient':
+      icon = <FontAwesomeIcon icon={faInfo} className="mr-4" />;
+      className = 'bg-gradient-to-r from-[#ffe3f3] to-[#c1dfff]';
       break;
     default:
       break;

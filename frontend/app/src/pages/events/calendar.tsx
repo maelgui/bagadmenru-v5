@@ -9,6 +9,7 @@ import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { useApiClient, usePermissions } from '../../config/client';
+import env from '../../env';
 import groupBy from '../../utils/groupby';
 import Calendar from './components/calendar';
 import EventListItem from './components/event';
@@ -30,6 +31,14 @@ export default function CalendarPage() {
   const today = new Date();
 
   const currentMonth = (new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' });
+  const [copyButtonLabel, setCopyButtonLabel] = useState('ICS');
+  const copy = () => {
+    navigator.clipboard.writeText(`${env.VITE_BBE2_API_URL}/events/export/ics`);
+    setCopyButtonLabel('Copié !');
+    setTimeout(() => {
+      setCopyButtonLabel('ICS');
+    }, 2000);
+  };
 
   return (
     <>
@@ -51,6 +60,26 @@ export default function CalendarPage() {
 
       />
       <Container>
+        <Alert type="gradient">
+          <p className="py-4 font-semibold">
+            Synchronisation du calendrier
+          </p>
+          <p className="pb-4">
+            Vous pouvez synchroniser le calendrier du site avec votre
+            propre application de calendrier. Les dates de sorties et de répétitions
+            affichées ici peuvent ainsi s&apos;ajouter automatiquement dans votre calendrier !
+          </p>
+          <p className="pb-2">
+            <Button as={Link} to={`https://www.google.com/calendar/render?cid=${env.VITE_BBE2_API_URL}/events/export/ics`} variant="ghost" icon={faCalendarDay}>Google Agenda</Button>
+            <Button
+              variant="ghost"
+              icon={faCalendarDay}
+              onClick={copy}
+            >
+              {copyButtonLabel}
+            </Button>
+          </p>
+        </Alert>
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="basis-2/3">
             <div className="flex justify-between items-center">
