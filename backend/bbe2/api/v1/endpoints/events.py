@@ -69,6 +69,7 @@ async def export_ics(
         e = Event()
         e.name = event.title
         e.begin = event.date
+        e.make_all_day()
         c.events.add(e)
 
     return Response(content=c.serialize(), media_type="text/calendar")
