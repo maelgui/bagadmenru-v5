@@ -4,7 +4,8 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { FileOrFolder, FileOrFolderType } from 'bagad-client';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
 import Alert from '../../components/alert';
@@ -76,11 +77,11 @@ export default function ListFilesPage() {
   });
 
   const uploadFileMutation = useMutation({
-    mutationFn: (e: React.ChangeEvent<HTMLInputElement>) => {
+    mutationFn: (acceptedFiles: File[]) => {
       if (!folder?.id) {
         return Promise.reject(new Error('Unable to upload'));
       }
-      return Promise.all(Array.from(e.target.files ?? [])?.map((file) => (
+      return Promise.all(Array.from(acceptedFiles ?? [])?.map((file) => (
         filesApi.uploadFileApiV1FilesFolderIdUploadPost({
           folderId: folder?.id,
           file,
@@ -104,6 +105,14 @@ export default function ListFilesPage() {
     },
   });
 
+  const {
+    getRootProps, getInputProps, isDragActive,
+  } = useDropzone({
+    onDrop: (acceptedFiles) => uploadFileMutation.mutate(acceptedFiles),
+    noClick: true,
+    noKeyboard: true,
+  });
+
   return (
     <>
       <Header
@@ -118,7 +127,8 @@ export default function ListFilesPage() {
           ? [
             <Header.Action as="label" key="upload-file" variant="outline">
               Ajouter un fichier
-              <input key="upload-file" type="file" id="upload-file" className="hidden" multiple onChange={uploadFileMutation.mutate} />
+              {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+              <input {...getInputProps()} />
             </Header.Action>,
             <Header.Action
               key="add-folder"
@@ -149,7 +159,9 @@ export default function ListFilesPage() {
         ) : null}
         {status === 'error' ? <Alert type="error">Erreur</Alert> : null}
         {status === 'success' ? (
-          <>
+          // eslint-disable-next-line react/jsx-props-no-spreading
+          <div {...getRootProps({ className: 'relative' })}>
+            <div className={isDragActive ? 'border-2 border-pourpre-500 block absolute w-full h-full bg-pourpre-50/50 z-10 rounded-lg' : ''} />
             {children && !children?.files.length && !children?.folders.length ? (
               <Alert type="info">Dossier vide</Alert>
             ) : null}
@@ -160,10 +172,15 @@ export default function ListFilesPage() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
               {children?.files.map((file) => (
-                <FileItem key={file.id} file={file} big deleteFn={() => confirmDeleteFile(file)} />
+                <FileItem
+                  key={file.id}
+                  file={file}
+                  big
+                  deleteFn={() => confirmDeleteFile(file)}
+                />
               ))}
             </div>
-          </>
+          </div>
         ) : null}
       </Container>
       <Dialog open={fileToDelete !== undefined} onOpenChange={() => setFileToDelete(undefined)}>
