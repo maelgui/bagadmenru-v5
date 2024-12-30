@@ -27,7 +27,7 @@ export default function Header({
   return (
     <>
       {breadcrumb.length !== 0 ? (
-        <div className="bg-pourpre-50 shadow-inner py-2">
+        <div className="shadow-inner py-2" style={{ backgroundImage: 'linear-gradient(to right, #ffe3f3, #f5e0f8, #e7dffd, #d5dfff, #c1dfff)' }}>
           <Container>
             <ul className="flex text-sm overflow-x-auto">
               <li className="mx-2"><Link to="/" className="underline underline-offset-4 hover:decoration-2"><FontAwesomeIcon icon={faHouse} /></Link></li>
