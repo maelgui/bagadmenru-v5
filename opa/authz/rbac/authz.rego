@@ -42,6 +42,7 @@ role_permissions := {
 		p.can_edit_event,
 		p.can_create_profile,
 		p.can_edit_profile,
+		p.can_view_email,
 	],
 }
 
