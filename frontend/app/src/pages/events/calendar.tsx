@@ -70,7 +70,7 @@ export default function CalendarPage() {
             affichées ici peuvent ainsi s&apos;ajouter automatiquement dans votre calendrier !
           </p>
           <p className="pb-2">
-            <Button as={Link} to={`https://www.google.com/calendar/render?cid=${env.VITE_BBE2_API_URL}/api/v1/events/export/ics`} variant="ghost" icon={faCalendarDay}>Google Agenda</Button>
+            <Button as={Link} to={`https://www.google.com/calendar/render?cid=${env.VITE_BBE2_API_URL.replace('https://', 'webcal://')}/api/v1/events/export/ics`} variant="ghost" icon={faCalendarDay}>Google Agenda</Button>
             <Button
               variant="ghost"
               icon={faCalendarDay}
