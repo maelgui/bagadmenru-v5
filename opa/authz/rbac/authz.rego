@@ -43,6 +43,10 @@ role_permissions := {
 		p.can_create_profile,
 		p.can_edit_profile,
 		p.can_view_email,
+		p.can_view_group,
+		p.can_edit_group,
+		p.can_create_group,
+		p.can_delete_group,
 	],
 }
 
