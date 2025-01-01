@@ -11,7 +11,10 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Costume, Response, ResponseCreate } from 'bagad-client';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+import {
+  Link, Navigate,
+  useSearchParams,
+} from 'react-router-dom';
 import Alert from '../../components/alert';
 import Avatar from '../../components/avatar';
 import Badge from '../../components/badge';
@@ -60,6 +63,7 @@ export default function DoodlePage() {
   const { usersApi, eventsApi } = useApiClient();
   const profile = useUserProfile();
 
+  const [searchParams] = useSearchParams();
   const [editing, setEditing] = useState<boolean>(false);
 
   const { data: events } = useQuery({
@@ -80,6 +84,11 @@ export default function DoodlePage() {
 
   const { can } = usePermissions();
 
+  if (!searchParams.get('noRedirect') && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    // true for mobile device
+    return <Navigate to="/events/planning" />;
+  }
+
   return (
     <>
       <Header
@@ -95,7 +104,7 @@ export default function DoodlePage() {
         ]}
         breadcrumb={[
           { link: '/events', title: 'Évènements' },
-          { title: 'Mes présences' },
+          { title: 'Doodle' },
         ]}
       />
       <Container className={`${mutation.isPending ? 'disabled' : ''}`}>

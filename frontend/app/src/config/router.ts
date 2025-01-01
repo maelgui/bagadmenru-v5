@@ -13,6 +13,7 @@ import CalendarPage from '../pages/events/calendar';
 import DoodlePage from '../pages/events/doodle';
 import EditEventPage from '../pages/events/edit';
 import EventsManagePage from '../pages/events/events';
+import PlanningPage from '../pages/events/planning';
 import ListFilesPage from '../pages/files/list';
 import AddGroupPage from '../pages/groups/add';
 import EditGroupPage from '../pages/groups/edit';
@@ -44,6 +45,10 @@ export default createBrowserRouter([
               {
                 path: '/events',
                 Component: DoodlePage,
+              },
+              {
+                path: '/events/planning',
+                Component: PlanningPage,
               },
               {
                 path: '/events/manage',
