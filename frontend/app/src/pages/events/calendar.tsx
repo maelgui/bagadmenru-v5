@@ -1,4 +1,3 @@
-import { faCalendarCheck } from '@fortawesome/free-regular-svg-icons';
 import { faCalendarDay, faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
@@ -13,6 +12,7 @@ import env from '../../env';
 import groupBy from '../../utils/groupby';
 import Calendar from './components/calendar';
 import EventListItem from './components/event';
+import DisplaySelector from './components/selector';
 
 export default function CalendarPage() {
   const { eventsApi } = useApiClient();
@@ -49,9 +49,7 @@ export default function CalendarPage() {
           <Header.Action variant="outline" key="add-event" icon={faCalendarPlus} as={Link} to="/events/manage" className={can('update', 'event') ? '' : 'hidden'}>
             Gérer
           </Header.Action>,
-          <Header.Action key="doodle-nav" icon={faCalendarCheck} as={Link} to="/events" className={can('create', 'response') ? '' : 'hidden'}>
-            Mes Présences
-          </Header.Action>,
+          <DisplaySelector key="doodle-nav" />,
         ]}
         breadcrumb={[
           { title: 'Évènements', link: can('view', 'response') ? '/events' : undefined },

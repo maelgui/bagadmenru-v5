@@ -1,13 +1,13 @@
 /* eslint-disable max-len */
 import {
-  faCalendar,
   faCalendarPlus,
   faCheck,
   faCircleCheck,
   faCircleQuestion,
   faCircleXmark,
   faPen,
-  faSquareArrowUpRight, faWandMagicSparkles, faXmark,
+  faSquareArrowUpRight,
+  faWandMagicSparkles, faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -32,6 +32,7 @@ import {
 } from '../../config/client';
 import groupBy from '../../utils/groupby';
 import sum from '../../utils/sum';
+import DisplaySelector from './components/selector';
 
 type EnrichedResponse = Response & { user?: Profile };
 function groupResponsesByEventAndEnrichUser(responses: Response[], profiles: Profile[]) {
@@ -305,9 +306,7 @@ export default function PlanningPage() {
           <Header.Action variant="outline" icon={faCalendarPlus} key="add-event" as={Link} to="/events/manage" className={can('edit', 'event') ? '' : 'hidden'}>
             Gérer
           </Header.Action>,
-          <Header.Action key="doodle-nav" icon={faCalendar} as={Link} to="/events/calendar">
-            Vue calendrier
-          </Header.Action>,
+          <DisplaySelector key="doodle-nav" />,
         ]}
         breadcrumb={[
           { title: 'Évènements', link: '/events' },

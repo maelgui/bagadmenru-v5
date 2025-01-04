@@ -1,7 +1,6 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 /* eslint-disable max-len */
 import {
-  faCalendar,
   faCalendarPlus,
   faFloppyDisk,
   faPen,
@@ -30,6 +29,7 @@ import {
 import EventCategories from '../../utils/event-category';
 import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
+import DisplaySelector from './components/selector';
 
 function sumByEvents(list: Response[]) {
   const map = new Map<number, number>();
@@ -98,9 +98,7 @@ export default function DoodlePage() {
           <Header.Action variant="outline" icon={faCalendarPlus} key="add-event" as={Link} to="/events/manage" className={can('edit', 'event') ? '' : 'hidden'}>
             Gérer
           </Header.Action>,
-          <Header.Action key="doodle-nav" icon={faCalendar} as={Link} to="/events/calendar">
-            Vue calendrier
-          </Header.Action>,
+          <DisplaySelector key="doodle-nav" />,
         ]}
         breadcrumb={[
           { link: '/events', title: 'Évènements' },
