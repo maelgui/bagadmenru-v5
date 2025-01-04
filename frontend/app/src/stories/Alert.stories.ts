@@ -42,3 +42,8 @@ export const Success: Story = {
     type: 'success',
   },
 };
+export const Gradient: Story = {
+  args: {
+    type: 'gradient',
+  },
+};

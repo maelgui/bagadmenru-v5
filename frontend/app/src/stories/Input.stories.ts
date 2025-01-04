@@ -35,3 +35,11 @@ export const Disabled: Story = {
     disabled: true,
   },
 };
+
+export const Error: Story = {
+  args: {
+    type: 'text',
+    value: 'Mon text',
+    error: 'Mon message d\'erreur',
+  },
+};
