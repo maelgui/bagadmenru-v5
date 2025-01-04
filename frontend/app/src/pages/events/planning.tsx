@@ -1,11 +1,13 @@
 /* eslint-disable max-len */
 import {
+  faCalendar,
+  faCalendarPlus,
   faCheck,
   faCircleCheck,
   faCircleQuestion,
   faCircleXmark,
   faPen,
-  faPlusCircle, faSquareArrowUpRight, faWandMagicSparkles, faXmark,
+  faSquareArrowUpRight, faWandMagicSparkles, faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -25,7 +27,9 @@ import {
 } from '../../components/dialog';
 import Header from '../../components/header';
 import Tooltip from '../../components/tooltip';
-import { queryClient, useApiClient, useUserProfile } from '../../config/client';
+import {
+  queryClient, useApiClient, usePermissions, useUserProfile,
+} from '../../config/client';
 import groupBy from '../../utils/groupby';
 import sum from '../../utils/sum';
 
@@ -39,7 +43,7 @@ function groupResponsesByEventAndEnrichUser(responses: Response[], profiles: Pro
   return groupBy(enrichedResponses, (r) => r.eventId);
 }
 
-function ResponseListItem({ response = undefined, user = undefined }: { response?: EnrichedResponse, user?: Profile }) {
+function ResponseListItem({ response = undefined, user = undefined, showResponse = true }: { response?: EnrichedResponse, user?: Profile, showResponse?: boolean }) {
   const profile = response?.user ?? user;
   return (
     <div key={profile?.id} className="flex items-center my-2">
@@ -54,25 +58,27 @@ function ResponseListItem({ response = undefined, user = undefined }: { response
       className="border-2"
       style={{ borderColor: profile?.instrument?.color ?? '' }}
     /> */}
-      <span className="ml-2 text-nowrap">
+      <span className="mx-2 text-nowrap">
         {profile?.firstName}
         {' '}
         {profile?.lastName}
       </span>
-      <div className="ml-auto">
-        {response ? (
-          <span>
-            {response.value ? (
-              <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-300" />
-            ) : (
-              <FontAwesomeIcon icon={faCircleXmark} className="text-red-300" />
-            )}
-          </span>
-        ) : (
-          <FontAwesomeIcon icon={faCircleQuestion} className="text-sky-500" />
+      {showResponse ? (
+        <div className="ml-auto">
+          {response ? (
+            <span>
+              {response.value ? (
+                <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-300" />
+              ) : (
+                <FontAwesomeIcon icon={faCircleXmark} className="text-red-300" />
+              )}
+            </span>
+          ) : (
+            <FontAwesomeIcon icon={faCircleQuestion} className="text-sky-500" />
 
-        )}
-      </div>
+          )}
+        </div>
+      ) : null}
     </div>
 
   );
@@ -102,11 +108,14 @@ function EventCard({
     onSuccess: () => toast.success('Réponse enregistrée'),
   });
 
-  const { totalOtherInstrumentsResponses, myInstrumentResponses, myResponse } = useMemo(() => {
+  const {
+    totalOtherInstrumentsResponses, myInstrumentResponses, otherInstrumentsResponses, myResponse,
+  } = useMemo(() => {
     const othersInstruments = instruments.filter((i) => i.id !== profile?.instrument?.id);
     return {
       myResponse: responses.find((r) => r.userId === profile?.id),
       myInstrumentResponses: responseByInstrument.get(profile?.instrument?.id)?.filter((r) => r.value) ?? [],
+      otherInstrumentsResponses: othersInstruments.map((i) => responseByInstrument.get(i.id)?.filter((r) => r.value) ?? []).flat(),
       totalOtherInstrumentsResponses: sum(othersInstruments.map((i) => responseByInstrument.get(i.id)?.filter((r) => r.value)?.length ?? 0)),
     };
   }, [responses, profile]);
@@ -145,11 +154,24 @@ function EventCard({
               </Tooltip>
             ))}
             {totalOtherInstrumentsResponses ? (
-              <Avatar
-                className="border-4 border-white"
-                placeholder={`+${totalOtherInstrumentsResponses}`}
-                size="xs"
-              />
+              <Tooltip
+                content={
+                  otherInstrumentsResponses.map((r) => (
+                    <ResponseListItem
+                      key={r.userId}
+                      showResponse={false}
+                      response={r}
+                      user={profiles.find((p) => p.id === r.userId)}
+                    />
+                  ))
+                }
+              >
+                <Avatar
+                  className="border-4 border-white"
+                  placeholder={`+${totalOtherInstrumentsResponses}`}
+                  size="xs"
+                />
+              </Tooltip>
             ) : null}
           </div>
         </div>
@@ -246,6 +268,7 @@ function EventCard({
 
 export default function PlanningPage() {
   const { usersApi, eventsApi } = useApiClient();
+  const { can } = usePermissions();
 
   const { data: events } = useQuery({
     queryKey: ['events', 'next100doodle'],
@@ -279,8 +302,11 @@ export default function PlanningPage() {
         title="Planning"
         subtitle="Mes présences aux évènements du groupe"
         actions={[
-          <Header.Action key="add-event" icon={faPlusCircle} as={Link} to="/events/add">
-            Ajouter
+          <Header.Action variant="outline" icon={faCalendarPlus} key="add-event" as={Link} to="/events/manage" className={can('edit', 'event') ? '' : 'hidden'}>
+            Gérer
+          </Header.Action>,
+          <Header.Action key="doodle-nav" icon={faCalendar} as={Link} to="/events/calendar">
+            Vue calendrier
           </Header.Action>,
         ]}
         breadcrumb={[
