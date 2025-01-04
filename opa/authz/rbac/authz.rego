@@ -38,6 +38,7 @@ role_permissions := {
 		p.can_view_file,
 		p.can_create_file,
 		p.can_edit_file,
+		p.can_delete_file,
 		p.can_create_event,
 		p.can_edit_event,
 		p.can_create_profile,
