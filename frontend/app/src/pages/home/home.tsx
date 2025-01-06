@@ -66,7 +66,7 @@ export default function HomePage() {
 
   return (
     <>
-      <Header title={`Degemer mat ${profile?.firstName}`} />
+      <Header title={<span lang="br" title={`Bienvenue ${profile?.firstName}`}>{`Degemer mat ${profile?.firstName}`}</span>} />
       <Container>
         <Alert type="gradient">
           <p className="py-4 font-semibold">
