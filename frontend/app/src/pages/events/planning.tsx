@@ -325,7 +325,7 @@ export default function PlanningPage() {
           <p className="pb-4">
             <strong className="font-semibold">Vous préfériez le tableau ?</strong>
             <br />
-            Pas de panique, il est toujours disponible via au bouton ci-dessous.
+            Pas de panique, il est toujours disponible grâce au bouton ci-dessous.
           </p>
           <p className="pb-2">
             <Button
