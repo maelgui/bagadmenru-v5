@@ -32,7 +32,7 @@ async def list_files(
     q = session.query(models.FileOrFolderDB)
     if t:
         q = q.filter(models.FileOrFolderDB.type == t)
-    q = q.order_by(models.FileOrFolderDB.uploaded_at.asc())
+    q = q.order_by(models.FileOrFolderDB.uploaded_at.desc())
     q = q.limit(limit)
 
     return q.all()
