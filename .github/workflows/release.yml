@@ -197,20 +197,17 @@ jobs:
       - lint-frontend
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Frontend Artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: frontend/build
+          path: dist
 
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy build --project-name=bagadmenru-dashboard
+          command: pages deploy dist --project-name=bagadmenru-dashboard
           # Optional: Enable this if you want to have GitHub Deployments triggered
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
