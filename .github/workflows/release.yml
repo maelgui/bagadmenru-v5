@@ -17,14 +17,14 @@ jobs:
   lint-authorizer:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: StyraInc/setup-regal@v1
-      with:
-        # For production workflows, use a specific version, like v0.22.0
-        version: latest
+      - uses: actions/checkout@v4
+      - uses: StyraInc/setup-regal@v1
+        with:
+          # For production workflows, use a specific version, like v0.22.0
+          version: latest
 
-    - name: Lint
-      run: regal lint --format=github ./opa
+      - name: Lint
+        run: regal lint --format=github ./opa
 
   lint-frontend:
     needs:
@@ -196,7 +196,12 @@ jobs:
     needs:
       - lint-frontend
     runs-on: ubuntu-latest
+    env:
+      VITE_BBE2_API_URL: https://api.beta.bagadmenru.bzh
+
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
@@ -207,6 +212,8 @@ jobs:
         with:
           name: frontend-build
           path: dist
+
+      - run: envsubst < frontend/.docker/app-config.js.template > dist/app-config.js
 
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
