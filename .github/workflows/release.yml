@@ -41,6 +41,11 @@ jobs:
           node-version: "22.x"
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
+      - name: Opa Policy
+        uses: actions/download-artifact@v4
+        with:
+          name: opa-policy-wasm
+          path: app/src/assets/
       - run: yarn
       - run: yarn lint
       - run: yarn build
