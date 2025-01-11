@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from bbe2 import models, schemas
-from bbe2.crud import CRUDEvent, CRUDResponse
+from bbe2.crud import CRUDEvent
 from bbe2.dependencies import SessionDep, SettingsDep, TemplateDep
 from bbe2.utils.auth import (
     Action,
