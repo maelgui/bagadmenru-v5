@@ -215,13 +215,14 @@ async def delete_event(
     dependencies=[Depends(Authorization(Action.VIEW, Resource.RESPONSE))],
 )
 async def list_responses(
-    response_crud: Annotated[CRUDResponse, Depends(CRUDResponse)],
+    session: SessionDep,
     user_id: Optional[str] = None,
 ):
+    q = select(models.ResponseDB)
     if user_id:
-        return response_crud.find_by(models.ResponseDB.user_id == user_id)
-    else:
-        return response_crud.find_all()
+        q = q.filter(models.ResponseDB.user_id == user_id)
+    responses = session.scalars(q).all()
+    return responses
 
 
 @events_router.put(

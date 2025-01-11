@@ -50,6 +50,13 @@ def populate_db(session):
         is_in_doodle=True,
     )
     session.merge(event)
+    response = models.ResponseDB(
+        value=True,
+        date=datetime(2024,1,1),
+        event_id=event.id,
+        user_id=user.id,
+    )
+    session.merge(response)
     # Files
     root = models.FileOrFolderDB(
         id=1,

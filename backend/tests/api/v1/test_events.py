@@ -1,3 +1,5 @@
+from unittest.mock import ANY
+
 from fastapi.testclient import TestClient
 
 
@@ -78,3 +80,36 @@ def test_edit_event(client: TestClient):
         "category": "CAT1",
         "is_in_doodle": True,
     }
+
+
+def test_put_responses(client: TestClient):
+    response = client.put(
+        "/api/v1/events/1/responses",
+        json={
+            "user_id": "a8e2d3249e9d997e",
+            "value": True,
+        },
+    )
+    print(response.text)
+    assert response.status_code == 200
+    assert response.json() == {
+        "date": ANY,
+        "event_id": 1,
+        "user_id": "a8e2d3249e9d997e",
+        "value": True,
+    }
+
+
+def test_list_responses(client: TestClient):
+    response = client.get(
+        "/api/v1/responses/",
+    )
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "date": "2024-01-01T00:00:00",
+            "event_id": 1,
+            "user_id": "a8e2d3249e9d997e",
+            "value": True,
+        },
+    ]
