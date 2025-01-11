@@ -194,7 +194,7 @@ jobs:
 
   deploy:
     needs:
-      - build-push
+      - lint-frontend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
