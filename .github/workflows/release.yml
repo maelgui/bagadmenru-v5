@@ -85,7 +85,6 @@ jobs:
 
   build-authz-policy-wasm:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
