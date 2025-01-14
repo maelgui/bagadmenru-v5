@@ -84,6 +84,7 @@ jobs:
 
   build-authz-policy-wasm:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -112,6 +113,7 @@ jobs:
 
   build-authz-policy-oci:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
     defaults:
       run:
         shell: bash
@@ -139,6 +141,7 @@ jobs:
       - run: oras push ${{ env.REPO }}/policy:beta --config config.yaml:application/vnd.oci.image.config.v1+json bundle.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip
 
   build-push:
+    if: ${{ github.event_name == 'push' }}
     needs:
       - test-backend
       - lint-frontend
@@ -193,6 +196,7 @@ jobs:
           delete-only-untagged-versions: "true"
 
   deploy:
+    if: ${{ github.event_name == 'push' }}
     needs:
       - lint-frontend
     runs-on: ubuntu-latest
