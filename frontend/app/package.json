@@ -21,7 +21,7 @@
     "@sentry/react": "^8.45.1",
     "@sentry/vite-plugin": "^2.22.7",
     "@simplewebauthn/browser": "^11.0.0",
-    "@simplewebauthn/types": "^11.0.0",
+    "@simplewebauthn/types": "^12.0.0",
     "@tanstack/react-query": "^5.0.0-alpha.63",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "axios": "^1.7.2",
