@@ -1,7 +1,6 @@
 import hashlib
 import logging
 import os
-from contextlib import contextmanager
 from datetime import datetime
 
 import httpx
@@ -9,7 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy import select
 
 from bbe2.config import get_settings
-from bbe2.database import SessionLocal, get_engine, get_session
+from bbe2.database import session_ctx
 from bbe2.models.user import GroupDB
 
 scheduler = AsyncIOScheduler()
@@ -114,17 +113,6 @@ class OvhHelper:
         r.raise_for_status()
 
         return r.json()
-
-
-@contextmanager
-def session(database_url: str):
-    # Code to acquire resource, e.g.:
-    engine = get_engine(database_url)
-    SessionLocal.configure(bind=engine)
-    with SessionLocal() as s:
-        yield s
-        s.commit()
-        s.close()
 
 
 @scheduler.scheduled_job("cron", hour="*", minute="*")
