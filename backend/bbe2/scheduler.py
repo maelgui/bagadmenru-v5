@@ -131,7 +131,7 @@ def session(database_url: str):
 async def synchronize_mailing_lists():
 
     settings = get_settings()
-    with session(settings.database_url) as ses:
+    with session_ctx(settings.database_url) as ses:
         logger.info("Retriveing groups")
         query = select(GroupDB).where(GroupDB.mailing_list.is_not(None))
         groups = ses.scalars(query)
