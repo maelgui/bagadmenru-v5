@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from functools import lru_cache
 from typing import Annotated
 
@@ -24,3 +25,16 @@ def get_session(settings: Annotated[Settings, Depends(get_settings)]):
     finally:
         db.commit()
         db.close()
+        
+        
+@contextmanager
+def session_ctx(database_url):
+    # Code to acquire resource, e.g.:
+    engine = get_engine(database_url)
+    SessionLocal.configure(bind=engine)
+    with SessionLocal() as s:
+        yield s
+        s.commit()
+        s.close()
+
+
