@@ -8,7 +8,7 @@ from rich.table import Table
 from sqlalchemy import insert, select
 
 from bbe2 import models
-from bbe2.database import SessionLocal, get_engine
+from bbe2.database import SessionLocal, session_ctx, get_engine
 from bbe2.models.user import RoleDB
 from bbe2.utils.auth import myctx
 
@@ -16,20 +16,12 @@ console = Console()
 users_cli = typer.Typer()
 
 
-@contextmanager
-def session():
-    # Code to acquire resource, e.g.:
-    engine = get_engine(os.environ["DATABASE_URL"])
-    SessionLocal.configure(bind=engine)
-    with SessionLocal() as s:
-        yield s
-        s.commit()
-        s.close()
+DB_URL = os.environ["DATABASE_URL"]
 
 
 @users_cli.command("list", help="List users")
 def list_users():
-    with session() as s:
+    with session_ctx(DB_URL) as s:
         users = s.scalars(select(models.UserDB)).all()
 
         table = Table("Firstname", "Lastname", "Email")
@@ -46,7 +38,7 @@ def create_user():
     email = typer.prompt("What's your email?")
     password = typer.prompt("What's your password?", hide_input=True)
 
-    with session() as s:
+    with session_ctx(DB_URL) as s:
         result = s.execute(
             insert(models.UserDB).values(
                 first_name=first_name,
@@ -63,7 +55,7 @@ roles_cli = typer.Typer()
 
 @roles_cli.command("list", help="List roles")
 def list_roles():
-    with session() as s:
+    with session_ctx(DB_URL) as s:
         roles = s.scalars(select(models.RoleDB)).all()
 
         table = Table("Role", "Description")
@@ -85,7 +77,7 @@ def hello(name: str):
 
 @app.command("bootstrap", help="Bootstrap default data")
 def bootstrap():
-    with console.status("Bootstraping data"), session() as s:
+    with console.status("Bootstraping data"), session_ctx(DB_URL) as s:
         default_roles = [
             RoleDB(id="admin", description="Administrateur"),
             RoleDB(
