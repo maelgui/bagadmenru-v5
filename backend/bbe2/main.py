@@ -1,11 +1,13 @@
 import logging
-import time
 import os
+import time
+from contextlib import asynccontextmanager
 
+import sentry_sdk
 from fastapi import FastAPI, Request
 
 from bbe2.api.v1.api import api_router
-import sentry_sdk
+from bbe2.scheduler import scheduler
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,6 +33,14 @@ sentry_sdk.init(
     environment=os.environ.get("ENVIRONMENT", "development"),
 )
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.start()
+    yield
+    scheduler.shutdown()
+
+
 app = FastAPI(
     # title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
     # swagger_ui_init_oauth={
@@ -40,6 +50,7 @@ app = FastAPI(
     #     "scopes": "openid email",
     # },
     openapi_tags=tags_metadata,
+    lifespan=lifespan,
 )
 
 

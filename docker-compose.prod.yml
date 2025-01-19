@@ -36,6 +36,9 @@ services:
       - TOKEN_SECRET_KEY=${TOKEN_SECRET_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - AUTHORIZER_API_ENDPOINT=http://authorizer:8181/
+      - OVH_APPLICATION_KEY=${OVH_APPLICATION_KEY}
+      - OVH_APPLICATION_SECRET=${OVH_APPLICATION_SECRET}
+      - OVH_CONSUMER_KEY=${OVH_CONSUMER_KEY}
     restart: unless-stopped
     networks:
       - default

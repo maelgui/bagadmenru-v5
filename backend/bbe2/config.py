@@ -27,6 +27,10 @@ class Settings(BaseSettings):
 
     token_secret_key: str
 
+    ovh_application_key: Optional[str] = None
+    ovh_application_secret: Optional[str] = None
+    ovh_consumer_key: Optional[str] = None
+
     @field_validator("email_api_endpoint", "authorizer_api_endpoint")
     @classmethod
     def strip_traialing_slash(cls, v: str) -> str:

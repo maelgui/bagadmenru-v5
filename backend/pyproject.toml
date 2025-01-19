@@ -27,6 +27,7 @@ passlib = { extras = ["argon2", "bcrypt"], version = "^1.7.4" }
 alembic = "^1.14.0"
 typer = "^0.15.1"
 sentry-sdk = {extras = ["fastapi"], version = "^2.20.0"}
+apscheduler = "^3.11.0"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.28.1"
@@ -49,3 +50,6 @@ extension-pkg-whitelist = "pydantic"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
+
+[tool.isort]
+profile = "black"
