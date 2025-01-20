@@ -71,9 +71,12 @@ class OvhHelper:
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
-        await self.client.aclose()
+        if self.client:
+            await self.client.aclose()
 
     async def retrieve_subscriber(self, domain, name) -> list[str]:
+        if not self.client:
+            raise RuntimeError("Client not initialized")
         r = await self.client.get(
             f"/email/domain/{domain}/mailingList/{name}/subscriber"
         )
@@ -82,6 +85,8 @@ class OvhHelper:
         return r.json()
 
     async def add_subscriber(self, domain, name, email):
+        if not self.client:
+            raise RuntimeError("Client not initialized")
         r = await self.client.post(
             f"/email/domain/{domain}/mailingList/{name}/subscriber",
             json={"email": email},
@@ -91,6 +96,8 @@ class OvhHelper:
         return r.json()
 
     async def delete_subscriber(self, domain, name, email):
+        if not self.client:
+            raise RuntimeError("Client not initialized")
         r = await self.client.delete(
             f"/email/domain/{domain}/mailingList/{name}/subscriber/{email}"
         )
