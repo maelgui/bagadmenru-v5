@@ -52,7 +52,7 @@ def populate_db(session):
     session.merge(event)
     response = models.ResponseDB(
         value=True,
-        date=datetime(2024,1,1),
+        date=datetime(2024, 1, 1),
         event_id=event.id,
         user_id=user.id,
     )
@@ -130,6 +130,7 @@ def client(monkeypatch) -> Generator:
         payload, get_fake_settings().jwt_secret_key, algorithm="HS256"
     )
 
-    with TestClient(app) as cli:
-        cli.headers = {"Authorization": f"Bearer {access_token}"}
-        yield cli
+    with patch("bbe2.main.scheduler") as p:
+        with TestClient(app) as cli:
+            cli.headers = {"Authorization": f"Bearer {access_token}"}
+            yield cli
