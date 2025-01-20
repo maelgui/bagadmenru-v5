@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from bbe2.config import get_settings
 from bbe2.database import session_ctx
-from bbe2.models.user import GroupDB
+from bbe2.models import GroupDB
 
 scheduler = AsyncIOScheduler()
 
