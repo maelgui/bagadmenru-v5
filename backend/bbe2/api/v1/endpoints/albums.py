@@ -12,6 +12,11 @@ from bbe2.utils.auth import Action, Authorization, Resource
 router = APIRouter(prefix="/albums")
 
 
+ALBUM_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND, detail="Album not found"
+)
+
+
 @router.get(
     "/",
     response_model=list[schemas.Album],
@@ -34,9 +39,7 @@ async def get_album(
 ):
     db_album = album_crud.find_one_by(models.AlbumDB.id == album_id)
     if not db_album:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Album not found"
-        )
+        raise ALBUM_NOT_FOUND
     return db_album
 
 
@@ -93,9 +96,7 @@ async def update_album(
 ):
     db_album = album_crud.find_one_by(models.AlbumDB.id == album_id)
     if not db_album:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+        raise ALBUM_NOT_FOUND
     db_album = album_crud.update(db_object=db_album, update_object=album)
     return db_album
 
@@ -111,7 +112,7 @@ async def delete_album(
 ):
     db_album = album_crud.find_one_by(models.AlbumDB.id == album_id)
     if not db_album:
-        raise HTTPException(status_code=404, detail="Album not found")
+        raise ALBUM_NOT_FOUND
     album_crud.delete(album_id)
 
 
@@ -129,5 +130,5 @@ async def delete_photo(
         (models.PhotoDB.id == photo_id) & (models.PhotoDB.album_id == album_id)
     )
     if not db_photo:
-        raise HTTPException(status_code=404, detail="Album not found")
+        raise ALBUM_NOT_FOUND
     photo_crud.delete(photo_id)

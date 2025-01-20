@@ -35,7 +35,8 @@ sentry_sdk.init(
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+# pylint: disable=unused-argument
+async def lifespan(fapp: FastAPI):
     scheduler.start()
     yield
     scheduler.shutdown()

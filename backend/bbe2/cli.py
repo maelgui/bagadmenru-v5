@@ -1,5 +1,4 @@
 import os
-from contextlib import contextmanager
 from time import sleep
 
 import typer
@@ -8,7 +7,7 @@ from rich.table import Table
 from sqlalchemy import insert, select
 
 from bbe2 import models
-from bbe2.database import SessionLocal, session_ctx, get_engine
+from bbe2.database import session_ctx
 from bbe2.models.user import RoleDB
 from bbe2.utils.auth import myctx
 

@@ -1,6 +1,4 @@
 import hashlib
-import logging
-import os
 from datetime import datetime
 
 import httpx
@@ -10,24 +8,9 @@ from sqlalchemy import select
 from bbe2.config import get_settings
 from bbe2.database import session_ctx
 from bbe2.models import GroupDB
+from bbe2.utils import get_logger
 
 scheduler = AsyncIOScheduler()
-
-
-def get_logger():
-    stage: str = os.environ.get("STAGE", "unknown")
-
-    logger = logging.getLogger(__name__)
-
-    log_level = logging.INFO
-
-    if stage != "prod":
-        log_level = logging.DEBUG
-
-    logger.setLevel(level=log_level)
-
-    return logger
-
 
 logger = get_logger()
 
@@ -74,6 +57,7 @@ class OvhHelper:
         self._application_key = application_key
         self._application_secret = application_secret
         self._consumer_key = consumer_key
+        self.client = None
 
     async def __aenter__(self):
         self.client = httpx.AsyncClient()

@@ -25,8 +25,8 @@ def get_session(settings: Annotated[Settings, Depends(get_settings)]):
     finally:
         db.commit()
         db.close()
-        
-        
+
+
 @contextmanager
 def session_ctx(database_url):
     # Code to acquire resource, e.g.:
@@ -36,5 +36,3 @@ def session_ctx(database_url):
         yield s
         s.commit()
         s.close()
-
-
