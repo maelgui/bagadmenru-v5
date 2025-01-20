@@ -35,7 +35,6 @@ def process_login(
     session: SessionDep,
     response: Response,
 ) -> Token:
-    time.sleep(3)
     user = session.scalars(select(UserDB).where(UserDB.email == data.email)).first()
     if not user:
         myctx.dummy_verify()

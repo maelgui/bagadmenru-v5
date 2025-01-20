@@ -14,7 +14,7 @@ scheduler = AsyncIOScheduler()
 
 logger = get_logger()
 
-DRY_RUN = True
+DRY_RUN = False
 DOMAIN = "bagadmenru.bzh"
 
 
@@ -106,7 +106,7 @@ class OvhHelper:
         return r.json()
 
 
-@scheduler.scheduled_job("cron", hour="*", minute="*/10")
+@scheduler.scheduled_job("cron", hour="3")
 async def synchronize_mailing_lists():
 
     settings = get_settings()
