@@ -106,7 +106,7 @@ class OvhHelper:
         return r.json()
 
 
-@scheduler.scheduled_job("cron", hour="*", minute="*")
+@scheduler.scheduled_job("cron", hour="*", minute="*/10")
 async def synchronize_mailing_lists():
 
     settings = get_settings()
