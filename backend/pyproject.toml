@@ -55,3 +55,8 @@ plugins = ["pydantic.mypy"]
 
 [tool.isort]
 profile = "black"
+
+[[tool.mypy.overrides]]
+# Remove once updated to apscheduler 4
+module = ["apscheduler.*"]
+follow_untyped_imports = true
