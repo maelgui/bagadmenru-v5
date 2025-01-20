@@ -124,7 +124,7 @@ async def synchronize_mailing_lists():
         query = select(GroupDB).where(GroupDB.mailing_list.is_not(None))
         groups = ses.scalars(query)
         for group in groups:
-            logger.info(f"Processing group {group.id}#{group.name}")
+            logger.info("Processing group %s#%s", group.id, group.name)
             await sync_mailing_list(
                 group.mailing_list, DOMAIN, set(m.email for m in group.members)
             )
@@ -146,10 +146,10 @@ async def sync_mailing_list(name, domain, email_list: set[str]):
         application_secret=settings.ovh_application_secret,
         consumer_key=settings.ovh_consumer_key,
     ) as helper:
-        logger.info(f"Updating {name}@{domain}")
+        logger.info("Updating %s@%s", name, domain)
         subscribers = set(await helper.retrieve_subscriber(domain=domain, name=name))
 
-        logger.info(f"There is currently {len(subscribers)} subscribers")
+        logger.info("There is currently %s subscribers", len(subscribers))
 
         email_to_add = email_list.difference(subscribers)
         email_to_delete = subscribers.difference(email_list)
@@ -158,7 +158,11 @@ async def sync_mailing_list(name, domain, email_list: set[str]):
             logger.info("Mailing list in sync")
             return
 
-        logger.info(f"Must add {len(email_to_add)} and remove {email_to_delete}")
+        logger.info(
+            "Must add %s and remove %s",
+            len(email_to_add),
+            len(email_to_delete),
+        )
 
         if DRY_RUN:
             logger.info("Dry run, not updating mailing list")
@@ -169,4 +173,4 @@ async def sync_mailing_list(name, domain, email_list: set[str]):
         for email in email_to_delete:
             await helper.delete_subscriber(domain=domain, name=name, email=email)
 
-    logger.info(f"sync successful")
+    logger.info("sync successful")
