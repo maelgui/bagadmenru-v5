@@ -36,7 +36,7 @@ export default function Calendar({
   monthOffset = 0,
   displayContent = false,
 }: CalendarProps) {
-  const eventsByDate = groupBy(events, (item) => item.date.toLocaleDateString());
+  const eventsByDate = groupBy(events, (item) => item.date.toISOString().substring(0, 10));
 
   return (
     <div>
@@ -48,7 +48,7 @@ export default function Calendar({
           <Tooltip
             key={day.getTime()}
             content={
-              eventsByDate.get(day.toLocaleDateString())?.map((event) => (
+              eventsByDate.get(day.toISOString().substring(0, 10))?.map((event) => (
                 <div key={event.id} className="py-1">
                   <div className="font-bold">{event.title}</div>
                   <div className="1">{event.description ? event.description : 'Pas de description'}</div>
@@ -60,12 +60,12 @@ export default function Calendar({
             <div
               className={`bg-white aspect-square flex flex-col items-center p-1 ${isCurrentMonth ? '' : 'opacity-50'}`}
             >
-              <div className={`inline-flex justify-center items-center h-8 w-8 m-1 rounded-full ${isToday ? ' bg-pourpre-400 text-white' : ''} ${eventsByDate.get(day.toLocaleDateString())?.length ? 'border border-pourpre-400' : ''}`}>
+              <div className={`inline-flex justify-center items-center h-8 w-8 m-1 rounded-full ${isToday ? ' bg-pourpre-400 text-white' : ''} ${eventsByDate.get(day.toISOString().substring(0, 10))?.length ? 'border border-pourpre-400' : ''}`}>
                 {day.getDate()}
               </div>
               {displayContent && (
                 <div className="hidden md:block w-full">
-                  {eventsByDate.get(day.toLocaleDateString())?.slice(0, 2).map(
+                  {eventsByDate.get(day.toISOString().substring(0, 10))?.slice(0, 2).map(
                     (event) => (
                       <Badge key={event.id} color={EventCategories[event.category]?.bg ?? 'bg-gray-500'} className="block mb-px rounded-sm truncate text-ellipsis w-full">
                         {event.title}
@@ -73,7 +73,7 @@ export default function Calendar({
                     ),
                   )}
                   <div className="pl-2 pt-1 text-sm">
-                    {eventsByDate.get(day.toLocaleDateString())?.slice(2).length ? '+1' : ''}
+                    {eventsByDate.get(day.toISOString().substring(0, 10))?.slice(2).length ? '+1' : ''}
                   </div>
                 </div>
               )}
