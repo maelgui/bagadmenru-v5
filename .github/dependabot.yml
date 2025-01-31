@@ -12,6 +12,11 @@ updates:
     open-pull-requests-limit: 5
     assignees:
       - maelgui
+    groups:
+      dev-deps:
+        dependency-type: "development"
+      prod-deps:
+        dependency-type: "production"
 
   - package-ecosystem: "pip" # See documentation for possible values
     directory: "/backend" # Location of package manifests
@@ -20,6 +25,11 @@ updates:
     open-pull-requests-limit: 5
     assignees:
       - maelgui
+    groups:
+      dev-deps:
+        dependency-type: "development"
+      prod-deps:
+        dependency-type: "production"
 
   - package-ecosystem: "github-actions"
     directory: "/"
