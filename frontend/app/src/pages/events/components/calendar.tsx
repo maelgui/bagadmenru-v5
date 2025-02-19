@@ -7,8 +7,8 @@ import groupBy from '../../../utils/groupby';
 function* generator(monthOffset: number, dayOffset = 1) {
   const today = new Date();
   const currentMonth = today.getMonth() + monthOffset;
-  const firstDay = new Date(today.getFullYear(), currentMonth, 1);
-  const lastDay = new Date(today.getFullYear(), currentMonth + 1, 0);
+  const firstDay = new Date(Date.UTC(today.getFullYear(), currentMonth, 1));
+  const lastDay = new Date(Date.UTC(today.getFullYear(), currentMonth + 1, 0));
   firstDay.setDate(firstDay.getDate() - ((firstDay.getDay() - dayOffset + 7) % 7));
   lastDay.setDate(lastDay.getDate() + ((7 - lastDay.getDay() - 1 + dayOffset) % 7));
   while (firstDay <= lastDay) {

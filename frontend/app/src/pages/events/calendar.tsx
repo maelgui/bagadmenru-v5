@@ -14,13 +14,21 @@ import Calendar from './components/calendar';
 import EventListItem from './components/event';
 import DisplaySelector from './components/selector';
 
+function getStartDate() {
+  const startDate = new Date();
+  startDate.setDate(1);
+  return startDate;
+}
+
 export default function CalendarPage() {
+  const startDate = getStartDate();
+
   const { eventsApi } = useApiClient();
   const { can } = usePermissions();
 
   const { data } = useQuery({
     queryKey: ['events', 'next100'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date() }),
+    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: startDate }),
     select: (res) => ({
       events: res,
       eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
@@ -28,9 +36,8 @@ export default function CalendarPage() {
   });
 
   const [monthOffset, setMonthOffset] = useState(0);
-  const today = new Date();
 
-  const currentMonth = (new Date(today.getFullYear(), today.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' });
+  const currentMonth = (new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' });
   const [copyButtonLabel, setCopyButtonLabel] = useState('ICS');
   const copy = () => {
     navigator.clipboard.writeText(`${env.VITE_BBE2_API_URL}/api/v1/events/export/ics`);
@@ -101,7 +108,7 @@ export default function CalendarPage() {
               {data && !data.events.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
               {Array.from(data?.eventsByMonth ?? []).map(([month, events]) => (
                 <div key={month} className="mb-4">
-                  <h3 className="capitalize font-bold text-center">{(new Date(today.getFullYear(), month)).toLocaleString('fr', { month: 'long' })}</h3>
+                  <h3 className="capitalize font-bold text-center">{(new Date(startDate.getFullYear(), month)).toLocaleString('fr', { month: 'long' })}</h3>
                   {events.map((event) => (
                     <div className="mb-5 mt-2" key={event.id}>
                       <EventListItem
