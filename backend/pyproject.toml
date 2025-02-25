@@ -35,11 +35,11 @@ autopep8 = "^2.2.0"
 mypy = "^1.15.0"
 black = "^25.1.0"
 isort = "^6.0.0"
-types-python-jose = "^3.3.4.20240106"
-boto3-stubs = "^1.36.17"
+types-python-jose = "^3.4.0.20250224"
+boto3-stubs = "^1.37.0"
 types-passlib = "^1.7.7.20241221"
 pytest-cov = "^6.0.0"
-coverage = "^7.6.11"
+coverage = "^7.6.12"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
