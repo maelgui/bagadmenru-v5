@@ -17,6 +17,7 @@ import * as runtime from '../runtime';
 import type {
   HTTPValidationError,
   LoginData,
+  Passkey,
   ResetPassword,
   ResetPasswordRequest,
   Token,
@@ -26,6 +27,8 @@ import {
     HTTPValidationErrorToJSON,
     LoginDataFromJSON,
     LoginDataToJSON,
+    PasskeyFromJSON,
+    PasskeyToJSON,
     ResetPasswordFromJSON,
     ResetPasswordToJSON,
     ResetPasswordRequestFromJSON,
@@ -34,8 +37,30 @@ import {
     TokenToJSON,
 } from '../models/index';
 
+export interface DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest {
+    credentialId: string;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface ListPasskeysApiV1WebauthnGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface PreregisterPasskeyApiV1WebauthnPreregisterGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
 export interface ProcessLoginApiV1AuthLoginPostRequest {
     loginData: LoginData;
+}
+
+export interface RegisterPasskeyApiV1WebauthnRegisterPostRequest {
+    requestBody: { [key: string]: any; };
+    authorization?: string | null;
+    accessToken?: string | null;
 }
 
 export interface ResetPasswordApiV1AuthResetPostRequest {
@@ -51,6 +76,77 @@ export interface ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest {
  * 
  */
 export class AuthenticationApi extends runtime.BaseAPI {
+
+    /**
+     * Delete Passkey
+     */
+    async deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['credentialId'] == null) {
+            throw new runtime.RequiredError(
+                'credentialId',
+                'Required parameter "credentialId" was null or undefined when calling deletePasskeyApiV1WebauthnCredentialIdDelete().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/webauthn/{credential_id}`.replace(`{${"credential_id"}}`, encodeURIComponent(String(requestParameters['credentialId']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Delete Passkey
+     */
+    async deletePasskeyApiV1WebauthnCredentialIdDelete(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * List Passkeys
+     */
+    async listPasskeysApiV1WebauthnGetRaw(requestParameters: ListPasskeysApiV1WebauthnGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Passkey>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/webauthn/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PasskeyFromJSON));
+    }
+
+    /**
+     * List Passkeys
+     */
+    async listPasskeysApiV1WebauthnGet(requestParameters: ListPasskeysApiV1WebauthnGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Passkey>> {
+        const response = await this.listPasskeysApiV1WebauthnGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Logout
@@ -113,6 +209,40 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
+     * Preregister Passkey
+     */
+    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/webauthn/preregister`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Preregister Passkey
+     */
+    async preregisterPasskeyApiV1WebauthnPreregisterGet(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Process Login
      */
     async processLoginApiV1AuthLoginPostRaw(requestParameters: ProcessLoginApiV1AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
@@ -145,6 +275,50 @@ export class AuthenticationApi extends runtime.BaseAPI {
      */
     async processLoginApiV1AuthLoginPost(requestParameters: ProcessLoginApiV1AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Token> {
         const response = await this.processLoginApiV1AuthLoginPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Register Passkey
+     */
+    async registerPasskeyApiV1WebauthnRegisterPostRaw(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['requestBody'] == null) {
+            throw new runtime.RequiredError(
+                'requestBody',
+                'Required parameter "requestBody" was null or undefined when calling registerPasskeyApiV1WebauthnRegisterPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/webauthn/register`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: requestParameters['requestBody'],
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Register Passkey
+     */
+    async registerPasskeyApiV1WebauthnRegisterPost(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.registerPasskeyApiV1WebauthnRegisterPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

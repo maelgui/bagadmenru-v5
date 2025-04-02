@@ -38,7 +38,7 @@ export interface LoginData {
      * @type {string}
      * @memberof LoginData
      */
-    email: string;
+    email?: string | null;
     /**
      * 
      * @type {string}
@@ -60,7 +60,6 @@ export interface LoginData {
  */
 export function instanceOfLoginData(value: object): value is LoginData {
     if (!('type' in value) || value['type'] === undefined) return false;
-    if (!('email' in value) || value['email'] === undefined) return false;
     return true;
 }
 
@@ -75,7 +74,7 @@ export function LoginDataFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return {
         
         'type': LoginTypeFromJSON(json['type']),
-        'email': json['email'],
+        'email': json['email'] == null ? undefined : json['email'],
         'password': json['password'] == null ? undefined : json['password'],
         'passkey': json['passkey'] == null ? undefined : json['passkey'],
     };

@@ -2,7 +2,7 @@ import logging
 import os
 
 
-def get_logger():
+def get_logger() -> logging.Logger:
     stage: str = os.environ.get("STAGE", "unknown")
 
     logger = logging.getLogger(__name__)

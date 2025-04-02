@@ -3,6 +3,7 @@
 export * from './Album';
 export * from './AlbumCreate';
 export * from './Costume';
+export * from './CredentialDeviceType';
 export * from './Event';
 export * from './EventCreate';
 export * from './FileOrFolder';
@@ -20,6 +21,7 @@ export * from './LoginType';
 export * from './MinimalGroup';
 export * from './MyProfileUpdate';
 export * from './MyStats';
+export * from './Passkey';
 export * from './Photo';
 export * from './Profile';
 export * from './ProfileCreate';

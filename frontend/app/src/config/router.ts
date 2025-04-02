@@ -25,6 +25,7 @@ import CreateProfilePage from '../pages/profiles/add';
 import EditProfilePage from '../pages/profiles/edit';
 import ProfilesPage from '../pages/profiles/list';
 import ShowMyProfilePage from '../pages/profiles/me';
+import PasskeysPage from '../pages/profiles/passkeys';
 import ShowProfilePage from '../pages/profiles/show';
 
 export default createBrowserRouter([
@@ -77,6 +78,10 @@ export default createBrowserRouter([
               {
                 path: '/profile/me',
                 Component: ShowMyProfilePage,
+              },
+              {
+                path: '/profile/passkeys',
+                Component: PasskeysPage,
               },
               {
                 path: '/profile/:profileId',

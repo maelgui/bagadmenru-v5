@@ -272,7 +272,7 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * Export Ics
      */
-    async exportIcsApiV1EventsExportIcsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+    async exportIcsApiV1EventsExportIcsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -285,7 +285,7 @@ export class EventsApi extends runtime.BaseAPI {
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<string>(response);
+            return new runtime.JSONApiResponse<any>(response);
         } else {
             return new runtime.TextApiResponse(response) as any;
         }
@@ -294,7 +294,7 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * Export Ics
      */
-    async exportIcsApiV1EventsExportIcsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+    async exportIcsApiV1EventsExportIcsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
         const response = await this.exportIcsApiV1EventsExportIcsGetRaw(initOverrides);
         return await response.value();
     }

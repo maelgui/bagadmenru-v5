@@ -10,7 +10,7 @@ export default function Badge({
   children, color = 'bg-gray-500', className, ...rest
 }: BadgeProps) {
   return (
-    <span className={`inline-block px-2 rounded-full overflow-hidden text-white font-medium text-sm ${color} ${className} whitespace-nowrap`} {...rest}>
+    <span className={`inline-block px-2 py-0.5 rounded-full overflow-hidden text-white font-medium text-xs ${color} ${className} whitespace-nowrap`} {...rest}>
       {children}
     </span>
   );

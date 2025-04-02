@@ -4,7 +4,7 @@ services:
     command: server /data --console-address :9090
     ports:
       - 9090:9090
-      - 9000:9000
+      # - 9000:9000
     volumes:
       - s3data:/data
 
@@ -63,6 +63,7 @@ services:
       - EMAIL_API_ENDPOINT=http://email-api:9999/
       - AUTHORIZER_API_ENDPOINT=http://authorizer:8181/
       - TOKEN_SECRET_KEY=my-super-secret-key
+      - SECRET_KEY=my-super-secret-key
     depends_on:
       backend-migrate:
         condition: service_completed_successfully
@@ -78,8 +79,6 @@ services:
       - 6006:6006
     environment:
       - VITE_BBE2_API_URL=http://localhost:5173
-      - VITE_OIDC_PROVIDER_URL=http://localhost:3000
-      - VITE_OIDC_CLIENT_ID=bagad-frontend-dev
 
   email-api:
     build: email-api
@@ -103,7 +102,18 @@ services:
 
   authorizer:
     image: openpolicyagent/opa
-    command: ["run", "-s", "-b", "/policies", "-w", "-c", "/policies/config.yaml", "--addr", "0.0.0.0:8181"]
+    command:
+      [
+        "run",
+        "-s",
+        "-b",
+        "/policies",
+        "-w",
+        "-c",
+        "/policies/config.yaml",
+        "--addr",
+        "0.0.0.0:8181",
+      ]
     ports:
       - 8181:8181
     volumes:

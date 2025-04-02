@@ -11,6 +11,8 @@ from itsdangerous import BadSignature, URLSafeTimedSerializer
 from passlib.context import CryptContext
 
 from bbe2.config import Settings, get_settings
+from bbe2.crud.crud_profile import CRUDProfile
+from bbe2.models import UserDB
 from bbe2.schemas import JwtPayload
 
 
@@ -155,6 +157,18 @@ def get_current_user2(
     payload: Annotated[JwtPayload, Depends(Authorization(Action.VIEW, Resource.ME))],
 ):
     return payload.sub
+
+
+def get_current_profile(
+    payload: Annotated[JwtPayload, Depends(Authorization(Action.VIEW, Resource.ME))],
+    profile_crud: Annotated[CRUDProfile, Depends()],
+):
+    db_profile = profile_crud.find_one_by(UserDB.id == payload.sub)
+    if not db_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
+    return db_profile
 
 
 myctx = CryptContext(

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     ovh_application_secret: Optional[str] = None
     ovh_consumer_key: Optional[str] = None
 
+    relying_party_id: str = "prod.bagadmenru.bzh"
+    relying_party_name: str = "Bagad Men Ru"
+
     @field_validator("email_api_endpoint", "authorizer_api_endpoint")
     @classmethod
     def strip_traialing_slash(cls, v: str) -> str:
