@@ -37,7 +37,7 @@ function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => 
   const { browser, os } = UAParser(passkey.lastUseUa ?? '');
 
   return (
-    <div className="flex items-center justify-between bg-gray-100 px-8 py-6 mb-8 rounded-lg">
+    <div className="md:flex items-center justify-between bg-gray-100 px-8 py-6 mb-8 rounded-lg">
       <div>
         <div className="flex items-center">
           <div className="mr-4">
@@ -75,7 +75,7 @@ function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => 
           </div>
         </div>
       </div>
-      <div>
+      <div className="pt-4 md:p-0">
         <Button variant="ghost" icon={faTrash} size="sm" onClick={onDelete}>Supprimer</Button>
       </div>
     </div>
