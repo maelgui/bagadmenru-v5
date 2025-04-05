@@ -1,7 +1,7 @@
 import base64
 import secrets
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Iterable
 
 import jwt
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response
@@ -235,10 +235,10 @@ async def preregister_passkey(
     session: SessionDep,
     settings: SettingsDep,
 ):
+    existing_credentials: Iterable[PasskeyDB] = []
     if current_user.passkey_user_id == None:
         # Generate
         passkey_user_id = secrets.token_bytes()
-        existing_credentials = []
         session.execute(
             update(UserDB)
             .where(UserDB.id == current_user.id)
