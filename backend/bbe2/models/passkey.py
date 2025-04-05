@@ -26,4 +26,6 @@ class PasskeyDB(Base):
     last_use_ip: Mapped[str] = mapped_column(nullable=True)
     last_use_ua: Mapped[str] = mapped_column(nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        default=func.now()  # pylint: disable=not-callable
+    )

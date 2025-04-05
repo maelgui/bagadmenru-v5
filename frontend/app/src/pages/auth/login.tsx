@@ -50,7 +50,8 @@ function AuthPage() {
         return;
       }
       // Some basic error handling
-      console.log(error);
+      // eslint-disable-next-line no-console
+      console.error(error);
       setErrorMsg(`Email inconnue : ${error}`);
     }
   };

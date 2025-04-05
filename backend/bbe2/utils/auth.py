@@ -12,7 +12,7 @@ from passlib.context import CryptContext
 
 from bbe2.config import Settings, get_settings
 from bbe2.crud.crud_profile import CRUDProfile
-from bbe2.models import UserDB
+from bbe2.models.user import UserDB
 from bbe2.schemas import JwtPayload
 
 

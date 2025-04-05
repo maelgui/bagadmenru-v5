@@ -112,7 +112,7 @@ def process_login(
                     require_user_verification=False,
                 )
             except InvalidAuthenticationResponse as exc:
-                raise HTTPException(status_code=401, detail="Bad credentials")
+                raise HTTPException(status_code=401, detail="Bad credentials") from exc
             if not res.user_verified:
                 raise HTTPException(status_code=401, detail="Bad credentials")
             # User authenticated, update sign count

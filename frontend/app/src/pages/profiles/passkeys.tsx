@@ -104,9 +104,11 @@ export default function PasskeysPage() {
     } catch (error) {
       // Some basic error handling
       if (error instanceof WebAuthnError && error.name === 'InvalidStateError') {
+        // eslint-disable-next-line no-console
         console.error('Error: Authenticator was probably already registered by user');
       } else {
-        console.log(error);
+        // eslint-disable-next-line no-console
+        console.error(error);
       }
 
       throw error;
