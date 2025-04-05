@@ -1,9 +1,14 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { faKey } from '@fortawesome/free-solid-svg-icons';
+import {
+  browserSupportsWebAuthn, PublicKeyCredentialRequestOptionsJSON, startAuthentication,
+  WebAuthnError,
+} from '@simplewebauthn/browser';
 import { LoginType, ResponseError } from 'bagad-client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import iconPasskeyWhite from '../../assets/FIDO_Passkey_mark_A_white.svg';
 import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Input from '../../components/input';
@@ -22,6 +27,39 @@ function AuthPage() {
 
   const navigate = useNavigate();
 
+  const postLogin = async () => {
+    const res = await usersApi.getMyProfileApiV1ProfilesMeGet();
+
+    setAccount(res);
+    navigate('/');
+  };
+  const startPasskeyLogin = async (conditional: boolean) => {
+    try {
+      // eslint-disable-next-line max-len
+      const opt = await authApi.prepareLoginApiV1AuthLoginGet() as PublicKeyCredentialRequestOptionsJSON;
+      const res = await startAuthentication({ optionsJSON: opt, useBrowserAutofill: conditional });
+      await authApi.processLoginApiV1AuthLoginPost({
+        loginData: {
+          type: LoginType.Passkey,
+          passkey: JSON.stringify(res),
+        },
+      });
+      await postLogin();
+    } catch (error) {
+      if (error instanceof WebAuthnError && error.name === 'AbortError') {
+        return;
+      }
+      // Some basic error handling
+      // eslint-disable-next-line no-console
+      console.error(error);
+      setErrorMsg(`Email inconnue : ${error}`);
+    }
+  };
+
+  useEffect(() => {
+    startPasskeyLogin(true);
+  }, []);
+
   const onSubmit = async (data: { email: string, password: string }) => {
     setErrorMsg(undefined);
     try {
@@ -32,9 +70,7 @@ function AuthPage() {
           password: data.password,
         },
       });
-      const res = await usersApi.getMyProfileApiV1ProfilesMeGet();
-      setAccount(res);
-      navigate('/');
+      await postLogin();
     } catch (error) {
       if (error instanceof ResponseError) {
         if (error.response.status === 401) {
@@ -58,6 +94,7 @@ function AuthPage() {
               id="email"
               error={errors.email?.message}
               {...register('email', { required: 'Ce champ est obligatoire.' })}
+              autoComplete="email webauthn"
             />
           </div>
           <div className="mb-6">
@@ -77,6 +114,15 @@ function AuthPage() {
           </div>
         </fieldset>
       </form>
+      {browserSupportsWebAuthn() ? (
+        <>
+          <div className="my-12 text-gray-500 flex items-center before:mr-3 before:block before:flex-grow  before:h-px before:bg-gray-300 after:block after:flex-grow after:h-px after:bg-gray-300 after:ml-3">Ou</div>
+          <Button type="button" onClick={() => startPasskeyLogin(false)} className="block w-full">
+            <span className="pr-3"><img src={iconPasskeyWhite} alt="passkey logo" className="h-6 inline" /></span>
+            Passkey
+          </Button>
+        </>
+      ) : null}
     </div>
   );
 }

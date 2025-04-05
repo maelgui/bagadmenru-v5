@@ -14,6 +14,7 @@ src/index.ts
 src/models/Album.ts
 src/models/AlbumCreate.ts
 src/models/Costume.ts
+src/models/CredentialDeviceType.ts
 src/models/Event.ts
 src/models/EventCreate.ts
 src/models/FileOrFolder.ts
@@ -31,6 +32,7 @@ src/models/LoginType.ts
 src/models/MinimalGroup.ts
 src/models/MyProfileUpdate.ts
 src/models/MyStats.ts
+src/models/Passkey.ts
 src/models/Photo.ts
 src/models/Profile.ts
 src/models/ProfileCreate.ts

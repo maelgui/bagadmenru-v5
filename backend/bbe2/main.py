@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 import sentry_sdk
 from fastapi import FastAPI, Request
+from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2.api.v1.api import api_router
 from bbe2.scheduler import scheduler
@@ -53,6 +54,7 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     lifespan=lifespan,
 )
+app.add_middleware(SessionMiddleware, secret_key=os.environ["SECRET_KEY"])
 
 
 @app.middleware("http")

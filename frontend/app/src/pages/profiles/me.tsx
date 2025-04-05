@@ -1,3 +1,5 @@
+import { faKey } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -18,6 +20,7 @@ export default function ShowMyProfilePage() {
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
         actions={[
+          <Header.Action key="passkeys" onClick={() => navigate('/profile/passkeys')} variant="outline"><FontAwesomeIcon icon={faKey} /></Header.Action>,
           <Header.Action key="edit-profile" onClick={() => navigate('/profile/edit/me')}>Modifier mon profil</Header.Action>,
         ]}
         breadcrumb={[

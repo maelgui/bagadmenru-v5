@@ -6,7 +6,7 @@ authors = ["Mael Guillossou <mael.guillossou@gmail.com>"]
 scripts = { bbe2 = 'bbe2.cli:app' }
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 fastapi = "^0.115.8"
 uvicorn = "^0.34.0"
 python-multipart = "^0.0.20"
@@ -27,6 +27,7 @@ typer = "^0.15.1"
 sentry-sdk = { extras = ["fastapi"], version = "^2.20.0" }
 apscheduler = "^3.11.0"
 
+webauthn = "^2.5.2"
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.28.1"
 pylint = "^3.3.4"

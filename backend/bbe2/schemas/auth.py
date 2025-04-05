@@ -30,13 +30,13 @@ class LoginType(Enum):
 
 class LoginData(BaseModel):
     type: LoginType
-    email: str
+    email: Optional[str] = None
     password: Optional[str] = None
     passkey: Optional[str] = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> Self:
-        if self.type == LoginType.PASSWORD and (not self.password):
+        if self.type == LoginType.PASSWORD and (not self.password or not self.email):
             raise ValueError("Missing password field")
         elif self.type == LoginType.PASSKEY and (not self.passkey):
             raise ValueError("Missing passkey field")

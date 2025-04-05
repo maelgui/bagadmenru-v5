@@ -1,9 +1,10 @@
 """User profile models."""
 
+import secrets
 import uuid
 from typing import List, Optional
 
-from sqlalchemy import Column, ForeignKey, String, Table, Text, true
+from sqlalchemy import Column, ForeignKey, Index, LargeBinary, String, Table, Text, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bbe2.models.base import Base
@@ -42,6 +43,13 @@ class UserDB(Base):
         secondary=user_group_association_table, back_populates="members"
     )
     receives_emails: Mapped[bool] = mapped_column(default=True, server_default=true())
+
+    # passkey specific user id, PII free
+    passkey_user_id: Mapped[Optional[bytes]] = mapped_column(
+        LargeBinary(), nullable=True, default=secrets.token_bytes
+    )
+    # passkey_user_id should be unique
+    __table_args__ = (Index("idx_passkey_user_id", passkey_user_id, unique=True),)
 
 
 class GroupDB(Base):

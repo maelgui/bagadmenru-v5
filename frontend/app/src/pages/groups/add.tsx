@@ -23,7 +23,6 @@ export default function AddGroupPage() {
     },
   });
   const onSubmit = (data: GroupCreate) => mutate(data);
-  // const onSubmit = (data: GroupCreate) => console.log(data);
 
   return (
     <>

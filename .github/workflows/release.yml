@@ -59,6 +59,7 @@ jobs:
   test-backend:
     env:
       ENVIRONMENT: ci
+      SECRET_KEY: my-secret-key-in-ci
     runs-on: ubuntu-latest
     defaults:
       run:
