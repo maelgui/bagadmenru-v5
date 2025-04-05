@@ -24,7 +24,7 @@
     "@simplewebauthn/browser": "^13.1.0",
     "@tanstack/react-query": "^5.0.0-alpha.63",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
-    "axios": "^1.7.9",
+    "axios": "^1.8.2",
     "bagad-client": "0.1.0",
     "luxon": "^3.6.1",
     "nprogress": "^0.2.0",
