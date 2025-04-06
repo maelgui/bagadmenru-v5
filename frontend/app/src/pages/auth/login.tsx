@@ -8,7 +8,7 @@ import { LoginType, ResponseError } from 'bagad-client';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import iconPasskeyWhite from '../../assets/FIDO_Passkey_mark_A_white.svg';
+import iconPasskeyWhite from '../../assets/passkeys/FIDO_Passkey_mark_A_white.svg';
 import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Input from '../../components/input';

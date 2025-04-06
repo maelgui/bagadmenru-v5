@@ -11,18 +11,21 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Passkey } from 'bagad-client';
 import { DateTime } from 'luxon';
 import { UAParser } from 'ua-parser-js';
-import passkeyBlack from '../../assets/FIDO_Passkey_mark_A_black.svg';
+import passkeyBitwarden from '../../assets/passkeys/blue-shield.svg';
+import passkeyBlack from '../../assets/passkeys/FIDO_Passkey_mark_A_black.svg';
 import Badge from '../../components/badge';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient, useUserProfile } from '../../config/client';
 
-const aaguidIconMapping: Record<string, IconDefinition> = {
+const aaguidIconMapping: Record<string, IconDefinition | string> = {
   'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': faApple,
+  'd548826e-79b4-db40-a3d8-11116f7e8349': passkeyBitwarden,
 };
 const aaguidNameMapping: Record<string, string> = {
   'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': 'iCloud Keychain',
+  'd548826e-79b4-db40-a3d8-11116f7e8349': 'Bitwarden',
 };
 
 function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
@@ -30,7 +33,10 @@ function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
   if (!icon) {
     return <img src={passkeyBlack} alt="passkey" className="w-6 h-6" />;
   }
-  return <FontAwesomeIcon icon={icon} />;
+  if (typeof icon === 'string') {
+    return <img src={icon} alt="passkey" className="w-6 h-6" />;
+  }
+  return <FontAwesomeIcon icon={icon} className="w-6 h-6" />;
 }
 
 function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => void }) {
