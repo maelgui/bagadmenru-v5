@@ -21,6 +21,7 @@ import type {
   GroupCreate,
   GroupUpdate,
   HTTPValidationError,
+  MyProfile,
   MyProfileUpdate,
   MyStats,
   Profile,
@@ -41,6 +42,8 @@ import {
     GroupUpdateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    MyProfileFromJSON,
+    MyProfileToJSON,
     MyProfileUpdateFromJSON,
     MyProfileUpdateToJSON,
     MyStatsFromJSON,
@@ -299,7 +302,7 @@ export class ProfilesApi extends runtime.BaseAPI {
     /**
      * Get My Profile
      */
-    async getMyProfileApiV1ProfilesMeGetRaw(requestParameters: GetMyProfileApiV1ProfilesMeGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+    async getMyProfileApiV1ProfilesMeGetRaw(requestParameters: GetMyProfileApiV1ProfilesMeGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MyProfile>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -315,13 +318,13 @@ export class ProfilesApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => MyProfileFromJSON(jsonValue));
     }
 
     /**
      * Get My Profile
      */
-    async getMyProfileApiV1ProfilesMeGet(requestParameters: GetMyProfileApiV1ProfilesMeGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
+    async getMyProfileApiV1ProfilesMeGet(requestParameters: GetMyProfileApiV1ProfilesMeGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MyProfile> {
         const response = await this.getMyProfileApiV1ProfilesMeGetRaw(requestParameters, initOverrides);
         return await response.value();
     }

@@ -10,14 +10,17 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import iconPasskeyWhite from '../../assets/passkeys/FIDO_Passkey_mark_A_white.svg';
 import Alert from '../../components/alert';
+import Avatar from '../../components/avatar';
 import Button from '../../components/button';
 import Input from '../../components/input';
 import { useApiClient } from '../../config/client';
+import useCachedProfile from '../../hooks/useCachedProfile';
 import { useProfileStore } from '../../utils/authStore';
 
 function AuthPage() {
   const { authApi, usersApi } = useApiClient();
   const { setAccount } = useProfileStore();
+  const { cacheProfile, profileData, profileImage } = useCachedProfile();
 
   const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
 
@@ -27,10 +30,15 @@ function AuthPage() {
 
   const navigate = useNavigate();
 
-  const postLogin = async () => {
+  const postLogin = async (loginType: LoginType) => {
     const res = await usersApi.getMyProfileApiV1ProfilesMeGet();
 
     setAccount(res);
+    localStorage.setItem('last-authenticated-user', JSON.stringify(res));
+    if (res.pictureUrl) {
+      // download and save image
+      cacheProfile(res, loginType);
+    }
     navigate('/');
   };
   const startPasskeyLogin = async (conditional: boolean) => {
@@ -44,7 +52,7 @@ function AuthPage() {
           passkey: JSON.stringify(res),
         },
       });
-      await postLogin();
+      await postLogin(LoginType.Passkey);
     } catch (error) {
       if (error instanceof WebAuthnError && error.name === 'AbortError') {
         return;
@@ -70,7 +78,7 @@ function AuthPage() {
           password: data.password,
         },
       });
-      await postLogin();
+      await postLogin(LoginType.Password);
     } catch (error) {
       if (error instanceof ResponseError) {
         if (error.response.status === 401) {
@@ -87,16 +95,28 @@ function AuthPage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <fieldset disabled={isSubmitting}>
           {errorMsg ? <Alert type="error">{errorMsg}</Alert> : null}
-          <div className="mb-6">
-            <label className="mb-2 block font-semibold" htmlFor="email">Email</label>
-            <Input
-              type="email"
-              id="email"
-              error={errors.email?.message}
-              {...register('email', { required: 'Ce champ est obligatoire.' })}
-              autoComplete="email webauthn"
-            />
-          </div>
+          {profileData ? (
+            <div className="flex flex-col items-center">
+              <Avatar src={profileImage} size="sm" />
+              <input
+                type="hidden"
+                id="email"
+                {...register('email')}
+              />
+              <span className="font-semibold mt-8 mb-16">{`${profileData.firstName} ${profileData.lastName.substring(0, 1)}.`}</span>
+            </div>
+          ) : (
+            <div className="mb-6">
+              <label className="mb-2 block font-semibold" htmlFor="email">Email</label>
+              <Input
+                type="email"
+                id="email"
+                error={errors.email?.message}
+                {...register('email', { required: 'Ce champ est obligatoire.' })}
+                autoComplete="email webauthn"
+              />
+            </div>
+          )}
           <div className="mb-6">
             <label className="mb-2 block font-semibold" htmlFor="password">Mot de passe</label>
             <Input

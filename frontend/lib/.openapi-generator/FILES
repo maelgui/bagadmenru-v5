@@ -30,6 +30,7 @@ src/models/HTTPValidationError.ts
 src/models/LoginData.ts
 src/models/LoginType.ts
 src/models/MinimalGroup.ts
+src/models/MyProfile.ts
 src/models/MyProfileUpdate.ts
 src/models/MyStats.ts
 src/models/Passkey.ts

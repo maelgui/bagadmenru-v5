@@ -46,6 +46,10 @@ class Profile(_ProfileBase):
         return self.s3_helper.generate_get_presigned_url(object_name=self.picture_key)
 
 
+class MyProfile(_ProfileBase):
+    email: str
+
+
 class Role(BaseModel):
     id: str
     description: str

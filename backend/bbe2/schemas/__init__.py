@@ -8,6 +8,7 @@ from .profile import (
     Group,
     GroupCreate,
     GroupUpdate,
+    MyProfile,
     MyProfileUpdate,
     Profile,
     ProfileCreate,

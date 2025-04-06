@@ -30,7 +30,7 @@ profiles_router = APIRouter(prefix="/profiles")
 
 @profiles_router.get(
     "/me",
-    response_model=schemas.Profile,
+    response_model=schemas.MyProfile,
     dependencies=[
         Depends(Authorization(Action.VIEW, Resource.ME)),
         Depends(get_s3_helper),

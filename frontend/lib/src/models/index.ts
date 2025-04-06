@@ -19,6 +19,7 @@ export * from './HTTPValidationError';
 export * from './LoginData';
 export * from './LoginType';
 export * from './MinimalGroup';
+export * from './MyProfile';
 export * from './MyProfileUpdate';
 export * from './MyStats';
 export * from './Passkey';

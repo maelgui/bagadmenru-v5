@@ -26,15 +26,20 @@ const aaguidMapping: Record<string, { icon: IconDefinition | string, name: strin
   'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': { icon: faGoogle, name: 'Google Password Manager' },
 };
 
-function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
+interface AuthenticatorIconProps extends React.ComponentPropsWithoutRef<'div'> {
+  aaguid: string
+}
+
+function AuthenticatorIcon({ aaguid, className }: AuthenticatorIconProps) {
+  const classes = `w-5 h-5 ${className}`;
   const icon = aaguidMapping[aaguid]?.icon;
   if (!icon) {
-    return <img src={passkeyBlack} alt="passkey" className="w-6 h-6" />;
+    return <img src={passkeyBlack} alt="passkey" className={classes} />;
   }
   if (typeof icon === 'string') {
-    return <img src={icon} alt="passkey" className="w-6 h-6" />;
+    return <img src={icon} alt="passkey" className={classes} />;
   }
-  return <FontAwesomeIcon icon={icon} className="w-6 h-6" />;
+  return <FontAwesomeIcon icon={icon} className={classes} />;
 }
 
 function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => void }) {
@@ -135,8 +140,8 @@ export default function PasskeysPage() {
   return (
     <>
       <Header
-        title="Profil"
-        subtitle={`${profile.firstName} ${profile.lastName}`}
+        title="Passkeys"
+        subtitle="Sécurité de votre compte"
         actions={[
           <Header.Action key="add-passkey" onClick={register}>Ajouter</Header.Action>,
         ]}
