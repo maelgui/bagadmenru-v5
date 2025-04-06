@@ -1,4 +1,4 @@
-import { faApple } from '@fortawesome/free-brands-svg-icons';
+import { faApple, faChrome, faGoogle } from '@fortawesome/free-brands-svg-icons';
 import {
   faArrowsRotate,
   faTrash, IconDefinition,
@@ -19,17 +19,15 @@ import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient, useUserProfile } from '../../config/client';
 
-const aaguidIconMapping: Record<string, IconDefinition | string> = {
-  'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': faApple,
-  'd548826e-79b4-db40-a3d8-11116f7e8349': passkeyBitwarden,
-};
-const aaguidNameMapping: Record<string, string> = {
-  'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': 'iCloud Keychain',
-  'd548826e-79b4-db40-a3d8-11116f7e8349': 'Bitwarden',
+const aaguidMapping: Record<string, { icon: IconDefinition | string, name: string }> = {
+  'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': { icon: faApple, name: 'iCloud Keychain' },
+  'd548826e-79b4-db40-a3d8-11116f7e8349': { icon: passkeyBitwarden, name: 'bitwarden' },
+  'adce0002-35bc-c60a-648b-0b25f1f05503': { icon: faChrome, name: 'Chrome on Mac' },
+  'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': { icon: faGoogle, name: 'Google Password Manager' },
 };
 
 function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
-  const icon = aaguidIconMapping[aaguid];
+  const icon = aaguidMapping[aaguid]?.icon;
   if (!icon) {
     return <img src={passkeyBlack} alt="passkey" className="w-6 h-6" />;
   }
@@ -50,7 +48,7 @@ function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => 
             <AuthenticatorIcon aaguid={passkey.aaguid} />
           </div>
           <div>
-            <span className="font-semibold">{aaguidNameMapping[passkey.aaguid] ?? 'Passkey'}</span>
+            <span className="font-semibold">{aaguidMapping[passkey.aaguid]?.name ?? 'Passkey'}</span>
           </div>
           {passkey.backUp ? (
             <Badge className="text-xs mx-4 bg-sky-200 !text-sky-600">
