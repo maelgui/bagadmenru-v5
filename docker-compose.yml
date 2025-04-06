@@ -4,7 +4,7 @@ services:
     command: server /data --console-address :9090
     ports:
       - 9090:9090
-      # - 9000:9000
+      - 9000:9000
     volumes:
       - s3data:/data
 
