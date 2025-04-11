@@ -64,6 +64,7 @@ services:
       - AUTHORIZER_API_ENDPOINT=http://authorizer:8181/
       - TOKEN_SECRET_KEY=my-super-secret-key
       - SECRET_KEY=my-super-secret-key
+      - RELYING_PARTY_ID=localhost
     depends_on:
       backend-migrate:
         condition: service_completed_successfully

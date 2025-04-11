@@ -1,62 +1,41 @@
 // hooks/useProfile.ts
-import { LoginType, Profile } from 'bagad-client';
+import { LoginType, MyProfile } from 'bagad-client';
 import { useEffect, useState } from 'react';
 
-interface CachedProfile {
+export interface CachedProfile {
   image: string | null;
-  data: Profile;
+  data: MyProfile;
   loginType: LoginType;
-  email: string;
   timestamp: number;
 }
 
-interface ProfileState {
-  image: string | null;
-  data: Profile | null;
-  loginType: LoginType | null;
-  email: string | null;
-}
-
 interface UseProfile {
-  profileImage: string | null;
-  profileData: Profile | null;
-  loginType: LoginType | null;
-  email: string | null;
-  cacheProfile: (profile: Profile, loginType: LoginType, email: string) => Promise<void>;
+  profileData: CachedProfile | undefined,
+  loaded: boolean;
+  cacheProfile: (profile: MyProfile, loginType: LoginType) => Promise<void>;
   clearProfile: () => void;
 }
 
 const CACHE_KEY = 'cached_profile';
 
-const initialState: ProfileState = {
-  image: null,
-  data: null,
-  loginType: null,
-  email: null,
-};
-
 export default function useCachedProfile(): UseProfile {
-  const [state, setState] = useState<ProfileState>(initialState);
+  const [stateProfile, setStateProfile] = useState<CachedProfile | undefined>();
+  const [loaded, setLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
-      const {
-        image, data, loginType, email,
-      } = JSON.parse(cached) as CachedProfile;
-      setState({
-        image,
-        data,
-        loginType,
-        email,
-      });
+      const cachedProfile = JSON.parse(cached) as CachedProfile;
+      setStateProfile(cachedProfile);
+      setLoaded(true);
+    } else {
+      setLoaded(true);
     }
   }, []);
 
   const cacheProfile = async (
-    profile: Profile,
+    profile: MyProfile,
     loginType: LoginType,
-    email: string,
   ): Promise<void> => {
     try {
       let base64Image: string | null = null;
@@ -75,17 +54,11 @@ export default function useCachedProfile(): UseProfile {
         image: base64Image,
         data: profile,
         loginType,
-        email,
         timestamp: Date.now(),
       };
 
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-      setState({
-        image: base64Image,
-        data: profile,
-        loginType,
-        email,
-      });
+      setStateProfile(cacheData);
     } catch (error) {
       console.error('Failed to cache profile:', error);
     }
@@ -93,14 +66,12 @@ export default function useCachedProfile(): UseProfile {
 
   const clearProfile = () => {
     localStorage.removeItem(CACHE_KEY);
-    setState(initialState);
+    setStateProfile(undefined);
   };
 
   return {
-    profileImage: state.image,
-    profileData: state.data,
-    loginType: state.loginType,
-    email: state.email,
+    profileData: stateProfile,
+    loaded,
     cacheProfile,
     clearProfile,
   };

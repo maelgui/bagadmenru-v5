@@ -1,6 +1,7 @@
 import os
 from time import sleep
 
+import questionary
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -38,6 +39,15 @@ def create_user():
     password = typer.prompt("What's your password?", hide_input=True)
 
     with session_ctx(DB_URL) as s:
+        groups = s.scalars(select(models.GroupDB)).all()
+        selected_groups = questionary.checkbox(
+            "Select groups",
+            choices=[
+                questionary.Choice(title=group.name, value=group.id) for group in groups
+            ],
+        ).ask()
+
+    with session_ctx(DB_URL) as s:
         result = s.execute(
             insert(models.UserDB).values(
                 first_name=first_name,
@@ -46,7 +56,19 @@ def create_user():
                 password=myctx.hash(password),
             )
         )
-    print(result)
+        if result.inserted_primary_key:
+            result = s.execute(
+                insert(models.user.user_group_association_table).values(
+                    [
+                        {
+                            "profile_id": result.inserted_primary_key[0],
+                            "group_id": group,
+                        }
+                        for group in selected_groups
+                    ]
+                )
+            )
+    print("OK")
 
 
 roles_cli = typer.Typer()

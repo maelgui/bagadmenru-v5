@@ -1,7 +1,9 @@
-import { faApple, faChrome, faGoogle } from '@fortawesome/free-brands-svg-icons';
+import {
+  faApple, faChrome, faGoogle, faMicrosoft
+} from '@fortawesome/free-brands-svg-icons';
 import {
   faArrowsRotate,
-  faTrash, IconDefinition,
+  faTrash, IconDefinition
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -24,6 +26,9 @@ const aaguidMapping: Record<string, { icon: IconDefinition | string, name: strin
   'd548826e-79b4-db40-a3d8-11116f7e8349': { icon: passkeyBitwarden, name: 'bitwarden' },
   'adce0002-35bc-c60a-648b-0b25f1f05503': { icon: faChrome, name: 'Chrome on Mac' },
   'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': { icon: faGoogle, name: 'Google Password Manager' },
+  '08987058-cadc-4b81-b6e1-30de50dcbe96': { icon: faMicrosoft, name: 'Windows Hello' },
+  '9ddd1817-af5a-4672-a2b9-3e3dd95000a9': { icon: faMicrosoft, name: 'Windows Hello' },
+  '6028b017-b1d4-4c02-b4b3-afcdafc96bb2': { icon: faMicrosoft, name: 'Windows Hello' },
 };
 
 interface AuthenticatorIconProps extends React.ComponentPropsWithoutRef<'div'> {

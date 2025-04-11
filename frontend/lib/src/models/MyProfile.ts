@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { MinimalGroup } from './MinimalGroup';
+import {
+    MinimalGroupFromJSON,
+    MinimalGroupFromJSONTyped,
+    MinimalGroupToJSON,
+    MinimalGroupToJSONTyped,
+} from './MinimalGroup';
+
 /**
  * 
  * @export
@@ -42,7 +50,31 @@ export interface MyProfile {
      * @type {string}
      * @memberof MyProfile
      */
+    id: string;
+    /**
+     * 
+     * @type {Array<MinimalGroup>}
+     * @memberof MyProfile
+     */
+    groups: Array<MinimalGroup>;
+    /**
+     * 
+     * @type {MinimalGroup}
+     * @memberof MyProfile
+     */
+    instrument?: MinimalGroup | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof MyProfile
+     */
     email: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MyProfile
+     */
+    pictureUrl: string | null;
 }
 
 /**
@@ -51,7 +83,10 @@ export interface MyProfile {
 export function instanceOfMyProfile(value: object): value is MyProfile {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
+    if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('groups' in value) || value['groups'] === undefined) return false;
     if (!('email' in value) || value['email'] === undefined) return false;
+    if (!('pictureUrl' in value) || value['pictureUrl'] === undefined) return false;
     return true;
 }
 
@@ -68,7 +103,11 @@ export function MyProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean):
         'firstName': json['first_name'],
         'lastName': json['last_name'],
         'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
+        'id': json['id'],
+        'groups': ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
+        'instrument': json['instrument'] == null ? undefined : MinimalGroupFromJSON(json['instrument']),
         'email': json['email'],
+        'pictureUrl': json['picture_url'],
     };
 }
 
@@ -86,7 +125,11 @@ export function MyProfileToJSONTyped(value?: MyProfile | null, ignoreDiscriminat
         'first_name': value['firstName'],
         'last_name': value['lastName'],
         'picture_key': value['pictureKey'],
+        'id': value['id'],
+        'groups': ((value['groups'] as Array<any>).map(MinimalGroupToJSON)),
+        'instrument': MinimalGroupToJSON(value['instrument']),
         'email': value['email'],
+        'picture_url': value['pictureUrl'],
     };
 }
 

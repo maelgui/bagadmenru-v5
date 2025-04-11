@@ -1,4 +1,4 @@
-import { Profile } from 'bagad-client';
+import { MyProfile } from 'bagad-client';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
 
@@ -11,10 +11,10 @@ export enum AuthStatus {
 export const useProfileStore = create(
   combine(
     {
-      account: undefined as undefined | null | Profile,
+      account: undefined as undefined | null | MyProfile,
     },
     (set) => ({
-      setAccount: (account: Profile | null) => set({ account }),
+      setAccount: (account: MyProfile | null) => set({ account }),
     }),
   ),
 );
