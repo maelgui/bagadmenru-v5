@@ -21,7 +21,7 @@ import { queryClient, useApiClient, useUserProfile } from '../../config/client';
 
 const aaguidMapping: Record<string, { icon: IconDefinition | string, name: string }> = {
   'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': { icon: faApple, name: 'iCloud Keychain' },
-  'd548826e-79b4-db40-a3d8-11116f7e8349': { icon: passkeyBitwarden, name: 'bitwarden' },
+  'd548826e-79b4-db40-a3d8-11116f7e8349': { icon: passkeyBitwarden, name: 'Bitwarden' },
   'adce0002-35bc-c60a-648b-0b25f1f05503': { icon: faChrome, name: 'Chrome on Mac' },
   'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': { icon: faGoogle, name: 'Google Password Manager' },
 };
