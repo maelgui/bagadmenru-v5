@@ -68,6 +68,7 @@ async def export_ics(
     for event in events:
         e = Event()
         e.name = event.title
+        e.description = event.description
         e.begin = event.date
         e.make_all_day()
         c.events.add(e)
