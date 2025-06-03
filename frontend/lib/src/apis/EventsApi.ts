@@ -61,6 +61,10 @@ export interface DeleteEventApiV1EventsEventIdDeleteRequest {
     accessToken?: string | null;
 }
 
+export interface ExportIcsApiV1EventsExportIcsGetRequest {
+    userId?: string | null;
+}
+
 export interface GetEventApiV1EventsEventIdGetRequest {
     eventId: number;
     authorization?: string | null;
@@ -272,8 +276,12 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * Export Ics
      */
-    async exportIcsApiV1EventsExportIcsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async exportIcsApiV1EventsExportIcsGetRaw(requestParameters: ExportIcsApiV1EventsExportIcsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
         const queryParameters: any = {};
+
+        if (requestParameters['userId'] != null) {
+            queryParameters['user_id'] = requestParameters['userId'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -294,8 +302,8 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * Export Ics
      */
-    async exportIcsApiV1EventsExportIcsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.exportIcsApiV1EventsExportIcsGetRaw(initOverrides);
+    async exportIcsApiV1EventsExportIcsGet(requestParameters: ExportIcsApiV1EventsExportIcsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.exportIcsApiV1EventsExportIcsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

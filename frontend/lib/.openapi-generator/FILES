@@ -37,6 +37,7 @@ src/models/Photo.ts
 src/models/Profile.ts
 src/models/ProfileCreate.ts
 src/models/ProfileUpdate.ts
+src/models/RankingInfo.ts
 src/models/Res.ts
 src/models/ResetPassword.ts
 src/models/ResetPasswordRequest.ts
@@ -44,6 +45,8 @@ src/models/Response.ts
 src/models/ResponseCreate.ts
 src/models/Role.ts
 src/models/Token.ts
+src/models/UserRankingItem.ts
+src/models/UserRankings.ts
 src/models/ValidationError.ts
 src/models/ValidationErrorLocInner.ts
 src/models/index.ts

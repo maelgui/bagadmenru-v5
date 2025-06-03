@@ -15,7 +15,14 @@ from sqlalchemy.types import Integer
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
 from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, TemplateDep, get_s3_helper
-from bbe2.schemas.utils import GlobalStats, MyStats
+from bbe2.schemas.profile import MinimalGroup, Profile
+from bbe2.schemas.utils import (
+    GlobalStats,
+    MyStats,
+    RankingInfo,
+    UserRankingItem,
+    UserRankings,
+)
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
@@ -366,6 +373,126 @@ async def get_global_stats(
             n_upcoming_event=res4,
         )
     )
+
+
+@stats_router.get(
+    "/rankings",
+    response_model=UserRankings,
+    dependencies=[
+        Depends(Authorization(Action.VIEW, Resource.EVENT)),
+        Depends(Authorization(Action.VIEW, Resource.PROFILE)),
+        Depends(get_s3_helper),
+    ],
+)
+async def get_user_rankings(
+    session: SessionDep,
+) -> UserRankings:
+    """
+    Get rankings of users based on their response metrics.
+    Returns rankings for n_responses, n_positive_responses, and avg_response_time.
+    Only includes users with more than 5 positive responses since 2024-09-01.
+    """
+    # Create a subquery to get the base metrics
+    subq = (
+        select(
+            models.UserDB.id.label("user_id"),
+            func.count().label("n_responses"),
+            func.sum(cast(models.ResponseDB.value, Integer)).label(
+                "n_positive_responses"
+            ),
+            func.avg(models.ResponseDB.date - models.EventDB.created_at).label(
+                "avg_response_time"
+            ),
+        )
+        .join(models.ResponseDB, models.UserDB.id == models.ResponseDB.user_id)
+        .join(models.EventDB, models.ResponseDB.event_id == models.EventDB.id)
+        .where(models.EventDB.date > datetime(2024, 9, 1))
+        .group_by(models.UserDB.id)
+        # .having(func.sum(cast(models.ResponseDB.value == True, Integer)) > 0)
+        .subquery()
+    )
+
+    # Query with window functions to calculate ranks
+    q = select(
+        models.UserDB,
+        subq.c.n_responses,
+        subq.c.n_positive_responses,
+        subq.c.avg_response_time,
+        func.rank().over(order_by=subq.c.n_responses.desc()).label("n_responses_rank"),
+        func.rank()
+        .over(order_by=subq.c.n_positive_responses.desc())
+        .label("n_positive_responses_rank"),
+        func.rank()
+        .over(order_by=subq.c.avg_response_time.asc())
+        .label("avg_response_time_rank"),
+    ).join(subq, models.UserDB.id == subq.c.user_id)
+
+    results = session.execute(q).all()
+
+    # Convert results to list of dictionaries
+    user_data = []
+    for row in results:
+        # Handle NULL avg_response_time_rank (when avg_response_time is NULL)
+        avg_response_time_rank = (
+            row.avg_response_time_rank if row.avg_response_time is not None else None
+        )
+
+        user_data.append(
+            {
+                "user_db": row.UserDB,
+                "n_responses": row.n_responses,
+                "n_positive_responses": row.n_positive_responses,
+                "avg_response_time": row.avg_response_time,
+                "n_responses_rank": row.n_responses_rank,
+                "n_positive_responses_rank": row.n_positive_responses_rank,
+                "avg_response_time_rank": avg_response_time_rank,
+            }
+        )
+
+    # Create UserRankingItem objects with nested structure
+    ranking_items = []
+    for user in user_data:
+        ranking_info = RankingInfo(
+            n_responses=user["n_responses"],
+            n_positive_responses=user["n_positive_responses"],
+            avg_response_time=user["avg_response_time"],
+            n_responses_rank=user["n_responses_rank"],
+            n_positive_responses_rank=user["n_positive_responses_rank"],
+            avg_response_time_rank=user["avg_response_time_rank"],
+        )
+
+        # Convert UserDB to Profile
+        user_db = user["user_db"]
+
+        # Create a Profile object with the correct field types
+        profile = Profile(
+            id=user_db.id,
+            first_name=user_db.first_name,
+            last_name=user_db.last_name,
+            picture_key=user_db.picture_key,
+            groups=[
+                MinimalGroup(id=g.id, name=g.name, color=g.color)
+                for g in user_db.groups
+            ],
+            instrument=(
+                MinimalGroup(
+                    id=user_db.instrument.id,
+                    name=user_db.instrument.name,
+                    color=user_db.instrument.color,
+                )
+                if user_db.instrument
+                else None
+            ),
+        )
+
+        # Create the nested item
+        ranking_item = UserRankingItem(
+            user=profile, ranks=ranking_info  # Use the Profile object
+        )
+
+        ranking_items.append(ranking_item)
+
+    return UserRankings(rankings=ranking_items)
 
 
 groups_router = APIRouter(prefix="/groups")

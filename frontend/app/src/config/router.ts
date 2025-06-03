@@ -26,6 +26,7 @@ import EditProfilePage from '../pages/profiles/edit';
 import ProfilesPage from '../pages/profiles/list';
 import ShowMyProfilePage from '../pages/profiles/me';
 import PasskeysPage from '../pages/profiles/passkeys';
+import RankingsPage from '../pages/profiles/rankings';
 import ShowProfilePage from '../pages/profiles/show';
 
 export default createBrowserRouter([
@@ -94,6 +95,10 @@ export default createBrowserRouter([
               {
                 path: '/profile/add',
                 Component: CreateProfilePage,
+              },
+              {
+                path: '/profile/rankings',
+                Component: RankingsPage,
               },
               {
                 path: '/groups',

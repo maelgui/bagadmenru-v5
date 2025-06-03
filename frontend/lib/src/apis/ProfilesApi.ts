@@ -27,6 +27,7 @@ import type {
   ProfileCreate,
   ProfileUpdate,
   Role,
+  UserRankings,
 } from '../models/index';
 import {
     GetUploadUrlResponseFromJSON,
@@ -53,6 +54,8 @@ import {
     ProfileUpdateToJSON,
     RoleFromJSON,
     RoleToJSON,
+    UserRankingsFromJSON,
+    UserRankingsToJSON,
 } from '../models/index';
 
 export interface CreateGroupApiV1GroupsPostRequest {
@@ -95,6 +98,11 @@ export interface GetMyStatsApiV1StatsMeGetRequest {
 
 export interface GetProfileApiV1ProfilesProfileIdGetRequest {
     profileId: string;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
+export interface GetUserRankingsApiV1StatsRankingsGetRequest {
     authorization?: string | null;
     accessToken?: string | null;
 }
@@ -420,6 +428,38 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async getProfileApiV1ProfilesProfileIdGet(requestParameters: GetProfileApiV1ProfilesProfileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
         const response = await this.getProfileApiV1ProfilesProfileIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get rankings of users based on their response metrics. Returns rankings for n_responses, n_positive_responses, and avg_response_time. Only includes users with more than 5 positive responses since 2024-09-01.
+     * Get User Rankings
+     */
+    async getUserRankingsApiV1StatsRankingsGetRaw(requestParameters: GetUserRankingsApiV1StatsRankingsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserRankings>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/stats/rankings`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserRankingsFromJSON(jsonValue));
+    }
+
+    /**
+     * Get rankings of users based on their response metrics. Returns rankings for n_responses, n_positive_responses, and avg_response_time. Only includes users with more than 5 positive responses since 2024-09-01.
+     * Get User Rankings
+     */
+    async getUserRankingsApiV1StatsRankingsGet(requestParameters: GetUserRankingsApiV1StatsRankingsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserRankings> {
+        const response = await this.getUserRankingsApiV1StatsRankingsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
