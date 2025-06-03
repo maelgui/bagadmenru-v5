@@ -8,8 +8,7 @@ from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
 from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import cast, func, select, update
-from sqlalchemy.sql.functions import count as sql_count
-from sqlalchemy.sql.functions import sum as sql_sum
+from sqlalchemy.sql import functions as sql_fn
 from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
@@ -298,13 +297,13 @@ async def get_my_stats(
     )
 
     q = select(
-        func.coalesce(sql_sum(cast(models.ResponseDB.value, Integer)), 0).label(
+        func.coalesce(sql_fn.sum(cast(models.ResponseDB.value, Integer)), 0).label(
             "n_positive_responses"
         ),
         func.avg(models.ResponseDB.date - models.EventDB.created_at).label(
             "avg_response_time"
         ),
-        sql_count(models.ResponseDB.value).label("n_responses"),
+        sql_fn.count(models.ResponseDB.value).label("n_responses"),
     ).join_from(models.EventDB, models.ResponseDB)
     q = q.where(models.EventDB.date >= date_debut_saison)
     q = q.where(models.ResponseDB.user_id == identifier)
@@ -312,7 +311,7 @@ async def get_my_stats(
     n_positive_responses, avg_response_time, n_responses = session.execute(q).one()
 
     q = select(
-        sql_count(models.ResponseDB.value).label("n_upcomming_responses"),
+        sql_fn.count(models.ResponseDB.value).label("n_upcomming_responses"),
     ).join_from(models.EventDB, models.ResponseDB)
     q = q.where(models.EventDB.date >= date_now)
     q = q.where(models.ResponseDB.user_id == identifier)
@@ -342,7 +341,7 @@ async def get_global_stats(
     )
 
     q = select(
-        sql_count(models.ResponseDB.value).label("n_responses"),
+        sql_fn.count(models.ResponseDB.value).label("n_responses"),
         func.avg(models.ResponseDB.date - models.EventDB.created_at).label(
             "avg_response_time"
         ),
@@ -352,14 +351,14 @@ async def get_global_stats(
     (n_responses, avg_response_time) = session.execute(q).one()
 
     q = select(
-        sql_count(models.EventDB.id).label("n_events"),
+        sql_fn.count(models.EventDB.id).label("n_events"),
     ).select_from(models.EventDB)
     q = q.where(models.EventDB.date >= date_debut_saison)
     q = q.where(models.EventDB.is_in_doodle == True)
     res3 = session.scalar(q)
 
     q = select(
-        sql_count(models.EventDB.id).label("n_upcoming_event"),
+        sql_fn.count(models.EventDB.id).label("n_upcoming_event"),
     ).select_from(models.EventDB)
     q = q.where(models.EventDB.date >= date_now)
     q = q.where(models.EventDB.is_in_doodle == True)
@@ -396,8 +395,8 @@ async def get_user_rankings(
     subq = (
         select(
             models.UserDB.id.label("user_id"),
-            func.count().label("n_responses"),
-            func.sum(cast(models.ResponseDB.value, Integer)).label(
+            sql_fn.count().label("n_responses"),
+            sql_fn.sum(cast(models.ResponseDB.value, Integer)).label(
                 "n_positive_responses"
             ),
             func.avg(models.ResponseDB.date - models.EventDB.created_at).label(
@@ -418,11 +417,13 @@ async def get_user_rankings(
         subq.c.n_responses,
         subq.c.n_positive_responses,
         subq.c.avg_response_time,
-        func.rank().over(order_by=subq.c.n_responses.desc()).label("n_responses_rank"),
-        func.rank()
+        sql_fn.dense_rank()
+        .over(order_by=subq.c.n_responses.desc())
+        .label("n_responses_rank"),
+        sql_fn.dense_rank()
         .over(order_by=subq.c.n_positive_responses.desc())
         .label("n_positive_responses_rank"),
-        func.rank()
+        sql_fn.dense_rank()
         .over(order_by=subq.c.avg_response_time.asc())
         .label("avg_response_time_rank"),
     ).join(subq, models.UserDB.id == subq.c.user_id)
