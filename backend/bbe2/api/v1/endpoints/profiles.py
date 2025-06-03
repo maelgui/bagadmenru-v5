@@ -407,7 +407,7 @@ async def get_user_rankings(
         .join(models.EventDB, models.ResponseDB.event_id == models.EventDB.id)
         .where(models.EventDB.date > datetime(2024, 9, 1))
         .group_by(models.UserDB.id)
-        # .having(func.sum(cast(models.ResponseDB.value == True, Integer)) > 0)
+        .having(func.sum(cast(models.ResponseDB.value == True, Integer)) >= 3)
         .subquery()
     )
 

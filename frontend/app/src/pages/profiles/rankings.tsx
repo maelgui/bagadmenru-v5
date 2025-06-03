@@ -1,9 +1,9 @@
 import { faMedal, faTrophy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
+import { Profile, RankingInfo, UserRankingItem } from 'bagad-client';
 import { Link } from 'react-router-dom';
 import { parse } from 'tinyduration';
-import { UserRankingItem, RankingInfo, Profile } from 'bagad-client';
 import defaultAvatar from '../../assets/default.svg';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -56,14 +56,12 @@ function PodiumPosition({
       <div className="w-24 h-24 rounded-full overflow-hidden mb-3 border-4" style={{ borderColor: medalColor }}>
         <img
           src={user.pictureUrl ?? defaultAvatar}
-          alt={`${user.firstName} ${user.lastName}`}
+          alt={`${user.firstName} ${user.lastName[0]}`}
           className="w-full h-full object-cover"
         />
       </div>
       <h3 className="font-bold text-lg">
         {user.firstName}
-        {' '}
-        {user.lastName}
       </h3>
       <div className="text-sm text-gray-600 mt-1">{title}</div>
       <div className="font-semibold mt-1">{formattedValue}</div>
