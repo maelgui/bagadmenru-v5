@@ -2,8 +2,7 @@ package authz.rbac
 
 import rego.v1
 
-# this is provided as data!
-# regal ignore:unresolved-import
+# regal ignore:pointless-import
 import data.authz.rbac.permissions as p
 
 role_permissions := {
