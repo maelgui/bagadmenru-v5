@@ -50,7 +50,10 @@ export default function HomePage() {
   });
   const { data: responses } = useQuery({
     queryKey: ['responses', 'me'],
-    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ userId: profile?.id }),
+    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({
+      dateGte: new Date(),
+      userId: profile?.id,
+    }),
     select: (data) => groupBy(data, (e) => e.eventId),
     enabled: can('create', 'response'),
   });

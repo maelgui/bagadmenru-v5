@@ -71,7 +71,11 @@ export default function DoodlePage() {
     queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date(), isInDoodle: true }),
   });
   const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: () => usersApi.listProfilesApiV1ProfilesGet() });
-  const { data: responses } = useQuery({ queryKey: ['responses'], queryFn: () => eventsApi.listResponsesApiV1ResponsesGet(), select: (data) => responseFormat(data) });
+  const { data: responses } = useQuery({
+    queryKey: ['responses'],
+    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ dateGte: new Date() }),
+    select: (data) => responseFormat(data),
+  });
 
   const mutation = useMutation({
     mutationFn: ({ eventId, response }: { eventId: number, response: ResponseCreate }) => {

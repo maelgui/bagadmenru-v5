@@ -281,7 +281,7 @@ export default function PlanningPage() {
   });
   const { data: responses } = useQuery({
     queryKey: ['responses'],
-    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet(),
+    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ dateGte: new Date() }),
   });
 
   const { filteredProfiles, enrichedResponses } = useMemo(() => ({
