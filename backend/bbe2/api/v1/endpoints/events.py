@@ -43,6 +43,7 @@ async def list_events(
 ):
     q = session.query(models.EventDB)
     if date__gte:
+        date__gte = date__gte.replace(hour=0, minute=0, second=0, microsecond=0)
         q = q.filter(models.EventDB.date >= date__gte)
     if date__lt:
         q = q.filter(models.EventDB.date < date__lt)
