@@ -61,10 +61,6 @@ export interface DeleteEventApiV1EventsEventIdDeleteRequest {
     accessToken?: string | null;
 }
 
-export interface ExportIcsApiV1EventsExportIcsGetRequest {
-    userId?: string | null;
-}
-
 export interface GetEventApiV1EventsEventIdGetRequest {
     eventId: number;
     authorization?: string | null;
@@ -86,6 +82,8 @@ export interface ListEventsApiV1EventsGetRequest {
 }
 
 export interface ListResponsesApiV1ResponsesGetRequest {
+    dateGte?: Date | null;
+    dateLt?: Date | null;
     userId?: string | null;
     authorization?: string | null;
     accessToken?: string | null;
@@ -276,12 +274,8 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * Export Ics
      */
-    async exportIcsApiV1EventsExportIcsGetRaw(requestParameters: ExportIcsApiV1EventsExportIcsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async exportIcsApiV1EventsExportIcsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
         const queryParameters: any = {};
-
-        if (requestParameters['userId'] != null) {
-            queryParameters['user_id'] = requestParameters['userId'];
-        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -302,8 +296,8 @@ export class EventsApi extends runtime.BaseAPI {
     /**
      * Export Ics
      */
-    async exportIcsApiV1EventsExportIcsGet(requestParameters: ExportIcsApiV1EventsExportIcsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.exportIcsApiV1EventsExportIcsGetRaw(requestParameters, initOverrides);
+    async exportIcsApiV1EventsExportIcsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.exportIcsApiV1EventsExportIcsGetRaw(initOverrides);
         return await response.value();
     }
 
@@ -436,6 +430,14 @@ export class EventsApi extends runtime.BaseAPI {
      */
     async listResponsesApiV1ResponsesGetRaw(requestParameters: ListResponsesApiV1ResponsesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Response>>> {
         const queryParameters: any = {};
+
+        if (requestParameters['dateGte'] != null) {
+            queryParameters['date__gte'] = (requestParameters['dateGte'] as any).toISOString();
+        }
+
+        if (requestParameters['dateLt'] != null) {
+            queryParameters['date__lt'] = (requestParameters['dateLt'] as any).toISOString();
+        }
 
         if (requestParameters['userId'] != null) {
             queryParameters['user_id'] = requestParameters['userId'];

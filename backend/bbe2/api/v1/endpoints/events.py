@@ -218,11 +218,18 @@ async def delete_event(
 )
 async def list_responses(
     session: SessionDep,
+    date__gte: Optional[datetime] = None,
+    date__lt: Optional[datetime] = None,
     user_id: Optional[str] = None,
 ):
     q = select(models.ResponseDB)
     if user_id:
         q = q.filter(models.ResponseDB.user_id == user_id)
+    if date__gte:
+        date__gte = date__gte.replace(hour=0, minute=0, second=0, microsecond=0)
+        q = q.filter(models.ResponseDB.event.has(models.EventDB.date >= date__gte))
+    if date__lt:
+        q = q.filter(models.ResponseDB.event.has(models.EventDB.date < date__lt))
     responses = session.scalars(q).all()
     return responses
 
