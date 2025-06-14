@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from ics import Calendar, Event  # type: ignore
 from itsdangerous import URLSafeTimedSerializer
 from pydantic import BaseModel
-from sqlalchemy import insert, select, update
+from sqlalchemy import select
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
