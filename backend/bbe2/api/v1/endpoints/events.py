@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from ics import Calendar, Event  # type: ignore
 from itsdangerous import URLSafeTimedSerializer
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import insert, select, update
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
@@ -243,23 +243,39 @@ async def create_response(
     event_id: int,
     response: schemas.ResponseCreate,
     session: SessionDep,
-    event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     identifier: Annotated[str, Depends(get_current_user2)],
 ):
-    db_event = event_crud.find_one_by(models.EventDB.id == event_id)
+    db_event = session.get(models.EventDB, event_id)
     if not db_event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
 
-    db_object = models.ResponseDB(
-        event_id=event_id,
-        user_id=identifier,
-        date=datetime.now(),
-        **response.model_dump(),
+    db_response = session.get(
+        models.ResponseDB,
+        (
+            event_id,
+            identifier,
+        ),
     )
-    session.merge(db_object)
-    session.commit()
+
+    if db_response:
+        q = (
+            update(models.ResponseDB)
+            .where(models.ResponseDB.event_id == event_id)
+            .where(models.ResponseDB.user_id == identifier)
+            .values(**response.model_dump())
+        )
+    else:
+        q = insert(models.ResponseDB).values(
+            event_id=event_id,
+            user_id=identifier,
+            date=datetime.now(),
+            **response.model_dump(),
+        )
+
+    db_object = session.scalars(q).first()
+
     return db_object
 
 
