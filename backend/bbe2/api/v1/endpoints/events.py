@@ -260,23 +260,19 @@ async def create_response(
     )
 
     if db_response:
-        q = (
-            update(models.ResponseDB)
-            .where(models.ResponseDB.event_id == event_id)
-            .where(models.ResponseDB.user_id == identifier)
-            .values(**response.model_dump())
-        )
+        db_response.value = response.value
     else:
-        q = insert(models.ResponseDB).values(
+        db_response = models.ResponseDB(
             event_id=event_id,
             user_id=identifier,
             date=datetime.now(),
             **response.model_dump(),
         )
+        session.add(db_response)
 
-    db_object = session.scalars(q).first()
+    session.commit()
 
-    return db_object
+    return db_response
 
 
 class Res(BaseModel):
