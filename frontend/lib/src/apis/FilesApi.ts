@@ -78,7 +78,7 @@ export interface ListFilesApiV1FilesGetRequest {
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
-    fileId: string;
+    fileId: number;
     fileOrFolderUpdate: FileOrFolderUpdate;
     authorization?: string | null;
     accessToken?: string | null;

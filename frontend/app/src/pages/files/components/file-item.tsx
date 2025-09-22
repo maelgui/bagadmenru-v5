@@ -15,7 +15,7 @@ import { faFolder } from '@fortawesome/free-regular-svg-icons';
 import {
   IconDefinition,
   faEllipsisVertical, faFile, faFilePdf,
-  faImage, faMusic,
+  faImage, faMusic, faPencil,
   faTrashCan,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -30,6 +30,7 @@ interface FileItemProps {
   file: FileOrFolder
   big?: boolean
   deleteFn?: MouseEventHandler<HTMLButtonElement>
+  renameFn?: MouseEventHandler<HTMLButtonElement>
   noAction?: boolean
 }
 
@@ -55,7 +56,7 @@ function getIcon(file: FileOrFolder) {
 }
 
 export default function FileItem({
-  file, big = false, deleteFn = undefined, noAction = false,
+  file, big = false, deleteFn = undefined, renameFn = undefined, noAction = false,
 }: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -124,17 +125,12 @@ export default function FileItem({
             style={floatingStyles}
             {...getFloatingProps()}
           >
-            {/* <Button variant="ghost" className="text-left capitalize font-medium">
+            <Button variant="ghost" className="text-left capitalize font-medium" onClick={renameFn}>
               <FontAwesomeIcon icon={faPencil} className="mr-3 w-4" />
               {' '}
               Renommer...
             </Button>
-            <Button variant="ghost" className="text-left capitalize font-medium">
-              <FontAwesomeIcon icon={faFolderTree} className="mr-3 w-4" />
-              {' '}
-              Déplacer...
-            </Button>
-            <hr className="mx-2 my-1" /> */}
+            <hr className="mx-2 my-1" />
             <Button variant="ghost" className="text-left text-red-600 capitalize font-medium" onClick={deleteFn}>
               <FontAwesomeIcon icon={faTrashCan} className="mr-3 w-4" />
               {' '}

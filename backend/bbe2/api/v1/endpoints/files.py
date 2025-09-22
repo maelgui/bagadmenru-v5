@@ -186,7 +186,7 @@ async def create_folder(
     response_model=schemas.FileOrFolder,
 )
 async def update_file(
-    file_id: str,
+    file_id: int,
     file: schemas.FileOrFolderUpdate,
     file_crud: Annotated[CRUDFile, Depends()],
 ):

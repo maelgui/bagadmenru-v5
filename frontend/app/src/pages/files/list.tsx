@@ -15,6 +15,7 @@ import {
   Dialog, DialogClose, DialogContent, DialogDescription, DialogHeading,
 } from '../../components/dialog';
 import Header from '../../components/header';
+import Input from '../../components/input';
 import { SkeletonText } from '../../components/skeleton';
 import { queryClient, useApiClient, usePermissions } from '../../config/client';
 import FileItem, { FileItemSkeleton } from './components/file-item';
@@ -93,8 +94,16 @@ export default function ListFilesPage() {
   });
 
   const [fileToDelete, setFileToDelete] = useState<FileOrFolder | undefined>(undefined);
+  const [fileToRename, setFileToRename] = useState<FileOrFolder | undefined>(undefined);
+  const [newFileName, setNewFileName] = useState('');
+
   const confirmDeleteFile = (file: FileOrFolder) => {
     setFileToDelete(file);
+  };
+
+  const confirmRenameFile = (file: FileOrFolder) => {
+    setFileToRename(file);
+    setNewFileName(file.name);
   };
 
   const deleteFileMutation = useMutation({
@@ -102,6 +111,19 @@ export default function ListFilesPage() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] });
       setFileToDelete(undefined);
+    },
+  });
+
+  const renameFileMutation = useMutation({
+    // eslint-disable-next-line max-len
+    mutationFn: ({ fileId, name }: { fileId: number; name: string }) => filesApi.updateFileApiV1FilesFileIdPut({
+      fileId,
+      fileOrFolderUpdate: { name, parentId: folder?.id ?? 0 },
+    }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] });
+      setFileToRename(undefined);
+      setNewFileName('');
     },
   });
 
@@ -167,7 +189,12 @@ export default function ListFilesPage() {
             ) : null}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {children?.folders.map((file) => (
-                <FileItem key={file.id} file={file} deleteFn={() => confirmDeleteFile(file)} />
+                <FileItem
+                  key={file.id}
+                  file={file}
+                  deleteFn={() => confirmDeleteFile(file)}
+                  renameFn={() => confirmRenameFile(file)}
+                />
               ))}
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
@@ -177,6 +204,7 @@ export default function ListFilesPage() {
                   file={file}
                   big
                   deleteFn={() => confirmDeleteFile(file)}
+                  renameFn={() => confirmRenameFile(file)}
                 />
               ))}
             </div>
@@ -216,6 +244,48 @@ export default function ListFilesPage() {
               >
                 <FontAwesomeIcon icon={faTrashAlt} className={`w-4 mr-2 ${deleteFileMutation.status === 'pending' ? 'animate-spin' : ''}`} />
                 Supprimer
+              </Button>
+            </div>
+          </DialogDescription>
+          <DialogClose />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={fileToRename !== undefined} onOpenChange={() => setFileToRename(undefined)}>
+        <DialogContent>
+          <DialogHeading>
+            <h2>Renommer</h2>
+          </DialogHeading>
+          <DialogDescription>
+            <label htmlFor="name" className="mb-2 block font-semibold">Nouveau nom</label>
+            <Input
+              id="name"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && fileToRename && newFileName.trim()) {
+                  renameFileMutation.mutate({ fileId: fileToRename.id, name: newFileName.trim() });
+                }
+              }}
+            />
+            <div className="flex gap-4 mt-8 mb-2">
+              <Button
+                className="w-full m-0"
+                variant="outline"
+                onClick={() => setFileToRename(undefined)}
+              >
+                Annuler
+              </Button>
+              <Button
+                className="w-full m-0"
+                disabled={!newFileName.trim() || renameFileMutation.status === 'pending'}
+                onClick={() => {
+                  if (fileToRename && newFileName.trim()) {
+                    // eslint-disable-next-line max-len
+                    renameFileMutation.mutate({ fileId: fileToRename.id, name: newFileName.trim() });
+                  }
+                }}
+              >
+                Renommer
               </Button>
             </div>
           </DialogDescription>
