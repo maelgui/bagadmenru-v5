@@ -38,6 +38,8 @@ class Profile(_ProfileBase):
 
     instrument: Optional["MinimalGroup"] = None
 
+    receives_emails: bool = True
+
     @computed_field  # type: ignore[misc]
     @property
     def picture_url(self) -> Optional[str]:

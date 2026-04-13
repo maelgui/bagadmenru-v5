@@ -1,4 +1,5 @@
-import { faCirclePlus, faMedal } from '@fortawesome/free-solid-svg-icons';
+import { faBellSlash, faCirclePlus, faMedal } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Container from '../../components/container';
@@ -53,7 +54,12 @@ export default function ProfilesPage() {
                   </div>
                 </div>
                 <div className="pt-4 px-2 text-center">
-                  <h4 className="my-2 text-lg font-semibold">{`${profile.firstName} ${profile.lastName}`}</h4>
+                  <h4 className="my-2 text-lg font-semibold">
+                    {`${profile.firstName} ${profile.lastName}`}
+                    {profile.receivesEmails === false && (
+                      <FontAwesomeIcon icon={faBellSlash} className="ml-1 text-red-400 text-xs" title="Ne reçoit pas les emails" />
+                    )}
+                  </h4>
                   <div className="flex flex-wrap">
                     {profile.groups.map((group) => (
                       <GroupTag key={group.id} name={group.name} color={group.color} />
