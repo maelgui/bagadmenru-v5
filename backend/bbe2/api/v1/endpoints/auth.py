@@ -78,7 +78,7 @@ def process_login(
             user = session.scalars(
                 select(UserDB).where(UserDB.email == data.email)
             ).first()
-            if not user:
+            if not user or not user.is_active:
                 myctx.dummy_verify()
                 raise HTTPException(status_code=401, detail="Bad credentials")
             if not data.password:
@@ -99,7 +99,7 @@ def process_login(
             passkey = session.scalar(
                 select(PasskeyDB).where(PasskeyDB.credential_id == credential.raw_id)
             )
-            if not passkey:
+            if not passkey or not passkey.user.is_active:
                 raise HTTPException(status_code=401, detail="Bad credentials")
             try:
                 res = verify_authentication_response(
@@ -180,7 +180,7 @@ async def reset_password_request(
     sender: SenderDep,
 ):
     user = session.scalars(select(UserDB).where(UserDB.email == body.email)).first()
-    if not user:
+    if not user or not user.is_active:
         return "OK"
 
     serializer = URLSafeTimedSerializer(settings.token_secret_key)

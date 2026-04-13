@@ -439,6 +439,7 @@ async def get_user_rankings(
         )
         .join(models.ResponseDB, models.UserDB.id == models.ResponseDB.user_id)
         .join(models.EventDB, models.ResponseDB.event_id == models.EventDB.id)
+        .where(models.UserDB.is_active)
         .where(models.EventDB.date > datetime(2024, 9, 1))
         .group_by(models.UserDB.id)
         .having(func.sum(cast(models.ResponseDB.value == True, Integer)) >= 3)
