@@ -105,7 +105,9 @@ def bootstrap():
         ).first()
         if default_group:
             default_group.is_default = True
-            console.log(f"Existing 'Membres' group (id={default_group.id}) marked as default")
+            console.log(
+                f"Existing 'Membres' group (id={default_group.id}) marked as default"
+            )
         else:
             default_group = models.GroupDB(
                 name="Membres",

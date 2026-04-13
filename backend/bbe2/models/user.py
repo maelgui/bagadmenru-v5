@@ -4,7 +4,17 @@ import secrets
 import uuid
 from typing import List, Optional
 
-from sqlalchemy import Column, ForeignKey, Index, LargeBinary, String, Table, Text, false, true
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Index,
+    LargeBinary,
+    String,
+    Table,
+    Text,
+    false,
+    true,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bbe2.models.base import Base
