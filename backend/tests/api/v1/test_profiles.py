@@ -18,6 +18,7 @@ def test_read_my_profile(client: TestClient):
             "name": "Piccolo",
         },
         "groups": [],
+        "receives_emails": True,
     }
 
 
@@ -36,6 +37,7 @@ def test_read_profile(client: TestClient):
             "name": "Piccolo",
         },
         "groups": [],
+        "receives_emails": True,
     }
 
 
@@ -67,6 +69,7 @@ def test_update_my_profile(mock_set_tags: MagicMock, client: TestClient):
             "name": "Piccolo",
         },
         "groups": [],
+        "receives_emails": True,
     }
 
 
@@ -86,5 +89,6 @@ def test_list_profiles(client: TestClient):
                 "name": "Piccolo",
             },
             "groups": [],
+            "receives_emails": True,
         }
     ]
