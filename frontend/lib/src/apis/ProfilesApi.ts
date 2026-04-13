@@ -70,6 +70,12 @@ export interface CreateProfileApiV1ProfilesPostRequest {
     accessToken?: string | null;
 }
 
+export interface DeleteProfileApiV1ProfilesProfileIdDeleteRequest {
+    profileId: string;
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
 export interface GetGlobalStatsApiV1StatsGetRequest {
     authorization?: string | null;
     accessToken?: string | null;
@@ -235,6 +241,42 @@ export class ProfilesApi extends runtime.BaseAPI {
     async createProfileApiV1ProfilesPost(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
         const response = await this.createProfileApiV1ProfilesPostRaw(requestParameters, initOverrides);
         return await response.value();
+    }
+
+    /**
+     * Delete Profile
+     */
+    async deleteProfileApiV1ProfilesProfileIdDeleteRaw(requestParameters: DeleteProfileApiV1ProfilesProfileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['profileId'] == null) {
+            throw new runtime.RequiredError(
+                'profileId',
+                'Required parameter "profileId" was null or undefined when calling deleteProfileApiV1ProfilesProfileIdDelete().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/profiles/{profile_id}`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Profile
+     */
+    async deleteProfileApiV1ProfilesProfileIdDelete(requestParameters: DeleteProfileApiV1ProfilesProfileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.deleteProfileApiV1ProfilesProfileIdDeleteRaw(requestParameters, initOverrides);
     }
 
     /**

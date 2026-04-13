@@ -174,6 +174,26 @@ async def update_profile(
     return db_profile
 
 
+@profiles_router.delete(
+    "/{profile_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(Authorization(Action.DELETE, Resource.PROFILE))],
+)
+async def delete_profile(
+    profile_id: str,
+    session: SessionDep,
+):
+    db_profile = (
+        session.query(models.UserDB).filter(models.UserDB.id == profile_id).first()
+    )
+    if not db_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
+    db_profile.is_active = False
+    session.commit()
+
+
 @profiles_router.get(
     "/",
     response_model=list[schemas.Profile],
@@ -182,8 +202,10 @@ async def update_profile(
 async def list_profiles(
     session: SessionDep,
 ):
-    q = select(models.UserDB).order_by(
-        models.UserDB.instrument_id, models.UserDB.first_name
+    q = (
+        select(models.UserDB)
+        .where(models.UserDB.is_active)
+        .order_by(models.UserDB.instrument_id, models.UserDB.first_name)
     )
     res = session.scalars(q).all()
     return res
@@ -484,6 +506,7 @@ async def get_user_rankings(
             last_name=user_db.last_name,
             picture_key=user_db.picture_key,
             receives_emails=user_db.receives_emails,
+            is_active=user_db.is_active,
             groups=[
                 MinimalGroup(id=g.id, name=g.name, color=g.color)
                 for g in user_db.groups

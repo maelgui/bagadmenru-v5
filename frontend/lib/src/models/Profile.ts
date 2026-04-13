@@ -71,6 +71,12 @@ export interface Profile {
     instrument?: MinimalGroup | null;
     /**
      * 
+     * @type {boolean}
+     * @memberof Profile
+     */
+    isActive: boolean;
+    /**
+     * 
      * @type {string}
      * @memberof Profile
      */
@@ -86,6 +92,7 @@ export function instanceOfProfile(value: object): value is Profile {
     if (!('receivesEmails' in value) || value['receivesEmails'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('groups' in value) || value['groups'] === undefined) return false;
+    if (!('isActive' in value) || value['isActive'] === undefined) return false;
     if (!('pictureUrl' in value) || value['pictureUrl'] === undefined) return false;
     return true;
 }
@@ -107,6 +114,7 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'id': json['id'],
         'groups': ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
         'instrument': json['instrument'] == null ? undefined : MinimalGroupFromJSON(json['instrument']),
+        'isActive': json['is_active'],
         'pictureUrl': json['picture_url'],
     };
 }
@@ -129,6 +137,7 @@ export function ProfileToJSONTyped(value?: Profile | null, ignoreDiscriminator: 
         'id': value['id'],
         'groups': ((value['groups'] as Array<any>).map(MinimalGroupToJSON)),
         'instrument': MinimalGroupToJSON(value['instrument']),
+        'is_active': value['isActive'],
         'picture_url': value['pictureUrl'],
     };
 }

@@ -53,6 +53,7 @@ class UserDB(Base):
         secondary=user_group_association_table, back_populates="members"
     )
     receives_emails: Mapped[bool] = mapped_column(default=True, server_default=true())
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     # passkey specific user id, PII free
     passkey_user_id: Mapped[Optional[bytes]] = mapped_column(

@@ -119,7 +119,9 @@ async def synchronize_mailing_lists():
             await sync_mailing_list(
                 group.mailing_list,
                 DOMAIN,
-                set(m.email for m in group.members if m.receives_emails),
+                set(
+                    m.email for m in group.members if m.receives_emails and m.is_active
+                ),
             )
 
 

@@ -19,6 +19,7 @@ def test_read_my_profile(client: TestClient):
         },
         "groups": [],
         "receives_emails": True,
+        "is_active": True,
     }
 
 
@@ -38,6 +39,7 @@ def test_read_profile(client: TestClient):
         },
         "groups": [],
         "receives_emails": True,
+        "is_active": True,
     }
 
 
@@ -71,6 +73,7 @@ def test_update_my_profile(mock_set_tags: MagicMock, client: TestClient):
         },
         "groups": [],
         "receives_emails": True,
+        "is_active": True,
     }
 
 
@@ -91,5 +94,6 @@ def test_list_profiles(client: TestClient):
             },
             "groups": [],
             "receives_emails": True,
+            "is_active": True,
         }
     ]

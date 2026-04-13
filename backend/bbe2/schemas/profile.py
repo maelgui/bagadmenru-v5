@@ -39,6 +39,8 @@ class Profile(_ProfileBase):
 
     instrument: Optional["MinimalGroup"] = None
 
+    is_active: bool
+
     @computed_field  # type: ignore[misc]
     @property
     def picture_url(self) -> Optional[str]:

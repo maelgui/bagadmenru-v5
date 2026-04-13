@@ -112,7 +112,9 @@ async def create_event(
 
     if event.is_in_doodle:
         users = session.scalars(
-            select(models.UserDB).order_by(models.UserDB.last_name)
+            select(models.UserDB)
+            .where(models.UserDB.is_active)
+            .order_by(models.UserDB.last_name)
         ).all()
 
         users = [

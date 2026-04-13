@@ -63,24 +63,18 @@ def downgrade() -> None:
     conn = op.get_bind()
 
     # Find the default group
-    result = conn.execute(
-        sa.text("SELECT id FROM groups WHERE is_default = true")
-    )
+    result = conn.execute(sa.text("SELECT id FROM groups WHERE is_default = true"))
     default_group_ids = [row[0] for row in result]
 
     for gid in default_group_ids:
         # Remove user associations
         conn.execute(
-            sa.text(
-                "DELETE FROM user_group_association_table WHERE group_id = :gid"
-            ),
+            sa.text("DELETE FROM user_group_association_table WHERE group_id = :gid"),
             {"gid": gid},
         )
         # Remove role associations
         conn.execute(
-            sa.text(
-                "DELETE FROM group_role_association_table WHERE group_id = :gid"
-            ),
+            sa.text("DELETE FROM group_role_association_table WHERE group_id = :gid"),
             {"gid": gid},
         )
         # Remove the group
