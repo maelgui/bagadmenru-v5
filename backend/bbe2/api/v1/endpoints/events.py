@@ -118,7 +118,8 @@ async def create_event(
         users = [
             user
             for user in users
-            if await is_authorized(
+            if user.receives_emails
+            and await is_authorized(
                 {
                     "user": {
                         "id": user.id,
