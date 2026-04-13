@@ -33,6 +33,7 @@ export default function AdminEditProfileForm(
       lastName: profile.lastName,
       groupIds: profile.groups.map((g) => g.id),
       instrumentId: profile.instrument?.id,
+      receivesEmails: profile.receivesEmails,
     } : {},
   });
 

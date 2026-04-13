@@ -9,6 +9,7 @@ class _ProfileBase(BaseModel):
     first_name: str
     last_name: str
     picture_key: str | None = None
+    receives_emails: bool
 
 
 class MyProfileUpdate(_ProfileBase):
@@ -37,8 +38,6 @@ class Profile(_ProfileBase):
     groups: list["MinimalGroup"]
 
     instrument: Optional["MinimalGroup"] = None
-
-    receives_emails: bool = True
 
     @computed_field  # type: ignore[misc]
     @property

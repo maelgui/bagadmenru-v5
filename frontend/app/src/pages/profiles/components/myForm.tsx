@@ -17,6 +17,7 @@ export default function EditProfileForm({ profile, onSubmit }: ProfileFormProps)
       pictureKey: profile.pictureKey,
       firstName: profile.firstName,
       lastName: profile.lastName,
+      receivesEmails: profile.receivesEmails,
     },
   });
 

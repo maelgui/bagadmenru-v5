@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faBellSlash, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { Profile, ProfileUpdate } from 'bagad-client';
@@ -76,7 +76,7 @@ export default function BaseProfileFormFields(
   { profile = undefined, avatar = true }: { profile?: Profile, avatar?: boolean },
 ) {
   const {
-    register, control, formState: { errors },
+    register, watch, control, formState: { errors },
   } = useFormContext<ProfileUpdate>();
 
   return (
@@ -99,6 +99,24 @@ export default function BaseProfileFormFields(
         </div>
       )
         : null}
+
+      <div className="mb-6">
+        <label htmlFor="receivesEmails" className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            id="receivesEmails"
+            className="h-5 w-5 rounded border-gray-300 text-pourpre-500 focus:ring-pourpre-500"
+            {...register('receivesEmails')}
+          />
+          <span className="font-semibold">Recevoir les emails</span>
+          {!watch('receivesEmails') && (
+            <FontAwesomeIcon icon={faBellSlash} className="text-red-400 text-sm" />
+          )}
+        </label>
+        <p className="text-sm text-gray-500 mt-1 ml-8">
+          Décochez pour ne plus recevoir les notifications par email.
+        </p>
+      </div>
 
       <div className="flex gap-4 mb-6">
         <div className="flex-1">

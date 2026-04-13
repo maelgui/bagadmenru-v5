@@ -37,6 +37,12 @@ export interface MyProfileUpdate {
      * @memberof MyProfileUpdate
      */
     pictureKey?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof MyProfileUpdate
+     */
+    receivesEmails: boolean;
 }
 
 /**
@@ -45,6 +51,7 @@ export interface MyProfileUpdate {
 export function instanceOfMyProfileUpdate(value: object): value is MyProfileUpdate {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
+    if (!('receivesEmails' in value) || value['receivesEmails'] === undefined) return false;
     return true;
 }
 
@@ -61,6 +68,7 @@ export function MyProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boo
         'firstName': json['first_name'],
         'lastName': json['last_name'],
         'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
+        'receivesEmails': json['receives_emails'],
     };
 }
 
@@ -78,6 +86,7 @@ export function MyProfileUpdateToJSONTyped(value?: MyProfileUpdate | null, ignor
         'first_name': value['firstName'],
         'last_name': value['lastName'],
         'picture_key': value['pictureKey'],
+        'receives_emails': value['receivesEmails'],
     };
 }
 

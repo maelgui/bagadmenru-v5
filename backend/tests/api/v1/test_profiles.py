@@ -50,6 +50,7 @@ def test_update_my_profile(mock_set_tags: MagicMock, client: TestClient):
             "last_name": "doe2",
             "picture_key": "blbabla.jpg",
             "instrument_id": 1,
+            "receives_emails": True,
         },
     )
     mock_set_tags.assert_called_once_with(
