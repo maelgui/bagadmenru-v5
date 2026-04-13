@@ -98,6 +98,23 @@ def bootstrap():
             )
         )
         console.log("Admin group created")
+
+        # Create or update the default group that every user belongs to
+        default_group = s.scalars(
+            select(models.GroupDB).filter_by(name="Membres")
+        ).first()
+        if default_group:
+            default_group.is_default = True
+            console.log(f"Existing 'Membres' group (id={default_group.id}) marked as default")
+        else:
+            default_group = models.GroupDB(
+                name="Membres",
+                color="#3498db",
+                is_default=True,
+                roles=[],
+            )
+            s.add(default_group)
+            console.log("Default 'Membres' group created")
     console.print("[bold green]Bootstrap successfully")
 
 

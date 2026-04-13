@@ -7,7 +7,7 @@ import httpx
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
 from itsdangerous import URLSafeTimedSerializer
-from sqlalchemy import cast, func, select, update
+from sqlalchemy import cast, func, or_, select, update
 from sqlalchemy.sql import functions as sql_fn
 from sqlalchemy.types import Integer
 
@@ -158,9 +158,15 @@ async def update_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
     profile.group_ids.append(profile.instrument_id)
+    # Fetch requested groups + always include default groups in a single query
     groups = (
         profile_crud.db_session.query(models.GroupDB)
-        .filter(models.GroupDB.id.in_(profile.group_ids))
+        .filter(
+            or_(
+                models.GroupDB.id.in_(profile.group_ids),
+                models.GroupDB.is_default,
+            )
+        )
         .all()
     )
     db_profile.groups = groups
@@ -199,9 +205,15 @@ async def create_profile(
         **profile.model_dump(exclude={"group_ids"}),
     )
     profile.group_ids.append(profile.instrument_id)
+    # Fetch requested groups + always include default groups in a single query
     groups = (
         session.query(models.GroupDB)
-        .filter(models.GroupDB.id.in_(profile.group_ids))
+        .filter(
+            or_(
+                models.GroupDB.id.in_(profile.group_ids),
+                models.GroupDB.is_default,
+            )
+        )
         .all()
     )
     profile_db.groups = groups

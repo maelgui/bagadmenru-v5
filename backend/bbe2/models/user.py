@@ -4,7 +4,7 @@ import secrets
 import uuid
 from typing import List, Optional
 
-from sqlalchemy import Column, ForeignKey, Index, LargeBinary, String, Table, Text, true
+from sqlalchemy import Column, ForeignKey, Index, LargeBinary, String, Table, Text, false, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bbe2.models.base import Base
@@ -60,6 +60,7 @@ class GroupDB(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False, default="#fff")
+    is_default: Mapped[bool] = mapped_column(default=False, server_default=false())
     mailing_list: Mapped[Optional[str]] = mapped_column(
         String(100), unique=True, nullable=True
     )
