@@ -40,6 +40,7 @@ export default function ShowProfilePage() {
   });
 
   const handleDelete = () => {
+    // eslint-disable-next-line no-alert
     if (window.confirm(`Êtes-vous sûr de vouloir désactiver le profil de ${profile?.firstName} ${profile?.lastName} ?`)) {
       deleteProfile();
     }
