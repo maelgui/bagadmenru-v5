@@ -1,0 +1,5 @@
+services:
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped

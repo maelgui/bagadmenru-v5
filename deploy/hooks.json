@@ -1,0 +1,18 @@
+[
+  {
+    "id": "deploy",
+    "execute-command": "/opt/bagadmenru-deploy/deploy.sh",
+    "command-working-directory": "/opt/bagadmenru-deploy",
+    "pass-arguments-to-command": [
+      { "source": "url", "name": "env" },
+      { "source": "url", "name": "tag" }
+    ],
+    "trigger-rule": {
+      "match": {
+        "type": "value",
+        "value": "{{getenv \"DEPLOY_TOKEN\"}}",
+        "parameter": { "source": "url", "name": "token" }
+      }
+    }
+  }
+]

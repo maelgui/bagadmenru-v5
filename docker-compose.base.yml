@@ -1,0 +1,101 @@
+services:
+
+  backend-postgres:
+    image: postgres:15-alpine
+    volumes:
+      - backend-pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=bagadmenru
+      - POSTGRES_PASSWORD=${BACKEND_DATABASE_PASSWORD}
+    restart: unless-stopped
+
+  backend-migrate:
+    image: ghcr.io/maelgui/bagadmenru-v5/backend:${IMAGE_TAG}
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      - DATABASE_URL=postgresql+psycopg://bagadmenru:${BACKEND_DATABASE_PASSWORD}@backend-postgres/bagadmenru
+    depends_on:
+      backend-postgres:
+        condition: service_started
+
+  backend:
+    image: ghcr.io/maelgui/bagadmenru-v5/backend:${IMAGE_TAG}
+    expose:
+      - 8000
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+psycopg://bagadmenru:${BACKEND_DATABASE_PASSWORD}@backend-postgres/bagadmenru
+      - DOMAIN=${DOMAIN}
+      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY}
+      - S3_SECRET_ACCESS_KEY=${S3_SECRET_KEY}
+      - S3_ENDPOINT=https://s3.fr-par.scw.cloud
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - S3_DEFAULT_REGION=fr-par
+      - EMAIL_API_ENDPOINT=http://email-api:9999/
+      - TOKEN_SECRET_KEY=${TOKEN_SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - AUTHORIZER_API_ENDPOINT=http://authorizer:8181/
+      - OVH_APPLICATION_KEY=${OVH_APPLICATION_KEY}
+      - OVH_APPLICATION_SECRET=${OVH_APPLICATION_SECRET}
+      - OVH_CONSUMER_KEY=${OVH_CONSUMER_KEY}
+    restart: unless-stopped
+    networks:
+      - default
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bagadmenru-${ENV_NAME}-backend.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.bagadmenru-${ENV_NAME}-backend.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.${ENV_NAME}-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,DELETE"
+      - "traefik.http.middlewares.${ENV_NAME}-cors.headers.accesscontrolallowheaders=authorization,content-type,token"
+      - "traefik.http.middlewares.${ENV_NAME}-cors.headers.accesscontrolalloworiginlist=https://${DOMAIN}"
+      - "traefik.http.middlewares.${ENV_NAME}-cors.headers.accesscontrolallowcredentials=true"
+      - "traefik.http.routers.bagadmenru-${ENV_NAME}-backend.middlewares=${ENV_NAME}-cors@docker"
+    depends_on:
+      backend-migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    image: ghcr.io/maelgui/bagadmenru-v5/frontend:${IMAGE_TAG}
+    expose:
+      - 80
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bagadmenru-${ENV_NAME}-frontend.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.bagadmenru-${ENV_NAME}-frontend.tls.certresolver=myresolver"
+    environment:
+      - VITE_BBE2_API_URL=https://api.${DOMAIN}
+      - VITE_OIDC_PROVIDER_URL=https://auth.${DOMAIN}
+      - VITE_OIDC_CLIENT_ID=bagad-frontend
+
+  email-api:
+    image: ghcr.io/maelgui/bagadmenru-v5/email-api:${IMAGE_TAG}
+    environment:
+      - RUST_LOG=tower_http=trace
+      - APP_listen=0.0.0.0:9999
+      - APP_email_from=Bagad Men Ru <contact@bagadmenru.bzh>
+      - APP_smtp_domain=${SMTP_HOST}
+      - APP_smtp_port=${SMTP_PORT}
+      - APP_smtp_tls=${SMTP_TLS}
+      - APP_smtp_username=${SMTP_USERNAME}
+      - APP_smtp_password=${SMTP_PASSWORD}
+      - APP_imap_domain=${IMAP_HOST}
+      - APP_imap_port=${IMAP_PORT}
+      - APP_imap_username=${IMAP_USERNAME}
+      - APP_imap_password=${IMAP_PASSWORD}
+
+  authorizer:
+    image: openpolicyagent/opa
+    command: ["run", "-s", "/policies", "-w", "-c", "/policies/config.yaml", "--addr", "0.0.0.0:8181"]
+    volumes:
+      - ./opa:/policies
+
+volumes:
+  backend-pgdata:
+
+networks:
+  traefik:
+    external: true
