@@ -17,7 +17,6 @@ FROM node-env AS node-build
 
 COPY . .
 
-ARG VITE_BBE2_API_URL
 ARG VITE_OIDC_PROVIDER_URL
 ARG VITE_OIDC_CLIENT_ID
 RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn build

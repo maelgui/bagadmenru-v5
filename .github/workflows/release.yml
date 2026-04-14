@@ -10,8 +10,7 @@ env:
   REPO: ghcr.io/${{ github.repository }}
 
 permissions:
-  contents: read
-  pages: write
+  contents: write
   id-token: write
   packages: write
 jobs:
@@ -198,35 +197,39 @@ jobs:
           min-versions-to-keep: 3
           delete-only-untagged-versions: "true"
 
-  deploy:
+  create-release:
     if: ${{ github.event_name == 'push' }}
     needs:
-      - lint-frontend
+      - build-push
+      - build-authz-policy-oci
     runs-on: ubuntu-latest
-    env:
-      VITE_BBE2_API_URL: https://api.beta.bagadmenru.bzh
-
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Generate tag
+        id: tag
+        run: echo "tag=deploy-$(date +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Bundle deploy files
+        run: tar -czf deploy.tar.gz docker-compose.prod.yml opa/ deploy/
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.tag.outputs.tag }}" deploy.tar.gz \
+            --title "Deploy ${{ steps.tag.outputs.tag }}" \
+            --notes "Auto-deploy from ${{ github.sha }}"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+  deploy-vps:
+    if: ${{ github.event_name == 'push' }}
+    needs:
+      - create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger VPS deploy webhook
+        run: |
+          curl -sf -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}&tag=${{ needs.create-release.outputs.tag }}" \
+            --max-time 120 \
+            -o /dev/null -w "HTTP %{http_code}\n"
 
-      - name: Frontend Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: dist
 
-      - run: envsubst < frontend/.docker/app-config.js.template > dist/app-config.js
-
-      - name: Deploy
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=bagadmenru-dashboard
-          # Optional: Enable this if you want to have GitHub Deployments triggered
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

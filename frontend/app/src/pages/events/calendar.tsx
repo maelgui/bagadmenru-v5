@@ -8,7 +8,6 @@ import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { useApiClient, usePermissions } from '../../config/client';
-import env from '../../env';
 import groupBy from '../../utils/groupby';
 import Calendar from './components/calendar';
 import EventListItem from './components/event';
@@ -40,7 +39,7 @@ export default function CalendarPage() {
   const currentMonth = (new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' });
   const [copyButtonLabel, setCopyButtonLabel] = useState('ICS');
   const copy = () => {
-    navigator.clipboard.writeText(`${env.VITE_BBE2_API_URL}/api/v1/events/export/ics`);
+    navigator.clipboard.writeText(`${window.location.origin}/api/v1/events/export/ics`);
     setCopyButtonLabel('Copié !');
     setTimeout(() => {
       setCopyButtonLabel('ICS');
@@ -75,7 +74,7 @@ export default function CalendarPage() {
             affichées ici peuvent ainsi s&apos;ajouter automatiquement dans votre calendrier !
           </p>
           <p className="pb-2">
-            <Button as={Link} to={`https://www.google.com/calendar/render?cid=${env.VITE_BBE2_API_URL.replace('https://', 'webcal://')}/api/v1/events/export/ics`} variant="ghost" icon={faCalendarDay}>Google Agenda</Button>
+            <Button as={Link} to={`https://www.google.com/calendar/render?cid=${window.location.origin.replace('https://', 'webcal://')}/api/v1/events/export/ics`} variant="ghost" icon={faCalendarDay}>Google Agenda</Button>
             <Button
               variant="ghost"
               icon={faCalendarDay}

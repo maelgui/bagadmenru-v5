@@ -42,16 +42,6 @@ services:
     restart: unless-stopped
     networks:
       - default
-      - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.bagadmenru-backend.rule=Host(`api.beta.bagadmenru.bzh`)"
-      - "traefik.http.routers.bagadmenru-backend.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,DELETE"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowheaders=authorization,content-type,token"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolalloworiginlist=https://beta.bagadmenru.bzh"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowcredentials=true"
-      - "traefik.http.routers.bagadmenru-backend.middlewares=corsheader@docker"
     depends_on:
       backend-migrate:
         condition: service_completed_successfully
@@ -61,6 +51,7 @@ services:
     expose:
       - 80
     networks:
+      - default
       - traefik
     labels:
       - "traefik.enable=true"
@@ -68,7 +59,6 @@ services:
       - "traefik.http.routers.bagadmenru-frontend.tls.certresolver=myresolver"
     restart: unless-stopped
     environment:
-      - VITE_BBE2_API_URL=https://api.beta.bagadmenru.bzh
       - VITE_OIDC_PROVIDER_URL=https://auth.beta.bagadmenru.bzh
       - VITE_OIDC_CLIENT_ID=bagad-frontend
 
