@@ -13,7 +13,6 @@ from sqlalchemy.types import Integer
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
 from bbe2.dependencies import S3Dep, SenderDep, SessionDep, SettingsDep, get_s3_helper
-from bbe2.utils.templates import EmailData
 from bbe2.schemas.profile import MinimalGroup, Profile
 from bbe2.schemas.utils import (
     GlobalStats,
@@ -30,6 +29,7 @@ from bbe2.utils.auth import (
     Resource,
     get_current_user2,
 )
+from bbe2.utils.templates import EmailData
 
 profiles_router = APIRouter(prefix="/profiles")
 
