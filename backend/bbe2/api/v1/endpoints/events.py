@@ -12,7 +12,6 @@ from sqlalchemy import select
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
-from bbe2.utils.templates import EmailData
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
@@ -22,6 +21,7 @@ from bbe2.utils.auth import (
     get_current_user2,
     is_authorized,
 )
+from bbe2.utils.templates import EmailData
 
 events_router = APIRouter(prefix="/events")
 responses_router = APIRouter(prefix="/responses")
