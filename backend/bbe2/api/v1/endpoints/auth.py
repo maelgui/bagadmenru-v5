@@ -135,10 +135,17 @@ def process_login(
         first_name=user.first_name,
         last_name=user.last_name,
         iat=datetime.now(),
-        exp=datetime.now() + timedelta(hours=48),
+        exp=datetime.now() + timedelta(days=90),
     ).model_dump()
     access_token = jwt.encode(payload, settings.jwt_secret_key, algorithm="HS256")
-    response.set_cookie(key="access_token", value=access_token)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=90 * 24 * 60 * 60,  # 90 jours
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
     return Token(access_token=access_token, token_type="bearer")
 
 
@@ -168,7 +175,12 @@ def reset_password(
 
 @router.post("/auth/logout")
 def logout(response: Response):
-    response.delete_cookie(key="access_token")
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
     return {}
 
 
