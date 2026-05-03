@@ -3,7 +3,6 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-import httpx
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
 from itsdangerous import URLSafeTimedSerializer
@@ -13,7 +12,8 @@ from sqlalchemy.types import Integer
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
-from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, TemplateDep, get_s3_helper
+from bbe2.dependencies import S3Dep, SenderDep, SessionDep, SettingsDep, get_s3_helper
+from bbe2.utils.templates import EmailData
 from bbe2.schemas.profile import MinimalGroup, Profile
 from bbe2.schemas.utils import (
     GlobalStats,
@@ -220,7 +220,7 @@ async def create_profile(
     profile: schemas.ProfileCreate,
     session: SessionDep,
     settings: SettingsDep,
-    templates: TemplateDep,
+    sender: SenderDep,
 ):
 
     profile_db = models.UserDB(
@@ -244,38 +244,31 @@ async def create_profile(
     session.refresh(profile_db)
 
     token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
-    template_payload = {
-        "user": profile_db,
-        "domain": settings.frontend_base_url,
-        "token": token_serializer.dumps(
-            {
-                "user_id": profile_db.id,
-                "action": ActionTokenValue.ResetPassword.value,
-            }
-        ),
-        "unsubscribe_token": token_serializer.dumps(
-            {
-                "user_id": profile_db.id,
-                "action": ActionTokenValue.Unsubscribe.value,
-            }
-        ),
-    }
-
-    html_template = templates.get_template("email_welcome.html")
-    text_template = templates.get_template("email_welcome.txt")
-    email = {
-        "subject": "[bagadmenru] Bienvenue !",
-        "to": profile_db.email,
-        "body_text": text_template.render(**template_payload),
-        "body_html": html_template.render(**template_payload),
-    }
-    async with httpx.AsyncClient() as client:
-        r = await client.post(
-            f"{settings.email_api_endpoint}/batch_send_emails",
-            timeout=10,
-            json=[email],
-        )
-        r.raise_for_status()
+    await sender.batch_send_emails(
+        subject="[bagadmenru] Bienvenue !",
+        template_name="email_welcome",
+        template_data=[
+            EmailData(
+                to=profile_db.email,
+                template_data={
+                    "user": profile_db,
+                    "frontend_url": str(settings.frontend_base_url).rstrip("/"),
+                    "token": token_serializer.dumps(
+                        {
+                            "user_id": profile_db.id,
+                            "action": ActionTokenValue.ResetPassword.value,
+                        }
+                    ),
+                    "unsubscribe_token": token_serializer.dumps(
+                        {
+                            "user_id": profile_db.id,
+                            "action": ActionTokenValue.Unsubscribe.value,
+                        }
+                    ),
+                },
+            )
+        ],
+    )
 
     return profile_db
 

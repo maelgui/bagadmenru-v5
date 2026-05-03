@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     cors_allowed_origins: list[str] = []
     cors_allowed_origin_regex: Optional[str] = None
 
-    frontend_base_url: str = "https://beta.bagadmenru.bzh"
+    frontend_base_url: AnyHttpUrl = AnyHttpUrl("https://beta.bagadmenru.bzh")
 
     jwt_secret_key: str
     email_api_endpoint: str

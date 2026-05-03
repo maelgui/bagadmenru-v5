@@ -108,7 +108,7 @@ def process_login(
                     credential_current_sign_count=passkey.sign_count,
                     expected_challenge=base64.b64decode(request.session["challenge"]),
                     expected_rp_id=settings.relying_party_id,
-                    expected_origin=f"https://{settings.frontend_base_url}",
+                    expected_origin=str(settings.frontend_base_url).rstrip("/"),
                     require_user_verification=False,
                 )
             except InvalidAuthenticationResponse as exc:
@@ -212,7 +212,7 @@ async def reset_password_request(
                 template_data={
                     "token": token,
                     "user": user,
-                    "frontend_url": settings.frontend_base_url,
+                    "frontend_url": str(settings.frontend_base_url).rstrip("/"),
                 },
             ),
         ],
@@ -307,7 +307,7 @@ async def register_passkey(
         credential=body,
         expected_challenge=base64.b64decode(request.session["challenge"]),
         expected_rp_id=settings.relying_party_id,
-        expected_origin=f"https://{settings.frontend_base_url}",
+        expected_origin=str(settings.frontend_base_url).rstrip("/"),
         require_user_verification=False,
     )
 

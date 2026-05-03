@@ -11,7 +11,8 @@ from sqlalchemy import select
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
-from bbe2.dependencies import SessionDep, SettingsDep, TemplateDep
+from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
+from bbe2.utils.templates import EmailData
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
@@ -106,7 +107,7 @@ async def create_event(
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     settings: SettingsDep,
     session: SessionDep,
-    templates: TemplateDep,
+    sender: SenderDep,
 ):
     db_event = event_crud.create(**event.model_dump())
 
@@ -134,41 +135,37 @@ async def create_event(
             )
         ]
 
-        html_template = templates.get_template("email_new_event.html")
         token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
-        data = [
-            {
-                "subject": f"[Nouvelle sortie] {event.title}",
-                "to": user.email,
-                "body_text": "Allez remplir vos disponibilités",
-                "body_html": html_template.render(
-                    event=event,
-                    domain=settings.frontend_base_url,
-                    token=token_serializer.dumps(
-                        {
-                            "user_id": user.id,
-                            "event_id": db_event.id,
-                            "action": ActionTokenValue.CreateResponseByToken.value,
-                        }
-                    ),
-                    unsubscribe_token=token_serializer.dumps(
-                        {
-                            "user_id": user.id,
-                            "action": ActionTokenValue.Unsubscribe.value,
-                        }
-                    ),
-                ),
-            }
-            for user in users
-        ]
+        frontend_url = str(settings.frontend_base_url).rstrip("/")
+
         try:
-            async with httpx.AsyncClient() as client:
-                r = await client.post(
-                    f"{settings.email_api_endpoint}/batch_send_emails",
-                    timeout=10,
-                    json=data,
-                )
-                r.raise_for_status()
+            await sender.batch_send_emails(
+                subject=f"[Nouvelle sortie] {event.title}",
+                template_name="email_new_event",
+                template_data=[
+                    EmailData(
+                        to=user.email,
+                        template_data={
+                            "event": event,
+                            "frontend_url": frontend_url,
+                            "token": token_serializer.dumps(
+                                {
+                                    "user_id": user.id,
+                                    "event_id": db_event.id,
+                                    "action": ActionTokenValue.CreateResponseByToken.value,
+                                }
+                            ),
+                            "unsubscribe_token": token_serializer.dumps(
+                                {
+                                    "user_id": user.id,
+                                    "action": ActionTokenValue.Unsubscribe.value,
+                                }
+                            ),
+                        },
+                    )
+                    for user in users
+                ],
+            )
         except httpx.HTTPError as exc:
             logging.error("Unable to send batch email: %s", exc)
 

@@ -2,4 +2,4 @@ Bienvenue au Bagad Men Ru
 
 Suivez le lien suivant pour créer votre compte :
 
-{{ domain }}/auth/reset/{{ token }}
+{{ frontend_url }}/auth/reset/{{ token }}
