@@ -4,6 +4,16 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
+// Register service worker for push notifications
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
+      // eslint-disable-next-line no-console
+      console.error('Service Worker registration failed:', error);
+    });
+  });
+}
+
 Sentry.init({
   dsn: 'https://7433cee9b0a5720226161fdcab710d8e@o1008469.ingest.us.sentry.io/4508480032800768',
   integrations: [

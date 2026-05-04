@@ -8,6 +8,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import Avatar from '../../../components/avatar';
 import Input from '../../../components/input';
+import PushNotificationToggle from '../../../components/PushNotificationToggle';
 import { useApiClient } from '../../../config/client';
 
 type AvatarInputProps = {
@@ -117,6 +118,8 @@ export default function BaseProfileFormFields(
           Décochez pour ne plus recevoir les notifications par email.
         </p>
       </div>
+
+      <PushNotificationToggle />
 
       <div className="flex gap-4 mb-6">
         <div className="flex-1">

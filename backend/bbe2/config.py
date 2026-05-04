@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     relying_party_id: str = "prod.bagadmenru.bzh"
     relying_party_name: str = "Bagad Men Ru"
 
+    vapid_private_key: Optional[str] = None
+    vapid_public_key: Optional[str] = None
+    vapid_claims_email: Optional[str] = None
+
     @field_validator("email_api_endpoint", "authorizer_api_endpoint")
     @classmethod
     def strip_traialing_slash(cls, v: str) -> str:

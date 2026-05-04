@@ -28,6 +28,8 @@ sentry-sdk = { extras = ["fastapi"], version = "^2.20.0" }
 apscheduler = "^3.11.0"
 
 webauthn = "^2.5.2"
+pywebpush = "^2.0.0"
+py-vapid = "^1.9.0"
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.28.1"
 pylint = "^3.3.4"

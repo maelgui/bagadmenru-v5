@@ -12,6 +12,7 @@ from sqlalchemy import select
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
+from bbe2.services.push_service import send_push_to_users
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
@@ -168,6 +169,20 @@ async def create_event(
             )
         except httpx.HTTPError as exc:
             logging.error("Unable to send batch email: %s", exc)
+
+        # Send push notifications to all eligible users
+        try:
+            frontend_url = str(settings.frontend_base_url).rstrip("/")
+            send_push_to_users(
+                session=session,
+                settings=settings,
+                user_ids=[user.id for user in users],
+                title=f"Nouvelle sortie : {event.title}",
+                body=event.description or "Un nouvel événement a été créé.",
+                url=f"{frontend_url}/events",
+            )
+        except (OSError, ValueError) as exc:
+            logging.error("Unable to send push notifications: %s", exc)
 
     return db_event
 
