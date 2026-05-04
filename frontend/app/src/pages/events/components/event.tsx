@@ -25,7 +25,6 @@ export default function EventListItem({
           <span className="text-xl font-bold">{event.date.getDate()}</span>
           <span className="text-sm truncate">{event.date.toLocaleString('fr', { month: 'long' })}</span>
         </div>
-
       </div>
       <div className="overflow-hidden">
         <div className="truncate" title={event.title}>{event.title}</div>
@@ -39,17 +38,17 @@ export default function EventListItem({
               {(() => {
                 if (response === undefined) {
                   return (
-                    <FontAwesomeIcon icon={faCircleQuestion} className="text-sky-500" />
+                    <FontAwesomeIcon icon={faCircleQuestion} className="text-sky-500" aria-hidden="true" />
                   );
                 }
                 if (response) {
                   return (
-                    <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-300" />
+                    <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-300" aria-hidden="true" />
                   );
                 }
 
                 return (
-                  <FontAwesomeIcon icon={faCircleXmark} className="text-red-300" />
+                  <FontAwesomeIcon icon={faCircleXmark} className="text-red-300" aria-hidden="true" />
                 );
               })()}
             </div>

@@ -84,6 +84,8 @@ function AuthPage() {
 
   return (
     <div>
+      <h1 className="text-2xl mb-2">Connexion</h1>
+      <p className="text-gray-500 mb-8">Connectez-vous à votre compte</p>
       <form onSubmit={handleSubmit(onSubmit)}>
         <fieldset disabled={isSubmitting}>
           {errorMsg ? <Alert type="error">{errorMsg}</Alert> : null}

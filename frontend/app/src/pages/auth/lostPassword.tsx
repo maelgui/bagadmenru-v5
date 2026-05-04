@@ -19,6 +19,8 @@ function LostPasswordPage() {
 
   return (
     <div>
+      <h1 className="text-2xl mb-2">Mot de passe oublié</h1>
+      <p className="text-gray-500 mb-8">Réinitialisez votre mot de passe</p>
       {isSubmitSuccessful ? (
         <>
           <div className="mb-6">

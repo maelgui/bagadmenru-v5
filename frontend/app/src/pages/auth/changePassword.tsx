@@ -26,6 +26,8 @@ function ChangePasswordPage() {
 
   return (
     <div>
+      <h1 className="text-2xl mb-2">Changer le mot de passe</h1>
+      <p className="text-gray-500 mb-8">Choisissez un nouveau mot de passe</p>
       {isSubmitSuccessful ? (
         <>
           <div className="mb-6">

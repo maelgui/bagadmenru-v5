@@ -27,6 +27,8 @@ export default function UnsubscribePage() {
 
   return (
     <div>
+      <h1 className="text-2xl mb-2">Se désinscrire</h1>
+      <p className="text-gray-500 mb-8">Gérez vos préférences de notification</p>
       {finished ? (
         <>
           <div className="mb-6">
