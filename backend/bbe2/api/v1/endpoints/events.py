@@ -20,8 +20,8 @@ from bbe2.utils.auth import (
     Authorization,
     Resource,
     get_current_user2,
-    is_authorized,
 )
+from bbe2.utils.permissions import is_allowed
 from bbe2.utils.templates import EmailData
 
 events_router = APIRouter(prefix="/events")
@@ -123,16 +123,10 @@ async def create_event(
             user
             for user in users
             if user.receives_emails
-            and await is_authorized(
-                {
-                    "user": {
-                        "id": user.id,
-                        "roles": [r.id for g in user.groups for r in g.roles],
-                    },
-                    "action": Action.CREATE.value,
-                    "resource": Resource.RESPONSE.value,
-                },
-                settings,
+            and is_allowed(
+                    roles=[r.id for g in user.groups for r in g.roles],
+                    action=Action.CREATE,
+                    resource=Resource.RESPONSE,
             )
         ]
 

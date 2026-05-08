@@ -61,7 +61,6 @@ services:
       - S3_SECRET_ACCESS_KEY=minioadmin
       - JWT_SECRET_KEY=my-super-secret-key
       - EMAIL_API_ENDPOINT=http://email-api:9999/
-      - AUTHORIZER_API_ENDPOINT=http://authorizer:8181/
       - TOKEN_SECRET_KEY=my-super-secret-key
       - SECRET_KEY=my-super-secret-key
       - VAPID_PRIVATE_KEY=-YgwVxjbQ_DVQgqk6Hl-z0WJUz04FJsqJiep26scF90
@@ -102,25 +101,6 @@ services:
       - APP_smtp_tls=false
 
       - APP_imap_password=${EMAIL_PASSWORD}
-
-  authorizer:
-    image: openpolicyagent/opa
-    command:
-      [
-        "run",
-        "-s",
-        "-b",
-        "/policies",
-        "-w",
-        "-c",
-        "/policies/config.yaml",
-        "--addr",
-        "0.0.0.0:8181",
-      ]
-    ports:
-      - 8181:8181
-    volumes:
-      - ./opa:/policies
 
 volumes:
   s3data:

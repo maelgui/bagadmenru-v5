@@ -1,4 +1,3 @@
-import { LoadedPolicy, loadPolicy } from '@open-policy-agent/opa-wasm';
 import { QueryCache, QueryClient, useQuery } from '@tanstack/react-query';
 import {
   AuthenticationApi,
@@ -7,11 +6,9 @@ import {
   ResponseError,
   UtilsApi,
 } from 'bagad-client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import policyData from '../assets/data.json';
-import policyBundleUrl from '../assets/policy.wasm?url';
 import env from '../env';
 import { AuthStatus, useProfileStore } from '../utils/authStore';
 
@@ -44,7 +41,6 @@ export function useApiClient() {
   const conf = new Configuration({
     basePath: env.VITE_BBE2_API_URL,
     credentials: 'include',
-    // headers: { Authorization: `Bearer ${auth.user?.access_token}` },
   });
 
   return {
@@ -63,45 +59,23 @@ export function useUserProfile() {
     queryKey: ['profiles', 'me'],
     queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
   });
-  // const auth = useAuth();
-  // if (error instanceof ResponseError && error.response.status === 401) {
-  //   auth.removeUser();
-  // }
   return data;
 }
 
 export function usePermissions() {
   const { usersApi } = useApiClient();
-  const { data: roles } = useQuery({
+
+  const { data: permissions } = useQuery({
     queryKey: ['profiles', 'me', 'permissions'],
-    queryFn: () => usersApi.getMyRolesApiV1ProfilesMeRolesGet(),
+    queryFn: () => usersApi.getMyPermissionsApiV1ProfilesMePermissionsGet(),
   });
 
-  const [policy, setPolicy] = useState<LoadedPolicy | undefined>(undefined);
-
-  useEffect(() => {
-    fetch(policyBundleUrl).then(loadPolicy).then((fetchedPolicy) => {
-      fetchedPolicy.setData(policyData);
-      setPolicy(fetchedPolicy);
-    });
-  }, []);
-
   const can = useCallback((action: string, resource: string) => {
-    if (policy === undefined) {
-      return false;
-    }
-    let allow = false;
-    try {
-      const res = policy.evaluate({ action, resource, user: { roles } });
-      allow = res[0].result.allow;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Unable to evaluate policy');
-    }
-    return allow;
-  }, [policy, roles]);
+    if (!permissions) return false;
+    return permissions.includes(`${action}:${resource}`);
+  }, [permissions]);
 
-  return { roles, can };
+  return { permissions, can };
 }
 
 export function useAuth() {

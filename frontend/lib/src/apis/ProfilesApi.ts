@@ -87,6 +87,11 @@ export interface GetGroupApiV1GroupsGroupIdGetRequest {
     accessToken?: string | null;
 }
 
+export interface GetMyPermissionsApiV1ProfilesMePermissionsGetRequest {
+    authorization?: string | null;
+    accessToken?: string | null;
+}
+
 export interface GetMyProfileApiV1ProfilesMeGetRequest {
     authorization?: string | null;
     accessToken?: string | null;
@@ -343,6 +348,38 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async getGroupApiV1GroupsGroupIdGet(requestParameters: GetGroupApiV1GroupsGroupIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Group> {
         const response = await this.getGroupApiV1GroupsGroupIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Returns all \'action:resource\' permission strings for the current user.
+     * Get My Permissions
+     */
+    async getMyPermissionsApiV1ProfilesMePermissionsGetRaw(requestParameters: GetMyPermissionsApiV1ProfilesMePermissionsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['authorization'] != null) {
+            headerParameters['authorization'] = String(requestParameters['authorization']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/profiles/me/permissions`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     * Returns all \'action:resource\' permission strings for the current user.
+     * Get My Permissions
+     */
+    async getMyPermissionsApiV1ProfilesMePermissionsGet(requestParameters: GetMyPermissionsApiV1ProfilesMePermissionsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string | null>> {
+        const response = await this.getMyPermissionsApiV1ProfilesMePermissionsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

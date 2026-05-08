@@ -23,7 +23,6 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str
     email_api_endpoint: str
-    authorizer_api_endpoint: str
 
     token_secret_key: str
 
@@ -38,7 +37,7 @@ class Settings(BaseSettings):
     vapid_public_key: Optional[str] = None
     vapid_claims_email: Optional[str] = None
 
-    @field_validator("email_api_endpoint", "authorizer_api_endpoint")
+    @field_validator("email_api_endpoint")
     @classmethod
     def strip_traialing_slash(cls, v: str) -> str:
         return v.rstrip("/")

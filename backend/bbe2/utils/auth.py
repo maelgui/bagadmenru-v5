@@ -4,7 +4,6 @@ import logging
 from enum import Enum
 from typing import Annotated
 
-import httpx
 import jwt
 from fastapi import Cookie, Depends, Header, HTTPException, status
 from itsdangerous import BadSignature, URLSafeTimedSerializer
@@ -14,28 +13,7 @@ from bbe2.config import Settings, get_settings
 from bbe2.crud.crud_profile import CRUDProfile
 from bbe2.models.user import UserDB
 from bbe2.schemas import JwtPayload
-
-
-class Action(Enum):
-    VIEW = "view"
-    EDIT = "edit"
-    CREATE = "create"
-    DELETE = "delete"
-
-
-class Resource(Enum):
-    ME = "me"
-
-    EVENT = "event"
-    RESPONSE = "response"
-
-    ALBUM = "album"
-    PHOTO = "photo"
-    FILE = "file"
-
-    PROFILE = "profile"
-    GROUP = "group"
-    EMAIL = "email"
+from bbe2.utils.permissions import Action, Resource, is_allowed
 
 
 class ActionTokenValue(Enum):
@@ -90,41 +68,23 @@ def verify_token(token: str, settings: Settings) -> JwtPayload | None:
     return payload
 
 
-async def is_authorized(payload: dict, settings: Settings) -> bool:
-
-    try:
-        async with httpx.AsyncClient() as client:
-            r = await client.post(settings.authorizer_api_endpoint, json=payload)
-        r.raise_for_status()
-        data = r.json()
-    except httpx.HTTPError as e:
-        logging.error("Unabe to query opa: %s", e)
-        return False
-
-    return data["allow"]
-
-
 class Authorization:
     def __init__(self, action: Action, resource: Resource):
-        self.action = action.value
-        self.resource = resource.value
+        self.action = action
+        self.resource = resource
 
     async def __call__(
         self,
         settings: Annotated[Settings, Depends(get_settings)],
         access_token: Annotated[str, Depends(credentials)],
     ) -> JwtPayload:
-        """Checks oauth access token, checks scope, and return token content.
-
-        Args:
-            security_scopes (SecurityScopes): Required security scopes
-            token (str, optional): OAuth access token. Defaults to Depends(oauth2_scheme).
+        """Checks oauth access token and permissions, returns token content.
 
         Raises:
-            HTTPException: 401 when token invalid, 403 when scope missing
+            HTTPException: 401 when token invalid, 403 when permission denied
 
         Returns:
-            dict[str, Any]: access token content
+            JwtPayload: decoded access token content
         """
 
         # Check user has a valid token
@@ -136,15 +96,7 @@ class Authorization:
             )
 
         # Check user is authorized to perform action on resource
-        opa_payload = {
-            "user": {
-                "id": decoded_token.sub,
-                "roles": decoded_token.roles,
-            },
-            "action": self.action,
-            "resource": self.resource,
-        }
-        if not (await is_authorized(opa_payload, settings)):
+        if not is_allowed(decoded_token.roles, self.action, self.resource):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",

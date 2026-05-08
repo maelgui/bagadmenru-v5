@@ -29,6 +29,7 @@ from bbe2.utils.auth import (
     Resource,
     get_current_user2,
 )
+from bbe2.utils.permissions import get_permissions_for_roles
 from bbe2.utils.templates import EmailData
 
 profiles_router = APIRouter(prefix="/profiles")
@@ -71,6 +72,26 @@ async def get_my_roles(
         )
 
     return [role.id for group in db_profile.groups for role in group.roles]
+
+
+@profiles_router.get(
+    "/me/permissions",
+    response_model=list[str],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
+)
+async def get_my_permissions(
+    profile_crud: Annotated[CRUDProfile, Depends()],
+    identifier: Annotated[str, Depends(get_current_user2)],
+):
+    """Returns all 'action:resource' permission strings for the current user."""
+    db_profile = profile_crud.find_one_by(models.UserDB.id == identifier)
+    if not db_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
+
+    roles = [role.id for group in db_profile.groups for role in group.roles]
+    return get_permissions_for_roles(roles)
 
 
 @profiles_router.put(
