@@ -14,27 +14,14 @@ permissions:
   pages: write
   id-token: write
   packages: write
+
 jobs:
-  lint-authorizer:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: StyraInc/setup-regal@v1
-        with:
-          # For production workflows, use a specific version, like v0.22.0
-          version: latest
-
-      - name: Lint
-        run: regal lint --format=github ./opa
-
   lint-frontend:
-    needs:
-      - build-authz-policy-wasm
     defaults:
       run:
         working-directory: frontend
     runs-on: ubuntu-latest
-    name: Run lintint frontend
+    name: Run linting frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,11 +29,6 @@ jobs:
           node-version: "22.x"
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
-      - name: Opa Policy
-        uses: actions/download-artifact@v4
-        with:
-          name: opa-policy-wasm
-          path: frontend/app/src/assets/
       - run: yarn
       - run: yarn lint
       - run: yarn build
@@ -75,7 +57,7 @@ jobs:
           cache: poetry
       - name: Install dependencies
         run: poetry install
-      - name: Run pylint (disabled)
+      - name: Run pylint
         run: poetry run pylint bbe2 --fail-under 8 --fail-on F,E,W
       - name: Run black
         run: poetry run black --check bbe2
@@ -83,88 +65,24 @@ jobs:
         run: poetry run isort --check bbe2
       - name: Run mypy
         run: poetry run mypy bbe2
-      - name: Run test (disabled)
+      - name: Run tests
         run: poetry run pytest
-
-  build-authz-policy-wasm:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-
-      - name: Setup OPA
-        uses: open-policy-agent/setup-opa@v2
-        with:
-          version: latest
-
-      - run: mkdir ${{ runner.temp }}/build
-      - name: Run OPA Tests
-        run: opa build -t wasm -e authz/rbac ./opa --output ${{ runner.temp }}/build/bundle.tar.gz
-
-      - name: Untar OPA bundle
-        run: tar -xzf ${{ runner.temp }}/build/bundle.tar.gz -C ${{ runner.temp }}/build
-
-      - name: Upload OPA bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: opa-policy-wasm
-          path: |
-            ${{ runner.temp }}/build/policy.wasm
-            ${{ runner.temp }}/build/data.json
-
-      - run: mkdir build
-
-  build-authz-policy-oci:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./opa
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-
-      - name: Setup OPA
-        uses: open-policy-agent/setup-opa@v2
-
-      - name: Setup ORAS
-        uses: oras-project/setup-oras@v1
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build OPA bundle
-        run: opa build -b . -o bundle.tar.gz
-
-      - run: oras push ${{ env.REPO }}/policy:beta --config config.yaml:application/vnd.oci.image.config.v1+json bundle.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip
 
   build-push:
     if: ${{ github.event_name == 'push' }}
     needs:
       - test-backend
       - lint-frontend
-      - build-authz-policy-wasm
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
           - image_name: backend
           - image_name: frontend
-          - image_name: email-api
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Opa Policy
-        uses: actions/download-artifact@v4
-        with:
-          name: opa-policy-wasm
-          path: frontend/app/src/assets/
       - run: tree ${{ matrix.image_name }}
 
       - name: Log in to the Container registry
@@ -228,5 +146,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=bagadmenru-dashboard
-          # Optional: Enable this if you want to have GitHub Deployments triggered
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
