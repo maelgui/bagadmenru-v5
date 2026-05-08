@@ -1,11 +1,11 @@
 from typing import Annotated
 
-import httpx
 from fastapi import Depends
 from jinja2 import Environment, PackageLoader, select_autoescape
 from pydantic import BaseModel
 
 from bbe2.config import Settings, get_settings
+from bbe2.services.email import OutgoingEmail, send_emails
 
 
 def get_templating() -> Environment:
@@ -36,20 +36,14 @@ class EmailSender:
         html_template = self.template_env.get_template(f"{template_name}.html")
         txt_template = self.template_env.get_template(f"{template_name}.txt")
 
-        data = [
-            {
-                "subject": subject,
-                "to": d.to,
-                "body_text": txt_template.render(d.template_data),
-                "body_html": html_template.render(d.template_data),
-            }
+        emails = [
+            OutgoingEmail(
+                subject=subject,
+                to=d.to,
+                body_text=txt_template.render(d.template_data),
+                body_html=html_template.render(d.template_data),
+            )
             for d in template_data
         ]
 
-        async with httpx.AsyncClient() as client:
-            r = await client.post(
-                f"{self.settings.email_api_endpoint}/batch_send_emails",
-                timeout=10,
-                json=data,
-            )
-            r.raise_for_status()
+        await send_emails(self.settings, emails)

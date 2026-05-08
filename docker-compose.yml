@@ -20,13 +20,6 @@ services:
     ports:
       - 1025:1025
       - 8025:8025
-    environment:
-      - MP_SMTP_RELAY_HOST=ssl0.ovh.net
-      - MP_SMTP_RELAY_PORT=587
-      - MP_SMTP_RELAY_STARTTLS=true
-      - MP_SMTP_RELAY_AUTH=plain # optional - default none
-      - MP_SMTP_RELAY_USERNAME=contact@bagadmenru.bzh # required for plain, login and cram-md5 auth
-      - MP_SMTP_RELAY_PASSWORD=${EMAIL_PASSWORD}
 
   backend-migrate:
     build: backend
@@ -60,8 +53,17 @@ services:
       - S3_ACCESS_KEY_ID=minioadmin
       - S3_SECRET_ACCESS_KEY=minioadmin
       - JWT_SECRET_KEY=my-super-secret-key
-      - EMAIL_API_ENDPOINT=http://email-api:9999/
       - TOKEN_SECRET_KEY=my-super-secret-key
+      # Email (direct SMTP via mailpit, IMAP via OVH)
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_USE_TLS=false
+      - EMAIL_FROM=Bagad Men Ru <contact@bagadmenru.bzh>
+      - EMAIL_DRY_RUN=false
+      - IMAP_HOST=ssl0.ovh.net
+      - IMAP_PORT=993
+      - IMAP_USERNAME=contact@bagadmenru.bzh
+      - IMAP_PASSWORD=gJBSySEy7Vo
       - SECRET_KEY=my-super-secret-key
       - VAPID_PRIVATE_KEY=-YgwVxjbQ_DVQgqk6Hl-z0WJUz04FJsqJiep26scF90
       - VAPID_PUBLIC_KEY=BEibjIo7p3zTBbEJc2Oywfvxe655TUTH-cklnkx0dPtAN2FktdtDEJV91xMrCdEbMaNBupoB699ENzTC3zr_ZWM
@@ -81,26 +83,6 @@ services:
       - 6006:6006
     environment:
       - VITE_BBE2_API_URL=http://localhost:5173
-
-  email-api:
-    build: email-api
-    ports:
-      - 9999:9999
-    environment:
-      - RUST_LOG=debug
-      - APP_listen=0.0.0.0:9999
-
-      - APP_email_from=contact@bagadmenru.bzh
-
-      - APP_imap_domain=ssl0.ovh.net
-      - APP_imap_port=993
-      - APP_imap_username=contact@bagadmenru.bzh
-
-      - APP_smtp_domain=mailpit
-      - APP_smtp_port=1025
-      - APP_smtp_tls=false
-
-      - APP_imap_password=${EMAIL_PASSWORD}
 
 volumes:
   s3data:

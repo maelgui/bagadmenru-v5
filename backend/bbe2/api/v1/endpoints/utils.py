@@ -1,7 +1,7 @@
-import httpx
 from fastapi import APIRouter, Depends
 
 from bbe2.dependencies import SettingsDep
+from bbe2.services.email import InboxEmail, fetch_inbox_emails
 from bbe2.utils.auth import Action, Authorization, Resource
 
 router = APIRouter(prefix="/utils")
@@ -9,12 +9,11 @@ router = APIRouter(prefix="/utils")
 
 @router.get(
     "/emails",
-    response_model=list[dict],
+    response_model=list[InboxEmail],
+    response_model_by_alias=True,
     dependencies=[Depends(Authorization(Action.VIEW, Resource.EMAIL))],
 )
 def get_emails(
     settings: SettingsDep,
-):
-    res = httpx.get(f"{settings.email_api_endpoint}/mailbox/emails", timeout=10)
-    res.raise_for_status()
-    return res.json()
+) -> list[InboxEmail]:
+    return fetch_inbox_emails(settings)

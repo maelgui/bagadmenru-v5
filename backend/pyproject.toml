@@ -26,12 +26,14 @@ alembic = "^1.14.0"
 typer = "^0.15.1"
 sentry-sdk = { extras = ["fastapi"], version = "^2.20.0" }
 apscheduler = "^3.11.0"
+aiosmtplib = "^3.0.0"
+imapclient = "^3.0.0"
+httpx = "^0.28.1"
 
 webauthn = "^2.5.2"
 pywebpush = "^2.0.0"
 py-vapid = "^1.9.0"
 [tool.poetry.group.dev.dependencies]
-httpx = "^0.28.1"
 pylint = "^3.3.4"
 pytest = "^8.2.0"
 autopep8 = "^2.2.0"

@@ -22,7 +22,20 @@ class Settings(BaseSettings):
     frontend_base_url: AnyHttpUrl = AnyHttpUrl("https://beta.bagadmenru.bzh")
 
     jwt_secret_key: str
-    email_api_endpoint: str
+
+    # Email (SMTP for sending, IMAP for reading inbox)
+    smtp_host: str = "ssl0.ovh.net"
+    smtp_port: int = 465
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_use_tls: bool = True
+    email_from: str = "Bagad Men Ru <contact@bagadmenru.bzh>"
+    email_dry_run: bool = False
+
+    imap_host: str = "ssl0.ovh.net"
+    imap_port: int = 993
+    imap_username: Optional[str] = None
+    imap_password: Optional[str] = None
 
     token_secret_key: str
 
@@ -37,10 +50,6 @@ class Settings(BaseSettings):
     vapid_public_key: Optional[str] = None
     vapid_claims_email: Optional[str] = None
 
-    @field_validator("email_api_endpoint")
-    @classmethod
-    def strip_traialing_slash(cls, v: str) -> str:
-        return v.rstrip("/")
 
 
 @lru_cache

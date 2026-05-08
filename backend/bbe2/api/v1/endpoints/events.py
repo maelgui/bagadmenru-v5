@@ -1,18 +1,15 @@
-import logging
 from datetime import datetime
 from typing import Annotated, Optional
 
-import httpx
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from ics import Calendar, Event  # type: ignore
-from itsdangerous import URLSafeTimedSerializer
 from pydantic import BaseModel
 from sqlalchemy import select
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
-from bbe2.services.push_service import send_push_to_users
+from bbe2.services.notifications import notify_new_event
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
@@ -21,8 +18,6 @@ from bbe2.utils.auth import (
     Resource,
     get_current_user2,
 )
-from bbe2.utils.permissions import is_allowed
-from bbe2.utils.templates import EmailData
 
 events_router = APIRouter(prefix="/events")
 responses_router = APIRouter(prefix="/responses")
@@ -107,76 +102,15 @@ async def create_event(
     event: schemas.EventCreate,
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
     settings: SettingsDep,
-    session: SessionDep,
     sender: SenderDep,
+    background_tasks: BackgroundTasks,
 ):
     db_event = event_crud.create(**event.model_dump())
 
     if event.is_in_doodle:
-        users = session.scalars(
-            select(models.UserDB)
-            .where(models.UserDB.is_active)
-            .order_by(models.UserDB.last_name)
-        ).all()
-
-        users = [
-            user
-            for user in users
-            if user.receives_emails
-            and is_allowed(
-                    roles=[r.id for g in user.groups for r in g.roles],
-                    action=Action.CREATE,
-                    resource=Resource.RESPONSE,
-            )
-        ]
-
-        token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
-        frontend_url = str(settings.frontend_base_url).rstrip("/")
-
-        try:
-            await sender.batch_send_emails(
-                subject=f"[Nouvelle sortie] {event.title}",
-                template_name="email_new_event",
-                template_data=[
-                    EmailData(
-                        to=user.email,
-                        template_data={
-                            "event": event,
-                            "frontend_url": frontend_url,
-                            "token": token_serializer.dumps(
-                                {
-                                    "user_id": user.id,
-                                    "event_id": db_event.id,
-                                    "action": ActionTokenValue.CreateResponseByToken.value,
-                                }
-                            ),
-                            "unsubscribe_token": token_serializer.dumps(
-                                {
-                                    "user_id": user.id,
-                                    "action": ActionTokenValue.Unsubscribe.value,
-                                }
-                            ),
-                        },
-                    )
-                    for user in users
-                ],
-            )
-        except httpx.HTTPError as exc:
-            logging.error("Unable to send batch email: %s", exc)
-
-        # Send push notifications to all eligible users
-        try:
-            frontend_url = str(settings.frontend_base_url).rstrip("/")
-            send_push_to_users(
-                session=session,
-                settings=settings,
-                user_ids=[user.id for user in users],
-                title=f"Nouvelle sortie : {event.title}",
-                body=event.description or "Un nouvel événement a été créé.",
-                url=f"{frontend_url}/events",
-            )
-        except (OSError, ValueError) as exc:
-            logging.error("Unable to send push notifications: %s", exc)
+        background_tasks.add_task(
+            notify_new_event, sender, settings, event, db_event.id
+        )
 
     return db_event
 
