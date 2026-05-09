@@ -104,10 +104,12 @@ def fetch_inbox_emails(settings: Settings) -> list[InboxEmail]:
         messages = client.fetch(uids, ["ENVELOPE"])
 
         results: list[InboxEmail] = []
-        for uid, data in messages.items():  # type: ignore[union-attr]
+        for _uid, data in messages.items():  # type: ignore[union-attr]
             envelope = data[b"ENVELOPE"]  # type: ignore[index]
             subject: str = (
-                getattr(envelope, "subject", b"").decode("utf-8", errors="replace")  # type: ignore[union-attr]
+                getattr(envelope, "subject", b"").decode(  # type: ignore[union-attr]
+                    "utf-8", errors="replace"
+                )
                 if getattr(envelope, "subject", None)
                 else ""
             )

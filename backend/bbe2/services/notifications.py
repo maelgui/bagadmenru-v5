@@ -6,6 +6,7 @@ They only receive plain/serializable data (no ORM objects).
 
 import logging
 
+import aiosmtplib
 from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import select
 
@@ -87,7 +88,7 @@ async def notify_new_event(
                     for user in users
                 ],
             )
-        except Exception as exc:
+        except (OSError, aiosmtplib.SMTPException) as exc:
             logger.error("Unable to send batch email: %s", exc)
 
         # Send push notifications
