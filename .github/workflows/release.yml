@@ -1,4 +1,4 @@
-name: Release images
+name: CI / Deploy
 
 on:
   pull_request:
@@ -11,8 +11,6 @@ env:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
   packages: write
 
 jobs:
@@ -21,7 +19,7 @@ jobs:
       run:
         working-directory: frontend
     runs-on: ubuntu-latest
-    name: Run linting frontend
+    name: Lint & build frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,11 +30,6 @@ jobs:
       - run: yarn
       - run: yarn lint
       - run: yarn build
-      - name: push artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: frontend/app/dist
 
   test-backend:
     env:
@@ -69,7 +62,7 @@ jobs:
         run: poetry run pytest
 
   build-push:
-    if: ${{ github.event_name == 'push' }}
+    if: github.event_name == 'push'
     needs:
       - test-backend
       - lint-frontend
@@ -82,8 +75,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - run: tree ${{ matrix.image_name }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -101,8 +92,8 @@ jobs:
           context: ${{ matrix.image_name }}
           push: true
           tags: |
-            ${{ env.REPO }}/${{ matrix.image_name }}:beta
             ${{ env.REPO }}/${{ matrix.image_name }}:${{ github.sha }}
+            ${{ env.REPO }}/${{ matrix.image_name }}:latest
           cache-from: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache
           cache-to: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache,mode=max
           sbom: false
@@ -113,37 +104,39 @@ jobs:
         with:
           package-name: ${{ github.event.repository.name }}/${{ matrix.image_name }}
           package-type: "container"
-          min-versions-to-keep: 3
+          min-versions-to-keep: 5
           delete-only-untagged-versions: "true"
 
-  deploy:
-    if: ${{ github.event_name == 'push' }}
+  deploy-beta:
+    if: github.event_name == 'push'
     needs:
-      - lint-frontend
+      - build-push
     runs-on: ubuntu-latest
-    env:
-      VITE_BBE2_API_URL: https://api.beta.bagadmenru.bzh
-
+    environment: beta
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
 
-      - name: Frontend Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: dist
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
 
-      - run: envsubst < frontend/.docker/app-config.js.template > dist/app-config.js
+      - name: Set image tag to commit SHA
+        working-directory: k8s/overlays/beta
+        run: |
+          kustomize edit set image \
+            ghcr.io/maelgui/bagadmenru-v5/backend=${{ env.REPO }}/backend:${{ github.sha }} \
+            ghcr.io/maelgui/bagadmenru-v5/frontend=${{ env.REPO }}/frontend:${{ github.sha }}
 
-      - name: Deploy
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=bagadmenru-dashboard
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy to beta
+        run: kubectl apply -k k8s/overlays/beta
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/backend -n bagadmenru-beta --timeout=120s
+          kubectl rollout status deployment/frontend -n bagadmenru-beta --timeout=120s
