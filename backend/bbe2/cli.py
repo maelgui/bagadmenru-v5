@@ -3,7 +3,7 @@ import os
 import typer
 from rich.console import Console
 from rich.table import Table
-from sqlalchemy import delete, insert, select
+from sqlalchemy import insert, select
 from sqlalchemy.orm import Session
 
 from bbe2 import models
@@ -13,7 +13,6 @@ from bbe2.models.user import (
     GroupDB,
     RoleDB,
     UserDB,
-    user_group_association_table,
 )
 from bbe2.utils.auth import myctx
 
