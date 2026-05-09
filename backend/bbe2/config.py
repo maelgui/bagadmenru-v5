@@ -51,7 +51,6 @@ class Settings(BaseSettings):
     vapid_claims_email: Optional[str] = None
 
 
-
 @lru_cache
 def get_settings() -> Settings:
     return Settings()  # type: ignore

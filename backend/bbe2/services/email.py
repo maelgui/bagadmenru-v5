@@ -9,7 +9,7 @@ from email.message import EmailMessage
 from typing import Optional
 
 import aiosmtplib
-from imapclient import IMAPClient
+from imapclient import IMAPClient  # type: ignore
 from pydantic import BaseModel, Field
 
 from bbe2.config import Settings
