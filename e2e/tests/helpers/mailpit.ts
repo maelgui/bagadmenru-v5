@@ -44,8 +44,9 @@ export async function waitForEmail(
       if (match) {
         // Fetch full message with HTML/Text body
         const detail = await ctx.get(`/api/v1/message/${match.ID}`);
+        const result = await detail.json();
         await ctx.dispose();
-        return await detail.json();
+        return result;
       }
     }
 
@@ -62,6 +63,17 @@ export async function waitForEmail(
 export function extractLinks(html: string): string[] {
   const matches = html.matchAll(/href="([^"]+)"/g);
   return [...matches].map((m) => m[1]);
+}
+
+/**
+ * Delete a specific email by ID.
+ */
+export async function deleteEmail(id: string): Promise<void> {
+  const ctx = await request.newContext({ baseURL: MAILPIT_URL });
+  await ctx.delete('/api/v1/messages', {
+    data: { IDs: [id] },
+  });
+  await ctx.dispose();
 }
 
 /**

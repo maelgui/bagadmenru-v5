@@ -32,7 +32,7 @@ class Profile(_ProfileBase):
     # s3_helper must be set in S3Helper and S3HelperDependencies must be used in route
     s3_helper: ClassVar[S3Helper]
 
-    # email: str
+    email: str
     id: str
 
     groups: list["MinimalGroup"]
