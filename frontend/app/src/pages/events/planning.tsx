@@ -19,14 +19,13 @@ import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import Alert from '../../components/alert';
-import Avatar from '../../components/avatar';
+import AvatarGroup from '../../components/avatar-group';
 import Button from '../../components/button';
 import Container from '../../components/container';
 import {
   Dialog, DialogClose, DialogContent, DialogDescription, DialogHeading,
 } from '../../components/dialog';
 import Header from '../../components/header';
-import Tooltip from '../../components/tooltip';
 import {
   queryClient, useApiClient, usePermissions, useUserProfile,
 } from '../../config/client';
@@ -123,7 +122,7 @@ function EventCard({
 
   return (
     <div key={event.id} className="shadow-md rounded-xl overflow-hidden">
-      <div className="flex flex-col justify-center text-center p-8 border-b-1 bg-gradient-to-tr from-pourpre-50 to-gray-200">
+      <div className="flex flex-col justify-center text-center p-8 bg-gradient-to-tr from-pourpre-50 to-gray-200">
         <span className="text-xl font-bold">{event.date.getDate()}</span>
         <span>{event.date.toLocaleString('fr', { month: 'long' })}</span>
       </div>
@@ -144,37 +143,25 @@ function EventCard({
             </Button>
           </h4>
 
-          <div className="flex -space-x-4">
-            {myInstrumentResponses.length === 0 && totalOtherInstrumentsResponses === 0 ? 'Aucun participant' : ''}
-            {myInstrumentResponses?.map((p) => (
-              <Tooltip
-                key={p.userId}
-                content={<span>{`${p.user?.firstName} ${p.user?.lastName}`}</span>}
-              >
-                <Avatar className="border-4 border-white" src={p.user?.pictureUrl} title={p.user?.firstName} size="xs" />
-              </Tooltip>
-            ))}
-            {totalOtherInstrumentsResponses ? (
-              <Tooltip
-                content={
-                  otherInstrumentsResponses.map((r) => (
-                    <ResponseListItem
-                      key={r.userId}
-                      showResponse={false}
-                      response={r}
-                      user={profiles.find((p) => p.id === r.userId)}
-                    />
-                  ))
-                }
-              >
-                <Avatar
-                  className="border-4 border-white"
-                  placeholder={`+${totalOtherInstrumentsResponses}`}
-                  size="xs"
+          <AvatarGroup
+            avatars={myInstrumentResponses.map((p) => ({
+              id: p.userId,
+              name: `${p.user?.firstName} ${p.user?.lastName}`,
+              src: p.user?.pictureUrl,
+            }))}
+            extraCount={totalOtherInstrumentsResponses}
+            extraTooltip={
+              otherInstrumentsResponses.map((r) => (
+                <ResponseListItem
+                  key={r.userId}
+                  showResponse={false}
+                  response={r}
+                  user={profiles.find((p) => p.id === r.userId)}
                 />
-              </Tooltip>
-            ) : null}
-          </div>
+              ))
+            }
+            emptyMessage="Aucun participant"
+          />
         </div>
 
         <div className="mt-4">
