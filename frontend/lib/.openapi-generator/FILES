@@ -8,6 +8,7 @@ src/apis/EventsApi.ts
 src/apis/FilesApi.ts
 src/apis/PhotosApi.ts
 src/apis/ProfilesApi.ts
+src/apis/PushNotificationsApi.ts
 src/apis/UtilsApi.ts
 src/apis/index.ts
 src/index.ts
@@ -27,6 +28,7 @@ src/models/Group.ts
 src/models/GroupCreate.ts
 src/models/GroupUpdate.ts
 src/models/HTTPValidationError.ts
+src/models/InboxEmail.ts
 src/models/LoginData.ts
 src/models/LoginType.ts
 src/models/MinimalGroup.ts
@@ -37,6 +39,8 @@ src/models/Photo.ts
 src/models/Profile.ts
 src/models/ProfileCreate.ts
 src/models/ProfileUpdate.ts
+src/models/PushSubscriptionCreate.ts
+src/models/PushSubscriptionResponse.ts
 src/models/RankingInfo.ts
 src/models/Res.ts
 src/models/ResetPassword.ts
@@ -49,6 +53,7 @@ src/models/UserRankingItem.ts
 src/models/UserRankings.ts
 src/models/ValidationError.ts
 src/models/ValidationErrorLocInner.ts
+src/models/VapidPublicKeyResponse.ts
 src/models/index.ts
 src/runtime.ts
 tsconfig.esm.json

@@ -16,10 +16,13 @@
 import * as runtime from '../runtime';
 import type {
   HTTPValidationError,
+  InboxEmail,
 } from '../models/index';
 import {
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    InboxEmailFromJSON,
+    InboxEmailToJSON,
 } from '../models/index';
 
 export interface GetEmailsApiV1UtilsEmailsGetRequest {
@@ -35,7 +38,7 @@ export class UtilsApi extends runtime.BaseAPI {
     /**
      * Get Emails
      */
-    async getEmailsApiV1UtilsEmailsGetRaw(requestParameters: GetEmailsApiV1UtilsEmailsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: any; }>>> {
+    async getEmailsApiV1UtilsEmailsGetRaw(requestParameters: GetEmailsApiV1UtilsEmailsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<InboxEmail>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -51,13 +54,13 @@ export class UtilsApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(InboxEmailFromJSON));
     }
 
     /**
      * Get Emails
      */
-    async getEmailsApiV1UtilsEmailsGet(requestParameters: GetEmailsApiV1UtilsEmailsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: any; }>> {
+    async getEmailsApiV1UtilsEmailsGet(requestParameters: GetEmailsApiV1UtilsEmailsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<InboxEmail>> {
         const response = await this.getEmailsApiV1UtilsEmailsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }

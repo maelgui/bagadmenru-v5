@@ -21,6 +21,36 @@ import * as runtime from '../runtime';
 export class DefaultApi extends runtime.BaseAPI {
 
     /**
+     * Health
+     */
+    async healthApiV1HealthGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/v1/health`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Health
+     */
+    async healthApiV1HealthGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.healthApiV1HealthGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Hello
      */
     async helloGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
