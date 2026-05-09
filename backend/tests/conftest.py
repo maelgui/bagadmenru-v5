@@ -1,14 +1,10 @@
 from datetime import date, datetime, timedelta, timezone
-from typing import Annotated, Generator
+from typing import Generator
 from unittest.mock import patch
 
+import bbe2.utils.auth
 import jwt
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import sessionmaker
-
-import bbe2.config
-import bbe2.utils.auth
 from bbe2 import models
 from bbe2.config import Settings, get_settings
 from bbe2.database import get_engine
@@ -16,7 +12,8 @@ from bbe2.main import app
 from bbe2.models.base import Base
 from bbe2.schemas import Costume, FileOrFolderType
 from bbe2.schemas.auth import JwtPayload
-from bbe2.utils.auth import Action, Authorization, Resource, get_current_user2
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import sessionmaker
 
 
 def populate_db(session):
@@ -92,15 +89,14 @@ def get_fake_settings():
             "s3_access_key_id": "blabla",
             "s3_secret_access_key": "blabla",
             "s3_bucket_name": "testbucket",
-            "email_api_endpoint": "http://email-api",
-            "token_secret_key": "fakesecretkay",
+            "token_secret_key": "fakesecretkey",
             "jwt_secret_key": "myjwtsecretkey",
-            "authorizer_api_endpoint": "http://authorizer",
         }
     )
 
 
-async def fake_is_authorized(payload: dict, settings: Settings) -> bool:
+def fake_is_allowed(roles, action, resource) -> bool:
+    """Always allow in tests."""
     return True
 
 
@@ -116,7 +112,7 @@ def client(monkeypatch) -> Generator:
     with TestingSessionLocal() as session:
         populate_db(session)
     app.dependency_overrides[get_settings] = get_fake_settings
-    monkeypatch.setattr(bbe2.utils.auth, "is_authorized", fake_is_authorized)
+    monkeypatch.setattr(bbe2.utils.auth, "is_allowed", fake_is_allowed)
 
     payload = JwtPayload(
         sub="a8e2d3249e9d997e",
