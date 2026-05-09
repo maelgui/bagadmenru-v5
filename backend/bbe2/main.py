@@ -5,9 +5,11 @@ from contextlib import asynccontextmanager
 
 import sentry_sdk
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2.api.v1.api import api_router
+from bbe2.config import get_settings
 from bbe2.scheduler import scheduler
 
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +57,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.add_middleware(SessionMiddleware, secret_key=os.environ["SECRET_KEY"])
+
+# CORS - required because frontend (beta.bagadmenru.bzh) calls API on different subdomain
+settings = get_settings()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allowed_origins,
+    allow_origin_regex=settings.cors_allowed_origin_regex,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.middleware("http")
