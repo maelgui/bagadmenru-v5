@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -9,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2.api.v1.api import api_router
-from bbe2.config import get_settings
 from bbe2.scheduler import scheduler
 
 logging.basicConfig(level=logging.INFO)
@@ -56,14 +56,17 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     lifespan=lifespan,
 )
-app.add_middleware(SessionMiddleware, secret_key=os.environ["SECRET_KEY"])
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "dev"))
 
 # CORS - required because frontend (beta.bagadmenru.bzh) calls API on different subdomain
-settings = get_settings()
+_cors_origins_raw = os.environ.get("CORS_ALLOWED_ORIGINS", "[]")
+_cors_origins = json.loads(_cors_origins_raw) if _cors_origins_raw else []
+_cors_origin_regex = os.environ.get("CORS_ALLOWED_ORIGIN_REGEX")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_allowed_origins,
-    allow_origin_regex=settings.cors_allowed_origin_regex,
+    allow_origins=_cors_origins,
+    allow_origin_regex=_cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
