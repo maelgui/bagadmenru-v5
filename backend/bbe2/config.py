@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
 
 
