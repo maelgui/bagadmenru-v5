@@ -1,0 +1,36 @@
+# K3s uses Traefik by default. This uses standard Ingress resources
+# which Traefik handles natively.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bagadmenru-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: ""
+spec:
+  tls:
+    - hosts:
+        - DOMAIN_PLACEHOLDER
+        - API_DOMAIN_PLACEHOLDER
+      secretName: bagadmenru-tls
+  rules:
+    - host: DOMAIN_PLACEHOLDER
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+    - host: API_DOMAIN_PLACEHOLDER
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000

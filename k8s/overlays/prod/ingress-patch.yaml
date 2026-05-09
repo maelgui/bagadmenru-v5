@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bagadmenru-ingress
+spec:
+  tls:
+    - hosts:
+        - prod.bagadmenru.bzh
+        - api.prod.bagadmenru.bzh
+      secretName: bagadmenru-prod-tls
+  rules:
+    - host: prod.bagadmenru.bzh
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+    - host: api.prod.bagadmenru.bzh
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
