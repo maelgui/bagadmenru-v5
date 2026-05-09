@@ -140,3 +140,47 @@ jobs:
         run: |
           kubectl rollout status deployment/backend -n bagadmenru-beta --timeout=120s
           kubectl rollout status deployment/frontend -n bagadmenru-beta --timeout=120s
+
+  e2e-beta:
+    needs:
+      - deploy-beta
+    runs-on: ubuntu-latest
+    environment: beta
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Wait for Mailpit to be ready
+        run: kubectl rollout status deployment/mailpit -n bagadmenru-beta --timeout=60s
+
+      - name: Port-forward Mailpit
+        run: |
+          kubectl port-forward svc/mailpit 8025:8025 -n bagadmenru-beta &
+          sleep 3
+
+      - name: Install Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run E2E tests against beta
+        working-directory: e2e
+        run: npm run test:ci
+        env:
+          CI: true
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/

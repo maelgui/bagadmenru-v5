@@ -6,6 +6,7 @@ namespace: bagadmenru-beta
 resources:
   - ../../base
   - sealed-secrets.yaml
+  - mailpit.yaml
 
 # Namespace is created separately (not subject to namespace transformation)
 generatorOptions:

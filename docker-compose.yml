@@ -55,6 +55,7 @@ services:
       - JWT_SECRET_KEY=my-super-secret-key
       - TOKEN_SECRET_KEY=my-super-secret-key
       # Email (direct SMTP via mailpit, IMAP via OVH)
+      - RELYING_PARTY_ID=localhost
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - SMTP_USE_TLS=false
