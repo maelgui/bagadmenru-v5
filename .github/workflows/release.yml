@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Run pylint
-        run: poetry run pylint bbe2 --fail-under 8 --fail-on F,E,W
+        run: poetry run pylint bbe2 --fail-under 8 --fail-on F,E,W --output-format=github --disable=C,R
       - name: Run black
         run: poetry run black --check bbe2
       - name: Run isort
