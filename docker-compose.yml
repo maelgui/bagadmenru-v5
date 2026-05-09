@@ -29,6 +29,17 @@ services:
     volumes:
       - ./backend:/project
 
+  backend-seed:
+    build: backend
+    command: ["bbe2", "seed-e2e", "--clean"]
+    environment:
+      - DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@db/postgres
+    volumes:
+      - ./backend:/project
+    depends_on:
+      backend-migrate:
+        condition: service_completed_successfully
+
   backend:
     build: backend
     command:
@@ -70,7 +81,7 @@ services:
       - VAPID_PUBLIC_KEY=BEibjIo7p3zTBbEJc2Oywfvxe655TUTH-cklnkx0dPtAN2FktdtDEJV91xMrCdEbMaNBupoB699ENzTC3zr_ZWM
       - VAPID_CLAIMS_EMAIL=mailto:contact@bagadmenru.bzh
     depends_on:
-      backend-migrate:
+      backend-seed:
         condition: service_completed_successfully
 
   frontend:

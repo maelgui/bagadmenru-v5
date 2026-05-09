@@ -15,6 +15,7 @@ generatorOptions:
 patches:
   - path: ingress-patch.yaml
   - path: backend-config-patch.yaml
+  - path: backend-seed-patch.yaml
   - path: frontend-config-patch.yaml
 
 images:

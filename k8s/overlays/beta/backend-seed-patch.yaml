@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: seed-e2e
+          image: ghcr.io/maelgui/bagadmenru-v5/backend:latest
+          command: ["bbe2", "seed-e2e", "--clean"]
+          envFrom:
+            - secretRef:
+                name: backend-secrets
+            - configMapRef:
+                name: backend-config
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: "postgresql+psycopg://bagadmenru:$(POSTGRES_PASSWORD)@postgres:5432/bagadmenru"
+            - name: ENVIRONMENT
+              value: "beta"

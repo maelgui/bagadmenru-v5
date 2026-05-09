@@ -3,6 +3,7 @@ kind: ConfigMap
 metadata:
   name: backend-config
 data:
+  ENVIRONMENT: "beta"
   DOMAIN: "beta.bagadmenru.bzh"
   FRONTEND_BASE_URL: "https://beta.bagadmenru.bzh"
   S3_BUCKET_NAME: "bagadmenruv5-data-beta"

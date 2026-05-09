@@ -1,3 +1,4 @@
+from enum import Enum
 from functools import lru_cache
 from typing import Optional
 
@@ -5,7 +6,15 @@ from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
 
 
+class Environment(str, Enum):
+    PRODUCTION = "production"
+    BETA = "beta"
+    DEVELOPMENT = "development"
+    CI = "ci"
+
+
 class Settings(BaseSettings):
+    environment: Environment = Environment.DEVELOPMENT
     database_url: str
 
     s3_endpoint: AnyHttpUrl
