@@ -134,7 +134,7 @@ export default function DoodlePage() {
                         )}
                       >
                         <div className="p-1">
-                          <Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
+                          <Badge variant={EventCategories[event.category]?.variant ?? 'default'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
                         </div>
                         <strong>{event.title}</strong>
                         <br />
@@ -178,7 +178,7 @@ export default function DoodlePage() {
                   <td>{' '}</td>
                   {events ? events.map((event) => (
                     <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
-                      <Badge color="bg-gray-400" className="m-1">
+                      <Badge variant="muted" className="m-1">
                         {(responses && responses.responsesSumByEvent.get(event.id)) ?? 0}
                         {' '}
                         présents
@@ -187,13 +187,13 @@ export default function DoodlePage() {
                   )) : (
                     <>
                       <td className="text-center whitespace-nowrap  px-4 text-sm">
-                        <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
+                        <Badge variant="muted" className="m-1 w-16">{' '}</Badge>
                       </td>
                       <td className="text-center whitespace-nowrap  px-4 text-sm">
-                        <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
+                        <Badge variant="muted" className="m-1 w-16">{' '}</Badge>
                       </td>
                       <td className="text-center whitespace-nowrap  px-4 text-sm">
-                        <Badge color="bg-gray-400" className="m-1 w-16">{' '}</Badge>
+                        <Badge variant="muted" className="m-1 w-16">{' '}</Badge>
                       </td>
                     </>
                   )}
@@ -201,7 +201,7 @@ export default function DoodlePage() {
                 {profiles ? profiles.filter((p) => p.id === profile?.id || responses?.existingUsers.has(p.id)).map((user) => (
                   <tr key={user.id}>
                     <th className={`text-right whitespace-nowrap ${profile?.id === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
-                      <Avatar src={user.pictureUrl} size="sm" className="rounded-full border-2 w-6 h-6 mr-2" style={{ borderColor: user.instrument?.color ?? '' }} />
+                      <Avatar src={user.pictureUrl} size="xxxs" className="rounded-full border-2 mr-2" style={{ borderColor: user.instrument?.color ?? '' }} />
                       <span>{`${user.firstName} ${user.lastName.slice(0, 1)}`}</span>
                     </th>
                     {events && events.map((event) => {

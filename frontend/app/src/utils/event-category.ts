@@ -1,19 +1,20 @@
 interface Category {
-  name: string,
-  bg: string,
+  name: string;
+  variant: 'sortie' | 'repetition' | 'default';
 }
+
 const EventCategories: { [key: string]: Category } = {
   sortie: {
     name: 'Sortie',
-    bg: 'bg-camelot-600',
+    variant: 'sortie',
   },
   repetition: {
     name: 'Répétition',
-    bg: 'bg-amber-500',
+    variant: 'repetition',
   },
   autre: {
     name: 'Autre évènement',
-    bg: 'bg-gray-500',
+    variant: 'default',
   },
 };
 

@@ -3,11 +3,12 @@ import defaultAvatar from '../assets/default.svg';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
   src?: string | undefined | null
-  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg'
+  size?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg'
   placeholder?: string
 }
 
 const sizeClass = {
+  xxxs: 'h-6 w-6',
   xxs: 'h-10 w-10',
   xs: 'h-12 w-12',
   sm: 'h-24 w-24',

@@ -1,6 +1,6 @@
 import { faCaretDown, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import Dropdown, { DropdownContent, DropdownItem, DropdownTrigger } from '../components/dropdown';
 
 function DropdownExemple() {

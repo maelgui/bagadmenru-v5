@@ -11,12 +11,12 @@ function PrivateInput(
   }: PrivateInputProps,
   ref: React.ForwardedRef<HTMLInputElement>,
 ) {
-  const [currentType, setCurrentTypt] = useState(type);
-  const toogleType = () => {
+  const [currentType, setCurrentType] = useState(type);
+  const toggleType = () => {
     if (currentType === 'password') {
-      setCurrentTypt('text');
+      setCurrentType('text');
     } else {
-      setCurrentTypt('password');
+      setCurrentType('password');
     }
   };
   return (
@@ -34,7 +34,7 @@ function PrivateInput(
         />
         {type === 'password' ? (
           <button
-            onClick={toogleType}
+            onClick={toggleType}
             type="button"
             aria-label="Afficher/cacher le mot de passe"
             className="absolute top-0 right-0 bottom-0 p-2 px-4 grid place-content-center cursor-pointer text-gray-500"

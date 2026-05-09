@@ -31,7 +31,7 @@ export default function EventListItem({
         <div className="text-sm truncate" title={event.description}>{event.description}</div>
         <div className="ml-auto flex items-center">
           <div className="p-1">
-            <Badge color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
+            <Badge variant={EventCategories[event.category]?.variant ?? 'default'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
           </div>
           {showResponse && event.isInDoodle ? (
             <div className="w-6 h-6 flex items-center justify-center">

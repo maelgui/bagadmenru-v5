@@ -43,7 +43,7 @@ export default function EventsManagePage() {
 
                     <div className="mr-4">
                       <Link to={`/events/edit/${event.id}`}>
-                        <Badge className="align-middle" color={EventCategories[event.category]?.bg ?? 'bg-gray-500'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
+                        <Badge className="align-middle" variant={EventCategories[event.category]?.variant ?? 'default'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
                         <span className="absolute top-0 bottom-0 left-0 right-0" />
                         <span className="block">
                           {event.title}

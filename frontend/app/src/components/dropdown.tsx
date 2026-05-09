@@ -112,11 +112,11 @@ export function useDropdown({ open: controlledOpen }: DropdownOptions) {
 type ContextType = ReturnType<typeof useDropdown> | null;
 const DropdownContext = React.createContext<ContextType>(null);
 
-export const useTooltipContext = () => {
+export const useDropdownContext = () => {
   const context = React.useContext(DropdownContext);
 
   if (context == null) {
-    throw new Error('Tooltip components must be wrapped in <Tooltip />');
+    throw new Error('Dropdown components must be wrapped in <Dropdown />');
   }
 
   return context;
@@ -143,7 +143,7 @@ function DropdownTriggerTmp(
   { children, asChild = false, ...props }: DropdownTriggerTmpProps,
   propRef: React.Ref<unknown> | undefined,
 ) {
-  const context = useTooltipContext();
+  const context = useDropdownContext();
   const childrenRef = (children as any).ref;
   const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef]);
 
@@ -154,9 +154,9 @@ function DropdownTriggerTmp(
       context.getReferenceProps({
         ref,
         ...props,
-        ...children.props,
+        ...(children.props as object),
         'data-state': context.open ? 'open' : 'closed',
-      }),
+      } as React.HTMLProps<Element>),
     );
   }
 
@@ -179,7 +179,7 @@ export const DropdownTrigger = React.forwardRef<HTMLElement, DropdownTriggerTmpP
 interface DropdownContentProps extends React.HTMLProps<HTMLDivElement> { }
 export const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
   ({ style, ...props }, propRef) => {
-    const context = useTooltipContext();
+    const context = useDropdownContext();
     const ref = useMergeRefs([context.refs.setFloating, propRef]);
 
     if (!context.open) return null;
@@ -199,7 +199,7 @@ export const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentP
     );
   },
 );
-DropdownContent.displayName = 'TooltipContent';
+DropdownContent.displayName = 'DropdownContent';
 
 type DropdownItemProps = {
   icon?: IconProp

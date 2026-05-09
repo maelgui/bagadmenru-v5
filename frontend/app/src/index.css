@@ -1,8 +1,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+    --font-sans: "Open Sans", sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+
+    --color-pourpre-50: #f4eaee;
+    --color-pourpre-100: #e9d4de;
+    --color-pourpre-200: #d4aabc;
+    --color-pourpre-300: #be7f9b;
+    --color-pourpre-400: #a95579;
+    --color-pourpre-500: #932a58;
+    --color-pourpre-600: #762246;
+    --color-pourpre-700: #581935;
+    --color-pourpre-800: #3b1123;
+    --color-pourpre-900: #1d0812;
+
+    --color-camelot-50: #fcf3f8;
+    --color-camelot-100: #f9eaf4;
+    --color-camelot-200: #f5d5e8;
+    --color-camelot-300: #efb2d5;
+    --color-camelot-400: #e482b8;
+    --color-camelot-500: #d75d9d;
+    --color-camelot-600: #c43e7f;
+    --color-camelot-700: #a92d65;
+    --color-camelot-800: #932a58;
+    --color-camelot-900: #752649;
+    --color-camelot-950: #471028;
+}
 
 #root {
     min-height: 100vh;
@@ -29,5 +55,4 @@
     100% {
         transform: scale(0.95);
     }
-
 }
