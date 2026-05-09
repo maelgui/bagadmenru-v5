@@ -73,3 +73,8 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/")
 async def hello():
     return {"status": "OK"}
+
+
+@app.get("/api/v1/health")
+async def health():
+    return {"status": "healthy"}
