@@ -1,6 +1,7 @@
 import { faInbox, faKey, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
+import type { InboxEmail } from 'bagad-client';
 import { useState } from 'react';
 import Alert from '../../../components/alert';
 import Button from '../../../components/button';
@@ -9,33 +10,36 @@ import {
 } from '../../../components/dialog';
 import { useApiClient } from '../../../config/client';
 
-type EmailResponse = {
-  id: string,
+interface EmailResponse {
   subject: string,
   datetime: Date,
   ago: number,
-  from: string,
+  from?: string,
   fromSm: string,
-};
+}
 
-function parseElem(data: any): EmailResponse {
+const MS_PER_DAY = 86400000 // 1000 * 60 * 60 * 24;
+const MAX_INITIALS = 2;
+
+function parseElem(data: InboxEmail): EmailResponse {
   const parsedDate = new Date(data.datetime);
   const now = new Date();
-  const ago = Math.round((now.getTime() - parsedDate.getTime()) / (1000 * 60 * 60 * 24));
-  const from = data.from as string | null;
+  const ago = Math.round((now.getTime() - parsedDate.getTime()) / MS_PER_DAY);
+  const from = data.from ?? null;
 
   return {
     ...data,
     ago,
     datetime: parsedDate,
-    fromSm: from?.split(' ').map((n: string) => n[0].toUpperCase()).slice(0, 2).join(''),
+    from: from ?? undefined,
+    fromSm: from?.split(' ').map((n: string) => n[0].toUpperCase()).slice(0, MAX_INITIALS).join('') ?? '',
   };
 }
 export default function Mailbox() {
   const { utilsApi } = useApiClient();
   const { data: emails } = useQuery<EmailResponse[]>({
     queryKey: ['mailbox'],
-    queryFn: () => utilsApi.getEmailsApiV1UtilsEmailsGet()
+    queryFn: async () => await utilsApi.getEmailsApiV1UtilsEmailsGet()
       .then((data) => data.map(parseElem).sort((a, b) => a.ago - b.ago)),
   });
 
@@ -45,7 +49,7 @@ export default function Mailbox() {
     return null;
   }
 
-  const nEmails = emails.length;
+  const { length: nEmails } = emails;
 
   return (
     <>
@@ -73,9 +77,9 @@ export default function Mailbox() {
             {emails.length}
             )
           </h3>
-          <ul className="divide-y">
-            {emails.map((email) => (
-              <li key={email.id} className="flex items-center py-4 px-2">
+          <ul className="divide-y divide-gray-200">
+            {emails.map((email, index) => (
+              <li key={index} className="flex items-center py-4 px-2">
                 <div className="h-12 w-12 shrink-0 mr-2 grid place-items-center bg-pourpre-100 rounded-full font-bold" title={email.from}>{email.fromSm}</div>
                 <div>
                   {email.subject}

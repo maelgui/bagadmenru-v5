@@ -14,6 +14,9 @@ import Calendar from './components/calendar';
 import EventListItem from './components/event';
 import DisplaySelector from './components/selector';
 
+const COPY_FEEDBACK_DELAY_MS = 2000;
+
+
 function getStartDate() {
   const startDate = new Date();
   startDate.setDate(1);
@@ -28,7 +31,7 @@ export default function CalendarPage() {
 
   const { data } = useQuery({
     queryKey: ['events', 'next100'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: startDate }),
+    queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: startDate }),
     select: (res) => ({
       events: res,
       eventsByMonth: groupBy(res, (item) => item.date.getMonth()),
@@ -40,11 +43,11 @@ export default function CalendarPage() {
   const currentMonth = (new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset)).toLocaleString('fr', { month: 'long', year: 'numeric' });
   const [copyButtonLabel, setCopyButtonLabel] = useState('ICS');
   const copy = () => {
-    navigator.clipboard.writeText(`${env.VITE_BBE2_API_URL}/api/v1/events/export/ics`);
+    void navigator.clipboard.writeText(`${env.VITE_BBE2_API_URL}/api/v1/events/export/ics`);
     setCopyButtonLabel('Copié !');
     setTimeout(() => {
       setCopyButtonLabel('ICS');
-    }, 2000);
+    }, COPY_FEEDBACK_DELAY_MS);
   };
 
   return (

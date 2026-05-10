@@ -80,7 +80,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Delete Passkey
      */
-    async deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         if (requestParameters['credentialId'] == null) {
             throw new runtime.RequiredError(
                 'credentialId',
@@ -104,7 +104,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
+            return new runtime.JSONApiResponse<string>(response);
         } else {
             return new runtime.TextApiResponse(response) as any;
         }
@@ -113,7 +113,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Delete Passkey
      */
-    async deletePasskeyApiV1WebauthnCredentialIdDelete(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async deletePasskeyApiV1WebauthnCredentialIdDelete(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -281,7 +281,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Register Passkey
      */
-    async registerPasskeyApiV1WebauthnRegisterPostRaw(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async registerPasskeyApiV1WebauthnRegisterPostRaw(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         if (requestParameters['requestBody'] == null) {
             throw new runtime.RequiredError(
                 'requestBody',
@@ -308,7 +308,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
+            return new runtime.JSONApiResponse<string>(response);
         } else {
             return new runtime.TextApiResponse(response) as any;
         }
@@ -317,7 +317,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Register Passkey
      */
-    async registerPasskeyApiV1WebauthnRegisterPost(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async registerPasskeyApiV1WebauthnRegisterPost(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.registerPasskeyApiV1WebauthnRegisterPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -376,7 +376,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Reset Password Request
      */
-    async resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         if (requestParameters['resetPasswordRequest'] == null) {
             throw new runtime.RequiredError(
                 'resetPasswordRequest',
@@ -399,7 +399,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
+            return new runtime.JSONApiResponse<string>(response);
         } else {
             return new runtime.TextApiResponse(response) as any;
         }
@@ -408,7 +408,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Reset Password Request
      */
-    async resetPasswordRequestApiV1AuthResetPasswordRequestPost(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async resetPasswordRequestApiV1AuthResetPasswordRequestPost(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters, initOverrides);
         return await response.value();
     }

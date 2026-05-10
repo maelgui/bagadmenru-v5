@@ -5,32 +5,33 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ResponseCreate } from 'bagad-client';
+import type { ResponseCreate } from 'bagad-client';
 import { Link, useParams } from 'react-router-dom';
 import Alert from '../../components/alert';
 import Button from '../../components/button';
 import { queryClient, useApiClient } from '../../config/client';
 import EventListItem, { EventListItemSkeleton } from './components/event';
 
-type AnswerPageParams = {
-  token: string;
-};
 
 export default function AnswerLinkPage() {
-  const params = useParams<AnswerPageParams>();
+  const { token } = useParams<"token">();
   const { eventsApi } = useApiClient();
+
+  if (!token) {
+    throw new Error('Missing token');
+  }
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['response_view_by_token'],
-    queryFn: () => eventsApi.getResponseByTokenApiV1ResponsesLinkPrepareGet({
-      token: params.token!,
+    queryFn: async () => await eventsApi.getResponseByTokenApiV1ResponsesLinkPrepareGet({
+      token,
     }),
   });
 
   const mutation = useMutation({
-    // eslint-disable-next-line max-len
-    mutationFn: ({ r }: { r: ResponseCreate }) => eventsApi.createResponseByTokenApiV1ResponsesLinkSavePut({ responseCreate: r, token: params.token! }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['response_view_by_token'] }),
+
+    mutationFn: async ({ r }: { r: ResponseCreate }) => await eventsApi.createResponseByTokenApiV1ResponsesLinkSavePut({ responseCreate: r, token }),
+    onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['response_view_by_token'] }),
   });
 
   return (
@@ -194,7 +195,7 @@ export default function AnswerLinkPage() {
                     className="rounded-full"
                     isLoading={
                       mutation.isPending
-                      && mutation.variables?.r.value === true
+                      && mutation.variables.r.value
                     }
                     onClick={() => mutation.mutate(
                       { r: { value: true } },
@@ -209,7 +210,7 @@ export default function AnswerLinkPage() {
                     className="rounded-full"
                     isLoading={
                       mutation.isPending
-                      && mutation.variables?.r.value === false
+                      && !(mutation.variables.r.value)
                     }
                     onClick={() => mutation.mutate(
                       { r: { value: false } },

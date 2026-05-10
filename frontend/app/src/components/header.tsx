@@ -12,7 +12,7 @@ interface BreadcrumbItem {
 interface HeaderProps {
   title: React.ReactNode
   subtitle?: React.ReactNode | undefined
-  actions?: React.ReactElement<typeof HeaderAction>[]
+  actions?: Array<React.ReactElement<typeof HeaderAction>>
   breadcrumb?: BreadcrumbItem[]
 }
 

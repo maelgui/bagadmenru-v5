@@ -30,11 +30,11 @@ export default function PushNotificationToggle() {
     );
   }
 
-  const handleToggle = () => {
+  const handleToggle = async () => {
     if (isSubscribed) {
-      unsubscribe();
+      await unsubscribe();
     } else {
-      subscribe();
+      await subscribe();
     }
   };
 

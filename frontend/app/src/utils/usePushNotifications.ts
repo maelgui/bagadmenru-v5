@@ -1,56 +1,62 @@
 import { useCallback, useEffect, useState } from 'react';
-import env from '../env';
+import type { PushNotificationsApi } from 'bagad-client';
+import { useApiClient } from '../config/client';
 
-/**
- * Converts a base64 URL-safe string to a Uint8Array (for applicationServerKey)
- */
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; i += 1) {
-    outputArray[i] = rawData.charCodeAt(i);
+export type PushNotificationStatus = 'unsupported' | 'denied' | 'granted' | 'default';
+
+function getInitialStatus(): PushNotificationStatus {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return 'unsupported';
   }
-  return outputArray;
+  return Notification.permission;
 }
 
-/**
- * Converts an ArrayBuffer to a URL-safe base64 string (no padding)
- */
-function arrayBufferToBase64Url(buffer: ArrayBuffer | null): string {
-  if (!buffer) return '';
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  bytes.forEach((b) => { binary += String.fromCharCode(b); });
-  return window.btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+async function registerPushSubscription(vapidPublicKey: string, pushApi: PushNotificationsApi) {
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: vapidPublicKey,
+  });
+
+  const { keys } = subscription.toJSON();
+  await pushApi.subscribeApiV1PushSubscribePost({
+    pushSubscriptionCreate: {
+      endpoint: subscription.endpoint,
+      p256dh: keys?.p256dh ?? '',
+      auth: keys?.auth ?? '',
+    },
+  });
 }
 
-export type PushNotificationStatus = 'unsupported' | 'denied' | 'granted' | 'default' | 'loading';
+async function removePushSubscription(subscription: PushSubscription, pushApi: PushNotificationsApi) {
+  const { keys } = subscription.toJSON();
+
+  await pushApi.unsubscribeApiV1PushUnsubscribeDelete({
+    pushSubscriptionCreate: {
+      endpoint: subscription.endpoint,
+      p256dh: keys?.p256dh ?? '',
+      auth: keys?.auth ?? '',
+    },
+  });
+
+  await subscription.unsubscribe();
+}
 
 export function usePushNotifications() {
-  const [status, setStatus] = useState<PushNotificationStatus>('loading');
+  const [status, setStatus] = useState<PushNotificationStatus>(getInitialStatus);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const apiUrl = env.VITE_BBE2_API_URL || '';
+  const { pushApi } = useApiClient();
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      setStatus('unsupported');
       return;
     }
 
-    // Check current permission status
-    const { permission } = Notification;
-    setStatus(permission as PushNotificationStatus);
-
     // Check if already subscribed
-    navigator.serviceWorker.ready.then((registration) => {
-      registration.pushManager.getSubscription().then((subscription) => {
+    void navigator.serviceWorker.ready.then((registration) => {
+      void registration.pushManager.getSubscription().then((subscription) => {
         setIsSubscribed(subscription !== null);
       });
     });
@@ -64,59 +70,22 @@ export function usePushNotifications() {
     setIsLoading(true);
 
     try {
-      // Request notification permission
       const permission = await Notification.requestPermission();
-      setStatus(permission as PushNotificationStatus);
+      setStatus(permission);
 
       if (permission !== 'granted') {
-        setIsLoading(false);
         return;
       }
 
-      // Get VAPID public key from server
-      const vapidResponse = await fetch(`${apiUrl}/api/v1/push/vapid-public-key`, {
-        credentials: 'include',
-      });
-      if (!vapidResponse.ok) {
-        throw new Error('Failed to get VAPID public key');
-      }
-      const { public_key: vapidPublicKey } = await vapidResponse.json();
-
-      // Subscribe to push notifications
-      const registration = await navigator.serviceWorker.ready;
-      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
-      });
-
-      // Send subscription to server
-      const p256dh = arrayBufferToBase64Url(subscription.getKey('p256dh'));
-      const auth = arrayBufferToBase64Url(subscription.getKey('auth'));
-
-      const response = await fetch(`${apiUrl}/api/v1/push/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          endpoint: subscription.endpoint,
-          p256dh,
-          auth,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to register subscription on server');
-      }
-
+      const { publicKey: vapidPublicKey } = await pushApi.getVapidPublicKeyApiV1PushVapidPublicKeyGet();
+      await registerPushSubscription(vapidPublicKey, pushApi);
       setIsSubscribed(true);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to subscribe to push notifications:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [apiUrl]);
+  }, [pushApi]);
 
   const unsubscribe = useCallback(async () => {
     if (!('serviceWorker' in navigator)) {
@@ -130,33 +99,16 @@ export function usePushNotifications() {
       const subscription = await registration.pushManager.getSubscription();
 
       if (subscription) {
-        const p256dh = arrayBufferToBase64Url(subscription.getKey('p256dh'));
-        const auth = arrayBufferToBase64Url(subscription.getKey('auth'));
-
-        // Unsubscribe from server
-        await fetch(`${apiUrl}/api/v1/push/unsubscribe`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            endpoint: subscription.endpoint,
-            p256dh,
-            auth,
-          }),
-        });
-
-        // Unsubscribe from browser
-        await subscription.unsubscribe();
+        await removePushSubscription(subscription, pushApi);
       }
 
       setIsSubscribed(false);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to unsubscribe from push notifications:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [apiUrl]);
+  }, [pushApi]);
 
   return {
     status,

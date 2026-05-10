@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-props-no-spreading */
+
 import {
   FloatingFocusManager,
   autoUpdate,
@@ -13,14 +13,14 @@ import {
 } from '@floating-ui/react';
 import { faFolder } from '@fortawesome/free-regular-svg-icons';
 import {
-  IconDefinition,
+  type IconDefinition,
   faEllipsisVertical, faFile, faFilePdf,
   faImage, faMusic, faPencil,
   faTrashCan,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { FileOrFolder, FileOrFolderType } from 'bagad-client';
-import { MouseEventHandler, useState } from 'react';
+import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
+import { type MouseEventHandler, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LongPressEventType, useLongPress } from 'use-long-press';
 import Button from '../../../components/button';
@@ -34,7 +34,7 @@ interface FileItemProps {
   noAction?: boolean
 }
 
-const faFileIconType: Map<string, IconDefinition> = new Map([
+const faFileIconType = new Map<string, IconDefinition>([
   ['mp3', faMusic],
   ['pdf', faFilePdf],
   ['png', faImage],
@@ -69,6 +69,7 @@ export default function FileItem({
     onOpenChange: setIsOpen,
     placement: 'bottom-end',
     whileElementsMounted: autoUpdate,
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- offset value for floating UI positioning
     middleware: [offset(5), flip(), shift()],
   });
 
@@ -120,6 +121,7 @@ export default function FileItem({
       {(!noAction && isOpen) && (
         <FloatingFocusManager context={context} modal={false}>
           <div
+            // eslint-disable-next-line react-hooks/refs -- floating-ui requires callback ref for dynamic positioning
             ref={refs.setFloating}
             className="flex flex-col p-1 rounded border bg-white shadow z-10"
             style={floatingStyles}

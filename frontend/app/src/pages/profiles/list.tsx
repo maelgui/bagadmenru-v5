@@ -23,7 +23,7 @@ export default function ProfilesPage() {
 
   const { data } = useQuery({
     queryKey: ['profiles'],
-    queryFn: () => usersApi.listProfilesApiV1ProfilesGet(),
+    queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet(),
   });
 
   return (
@@ -56,8 +56,8 @@ export default function ProfilesPage() {
                 <div className="pt-4 px-2 text-center">
                   <h4 className="my-2 text-lg font-semibold">
                     {`${profile.firstName} ${profile.lastName}`}
-                    {profile.receivesEmails === false && (
-                      <FontAwesomeIcon icon={faBellSlash} className="ml-1 text-red-400 text-xs" title="Ne reçoit pas les emails" />
+                    {!profile.receivesEmails && (
+                      <FontAwesomeIcon icon={faBellSlash} className="ml-1 text-red-400 text-xs" aria-label="Ne reçoit pas les emails" />
                     )}
                   </h4>
                   <div className="flex flex-wrap">

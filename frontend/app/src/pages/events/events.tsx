@@ -15,7 +15,7 @@ import EventCategories from '../../utils/event-category';
 export default function EventsManagePage() {
   const { eventsApi } = useApiClient();
 
-  const { data: events } = useQuery({ queryKey: ['events'], queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, ordering: '-date' }) });
+  const { data: events } = useQuery({ queryKey: ['events'], queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 100, ordering: '-date' }) });
 
   return (
     <>
@@ -34,9 +34,9 @@ export default function EventsManagePage() {
 
       />
       <Container>
-        {(events && events.length) ? (
+        {(events?.length) ? (
           <div className="overflow-x-auto">
-            <ul className="divide-y">
+            <ul className="divide-y divide-gray-200">
               {events.map((event) => (
                 <li key={event.id} className="gap-2 md:flex items-center hover:bg-gray-50 relative px-8 py-4">
                   <div className="flex-1 md:flex items-center">

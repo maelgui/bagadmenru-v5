@@ -1,8 +1,8 @@
-/* eslint-disable react/jsx-props-no-spreading */
+
 import { useQuery } from '@tanstack/react-query';
-import { Profile, ProfileCreate, ProfileUpdate } from 'bagad-client';
+import type { Profile, ProfileCreate, ProfileUpdate } from 'bagad-client';
 import {
-  Controller, FormProvider, SubmitHandler, useForm,
+  Controller, FormProvider, type SubmitHandler, useForm,
 } from 'react-hook-form';
 import Select from 'react-select';
 import Button from '../../../components/button';
@@ -24,7 +24,7 @@ export default function AdminEditProfileForm(
 
   const { data: groups } = useQuery({
     queryKey: ['groups'],
-    queryFn: () => usersApi.listGroupsApiV1GroupsGet(),
+    queryFn: async () => await usersApi.listGroupsApiV1GroupsGet(),
   });
 
   const methods = useForm<ProfileFormData>({
@@ -91,7 +91,7 @@ export default function AdminEditProfileForm(
               options={groups}
               getOptionValue={(option) => option.id.toString()}
               getOptionLabel={(option) => option.name}
-              value={groups?.filter((c) => value?.includes(c.id))}
+              value={groups?.filter((c) => value.includes(c.id))}
               onChange={(val) => onChange(val.map((c) => c.id))}
             />
 

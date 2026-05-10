@@ -3,7 +3,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { FileOrFolder, FileOrFolderType } from 'bagad-client';
+import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import toast from 'react-hot-toast';
@@ -29,8 +29,8 @@ export default function ListFilesPage() {
     queryKey: ['files', params.folderId ?? 'root'],
     queryFn: async ({ queryKey }) => (
       queryKey[1] === 'root'
-        ? filesApi.getRootApiV1FilesRootGet()
-        : filesApi.getFileApiV1FilesFileIdGet({ fileId: parseInt(queryKey[1], 10) })
+        ? await filesApi.getRootApiV1FilesRootGet()
+        : await filesApi.getFileApiV1FilesFileIdGet({ fileId: parseInt(queryKey[1], 10) })
     ),
   });
 
@@ -38,11 +38,12 @@ export default function ListFilesPage() {
     data: children, status,
   } = useQuery({
     queryKey: ['files', 'children', folder?.id],
-    queryFn: async ({ queryKey }) => (
-      typeof queryKey[2] !== 'number'
-        ? Promise.reject(new Error('Invalid id'))
-        : filesApi.listChildrenApiV1FilesFolderIdChildrenGet({ folderId: queryKey[2] })
-    ),
+    queryFn: async () => {
+      if (!folder?.id) {
+        throw new Error('Invalid id');
+      }
+      return await filesApi.listChildrenApiV1FilesFolderIdChildrenGet({ folderId: folder.id });
+    },
     select: (data) => ({
       folders: data.filter((value) => value.type === FileOrFolderType.Dir),
       files: data.filter((value) => value.type === FileOrFolderType.File),
@@ -55,41 +56,42 @@ export default function ListFilesPage() {
     data: breadcrumb,
   } = useQuery({
     queryKey: ['files', 'breadcrumb', folder?.id],
-    queryFn: async ({ queryKey }) => (
-      typeof queryKey[2] !== 'number'
-        ? Promise.reject(new Error('Invalid id'))
-        : filesApi.getBreadcrumbApiV1FilesFileIdBreadcrumbGet({ fileId: queryKey[2] })
-    ),
+    queryFn: async () => {
+      if (!folder?.id) {
+        throw new Error('Invalid id');
+      }
+      return await filesApi.getBreadcrumbApiV1FilesFileIdBreadcrumbGet({ fileId: folder.id });
+    },
     // The query will not execute until the folder id exists
     enabled: !!folder?.id,
   });
 
   const createFolderMutation = useMutation({
-    mutationFn: (name: string) => {
+    mutationFn: async (name: string) => {
       if (!folder?.id) {
-        return Promise.reject(new Error('Unable to upload'));
+        return await Promise.reject(new Error('Unable to upload'));
       }
-      return filesApi.createFolderApiV1FilesFolderIdPost({
-        folderId: folder?.id,
+      return await filesApi.createFolderApiV1FilesFolderIdPost({
+        folderId: folder.id,
         folderCreate: { name },
       });
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] }),
+    onSettled: async () => await queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] }),
   });
 
   const uploadFileMutation = useMutation({
-    mutationFn: (acceptedFiles: File[]) => {
+    mutationFn: async (acceptedFiles: File[]) => {
       if (!folder?.id) {
-        return Promise.reject(new Error('Unable to upload'));
+        return await Promise.reject(new Error('Unable to upload'));
       }
-      return Promise.all(Array.from(acceptedFiles ?? [])?.map((file) => (
-        filesApi.uploadFileApiV1FilesFolderIdUploadPost({
-          folderId: folder?.id,
+      return await Promise.all(Array.from(acceptedFiles).map(async (file) => (
+        await filesApi.uploadFileApiV1FilesFolderIdUploadPost({
+          folderId: folder.id,
           file,
         })
       )));
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] }),
+    onSettled: async () => await queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] }),
     onSuccess: (data) => toast.success(`${data.length} fichier(s) envoyé(s) avec succès.`),
   });
 
@@ -107,21 +109,21 @@ export default function ListFilesPage() {
   };
 
   const deleteFileMutation = useMutation({
-    mutationFn: (fileId: number) => filesApi.deleteFileApiV1FilesFileIdDelete({ fileId }),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] });
+    mutationFn: async (fileId: number) => await filesApi.deleteFileApiV1FilesFileIdDelete({ fileId }),
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] });
       setFileToDelete(undefined);
     },
   });
 
   const renameFileMutation = useMutation({
-    // eslint-disable-next-line max-len
-    mutationFn: ({ fileId, name }: { fileId: number; name: string }) => filesApi.updateFileApiV1FilesFileIdPut({
+
+    mutationFn: async ({ fileId, name }: { fileId: number; name: string }) => await filesApi.updateFileApiV1FilesFileIdPut({
       fileId,
       fileOrFolderUpdate: { name, parentId: folder?.id ?? 0 },
     }),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id ?? 'root'] });
       setFileToRename(undefined);
       setNewFileName('');
     },
@@ -149,14 +151,14 @@ export default function ListFilesPage() {
           ? [
             <Header.Action as="label" key="upload-file" variant="outline">
               Ajouter un fichier
-              {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+              { }
               <input {...getInputProps()} />
             </Header.Action>,
             <Header.Action
               key="add-folder"
               type="button"
-              onClick={async () => {
-                /* eslint-disable no-alert */
+              onClick={() => {
+
                 const name = prompt('Nom du dossier');
                 if (name) {
                   createFolderMutation.mutate(name);
@@ -181,14 +183,14 @@ export default function ListFilesPage() {
         ) : null}
         {status === 'error' ? <Alert type="error">Erreur</Alert> : null}
         {status === 'success' ? (
-          // eslint-disable-next-line react/jsx-props-no-spreading
+
           <div {...getRootProps({ className: 'relative' })}>
             <div className={isDragActive ? 'border-2 border-pourpre-500 block absolute w-full h-full bg-pourpre-50/50 z-10 rounded-lg' : ''} />
-            {children && !children?.files.length && !children?.folders.length ? (
+            {!children.files.length && !children.folders.length ? (
               <Alert type="info">Dossier vide</Alert>
             ) : null}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {children?.folders.map((file) => (
+              {children.folders.map((file) => (
                 <FileItem
                   key={file.id}
                   file={file}
@@ -198,7 +200,7 @@ export default function ListFilesPage() {
               ))}
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
-              {children?.files.map((file) => (
+              {children.files.map((file) => (
                 <FileItem
                   key={file.id}
                   file={file}
@@ -239,7 +241,7 @@ export default function ListFilesPage() {
                 className="w-full m-0"
                 disabled={fileToDelete === undefined || deleteFileMutation.status === 'pending'}
                 onClick={() => {
-                  if (fileToDelete !== undefined) deleteFileMutation.mutate(fileToDelete?.id);
+                  if (fileToDelete !== undefined) deleteFileMutation.mutate(fileToDelete.id);
                 }}
               >
                 <FontAwesomeIcon icon={faTrashAlt} className={`w-4 mr-2 ${deleteFileMutation.status === 'pending' ? 'animate-spin' : ''}`} />
@@ -280,7 +282,7 @@ export default function ListFilesPage() {
                 disabled={!newFileName.trim() || renameFileMutation.status === 'pending'}
                 onClick={() => {
                   if (fileToRename && newFileName.trim()) {
-                    // eslint-disable-next-line max-len
+
                     renameFileMutation.mutate({ fileId: fileToRename.id, name: newFileName.trim() });
                   }
                 }}

@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-props-no-spreading */
+
 import {
   FloatingFocusManager,
   autoUpdate,
@@ -12,7 +12,7 @@ import {
   useMergeRefs,
   useRole,
 } from '@floating-ui/react';
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useState } from 'react';
@@ -82,6 +82,7 @@ export function useDropdown({ open: controlledOpen }: DropdownOptions) {
     onOpenChange: setOpen,
     placement: 'bottom-end',
     whileElementsMounted: autoUpdate,
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- pixel offset value for floating UI positioning
     middleware: [offset(5), flip(), shift()],
   });
 
@@ -136,28 +137,31 @@ export default function Dropdown({
   );
 }
 
-interface DropdownTriggerTmpProps extends React.ComponentPropsWithoutRef<'span'> {
+interface DropdownTriggerProps extends React.ComponentPropsWithoutRef<'span'> {
   asChild?: boolean,
+  ref?: React.Ref<HTMLElement>,
 }
-function DropdownTriggerTmp(
-  { children, asChild = false, ...props }: DropdownTriggerTmpProps,
-  propRef: React.Ref<unknown> | undefined,
+export function DropdownTrigger(
+  { children, asChild = false, ref: propRef, ...props }: DropdownTriggerProps,
 ) {
   const context = useDropdownContext();
-  const childrenRef = (children as any).ref;
+  const childrenRef = React.isValidElement<{ ref?: React.Ref<unknown> }>(children)
+    ? children.props.ref
+    : undefined;
   const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef]);
 
   // `asChild` allows the user to pass any element as the anchor
-  if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(
-      children,
-      context.getReferenceProps({
-        ref,
-        ...props,
-        ...(children.props as object),
-        'data-state': context.open ? 'open' : 'closed',
-      } as React.HTMLProps<Element>),
-    );
+  if (asChild && React.isValidElement<Record<string, unknown>>(children)) {
+    const mergedProps = context.getReferenceProps({
+      ...props,
+      ...children.props,
+    });
+
+    return React.cloneElement(children, {
+      ...mergedProps,
+      ref,
+      'data-state': context.open ? 'open' : 'closed',
+    });
   }
 
   return (
@@ -173,33 +177,29 @@ function DropdownTriggerTmp(
   );
 }
 
-// eslint-disable-next-line max-len
-export const DropdownTrigger = React.forwardRef<HTMLElement, DropdownTriggerTmpProps>(DropdownTriggerTmp);
+interface DropdownContentProps extends React.HTMLProps<HTMLDivElement> {
+  ref?: React.Ref<HTMLDivElement>,
+}
+export function DropdownContent({ style, ref: propRef, ...props }: DropdownContentProps) {
+  const context = useDropdownContext();
+  const ref = useMergeRefs([context.refs.setFloating, propRef]);
 
-interface DropdownContentProps extends React.HTMLProps<HTMLDivElement> { }
-export const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
-  ({ style, ...props }, propRef) => {
-    const context = useDropdownContext();
-    const ref = useMergeRefs([context.refs.setFloating, propRef]);
+  if (!context.open) return null;
 
-    if (!context.open) return null;
-
-    return (
-      <FloatingFocusManager context={context.context} modal={false}>
-        <div
-          ref={ref}
-          className="flex flex-col p-1 rounded border bg-white shadow z-10"
-          style={{
-            ...context.floatingStyles,
-            ...style,
-          }}
-          {...context.getFloatingProps(props)}
-        />
-      </FloatingFocusManager>
-    );
-  },
-);
-DropdownContent.displayName = 'DropdownContent';
+  return (
+    <FloatingFocusManager context={context.context} modal={false}>
+      <div
+        ref={ref}
+        className="flex flex-col p-1 rounded border bg-white shadow z-10"
+        style={{
+          ...context.floatingStyles,
+          ...style,
+        }}
+        {...context.getFloatingProps(props)}
+      />
+    </FloatingFocusManager>
+  );
+}
 
 type DropdownItemProps = {
   icon?: IconProp

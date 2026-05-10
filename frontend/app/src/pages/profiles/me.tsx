@@ -20,8 +20,8 @@ export default function ShowMyProfilePage() {
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
         actions={[
-          <Header.Action key="passkeys" onClick={() => navigate('/profile/passkeys')} variant="outline"><FontAwesomeIcon icon={faKey} /></Header.Action>,
-          <Header.Action key="edit-profile" onClick={() => navigate('/profile/edit/me')}>Modifier mon profil</Header.Action>,
+          <Header.Action key="passkeys" onClick={async () => await navigate('/profile/passkeys')} variant="outline"><FontAwesomeIcon icon={faKey} /></Header.Action>,
+          <Header.Action key="edit-profile" onClick={async () => await navigate('/profile/edit/me')}>Modifier mon profil</Header.Action>,
         ]}
         breadcrumb={[
           { title: 'Profils', link: '/profile' },
@@ -30,7 +30,7 @@ export default function ShowMyProfilePage() {
       />
 
       <Container>
-        {profile ? <ProfileView profile={profile} /> : 'Loading'}
+        <ProfileView profile={profile} />
       </Container>
     </>
   );

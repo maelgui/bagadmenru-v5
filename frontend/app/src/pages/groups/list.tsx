@@ -12,7 +12,7 @@ export default function GroupListPage() {
 
   const { data: groups } = useQuery({
     queryKey: ['groups'],
-    queryFn: () => usersApi.listGroupsApiV1GroupsGet(),
+    queryFn: async () => await usersApi.listGroupsApiV1GroupsGet(),
   });
 
   return (

@@ -1,14 +1,14 @@
 import { faApple, faChrome, faGoogle } from '@fortawesome/free-brands-svg-icons';
 import {
   faArrowsRotate,
-  faTrash, IconDefinition,
+  faTrash, type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  PublicKeyCredentialCreationOptionsJSON, startRegistration, WebAuthnError,
+  type PublicKeyCredentialCreationOptionsJSON, startRegistration, WebAuthnError,
 } from '@simplewebauthn/browser';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Passkey } from 'bagad-client';
+import type { Passkey } from 'bagad-client';
 import { DateTime } from 'luxon';
 import { UAParser } from 'ua-parser-js';
 import passkeyBitwarden from '../../assets/passkeys/blue-shield.svg';
@@ -19,7 +19,7 @@ import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient, useUserProfile } from '../../config/client';
 
-const aaguidMapping: Record<string, { icon: IconDefinition | string, name: string }> = {
+const aaguidMapping: Partial<Record<string, { icon: IconDefinition | string, name: string }>> = {
   'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': { icon: faApple, name: 'iCloud Keychain' },
   'd548826e-79b4-db40-a3d8-11116f7e8349': { icon: passkeyBitwarden, name: 'Bitwarden' },
   'adce0002-35bc-c60a-648b-0b25f1f05503': { icon: faChrome, name: 'Chrome on Mac' },
@@ -91,27 +91,27 @@ export default function PasskeysPage() {
 
   const { data } = useQuery({
     queryKey: ['passkeys'],
-    queryFn: () => authApi.listPasskeysApiV1WebauthnGet(),
+    queryFn: async () => await authApi.listPasskeysApiV1WebauthnGet(),
     enabled: !!profile,
   });
 
   const register = async () => {
-    // eslint-disable-next-line max-len
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The API response type is not narrowed to PublicKeyCredentialCreationOptionsJSON
     const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet() as PublicKeyCredentialCreationOptionsJSON;
 
-    let attResp;
     try {
       // Pass the options to the authenticator and wait for a response
-      attResp = await startRegistration({ optionsJSON: registrationOpt });
+      const attResp = await startRegistration({ optionsJSON: registrationOpt });
       await authApi.registerPasskeyApiV1WebauthnRegisterPost({ requestBody: attResp });
-      queryClient.invalidateQueries({ queryKey: ['passkeys'] });
+      await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
     } catch (error) {
       // Some basic error handling
       if (error instanceof WebAuthnError && error.name === 'InvalidStateError') {
-        // eslint-disable-next-line no-console
+
         console.error('Error: Authenticator was probably already registered by user');
       } else {
-        // eslint-disable-next-line no-console
+
         console.error(error);
       }
 
@@ -120,11 +120,11 @@ export default function PasskeysPage() {
   };
 
   const { mutate: deleteMutation } = useMutation({
-    mutationFn: (cid: string) => authApi.deletePasskeyApiV1WebauthnCredentialIdDelete({
+    mutationFn: async (cid: string) => await authApi.deletePasskeyApiV1WebauthnCredentialIdDelete({
       credentialId: cid,
     }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['passkeys'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
     },
   });
 

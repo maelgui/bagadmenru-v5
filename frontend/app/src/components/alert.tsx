@@ -3,7 +3,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 const alertVariants = cva(
   'relative py-4 px-6 mb-8',
@@ -34,10 +34,9 @@ interface AlertProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'type'>
 }
 
 export default function Alert({ type, children, className, ...rest }: AlertProps) {
-  const icon = alertIcons[type];
+  const { [type]: icon } = alertIcons;
 
   return (
-    // eslint-disable-next-line react/jsx-props-no-spreading
     <div className={alertVariants({ type, className })} {...rest}>
       <span className="absolute top-0 bottom-0 flex items-center">
         <FontAwesomeIcon icon={icon} className="mr-4" />

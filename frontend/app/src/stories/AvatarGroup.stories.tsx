@@ -23,9 +23,11 @@ const sampleAvatars = [
   { id: '6', name: 'Claire Petit', src: img },
 ];
 
+const DEFAULT_AVATAR_COUNT = 4;
+
 export const Default: Story = {
   args: {
-    avatars: sampleAvatars.slice(0, 4),
+    avatars: sampleAvatars.slice(0, DEFAULT_AVATAR_COUNT),
   },
 };
 
@@ -36,9 +38,11 @@ export const WithMaxTruncation: Story = {
   },
 };
 
+const WITH_EXTRA_COUNT_AVATAR_COUNT = 3;
+
 export const WithExtraCount: Story = {
   args: {
-    avatars: sampleAvatars.slice(0, 3),
+    avatars: sampleAvatars.slice(0, WITH_EXTRA_COUNT_AVATAR_COUNT),
     extraCount: 5,
     extraTooltip: <span>+5 autres instruments</span>,
   },
@@ -57,9 +61,11 @@ export const SingleAvatar: Story = {
   },
 };
 
+const LARGE_SIZE_AVATAR_COUNT = 3;
+
 export const LargeSize: Story = {
   args: {
-    avatars: sampleAvatars.slice(0, 3),
+    avatars: sampleAvatars.slice(0, LARGE_SIZE_AVATAR_COUNT),
     size: 'sm',
   },
 };

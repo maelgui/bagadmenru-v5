@@ -21,6 +21,9 @@ import EventListItem, { EventListItemSkeleton } from '../events/components/event
 import FileItem, { FileItemSkeleton } from '../files/components/file-item';
 import Mailbox from './components/mailbox';
 
+const MAX_DISPLAYED_EVENTS = 4;
+const RESPONSE_TIME_WARNING_THRESHOLD = 5;
+
 export default function HomePage() {
   const { eventsApi, filesApi, usersApi } = useApiClient();
   const profile = useUserProfile();
@@ -30,13 +33,13 @@ export default function HomePage() {
 
   const { data: nextEvents } = useQuery({
     queryKey: ['events', 'next100'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 10, dateGte: today }),
-    select: (data) => data.slice(0, 3),
+    queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 10, dateGte: today }),
+    select: (data) => data.slice(0, MAX_DISPLAYED_EVENTS),
     enabled: can('view', 'event'),
   });
   const { data: calendarEvents } = useQuery({
     queryKey: ['events', 'currentMonth'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet({
+    queryFn: async () => await eventsApi.listEventsApiV1EventsGet({
       limit: 100,
       dateGte: new Date(today.getFullYear(), today.getMonth(), 0),
       dateLt: new Date(today.getFullYear(), today.getMonth() + 1, 0),
@@ -45,12 +48,12 @@ export default function HomePage() {
   });
   const { data: files } = useQuery({
     queryKey: ['files'],
-    queryFn: () => filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File, limit: 5 }),
+    queryFn: async () => await filesApi.listFilesApiV1FilesGet({ t: FileOrFolderType.File, limit: 5 }),
     enabled: can('view', 'file'),
   });
   const { data: responses } = useQuery({
     queryKey: ['responses', 'me'],
-    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({
+    queryFn: async () => await eventsApi.listResponsesApiV1ResponsesGet({
       dateGte: new Date(),
       userId: profile?.id,
     }),
@@ -59,12 +62,12 @@ export default function HomePage() {
   });
   const { data: myStats } = useQuery({
     queryKey: ['stats', 'me'],
-    queryFn: () => usersApi.getMyStatsApiV1StatsMeGet(),
+    queryFn: async () => await usersApi.getMyStatsApiV1StatsMeGet(),
     enabled: can('create', 'response'),
   });
   const { data: globalStats } = useQuery({
     queryKey: ['stats', 'global'],
-    queryFn: () => usersApi.getGlobalStatsApiV1StatsGet(),
+    queryFn: async () => await usersApi.getGlobalStatsApiV1StatsGet(),
   });
 
   return (
@@ -117,8 +120,8 @@ export default function HomePage() {
                 const days = parse(myStats.avgResponseTime).days ?? 0;
                 return (
                   <Counter
-                    type={days < 5 ? 'ghost' : 'warning'}
-                    value={days ?? 0}
+                    type={days < RESPONSE_TIME_WARNING_THRESHOLD ? 'ghost' : 'warning'}
+                    value={days}
                     description={`Vous mettez en moyenne ${days} jours pour répondre aux sorties.`}
                   />
                 );
@@ -151,7 +154,7 @@ export default function HomePage() {
                 {nextEvents ? (
                   <div>
                     {!nextEvents.length ? (<Alert type="info">Aucun évènement à venir.</Alert>) : null}
-                    {nextEvents.slice(0, 4).map((event) => (
+                    {nextEvents.slice(0, MAX_DISPLAYED_EVENTS).map((event) => (
                       <div className="mb-5" key={event.id}>
                         <EventListItem
                           event={event}

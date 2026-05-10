@@ -6,19 +6,19 @@ import Container from '../../components/container';
 import Header from '../../components/header';
 import { useApiClient } from '../../config/client';
 
-type GroupPageParams = {
-  groupId: string;
-};
 
 export default function GroupPage() {
   const { usersApi } = useApiClient();
-  const params = useParams<GroupPageParams>();
+  const { groupId: groupIdRaw } = useParams<"groupId">();
+  if (!groupIdRaw) {
+    throw new Error('Missing group id');
+  }
 
-  const groupId = parseInt(params.groupId!, 10);
+  const groupId = parseInt(groupIdRaw, 10);
 
   const { data: group } = useQuery({
     queryKey: ['groups', groupId],
-    queryFn: () => usersApi.getGroupApiV1GroupsGroupIdGet({ groupId }),
+    queryFn: async () => await usersApi.getGroupApiV1GroupsGroupIdGet({ groupId }),
   });
 
   return (

@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import defaultAvatar from '../assets/default.svg';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {

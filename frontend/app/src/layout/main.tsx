@@ -19,7 +19,7 @@ export default function MainLayout() {
   return (
     <>
       <Navbar />
-      <div className={`${isFetching ? '' : ''}`}>
+      <div className={isFetching ? '' : ''}>
         <Outlet />
       </div>
       <div className="mt-auto">

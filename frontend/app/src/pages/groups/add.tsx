@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { GroupCreate } from 'bagad-client';
+import type { GroupCreate } from 'bagad-client';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Container from '../../components/container';
@@ -12,10 +12,10 @@ export default function AddGroupPage() {
   const navigate = useNavigate();
 
   const { mutate } = useMutation({
-    mutationFn: (data: GroupCreate) => usersApi.createGroupApiV1GroupsPost({ groupCreate: data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      navigate('/groups');
+    mutationFn: async (data: GroupCreate) => await usersApi.createGroupApiV1GroupsPost({ groupCreate: data }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['groups'] });
+      void navigate('/groups');
       toast.success('Groupe crée !');
     },
     onError: (error) => {

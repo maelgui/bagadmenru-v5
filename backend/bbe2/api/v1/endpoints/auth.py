@@ -190,7 +190,7 @@ async def reset_password_request(
     settings: SettingsDep,
     session: SessionDep,
     sender: SenderDep,
-):
+) -> str:
     user = session.scalars(select(UserDB).where(UserDB.email == body.email)).first()
     if not user or not user.is_active:
         return "OK"
@@ -302,7 +302,7 @@ async def register_passkey(
     current_user: Annotated[UserDB, Depends(get_current_profile)],
     session: SessionDep,
     settings: SettingsDep,
-):
+) -> str:
     verification = verify_registration_response(
         credential=body,
         expected_challenge=base64.b64decode(request.session["challenge"]),
@@ -326,6 +326,8 @@ async def register_passkey(
     )
     session.add(passkey_db)
 
+    return "OK"
+
     # return Response(
     #     content=verification,
     #     media_type="application/json",
@@ -340,7 +342,7 @@ async def delete_passkey(
     credential_id: str,
     current_user: Annotated[UserDB, Depends(get_current_profile)],
     session: SessionDep,
-):
+) -> str:
     q = (
         select(PasskeyDB)
         .where(PasskeyDB.passkey_user_id == current_user.passkey_user_id)
@@ -351,3 +353,5 @@ async def delete_passkey(
         raise HTTPException(status_code=404, detail="Passkey not found")
     session.delete(res)
     session.commit()
+
+    return "OK"

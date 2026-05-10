@@ -1,15 +1,14 @@
 import { useIsFetching } from '@tanstack/react-query';
 import nprogress from 'nprogress';
-import { PropsWithChildren, useEffect } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import logo from '../assets/logov2fullsmallhorizontall.svg';
 
 interface SimpleLayoutProps extends PropsWithChildren {
-  noQueryClient?: boolean
 }
 
-export default function SimpleLayout({ children, noQueryClient = false }: SimpleLayoutProps) {
-  const isFetching = noQueryClient ? false : useIsFetching();
+export default function SimpleLayout({ children }: SimpleLayoutProps) {
+  const isFetching = useIsFetching();
 
   useEffect(() => {
     if (isFetching) {

@@ -7,8 +7,7 @@ import './index.css';
 // Register service worker for push notifications
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
-      // eslint-disable-next-line no-console
+    navigator.serviceWorker.register('/sw.js').catch((error: unknown) => {
       console.error('Service Worker registration failed:', error);
     });
   });
@@ -33,7 +32,12 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
 });
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('Root element not found');
+}
+
+ReactDOM.createRoot(rootElement).render(
   <StrictMode>
     <App />
   </StrictMode>,

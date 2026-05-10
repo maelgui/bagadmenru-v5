@@ -1,5 +1,5 @@
-/* eslint-disable react/jsx-props-no-spreading */
-import { ReactNode } from 'react';
+
+import type { ReactNode } from 'react';
 
 type CounterProps = {
   type: 'error' | 'warning' | 'success' | 'info' | 'ghost';
@@ -26,8 +26,6 @@ export default function Counter({
       break;
     case 'ghost':
       bgClassName = 'bg-gray-100 text-gray-950';
-      break;
-    default:
       break;
   }
   return (

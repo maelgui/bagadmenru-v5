@@ -1,6 +1,6 @@
-/* eslint-disable react/jsx-props-no-spreading */
+
 import { cva, type VariantProps } from 'class-variance-authority';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 const badgeVariants = cva(
   'inline-block px-2 py-0.5 rounded-full overflow-hidden text-white font-medium text-xs whitespace-nowrap',

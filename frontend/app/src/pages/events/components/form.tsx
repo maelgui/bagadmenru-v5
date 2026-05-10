@@ -1,10 +1,10 @@
-/* eslint-disable react/jsx-props-no-spreading */
+ 
 import { faSquare } from '@fortawesome/free-regular-svg-icons';
 import { faCircleCheck, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Event, EventCreate } from 'bagad-client';
+import type { Event, EventCreate } from 'bagad-client';
 import {
-  Controller, SubmitHandler, useForm,
+  Controller, type SubmitHandler, useForm,
 } from 'react-hook-form';
 import Input from '../../../components/input';
 
@@ -69,7 +69,7 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
           error={errors.category?.message}
           {...register('category', {
             required: 'Ce champ est obligatoire.',
-            onChange: (e) => {
+            onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
               if (dirtyFields.isInDoodle !== true) setValue('isInDoodle', e.target.value === 'sortie');
               if (dirtyFields.costume !== true) setValue('costume', e.target.value === 'sortie' ? 'COSTUME' : 'POLO');
             },

@@ -1,26 +1,36 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router-dom';
+import { z } from 'zod';
 import Button from '../../components/button';
 import { useApiClient } from '../../config/client';
 
-type UnsubscribePageParams = {
-  token: string;
-};
+const tokenPayloadSchema = z.object({
+  user_id: z.string(),
+});
+
+function extractUserIdFromToken(token: string): string {
+  const {0: data} = token.split('.');
+  const payload = tokenPayloadSchema.parse(JSON.parse(window.atob(data)));
+  return payload.user_id;
+}
 
 export default function UnsubscribePage() {
   const { usersApi } = useApiClient();
-  const params = useParams<UnsubscribePageParams>();
+  const { token } = useParams<"token">();
   const [finished, setFinished] = useState<boolean>(false);
 
-  const token = params.token!;
-  const userId = JSON.parse(window.atob(token.split('.')[0])).user_id;
+  if (!token) {
+    throw new Error('No token provided');
+  }
+
+  const userId: string = extractUserIdFromToken(token);
 
   const {
     handleSubmit, formState: { isSubmitting },
   } = useForm<{ email: string }>();
 
-  const onSubmit = () => usersApi.unsubscribeApiV1ProfilesProfileIdUnsubscribePost({
+  const onSubmit = async () => await usersApi.unsubscribeApiV1ProfilesProfileIdUnsubscribePost({
     profileId: userId,
     token,
   }).then(() => setFinished(true));

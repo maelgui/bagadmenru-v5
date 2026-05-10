@@ -1,8 +1,8 @@
-/* eslint-disable react/jsx-props-no-spreading */
-import {
+ 
+import type {
   MyProfileUpdate, Profile,
 } from 'bagad-client';
-import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
+import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
 import Button from '../../../components/button';
 import BaseProfileFormFields from './baseForm';
 

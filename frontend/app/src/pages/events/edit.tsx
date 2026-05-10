@@ -1,6 +1,6 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { EventCreate } from 'bagad-client';
+import type { EventCreate } from 'bagad-client';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../components/button';
 import Container from '../../components/container';
@@ -8,42 +8,37 @@ import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
 import EventForm from './components/form';
 
-type EditEventParams = {
-  eventId: string;
-};
-
 export default function EditEventPage() {
   const { eventsApi } = useApiClient();
-  const params = useParams<EditEventParams>();
-
-  const eventId = parseInt(params.eventId!, 10);
+  const { eventId } = useParams<"eventId">();
+  if (!eventId) throw new Error("No event id");
+  const parsedEventId = parseInt(eventId, 10);
 
   const { data } = useQuery({
-    queryKey: ['events', params.eventId],
-    queryFn: () => eventsApi.getEventApiV1EventsEventIdGet({ eventId }),
-    enabled: !!params.eventId,
+    queryKey: ['events', eventId],
+    queryFn: async () => await eventsApi.getEventApiV1EventsEventIdGet({ eventId: parsedEventId }),
   });
 
   const navigate = useNavigate();
   const { mutate } = useMutation({
-    mutationFn: (d: EventCreate) => eventsApi.updateEventApiV1EventsEventIdPut({
-      eventId,
+    mutationFn: async (d: EventCreate) => await eventsApi.updateEventApiV1EventsEventIdPut({
+      eventId: parsedEventId,
       eventCreate: d,
     }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-      navigate('/events/manage');
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['events'] });
+      void navigate('/events/manage');
     },
   });
   const onSubmit = (d: EventCreate) => mutate(d);
 
   const { mutate: deleteMutation } = useMutation({
-    mutationFn: (eid: number) => eventsApi.deleteEventApiV1EventsEventIdDelete({
+    mutationFn: async (eid: number) => await eventsApi.deleteEventApiV1EventsEventIdDelete({
       eventId: eid,
     }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
-      navigate('/events/manage');
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
+      void navigate('/events/manage');
     },
   });
 
@@ -62,10 +57,10 @@ export default function EditEventPage() {
             key="event.delete"
             as={Button}
             onClick={() => {
-              // eslint-disable-next-line no-alert
+
               const sure = window.confirm(`Supprimer la sortie ${data?.title} ?`);
               if (sure) {
-                deleteMutation(eventId);
+                deleteMutation(parsedEventId);
               }
             }}
             size="sm"

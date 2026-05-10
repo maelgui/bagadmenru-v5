@@ -6,7 +6,6 @@ export default function LogoFullV2(props: React.SVGProps<SVGSVGElement>) {
       viewBox="0 0 562.49995 749.99995"
       id="svg12915"
       xmlns="http://www.w3.org/2000/svg"
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
     >
       <defs id="defs12917" />

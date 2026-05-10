@@ -4,7 +4,7 @@ import ErrorLayout from '../../layout/error';
 
 export default function RoutingErrorComponent() {
   const error = useRouteError();
-  /* eslint-disable no-console */
+   
   console.error(error);
 
   return (

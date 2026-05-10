@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-props-no-spreading */
+
 import {
   FloatingFocusManager,
   FloatingOverlay,
@@ -101,7 +101,9 @@ export const DialogTrigger = React.forwardRef<HTMLElement, DialogTriggerProps>((
   propRef: React.Ref<HTMLElement>,
 ) => {
   const context = useDialogContext();
-  const childrenRef = (children as any).ref;
+  const childrenRef = React.isValidElement<{ ref?: React.Ref<unknown> }>(children)
+    ? children.props.ref
+    : undefined;
   const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef]);
 
   // `asChild` allows the user to pass any element as the anchor
@@ -140,7 +142,7 @@ export const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLProps<HT
 
     return (
       <FloatingPortal>
-        <FloatingOverlay className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50" lockScroll>
+        <FloatingOverlay className="fixed inset-0 bg-gray-500 opacity-75 transition-opacity z-50" lockScroll>
           <FloatingFocusManager context={floatingContext}>
             <div className={`flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0 ${props.className}`}>
               <div
@@ -161,7 +163,7 @@ export const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLProps<HT
 );
 DialogContent.displayName = 'DialogContent';
 
-// eslint-disable-next-line max-len
+
 export const DialogHeading = React.forwardRef<HTMLHeadingElement, React.HTMLProps<HTMLHeadingElement>>(
   ({ children, ...props }, ref) => {
     const { setLabelId } = useDialogContext();
@@ -184,7 +186,7 @@ export const DialogHeading = React.forwardRef<HTMLHeadingElement, React.HTMLProp
 
 DialogHeading.displayName = 'DialogHeading';
 
-// eslint-disable-next-line max-len
+
 export const DialogDescription = React.forwardRef<HTMLParagraphElement, React.HTMLProps<HTMLParagraphElement>>(
   ({ children, ...props }, ref) => {
     const { setDescriptionId } = useDialogContext();
@@ -207,7 +209,7 @@ export const DialogDescription = React.forwardRef<HTMLParagraphElement, React.HT
 
 DialogDescription.displayName = 'DialogDescription';
 
-// eslint-disable-next-line max-len
+
 export const DialogClose = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
   (props, ref) => {
     const { setOpen } = useDialogContext();

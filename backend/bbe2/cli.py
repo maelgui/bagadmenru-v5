@@ -104,9 +104,7 @@ def _bootstrap(s: Session) -> None:
     console.log("Admin group created")
 
     # Create or update the default group that every user belongs to
-    default_group = s.scalars(
-        select(models.GroupDB).filter_by(name="Membres")
-    ).first()
+    default_group = s.scalars(select(models.GroupDB).filter_by(name="Membres")).first()
     if default_group:
         default_group.is_default = True
         console.log(

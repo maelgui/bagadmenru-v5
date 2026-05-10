@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-props-no-spreading */
+
 import {
   FloatingPortal,
   autoUpdate,
@@ -12,7 +12,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import { ElementType, ReactNode, useState } from 'react';
+import { type ElementType, type ReactNode, useState } from 'react';
 
 export default function Tooltip(
   { children, content, as = 'span' }: { children: ReactNode, content: ReactNode, as?: ElementType },
@@ -26,6 +26,7 @@ export default function Tooltip(
     // Make sure the tooltip stays on the screen
     whileElementsMounted: autoUpdate,
     middleware: [
+      // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- Small pixel offset for visual spacing between trigger and tooltip
       offset(5),
       flip({
         fallbackAxisSideDirection: 'start',
@@ -49,7 +50,7 @@ export default function Tooltip(
     role,
   ]);
 
-  const Component = as || 'span';
+  const Component = as;
 
   if (!content) {
     return <Component>{children}</Component>;
@@ -64,6 +65,7 @@ export default function Tooltip(
         {isOpen && (
           <div
             className="bg-gray-900 text-center px-4 py-2 opacity-95 text-white text-sm rounded-sm"
+            // eslint-disable-next-line react-hooks/refs -- floating-ui requires passing a callback ref via refs.setFloating
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}

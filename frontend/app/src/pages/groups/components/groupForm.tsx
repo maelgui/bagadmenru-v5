@@ -1,16 +1,16 @@
 import { faSquare, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
-import {
+import type {
   GroupCreate,
   Role,
 } from 'bagad-client';
 import { useEffect } from 'react';
 import {
   Controller,
-  SubmitHandler, useForm,
+  type SubmitHandler, useForm, useWatch,
 } from 'react-hook-form';
-import Select, { FormatOptionLabelMeta } from 'react-select';
+import Select, { type FormatOptionLabelMeta } from 'react-select';
 import Badge from '../../../components/badge';
 import Button from '../../../components/button';
 import Input from '../../../components/input';
@@ -39,24 +39,24 @@ export default function PermissionsForm({
 }: PermissionsFormProps) {
   const { usersApi } = useApiClient();
   const {
-    register, handleSubmit, setValue, formState: { errors }, control, watch,
+    register, handleSubmit, setValue, formState: { errors }, control,
   } = useForm<GroupCreate & { mailingListEnabled: boolean }>(
     { defaultValues: { mailingListEnabled: !!(data?.mailingList), ...(data || { color: '#932a58', roleIds: [] }) } },
   );
 
-  const watchName = watch('name', 'groupe');
-  const watchColor = watch('color', '');
-  const watchMailingListEnabled = watch('mailingListEnabled');
+  const watchName = useWatch({ control, name: 'name', defaultValue: 'groupe' });
+  const watchColor = useWatch({ control, name: 'color', defaultValue: '' });
+  const watchMailingListEnabled = useWatch({ control, name: 'mailingListEnabled' });
 
   useEffect(() => {
-    if (watchMailingListEnabled === false) {
+    if (!watchMailingListEnabled) {
       setValue('mailingList', null);
     }
-  }, [watchMailingListEnabled]);
+  }, [setValue, watchMailingListEnabled]);
 
   const { data: roles } = useQuery({
     queryKey: ['roles'],
-    queryFn: () => usersApi.listRolesApiV1RolesGet(),
+    queryFn: async () => await usersApi.listRolesApiV1RolesGet(),
   });
 
   return (
@@ -67,7 +67,7 @@ export default function PermissionsForm({
           type="text"
           id="name"
           error={errors.name?.message}
-          // eslint-disable-next-line react/jsx-props-no-spreading
+
           {...register('name', { required: 'Ce champ est obligatoire.' })}
         />
       </div>
@@ -78,7 +78,7 @@ export default function PermissionsForm({
             type="color"
             id="color"
             className="hidden"
-            // eslint-disable-next-line react/jsx-props-no-spreading
+
             {...register('color', { required: 'Ce champ est obligatoire.' })}
           />
           {!watchName ? (
@@ -118,7 +118,7 @@ export default function PermissionsForm({
           <input
             type="checkbox"
             id="mailingListEnabled"
-            // eslint-disable-next-line react/jsx-props-no-spreading
+
             {...register('mailingListEnabled')}
             className="hidden peer"
           />
@@ -139,7 +139,7 @@ export default function PermissionsForm({
               id="mailingList"
               className="flex-1 grow"
               error={errors.mailingList?.message}
-              // eslint-disable-next-line react/jsx-props-no-spreading
+
               {...register('mailingList', { required: 'Ce champ est obligatoire.' })}
             />
             <span className="absolute top-0 bottom-0 right-0 grid place-content-center">

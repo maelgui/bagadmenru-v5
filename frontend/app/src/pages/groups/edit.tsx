@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { GroupCreate, GroupUpdate } from 'bagad-client';
+import type { GroupCreate, GroupUpdate } from 'bagad-client';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import Container from '../../components/container';
@@ -7,20 +7,20 @@ import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
 import GroupForm from './components/groupForm';
 
-type EditGroupPageParams = {
-  groupId: string;
-};
 
 export default function EditGroupPage() {
   const { usersApi } = useApiClient();
   const navigate = useNavigate();
 
-  const params = useParams<EditGroupPageParams>();
-  const groupId = parseInt(params.groupId!, 10);
+  const { groupId: groupIdRaw } = useParams<"groupId">();
+  if (!groupIdRaw) {
+    throw new Error("Missing groupId");
+  }
+  const groupId = parseInt(groupIdRaw, 10);
 
   const { data: group } = useQuery({
     queryKey: ['groups', groupId],
-    queryFn: () => usersApi.getGroupApiV1GroupsGroupIdGet({ groupId }),
+    queryFn: async () => await usersApi.getGroupApiV1GroupsGroupIdGet({ groupId }),
     select: (data) => ({
       roleIds: data.roles.map((p) => p.id),
       ...data,
@@ -28,12 +28,12 @@ export default function EditGroupPage() {
   });
 
   const { mutate } = useMutation({
-    // eslint-disable-next-line max-len
-    mutationFn: (data: GroupUpdate) => usersApi.updateGroupApiV1GroupsGroupIdPut({ groupId, groupUpdate: data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      queryClient.invalidateQueries({ queryKey: ['groups', groupId] });
-      navigate('/groups');
+
+    mutationFn: async (data: GroupUpdate) => await usersApi.updateGroupApiV1GroupsGroupIdPut({ groupId, groupUpdate: data }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['groups'] });
+      await queryClient.invalidateQueries({ queryKey: ['groups', groupId] });
+      void navigate('/groups');
       toast.success('Groupe modifié !');
     },
     onError: (error) => {

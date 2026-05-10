@@ -1,5 +1,5 @@
-/* eslint-disable react/jsx-props-no-spreading */
-import { ResetPasswordRequest } from 'bagad-client';
+ 
+import type { ResetPasswordRequest } from 'bagad-client';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import Button from '../../components/button';
@@ -12,8 +12,8 @@ function LostPasswordPage() {
     register, handleSubmit, formState: { errors, isSubmitSuccessful },
   } = useForm<ResetPasswordRequest>();
 
-  // eslint-disable-next-line max-len
-  const onSubmit = (data: ResetPasswordRequest) => authApi.resetPasswordRequestApiV1AuthResetPasswordRequestPost({
+   
+  const onSubmit = async (data: ResetPasswordRequest) => await authApi.resetPasswordRequestApiV1AuthResetPasswordRequestPost({
     resetPasswordRequest: { email: data.email },
   });
 

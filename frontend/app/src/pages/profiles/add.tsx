@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { ProfileCreate } from 'bagad-client';
+import type { ProfileCreate } from 'bagad-client';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Container from '../../components/container';
@@ -12,7 +12,7 @@ export default function CreateProfilePage() {
   const navigate = useNavigate();
 
   const { mutate } = useMutation({
-    mutationFn: (data: ProfileCreate) => toast.promise(
+    mutationFn: async (data: ProfileCreate) => await toast.promise(
       usersApi.createProfileApiV1ProfilesPost({
         profileCreate: data,
       }),
@@ -22,9 +22,9 @@ export default function CreateProfilePage() {
         error: 'Une erreur est survenue.',
       },
     ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      navigate('/profile');
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      void navigate('/profile');
     },
   });
   const onSubmit = (data: ProfileCreate) => mutate(data);

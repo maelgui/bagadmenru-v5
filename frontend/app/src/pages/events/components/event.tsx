@@ -2,7 +2,7 @@ import {
   faCircleCheck, faCircleQuestion, faCircleXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Costume, Event } from 'bagad-client';
+import { Costume, type Event } from 'bagad-client';
 import costume from '../../../assets/costume.svg';
 import polo from '../../../assets/polo.svg';
 import Badge from '../../../components/badge';

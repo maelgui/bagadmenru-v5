@@ -1,23 +1,23 @@
-/* eslint-disable react/jsx-props-no-spreading */
+
 import { faKey } from '@fortawesome/free-solid-svg-icons';
 import {
-  browserSupportsWebAuthn, PublicKeyCredentialRequestOptionsJSON, startAuthentication,
+  browserSupportsWebAuthn, type PublicKeyCredentialRequestOptionsJSON, startAuthentication,
   WebAuthnError,
 } from '@simplewebauthn/browser';
 import { LoginType, ResponseError } from 'bagad-client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import iconPasskeyWhite from '../../assets/passkeys/FIDO_Passkey_mark_A_white.svg';
 import Alert from '../../components/alert';
 import Button from '../../components/button';
 import Input from '../../components/input';
-import { useApiClient } from '../../config/client';
-import { useProfileStore } from '../../utils/authStore';
+import { queryClient, useApiClient } from '../../config/client';
+
+const HTTP_UNAUTHORIZED = 401;
 
 function AuthPage() {
   const { authApi, usersApi } = useApiClient();
-  const { setAccount } = useProfileStore();
 
   const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
 
@@ -27,15 +27,16 @@ function AuthPage() {
 
   const navigate = useNavigate();
 
-  const postLogin = async () => {
+  const postLogin = useCallback(async () => {
     const res = await usersApi.getMyProfileApiV1ProfilesMeGet();
 
-    setAccount(res);
-    navigate('/');
-  };
-  const startPasskeyLogin = async (conditional: boolean) => {
+    queryClient.setQueryData(['profiles', 'me'], res);
+    void navigate('/');
+  }, [navigate, usersApi]);
+  const startPasskeyLogin = useCallback(async (conditional: boolean) => {
     try {
-      // eslint-disable-next-line max-len
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The API response matches PublicKeyCredentialRequestOptionsJSON but the generated client types it as object
       const opt = await authApi.prepareLoginApiV1AuthLoginGet() as PublicKeyCredentialRequestOptionsJSON;
       const res = await startAuthentication({ optionsJSON: opt, useBrowserAutofill: conditional });
       await authApi.processLoginApiV1AuthLoginPost({
@@ -50,15 +51,16 @@ function AuthPage() {
         return;
       }
       // Some basic error handling
-      // eslint-disable-next-line no-console
+
       console.error(error);
-      setErrorMsg(`Email inconnue : ${error}`);
+      setErrorMsg(`Email inconnue : ${String(error)}`);
     }
-  };
+  }, [authApi, postLogin]);
 
   useEffect(() => {
-    startPasskeyLogin(true);
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Passkey conditional login must be initiated on mount; it may set error state on failure which is acceptable here
+    void startPasskeyLogin(true);
+  }, [startPasskeyLogin]);
 
   const onSubmit = async (data: { email: string, password: string }) => {
     setErrorMsg(undefined);
@@ -73,7 +75,7 @@ function AuthPage() {
       await postLogin();
     } catch (error) {
       if (error instanceof ResponseError) {
-        if (error.response.status === 401) {
+        if (error.response.status === HTTP_UNAUTHORIZED) {
           setErrorMsg('Email ou mot de passe incorrect.');
         } else {
           setErrorMsg(`Erreur inconnue, veillez réessayer plus tard : ${error.message}`);
@@ -118,8 +120,8 @@ function AuthPage() {
       </form>
       {browserSupportsWebAuthn() ? (
         <>
-          <div className="my-12 text-gray-500 flex items-center before:mr-3 before:block before:flex-grow  before:h-px before:bg-gray-300 after:block after:flex-grow after:h-px after:bg-gray-300 after:ml-3">Ou</div>
-          <Button type="button" onClick={() => startPasskeyLogin(false)} className="block w-full">
+          <div className="my-12 text-gray-500 flex items-center before:mr-3 before:block before:grow  before:h-px before:bg-gray-300 after:block after:grow after:h-px after:bg-gray-300 after:ml-3">Ou</div>
+          <Button type="button" onClick={async () => await startPasskeyLogin(false)} className="block w-full">
             <span className="pr-3"><img src={iconPasskeyWhite} alt="passkey logo" className="h-6 inline" /></span>
             Passkey
           </Button>

@@ -1,6 +1,6 @@
 import { faCheck, faQuestion, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ReactEventHandler } from 'react';
+import type { ReactEventHandler } from 'react';
 
 export default function Checkbox({
   value,
@@ -11,17 +11,14 @@ export default function Checkbox({
   value: boolean | undefined,
   onClick: ReactEventHandler,
 }) {
-  let className;
-  let content;
+  let className = 'bg-sky-200';
+  let content = <FontAwesomeIcon icon={faQuestion} className="text-sky-800" />;
   if (value === true) {
     content = <FontAwesomeIcon icon={faCheck} className="text-emerald-800" />;
     className = 'bg-emerald-300';
   } else if (value === false) {
     content = <FontAwesomeIcon icon={faXmark} className="text-red-900" />;
     className = 'bg-red-300';
-  } else if (value === undefined) {
-    content = <FontAwesomeIcon icon={faQuestion} className="text-sky-800" />;
-    className = 'bg-sky-200';
   }
 
   if (disabled) {

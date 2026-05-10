@@ -1,8 +1,8 @@
-/* eslint-disable react/jsx-props-no-spreading */
+
 import { faBellSlash, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
-import { Profile, ProfileUpdate } from 'bagad-client';
+import type { Profile, ProfileUpdate } from 'bagad-client';
 import { useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -11,11 +11,11 @@ import Input from '../../../components/input';
 import PushNotificationToggle from '../../../components/PushNotificationToggle';
 import { useApiClient } from '../../../config/client';
 
-type AvatarInputProps = {
+interface AvatarInputProps {
   defaultUrl: string | null;
   profileId: string;
   onChange: (value: string | null) => void;
-};
+}
 function AvatarInput({
   defaultUrl, profileId, onChange,
 }: AvatarInputProps) {
@@ -41,7 +41,7 @@ function AvatarInput({
 
   const onAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.length === 1) {
-      toast.promise(
+      void toast.promise(
         uploadAvatar(event.target.files[0]),
         {
           loading: 'Envoie...',
@@ -90,8 +90,8 @@ export default function BaseProfileFormFields(
               control={control}
               render={({ field: { onChange } }) => (
                 <AvatarInput
-                  defaultUrl={profile?.pictureUrl}
-                  profileId={profile?.id}
+                  defaultUrl={profile.pictureUrl}
+                  profileId={profile.id}
                   onChange={onChange}
                 />
               )}

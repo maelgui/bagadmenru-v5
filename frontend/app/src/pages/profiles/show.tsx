@@ -13,19 +13,19 @@ export default function ShowProfilePage() {
   const { usersApi } = useApiClient();
   const currentUser = useUserProfile();
   const { can } = usePermissions();
-  const { profileId } = useParams<{ profileId: string }>();
+  const { profileId } = useParams<"profileId">();
   if (!profileId) {
-    return null;
+    throw new Error('Missing profile id');
   }
 
   const navigate = useNavigate();
   const { data: profile } = useQuery({
     queryKey: ['profiles', profileId],
-    queryFn: () => usersApi.getProfileApiV1ProfilesProfileIdGet({ profileId }),
+    queryFn: async () => await usersApi.getProfileApiV1ProfilesProfileIdGet({ profileId }),
   });
 
   const { mutate: deleteProfile } = useMutation({
-    mutationFn: () => toast.promise(
+    mutationFn: async () => await toast.promise(
       usersApi.deleteProfileApiV1ProfilesProfileIdDelete({ profileId }),
       {
         loading: 'Suppression...',
@@ -33,14 +33,14 @@ export default function ShowProfilePage() {
         error: 'Une erreur est survenue.',
       },
     ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      navigate('/profile');
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      void navigate('/profile');
     },
   });
 
   const handleDelete = () => {
-    // eslint-disable-next-line no-alert
+
     if (window.confirm(`Êtes-vous sûr de vouloir désactiver le profil de ${profile?.firstName} ${profile?.lastName} ?`)) {
       deleteProfile();
     }
@@ -53,7 +53,7 @@ export default function ShowProfilePage() {
   const actions = [];
   if (can('edit', 'profile') || profileId === currentUser?.id) {
     actions.push(
-      <Header.Action key="edit-profile" onClick={() => navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Header.Action>,
+      <Header.Action key="edit-profile" onClick={async () => await navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Header.Action>,
     );
   }
   if (can('delete', 'profile') && profileId !== currentUser?.id) {
@@ -75,7 +75,7 @@ export default function ShowProfilePage() {
       />
 
       <Container>
-        {profile ? <ProfileView profile={profile} /> : 'Loading'}
+        <ProfileView profile={profile} />
       </Container>
     </>
   );

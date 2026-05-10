@@ -12,7 +12,7 @@ export default function Empty() {
       <div>
         Error:
         {auth.error.message}
-        <button type="button" onClick={() => auth.signinRedirect()}>Retry</button>
+        <button type="button" onClick={async () => await auth.signinRedirect()}>Retry</button>
       </div>
     );
   }

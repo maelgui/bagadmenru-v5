@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+
 import {
   faCalendarPlus,
   faCheck,
@@ -11,7 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import {
+import type {
   Event,
   MinimalGroup, Profile, Response,
 } from 'bagad-client';
@@ -100,11 +100,11 @@ function EventCard({
   const responseByInstrument = useMemo(() => groupBy(responses, (r) => r.user?.instrument?.id), [responses]);
 
   const mutation = useMutation({
-    mutationFn: (response: boolean) => {
+    mutationFn: async (response: boolean) => {
       const params = { eventId: event.id, responseCreate: { value: response } };
-      return eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
+      return await eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['responses'] }),
+    onSettled: async () => await queryClient.invalidateQueries({ queryKey: ['responses'] }),
     onSuccess: () => toast.success('Réponse enregistrée'),
   });
 
@@ -116,13 +116,13 @@ function EventCard({
       myResponse: responses.find((r) => r.userId === profile?.id),
       myInstrumentResponses: responseByInstrument.get(profile?.instrument?.id)?.filter((r) => r.value) ?? [],
       otherInstrumentsResponses: othersInstruments.map((i) => responseByInstrument.get(i.id)?.filter((r) => r.value) ?? []).flat(),
-      totalOtherInstrumentsResponses: sum(othersInstruments.map((i) => responseByInstrument.get(i.id)?.filter((r) => r.value)?.length ?? 0)),
+      totalOtherInstrumentsResponses: sum(othersInstruments.map((i) => responseByInstrument.get(i.id)?.filter((r) => r.value).length ?? 0)),
     };
-  }, [responses, profile]);
+  }, [instruments, responses, responseByInstrument, profile?.instrument?.id, profile?.id]);
 
   return (
     <div key={event.id} className="shadow-md rounded-xl overflow-hidden">
-      <div className="flex flex-col justify-center text-center p-8 bg-gradient-to-tr from-pourpre-50 to-gray-200">
+      <div className="flex flex-col justify-center text-center p-8 bg-linear-to-tr from-pourpre-50 to-gray-200">
         <span className="text-xl font-bold">{event.date.getDate()}</span>
         <span>{event.date.toLocaleString('fr', { month: 'long' })}</span>
       </div>
@@ -231,7 +231,7 @@ function EventCard({
             <ul className="text-left mb-4">
               {instruments.map((instrument) => (
                 <li key={instrument.id}>
-                  {responseByInstrument.get(instrument.id)?.filter((r) => r.value)?.length ?? 0}
+                  {responseByInstrument.get(instrument.id)?.filter((r) => r.value).length}
                   {' '}
                   {instrument.name}
                 </li>
@@ -260,15 +260,15 @@ export default function PlanningPage() {
 
   const { data: events } = useQuery({
     queryKey: ['events', 'next100doodle'],
-    queryFn: () => eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date(), isInDoodle: true }),
+    queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date(), isInDoodle: true }),
   });
   const { data: profiles } = useQuery({
     queryKey: ['profiles'],
-    queryFn: () => usersApi.listProfilesApiV1ProfilesGet(),
+    queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet(),
   });
   const { data: responses } = useQuery({
     queryKey: ['responses'],
-    queryFn: () => eventsApi.listResponsesApiV1ResponsesGet({ dateGte: new Date() }),
+    queryFn: async () => await eventsApi.listResponsesApiV1ResponsesGet({ dateGte: new Date() }),
   });
 
   const { filteredProfiles, enrichedResponses } = useMemo(() => ({
@@ -280,8 +280,9 @@ export default function PlanningPage() {
     if (!profiles) {
       return [];
     }
-    const instrumentsFiltered = profiles?.map((p) => p.instrument).filter((i) => !!i);
-    return [...new Set(instrumentsFiltered.map((i) => JSON.stringify(i)))].map((s) => JSON.parse(s));
+    const instrumentsFiltered = profiles.map((p) => p.instrument).filter((i) => !!i);
+    const uniqueById = new Map(instrumentsFiltered.map((i) => [i.id, i]));
+    return [...uniqueById.values()];
   }, [profiles]);
 
   return (
@@ -328,7 +329,7 @@ export default function PlanningPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {events?.map((event) => (
-            <EventCard key={event.id} event={event} responses={enrichedResponses?.get(event.id) ?? []} instruments={instruments} profiles={filteredProfiles} />
+            <EventCard key={event.id} event={event} responses={enrichedResponses.get(event.id) ?? []} instruments={instruments} profiles={filteredProfiles} />
           ))}
         </div>
       </Container>

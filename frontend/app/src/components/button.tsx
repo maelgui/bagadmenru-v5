@@ -1,5 +1,5 @@
-/* eslint-disable react/require-default-props */
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
+
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { cva, type VariantProps } from 'class-variance-authority';
 import LoaderAudio from '../assets/loader';
@@ -31,7 +31,7 @@ type ButtonProps<C extends React.ElementType = 'button'> = {
   as?: C
   isLoading?: boolean
   icon?: IconProp
-  ref?: React.Ref<any>
+  ref?: React.Ref<HTMLButtonElement>
 } & VariantProps<typeof buttonVariants>
   & Omit<React.ComponentPropsWithoutRef<C>, 'size' | 'variant'>;
 
@@ -56,7 +56,7 @@ export default function Button<C extends React.ElementType = 'button'>({
       type="button"
       className={buttonVariants({ size, variant, className: `${isLoading ? 'animate-pulse' : ''} ${className ?? ''}` })}
       disabled={isLoading}
-      // eslint-disable-next-line react/jsx-props-no-spreading
+
       {...rest}
     >
       <div className="relative">

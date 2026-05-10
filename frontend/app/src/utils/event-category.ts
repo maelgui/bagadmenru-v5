@@ -3,7 +3,7 @@ interface Category {
   variant: 'sortie' | 'repetition' | 'default';
 }
 
-const EventCategories: { [key: string]: Category } = {
+const EventCategories: Partial<Record<string, Category>> = {
   sortie: {
     name: 'Sortie',
     variant: 'sortie',

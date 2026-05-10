@@ -2,22 +2,27 @@ import { QueryCache, QueryClient, useQuery } from '@tanstack/react-query';
 import {
   AuthenticationApi,
   Configuration, EventsApi, FilesApi,
+  type Profile,
   ProfilesApi,
+  PushNotificationsApi,
   ResponseError,
   UtilsApi,
 } from 'bagad-client';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import env from '../env';
-import { AuthStatus, useProfileStore } from '../utils/authStore';
+
+const MAX_QUERY_RETRIES = 2;
+const HTTP_UNAUTHORIZED = 401;
+const HTTP_FORBIDDEN = 403;
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      if (error instanceof ResponseError && error.response.status === 403) {
+      if (error instanceof ResponseError && error.response.status === HTTP_FORBIDDEN) {
         toast.error("Vous n'avez pas les droits nécessaire pour accéder à cette ressources.");
-      } else if (error instanceof ResponseError && error.response.status === 401) {
+      } else if (error instanceof ResponseError && error.response.status === HTTP_UNAUTHORIZED) {
         toast.error('Vous ne semblez pas authentifié.');
       } else {
         toast.error(`Something went wrong: ${error.message}`);
@@ -28,28 +33,37 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (error instanceof ResponseError && error.response.status === 401) {
+        if (error instanceof ResponseError && error.response.status === HTTP_UNAUTHORIZED) {
           return false;
         }
-        return failureCount < 2;
+        return failureCount < MAX_QUERY_RETRIES;
       },
     },
   },
 });
 
-export function useApiClient() {
-  const conf = new Configuration({
-    basePath: env.VITE_BBE2_API_URL,
-    credentials: 'include',
-  });
+const apiConf = new Configuration({
+  basePath: env.VITE_BBE2_API_URL,
+  credentials: 'include',
+});
 
-  return {
-    eventsApi: new EventsApi(conf),
-    usersApi: new ProfilesApi(conf),
-    filesApi: new FilesApi(conf),
-    utilsApi: new UtilsApi(conf),
-    authApi: new AuthenticationApi(conf),
-  };
+const apiClient = {
+  eventsApi: new EventsApi(apiConf),
+  usersApi: new ProfilesApi(apiConf),
+  filesApi: new FilesApi(apiConf),
+  utilsApi: new UtilsApi(apiConf),
+  authApi: new AuthenticationApi(apiConf),
+  pushApi: new PushNotificationsApi(apiConf),
+};
+
+export function useApiClient() {
+  return apiClient;
+}
+
+export enum AuthStatus {
+  Guest = 'GUEST',
+  Authenticated = 'AUTHENTICATED',
+  Unknown = 'UNKNOWN',
 }
 
 export function useUserProfile() {
@@ -57,7 +71,7 @@ export function useUserProfile() {
 
   const { data } = useQuery({
     queryKey: ['profiles', 'me'],
-    queryFn: () => usersApi.getMyProfileApiV1ProfilesMeGet(),
+    queryFn: async () => await usersApi.getMyProfileApiV1ProfilesMeGet(),
   });
   return data;
 }
@@ -67,7 +81,7 @@ export function usePermissions() {
 
   const { data: permissions } = useQuery({
     queryKey: ['profiles', 'me', 'permissions'],
-    queryFn: () => usersApi.getMyPermissionsApiV1ProfilesMePermissionsGet(),
+    queryFn: async () => await usersApi.getMyPermissionsApiV1ProfilesMePermissionsGet(),
   });
 
   const can = useCallback((action: string, resource: string) => {
@@ -79,41 +93,32 @@ export function usePermissions() {
 }
 
 export function useAuth() {
-  const { account, setAccount } = useProfileStore();
   const { usersApi, authApi } = useApiClient();
   const navigate = useNavigate();
 
-  let status;
-  switch (account) {
-    case null:
-      status = AuthStatus.Guest;
-      break;
-    case undefined:
-      status = AuthStatus.Unknown;
-      break;
-    default:
-      status = AuthStatus.Authenticated;
-      break;
-  }
+  const { data: account, isPending, isError } = useQuery<Profile>({
+    queryKey: ['profiles', 'me'],
+    queryFn: async () => await usersApi.getMyProfileApiV1ProfilesMeGet(),
+    retry: false,
+  });
 
-  useEffect(() => {
-    usersApi.getMyProfileApiV1ProfilesMeGet().then((user) => {
-      setAccount(user);
-    }).catch(() => {
-      setAccount(null);
-    });
-  }, []);
+  const status = (() => {
+    if (isPending) return AuthStatus.Unknown;
+    if (isError) return AuthStatus.Guest;
+    return AuthStatus.Authenticated;
+  })();
 
   const login = useCallback(() => {
-    navigate('/auth/login');
-  }, []);
+    void navigate('/auth/login');
+  }, [navigate]);
 
   const logout = useCallback(({ redirectTo = 'https://bagadmenru.bzh' }: { redirectTo: string }) => {
-    authApi.logoutApiV1AuthLogoutPost().then(() => {
-      setAccount(null);
+    void authApi.logoutApiV1AuthLogoutPost().then(() => {
+      queryClient.setQueryData(['profiles', 'me'], null);
+      queryClient.removeQueries({ queryKey: ['profiles', 'me'] });
       window.location.href = redirectTo;
     });
-  }, []);
+  }, [authApi]);
 
   return {
     status, account, login, logout,

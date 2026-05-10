@@ -2,7 +2,7 @@ import { Link, NavLink } from 'react-router-dom';
 
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import logo from '../assets/logov2.svg';
 import {
@@ -11,6 +11,8 @@ import {
 } from '../config/client';
 import Avatar from './avatar';
 import Button from './button';
+
+const BLUR_CLOSE_DELAY_MS = 200;
 
 interface CustomNavLinkProps {
   to: string,
@@ -58,7 +60,7 @@ export default function Navbar() {
             className="ml-auto block lg:hidden"
             aria-label="open-menu"
             onClick={() => setShow(!show)}
-            onBlur={() => setTimeout(close, 200)}
+            onBlur={() => setTimeout(close, BLUR_CLOSE_DELAY_MS)}
           >
             <FontAwesomeIcon icon={faBars} size="xl" className="mx-8" />
           </button>

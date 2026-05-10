@@ -1,6 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../config/client';
-import { AuthStatus } from '../utils/authStore';
+import { AuthStatus, useAuth } from '../config/client';
 
 export default function AuthGuard() {
   const { status } = useAuth();
