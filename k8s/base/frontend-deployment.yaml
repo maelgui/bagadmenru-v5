@@ -18,7 +18,7 @@ spec:
         - name: ghcr-credentials
       containers:
         - name: frontend
-          image: ghcr.io/maelgui/bagadmenru-v5/frontend:latest
+          image: ghcr.io/maelgui/bagadmenru-v5/frontend:MUST_BE_SET
           ports:
             - containerPort: 80
           envFrom:

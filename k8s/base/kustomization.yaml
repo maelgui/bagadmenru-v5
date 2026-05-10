@@ -13,8 +13,3 @@ resources:
   - frontend-service.yaml
   - ingress.yaml
 
-images:
-  - name: ghcr.io/maelgui/bagadmenru-v5/backend
-    newTag: latest
-  - name: ghcr.io/maelgui/bagadmenru-v5/frontend
-    newTag: latest

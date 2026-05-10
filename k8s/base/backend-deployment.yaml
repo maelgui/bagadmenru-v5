@@ -18,7 +18,7 @@ spec:
         - name: ghcr-credentials
       initContainers:
         - name: migrate
-          image: ghcr.io/maelgui/bagadmenru-v5/backend:latest
+          image: ghcr.io/maelgui/bagadmenru-v5/backend:MUST_BE_SET
           command: ["alembic", "upgrade", "head"]
           envFrom:
             - secretRef:
@@ -35,7 +35,7 @@ spec:
               value: "postgresql+psycopg://bagadmenru:$(POSTGRES_PASSWORD)@postgres:5432/bagadmenru"
       containers:
         - name: backend
-          image: ghcr.io/maelgui/bagadmenru-v5/backend:latest
+          image: ghcr.io/maelgui/bagadmenru-v5/backend:MUST_BE_SET
           command: ["uvicorn", "bbe2.main:app", "--host", "0.0.0.0", "--port", "8000"]
           ports:
             - containerPort: 8000

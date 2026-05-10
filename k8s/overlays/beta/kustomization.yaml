@@ -18,8 +18,4 @@ patches:
   - path: backend-seed-patch.yaml
   - path: frontend-config-patch.yaml
 
-images:
-  - name: ghcr.io/maelgui/bagadmenru-v5/backend
-    newTag: beta
-  - name: ghcr.io/maelgui/bagadmenru-v5/frontend
-    newTag: beta
+# images: tags are set explicitly by CI via `kustomize edit set image`

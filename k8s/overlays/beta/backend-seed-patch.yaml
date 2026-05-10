@@ -7,7 +7,7 @@ spec:
     spec:
       initContainers:
         - name: seed-e2e
-          image: ghcr.io/maelgui/bagadmenru-v5/backend:latest
+          image: ghcr.io/maelgui/bagadmenru-v5/backend:MUST_BE_SET
           command: ["bbe2", "seed-e2e"]
           envFrom:
             - secretRef:

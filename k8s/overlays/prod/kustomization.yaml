@@ -15,8 +15,4 @@ patches:
   - path: backend-config-patch.yaml
   - path: frontend-config-patch.yaml
 
-images:
-  - name: ghcr.io/maelgui/bagadmenru-v5/backend
-    newTag: latest
-  - name: ghcr.io/maelgui/bagadmenru-v5/frontend
-    newTag: latest
+# images: tags must be set explicitly via `kustomize edit set image` before deploying
