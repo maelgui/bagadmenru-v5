@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from bbe2.dependencies import SettingsDep
 from bbe2.services.email import InboxEmail, fetch_inbox_emails
@@ -16,4 +16,8 @@ router = APIRouter(prefix="/utils")
 def get_emails(
     settings: SettingsDep,
 ) -> list[InboxEmail]:
-    return fetch_inbox_emails(settings)
+    try:
+        emails = fetch_inbox_emails(settings)
+    except:
+        raise HTTPException(status_code=501, detail="Failed to connect to mailbox")
+    return emails
