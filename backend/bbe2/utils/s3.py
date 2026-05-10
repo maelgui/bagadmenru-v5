@@ -56,18 +56,27 @@ class S3Helper:
 
         return response
 
-    def generate_get_presigned_url(self, object_name, expiration=3600):
+    def generate_get_presigned_url(
+        self, object_name, expiration=3600, filename: Optional[str] = None
+    ):
         """Generate a presigned URL to share an S3 object
 
         :param bucket_name: string
         :param object_name: string
         :param expiration: Time in seconds for the presigned URL to remain valid
+        :param filename: If provided, sets Content-Disposition so the browser
+                         downloads the file with this name.
         :return: Presigned URL as string. If error, returns None.
         """
+        params = {"Bucket": self.bucket_name, "Key": object_name}
+        if filename:
+            params["ResponseContentDisposition"] = (
+                f'attachment; filename="{filename}"'
+            )
 
         return self.client.generate_presigned_url(
             "get_object",
-            Params={"Bucket": self.bucket_name, "Key": object_name},
+            Params=params,
             ExpiresIn=expiration,
         )
 

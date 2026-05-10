@@ -38,4 +38,6 @@ class FileOrFolder(_FileOrFolderBase):
     def fileUrl(self) -> Optional[str]:
         if not self.file_key:
             return None
-        return self.s3_helper.generate_get_presigned_url(object_name=self.file_key)
+        return self.s3_helper.generate_get_presigned_url(
+            object_name=self.file_key, filename=self.name
+        )
