@@ -4,7 +4,7 @@ import uuid
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
@@ -45,12 +45,16 @@ async def list_files(
 )
 async def get_root(
     file_crud: Annotated[CRUDFile, Depends()],
+    session: SessionDep,
 ):
     """Get root folder entity."""
-    root_file = file_crud.find_one_by(models.FileOrFolderDB.id == 1)
+    root_file = file_crud.find_one_by(
+        models.FileOrFolderDB.name == "root",
+        models.FileOrFolderDB.parent_id.is_(None),
+        models.FileOrFolderDB.type == FileOrFolderType.DIRECTORY,
+    )
     if not root_file:
         root_file = file_crud.create(
-            id=1,
             type=FileOrFolderType.DIRECTORY,
             name="root",
         )
