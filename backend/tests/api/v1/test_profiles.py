@@ -8,6 +8,7 @@ def test_read_my_profile(client: TestClient):
     assert response.status_code == 200
     assert response.json() == {
         "id": "a8e2d3249e9d997e",
+        "email": "john.doe@example.com",
         "first_name": "john",
         "last_name": "doe",
         "picture_key": None,
@@ -28,6 +29,7 @@ def test_read_profile(client: TestClient):
     assert response.status_code == 200
     assert response.json() == {
         "id": "a8e2d3249e9d997e",
+        "email": "john.doe@example.com",
         "first_name": "john",
         "last_name": "doe",
         "picture_key": ANY,
@@ -62,6 +64,7 @@ def test_update_my_profile(mock_set_tags: MagicMock, client: TestClient):
     assert response.status_code == 200
     assert response.json() == {
         "id": "a8e2d3249e9d997e",
+        "email": "john.doe@example.com",
         "first_name": "john",
         "last_name": "doe2",
         "picture_key": "blbabla.jpg",
@@ -83,6 +86,7 @@ def test_list_profiles(client: TestClient):
     assert response.json() == [
         {
             "id": "a8e2d3249e9d997e",
+            "email": "john.doe@example.com",
             "first_name": "john",
             "last_name": "doe",
             "picture_key": None,
