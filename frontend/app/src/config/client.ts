@@ -33,7 +33,8 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (error instanceof ResponseError && error.response.status === HTTP_UNAUTHORIZED) {
+        if (error instanceof ResponseError
+          && (error.response.status === HTTP_UNAUTHORIZED || error.response.status === HTTP_FORBIDDEN)) {
           return false;
         }
         return failureCount < MAX_QUERY_RETRIES;
