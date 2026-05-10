@@ -20,5 +20,7 @@ def get_emails(
     try:
         emails = fetch_inbox_emails(settings)
     except IMAPClientError as exc:
-        raise HTTPException(status_code=501, detail="Failed to connect to mailbox") from exc
+        raise HTTPException(
+            status_code=501, detail="Failed to connect to mailbox"
+        ) from exc
     return emails

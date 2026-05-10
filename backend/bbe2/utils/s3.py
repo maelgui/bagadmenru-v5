@@ -70,9 +70,7 @@ class S3Helper:
         """
         params = {"Bucket": self.bucket_name, "Key": object_name}
         if filename:
-            params["ResponseContentDisposition"] = (
-                f'attachment; filename="{filename}"'
-            )
+            params["ResponseContentDisposition"] = f'attachment; filename="{filename}"'
 
         return self.client.generate_presigned_url(
             "get_object",
