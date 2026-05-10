@@ -12,6 +12,8 @@ spec:
           envFrom:
             - secretRef:
                 name: backend-secrets
+            - secretRef:
+                name: e2e-credentials
             - configMapRef:
                 name: backend-config
           env:

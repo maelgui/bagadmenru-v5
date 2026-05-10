@@ -43,7 +43,7 @@ class UserDB(Base):
         String(64), primary_key=True, index=True, default=uuid.uuid4
     )
     email: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    password: Mapped[bytes] = mapped_column(String(256), nullable=True)
+    password: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
     first_name: Mapped[str] = mapped_column(String(30), nullable=False)
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)

@@ -4,7 +4,7 @@ services:
     command: server /data --console-address :9090
     ports:
       - 9090:9090
-      # - 9000:9000
+      - 9000:9000
     volumes:
       - s3data:/data
 
@@ -26,6 +26,8 @@ services:
     command: ["sh", "-c", "alembic upgrade head && bbe2 seed-e2e"]
     environment:
       - DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@db/postgres
+      - E2E_USER_PASSWORD=E2eTest1234!
+      - E2E_ADMIN_PASSWORD=E2eAdmin1234!
     volumes:
       - ./backend:/project
     depends_on:

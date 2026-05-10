@@ -6,6 +6,10 @@ on:
     branches:
       - "main"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REPO: ghcr.io/${{ github.repository }}
 
@@ -62,7 +66,7 @@ jobs:
         run: poetry run pytest
 
   build-push:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs:
       - test-backend
       - lint-frontend
@@ -108,11 +112,14 @@ jobs:
           delete-only-untagged-versions: "true"
 
   deploy-beta:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs:
       - build-push
     runs-on: ubuntu-latest
     environment: beta
+    outputs:
+      e2e_user_password: ${{ steps.e2e-creds.outputs.E2E_USER_PASSWORD }}
+      e2e_admin_password: ${{ steps.e2e-creds.outputs.E2E_ADMIN_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -125,6 +132,22 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
+
+      - name: Generate E2E credentials
+        id: e2e-creds
+        run: |
+          echo "E2E_USER_PASSWORD=$(openssl rand -base64 24)" >> $GITHUB_OUTPUT
+          echo "E2E_ADMIN_PASSWORD=$(openssl rand -base64 24)" >> $GITHUB_OUTPUT
+
+      - name: Create E2E credentials secret
+        run: |
+          kubectl create secret generic e2e-credentials \
+            --namespace=bagadmenru-beta \
+            --from-literal=E2E_USER_EMAIL=e2e@bagadmenru.bzh \
+            --from-literal=E2E_USER_PASSWORD=${{ steps.e2e-creds.outputs.E2E_USER_PASSWORD }} \
+            --from-literal=E2E_ADMIN_EMAIL=e2e-admin@bagadmenru.bzh \
+            --from-literal=E2E_ADMIN_PASSWORD=${{ steps.e2e-creds.outputs.E2E_ADMIN_PASSWORD }} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Set image tag to commit SHA
         working-directory: k8s/overlays/beta
@@ -177,6 +200,8 @@ jobs:
         run: npm run test:ci
         env:
           CI: true
+          E2E_USER_PASSWORD: ${{ needs.deploy-beta.outputs.e2e_user_password }}
+          E2E_ADMIN_PASSWORD: ${{ needs.deploy-beta.outputs.e2e_admin_password }}
 
       - name: Upload test report
         uses: actions/upload-artifact@v4

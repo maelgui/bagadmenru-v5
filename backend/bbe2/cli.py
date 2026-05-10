@@ -1,4 +1,5 @@
 import os
+import secrets
 
 import typer
 from rich.console import Console
@@ -130,14 +131,17 @@ def bootstrap():
 
 
 # ---------------------------------------------------------------------------
-# E2E seed data constants
+# E2E seed data constants — override via env vars for flexibility
+# If no password is provided, a random one is generated each time.
 # ---------------------------------------------------------------------------
 E2E_USER_ID = "e2e-user-00000000"
 E2E_ADMIN_ID = "e2e-admin-00000000"
-E2E_USER_EMAIL = "e2e@bagadmenru.bzh"
-E2E_ADMIN_EMAIL = "e2e-admin@bagadmenru.bzh"
-E2E_USER_PASSWORD = "E2eTest1234!"
-E2E_ADMIN_PASSWORD = "E2eAdmin1234!"
+E2E_USER_EMAIL = os.environ.get("E2E_USER_EMAIL", "e2e@bagadmenru.bzh")
+E2E_ADMIN_EMAIL = os.environ.get("E2E_ADMIN_EMAIL", "e2e-admin@bagadmenru.bzh")
+
+
+E2E_USER_PASSWORD = os.environ.get("E2E_USER_PASSWORD") or secrets.token_urlsafe(32)
+E2E_ADMIN_PASSWORD = os.environ.get("E2E_ADMIN_PASSWORD") or secrets.token_urlsafe(32)
 
 
 @app.command("seed-e2e", help="Seed E2E test data (runs bootstrap first, idempotent)")
@@ -179,7 +183,7 @@ def seed_e2e():
             s.flush()
             console.log("E2E Members group created")
 
-        # 4. Create E2E users
+        # 4. Create or update E2E users (always update password/email)
         e2e_user = s.get(UserDB, E2E_USER_ID)
         if not e2e_user:
             e2e_user = UserDB(
@@ -194,7 +198,9 @@ def seed_e2e():
             s.add(e2e_user)
             console.log(f"E2E user created: {E2E_USER_EMAIL}")
         else:
-            console.log(f"E2E user already exists: {E2E_USER_EMAIL}")
+            e2e_user.email = E2E_USER_EMAIL
+            e2e_user.password = myctx.hash(E2E_USER_PASSWORD)
+            console.log(f"E2E user updated: {E2E_USER_EMAIL}")
 
         e2e_admin = s.get(UserDB, E2E_ADMIN_ID)
         if not e2e_admin:
@@ -210,7 +216,9 @@ def seed_e2e():
             s.add(e2e_admin)
             console.log(f"E2E admin created: {E2E_ADMIN_EMAIL}")
         else:
-            console.log(f"E2E admin already exists: {E2E_ADMIN_EMAIL}")
+            e2e_admin.email = E2E_ADMIN_EMAIL
+            e2e_admin.password = myctx.hash(E2E_ADMIN_PASSWORD)
+            console.log(f"E2E admin updated: {E2E_ADMIN_EMAIL}")
 
         s.commit()
 
