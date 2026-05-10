@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from imapclient.exceptions import IMAPClientError
+from imapclient.exceptions import IMAPClientError  # type: ignore
 
 from bbe2.dependencies import SettingsDep
 from bbe2.services.email import InboxEmail, fetch_inbox_emails
