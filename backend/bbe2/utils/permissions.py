@@ -37,6 +37,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.EVENT.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
+        (Action.VIEW.value, Resource.GROUP.value),
     },
     "intervenants": {
         (Action.VIEW.value, Resource.ME.value),
@@ -51,6 +52,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.CREATE.value, Resource.RESPONSE.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
+        (Action.VIEW.value, Resource.GROUP.value),
     },
     "staff": {
         (Action.VIEW.value, Resource.ME.value),

@@ -55,6 +55,6 @@ test.describe('Groups UI', () => {
     await page.waitForLoadState('networkidle');
 
     // Should see groups list header
-    await expect(page.locator('text=Liste des groupes')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Liste des groupes' })).toBeVisible();
   });
 });
