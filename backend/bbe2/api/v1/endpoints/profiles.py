@@ -517,6 +517,7 @@ async def get_user_rankings(
         # Create a Profile object with the correct field types
         profile = Profile(
             id=user_db.id,
+            email=user_db.email,
             first_name=user_db.first_name,
             last_name=user_db.last_name,
             picture_key=user_db.picture_key,
