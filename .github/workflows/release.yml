@@ -209,3 +209,42 @@ jobs:
         with:
           name: playwright-report
           path: e2e/playwright-report/
+
+  deploy-prod:
+    needs:
+      - e2e-beta
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Set image tag to commit SHA
+        working-directory: k8s/overlays/prod
+        run: |
+          kustomize edit set image \
+            ghcr.io/maelgui/bagadmenru-v5/backend=${{ env.REPO }}/backend:${{ github.sha }} \
+            ghcr.io/maelgui/bagadmenru-v5/frontend=${{ env.REPO }}/frontend:${{ github.sha }}
+
+      - name: Deploy to production
+        run: kubectl apply -k k8s/overlays/prod
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/backend -n bagadmenru-prod --timeout=180s
+          kubectl rollout status deployment/frontend -n bagadmenru-prod --timeout=180s
+
+      - name: Verify deployment health
+        run: |
+          kubectl get pods -n bagadmenru-prod
+          echo "---"
+          kubectl get ingress -n bagadmenru-prod
