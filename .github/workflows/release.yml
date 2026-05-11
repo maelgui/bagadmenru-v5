@@ -170,7 +170,6 @@ jobs:
     needs:
       - deploy-beta
     runs-on: ubuntu-latest
-    environment: beta
     steps:
       - uses: actions/checkout@v4
 
