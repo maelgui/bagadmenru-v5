@@ -14,14 +14,15 @@ test.describe('Smoke Tests', () => {
 
   test('Frontend loads', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/.*/);
-    // Page should render without crashing
-    await expect(page.locator('body')).toBeVisible();
+    await expect(page).toHaveTitle(/Bagad Men Ru/);
   });
 
   test('Login page accessible', async ({ page }) => {
     await page.goto('/auth/login');
-    // Should show a login form or redirect
-    await expect(page.locator('body')).toBeVisible();
+    await expect(page).toHaveTitle(/Bagad Men Ru/);
+    await expect(page.locator('h1')).toHaveText('Connexion');
+    await expect(page.locator('input#email')).toBeVisible();
+    await expect(page.locator('input#password')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Connexion' })).toBeVisible();
   });
 });
