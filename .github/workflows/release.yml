@@ -116,7 +116,9 @@ jobs:
     needs:
       - build-push
     runs-on: ubuntu-latest
-    environment: beta
+    environment:
+      name: beta
+      url: https://beta.bagadmenru.bzh
     outputs:
       e2e_user_password: ${{ steps.e2e-creds.outputs.E2E_USER_PASSWORD }}
       e2e_admin_password: ${{ steps.e2e-creds.outputs.E2E_ADMIN_PASSWORD }}
@@ -214,7 +216,9 @@ jobs:
     needs:
       - e2e-beta
     runs-on: ubuntu-latest
-    environment: prod
+    environment:
+      name: prod
+      url: https://prod.bagadmenru.bzh
     steps:
       - name: Checkout
         uses: actions/checkout@v4
