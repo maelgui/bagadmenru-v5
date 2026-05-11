@@ -1,7 +1,7 @@
 import { QueryCache, QueryClient, useQuery } from '@tanstack/react-query';
 import {
   AuthenticationApi,
-  Configuration, EventsApi, FilesApi,
+  Configuration, DefaultApi, EventsApi, FilesApi,
   type Profile,
   ProfilesApi,
   PushNotificationsApi,
@@ -49,6 +49,7 @@ const apiConf = new Configuration({
 });
 
 const apiClient = {
+  defaultApi: new DefaultApi(apiConf),
   eventsApi: new EventsApi(apiConf),
   usersApi: new ProfilesApi(apiConf),
   filesApi: new FilesApi(apiConf),

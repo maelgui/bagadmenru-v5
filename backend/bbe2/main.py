@@ -7,8 +7,10 @@ from contextlib import asynccontextmanager
 import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
+from bbe2 import __version__
 from bbe2.api.v1.api import api_router
 from bbe2.scheduler import scheduler
 
@@ -86,11 +88,24 @@ async def add_process_time_header(request: Request, call_next):
 app.include_router(api_router, prefix="/api/v1")
 
 
+class HealthResponse(BaseModel):
+    status: str
+
+
+class VersionResponse(BaseModel):
+    version: str
+
+
 @app.get("/")
-async def hello():
-    return {"status": "OK"}
+async def hello() -> HealthResponse:
+    return HealthResponse(status="OK")
 
 
-@app.get("/api/v1/health")
-async def health():
-    return {"status": "healthy"}
+@app.get("/api/v1/health", response_model=HealthResponse)
+async def health() -> HealthResponse:
+    return HealthResponse(status="healthy")
+
+
+@app.get("/api/v1/version", response_model=VersionResponse)
+async def version() -> VersionResponse:
+    return VersionResponse(version=os.environ.get("APP_VERSION", "dev"))

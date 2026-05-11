@@ -1,5 +1,6 @@
 import { faHeart } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import VersionInfo from './version-info';
 
 export default function Footer() {
   return (
@@ -11,6 +12,7 @@ export default function Footer() {
         {' '}
         by Mael G.
       </span>
+      <VersionInfo />
     </div>
   );
 }

@@ -98,6 +98,8 @@ jobs:
           tags: |
             ${{ env.REPO }}/${{ matrix.image_name }}:${{ github.sha }}
             ${{ env.REPO }}/${{ matrix.image_name }}:latest
+          build-args: |
+            APP_VERSION=v${{ github.run_number }}
           cache-from: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache
           cache-to: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache,mode=max
           sbom: false

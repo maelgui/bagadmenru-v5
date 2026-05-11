@@ -3,6 +3,7 @@ import nprogress from 'nprogress';
 import { type PropsWithChildren, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import logo from '../assets/logov2fullsmallhorizontall.svg';
+import VersionInfo from '../components/version-info';
 
 interface SimpleLayoutProps extends PropsWithChildren {
 }
@@ -19,12 +20,15 @@ export default function SimpleLayout({ children }: SimpleLayoutProps) {
   }, [isFetching]);
 
   return (
-    <div className={`${isFetching ? 'loading' : ''} p-4 min-h-screen flex`}>
+    <div className={`${isFetching ? 'loading' : ''} p-4 min-h-screen flex flex-col`}>
       <div className="m-auto max-w-md w-full align-middle">
         <div>
           <img src={logo} alt="logo du bagadmenru" className="h-16 my-16" />
         </div>
         {children}
+      </div>
+      <div className="text-center">
+        <VersionInfo />
       </div>
     </div>
   );

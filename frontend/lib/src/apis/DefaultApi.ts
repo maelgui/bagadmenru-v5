@@ -14,6 +14,16 @@
 
 
 import * as runtime from '../runtime';
+import type {
+  HealthResponse,
+  VersionResponse,
+} from '../models/index';
+import {
+    HealthResponseFromJSON,
+    HealthResponseToJSON,
+    VersionResponseFromJSON,
+    VersionResponseToJSON,
+} from '../models/index';
 
 /**
  * 
@@ -23,7 +33,7 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Health
      */
-    async healthApiV1HealthGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async healthApiV1HealthGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<HealthResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -35,17 +45,13 @@ export class DefaultApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => HealthResponseFromJSON(jsonValue));
     }
 
     /**
      * Health
      */
-    async healthApiV1HealthGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async healthApiV1HealthGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<HealthResponse> {
         const response = await this.healthApiV1HealthGetRaw(initOverrides);
         return await response.value();
     }
@@ -53,7 +59,7 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Hello
      */
-    async helloGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async helloGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<HealthResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -65,18 +71,40 @@ export class DefaultApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => HealthResponseFromJSON(jsonValue));
     }
 
     /**
      * Hello
      */
-    async helloGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async helloGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<HealthResponse> {
         const response = await this.helloGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Version
+     */
+    async versionApiV1VersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VersionResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/v1/version`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => VersionResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Version
+     */
+    async versionApiV1VersionGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VersionResponse> {
+        const response = await this.versionApiV1VersionGetRaw(initOverrides);
         return await response.value();
     }
 
