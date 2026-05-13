@@ -228,7 +228,7 @@ async def list_profiles(
         select(models.UserDB)
         .where(models.UserDB.is_active)
         .order_by(models.UserDB.instrument_id, models.UserDB.first_name)
-        options(selectinload(models.UserDB.groups))  # Magic happens here!
+        .options(selectinload(models.UserDB.groups))  # Magic happens here!
     )
     res = session.scalars(q).all()
     return res
