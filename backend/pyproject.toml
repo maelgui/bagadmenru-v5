@@ -9,7 +9,7 @@ scripts = { bbe2 = 'bbe2.cli:app' }
 python = "^3.10"
 fastapi = "^0.115.8"
 uvicorn = "^0.34.0"
-python-multipart = "^0.0.20"
+python-multipart = ">=0.0.20,<0.0.28"
 boto3 = "1.35.64"
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 sqlalchemy = "^2.0.38"
