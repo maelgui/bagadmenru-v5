@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
 from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import cast, func, or_, select, update
+from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import functions as sql_fn
 from sqlalchemy.types import Integer
 
