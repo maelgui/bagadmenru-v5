@@ -40,13 +40,3 @@ updates:
       actions-deps:
         patterns:
           - "*"
-
-  - package-ecosystem: "cargo"
-    directory: "/email-api"
-    schedule:
-      interval: "daily"
-    groups:
-      actions-deps:
-        patterns:
-          - "*"
-
