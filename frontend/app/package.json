@@ -37,7 +37,7 @@
     "react-hot-toast": "^2.6.0",
     "react-oidc-context": "^3.3.1",
     "react-query": "^3.39.3",
-    "react-router": "^7.16.0",
+    "react-router": "^6.30.4",
     "react-router-dom": "^7.16.0",
     "react-select": "^5.10.2",
     "tinyduration": "^3.4.1",
