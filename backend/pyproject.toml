@@ -7,9 +7,9 @@ scripts = { bbe2 = 'bbe2.cli:app' }
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "^0.136.3"
-uvicorn = "^0.48.0"
-python-multipart = "^0.0.29"
+fastapi = "^0.141.1"
+uvicorn = "^0.52.1"
+python-multipart = "^0.0.32"
 boto3 = "1.35.64"
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 sqlalchemy = "^2.0.38"
@@ -23,14 +23,14 @@ pyjwt = "^2.9.0"
 jinja2 = "^3.1.5"
 passlib = { extras = ["argon2", "bcrypt"], version = "^1.7.4" }
 alembic = "^1.14.0"
-typer = "^0.26.3"
+typer = "^0.27.1"
 sentry-sdk = { extras = ["fastapi"], version = "^2.20.0" }
 apscheduler = "^3.11.0"
 aiosmtplib = "^5.1.0"
 imapclient = "^3.0.0"
 httpx = "^0.28.1"
 
-webauthn = "^2.5.2"
+webauthn = "^3.0.0"
 pywebpush = "^2.0.0"
 py-vapid = "^1.9.0"
 [tool.poetry.group.dev.dependencies]
