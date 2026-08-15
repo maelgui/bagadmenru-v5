@@ -1,8 +1,9 @@
- 
+
 import { faSquare } from '@fortawesome/free-regular-svg-icons';
 import { faCircleCheck, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Event, EventCreate } from 'bagad-client';
+import { useQuery } from '@tanstack/react-query';
+import type { CampaignListItem, Event, EventCreate } from 'bagad-client';
 import {
   Controller, type SubmitHandler, useForm,
 } from 'react-hook-form';
@@ -13,16 +14,32 @@ import polo from '../../../assets/polo.svg';
 import tshirt from '../../../assets/tshirt.svg';
 import Button from '../../../components/button';
 import Select from '../../../components/select';
+import { useApiClient, usePermissions } from '../../../config/client';
 
 interface EventFormProps {
   onSubmit: SubmitHandler<EventCreate>,
   data?: Event,
+  defaultCampaignId?: number | null,
 }
 
-export default function EventForm({ onSubmit, data = undefined }: EventFormProps) {
+export default function EventForm({ onSubmit, data = undefined, defaultCampaignId = null }: EventFormProps) {
+  const { campaignsApi } = useApiClient();
+  const { can } = usePermissions();
+  const isCampaignManager = can('edit', 'campaign');
+
+  const { data: campaigns } = useQuery<CampaignListItem[]>({
+    queryKey: ['campaigns'],
+    queryFn: async () => await campaignsApi.listCampaignsApiV1CampaignsGet(),
+    enabled: isCampaignManager,
+  });
+
   const {
     register, control, handleSubmit, formState: { errors, dirtyFields, isSubmitting }, setValue,
-  } = useForm<EventCreate>({ defaultValues: data || { category: 'sortie', isInDoodle: true, costume: 'COSTUME' } });
+  } = useForm<EventCreate>({
+    defaultValues: data || {
+      category: 'sortie', isInDoodle: true, costume: 'COSTUME', campaignId: defaultCampaignId,
+    },
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -80,6 +97,31 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
           <option value="autre">Autre évènement</option>
         </Select>
       </div>
+      {isCampaignManager ? (
+        <div className="mb-6">
+          <label className="mb-2 block font-semibold" htmlFor="campaignId">Campagne (optionnel)</label>
+          <Controller
+            name="campaignId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                id="campaignId"
+                error={errors.campaignId?.message}
+                name={field.name}
+                ref={field.ref}
+                value={field.value ?? ''}
+                onBlur={field.onBlur}
+                onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+              >
+                <option value="">Aucune campagne</option>
+                {campaigns?.map((campaign) => (
+                  <option key={campaign.id} value={campaign.id}>{campaign.name}</option>
+                ))}
+              </Select>
+            )}
+          />
+        </div>
+      ) : null}
       <div className="mb-6">
         <label className="mb-2 block font-semibold" htmlFor="costume-costume">Costume</label>
         <div className="grid md:grid-cols-3 gap-4 md:gap-16">

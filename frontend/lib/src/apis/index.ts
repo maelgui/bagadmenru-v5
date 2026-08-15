@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AuthenticationApi';
+export * from './CampaignsApi';
 export * from './DefaultApi';
 export * from './EventsApi';
 export * from './FilesApi';

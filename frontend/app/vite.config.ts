@@ -16,6 +16,10 @@ export default defineConfig({
       '/docs': 'http://backend:8000',
       '/openapi.json': 'http://backend:8000',
     },
+    watch: {
+      'interval': 1000,
+      'usePolling': true,
+    }
   },
 
   build: {

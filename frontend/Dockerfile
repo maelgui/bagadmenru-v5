@@ -9,7 +9,7 @@ COPY package.json yarn.lock ./
 COPY lib/package.json ./lib/
 COPY app/package.json app/yarn.lock ./app/
 
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install
+RUN yarn install
 
 CMD [ "yarn", "dev", "--host", "0.0.0.0" ]
 

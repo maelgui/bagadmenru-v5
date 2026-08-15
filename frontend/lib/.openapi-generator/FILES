@@ -3,6 +3,7 @@
 README.md
 package.json
 src/apis/AuthenticationApi.ts
+src/apis/CampaignsApi.ts
 src/apis/DefaultApi.ts
 src/apis/EventsApi.ts
 src/apis/FilesApi.ts
@@ -14,6 +15,11 @@ src/apis/index.ts
 src/index.ts
 src/models/Album.ts
 src/models/AlbumCreate.ts
+src/models/Campaign.ts
+src/models/CampaignCreate.ts
+src/models/CampaignEvent.ts
+src/models/CampaignListItem.ts
+src/models/CampaignUpdate.ts
 src/models/Costume.ts
 src/models/CredentialDeviceType.ts
 src/models/Event.ts
@@ -28,6 +34,7 @@ src/models/Group.ts
 src/models/GroupCreate.ts
 src/models/GroupUpdate.ts
 src/models/HTTPValidationError.ts
+src/models/HealthResponse.ts
 src/models/InboxEmail.ts
 src/models/LoginData.ts
 src/models/LoginType.ts
@@ -54,6 +61,7 @@ src/models/UserRankings.ts
 src/models/ValidationError.ts
 src/models/ValidationErrorLocInner.ts
 src/models/VapidPublicKeyResponse.ts
+src/models/VersionResponse.ts
 src/models/index.ts
 src/runtime.ts
 tsconfig.esm.json

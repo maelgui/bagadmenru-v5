@@ -12,9 +12,27 @@ test.describe('Smoke Tests', () => {
     expect(body.status).toBe('healthy');
   });
 
+  test('API version endpoint', async ({ request }) => {
+    const baseURL = process.env.BASE_URL || 'https://beta.bagadmenru.bzh';
+    const apiURL = baseURL.replace('://', '://api.');
+
+    const res = await request.get(`${apiURL}/api/v1/version`);
+    expect(res.ok()).toBeTruthy();
+
+    const body = await res.json();
+    expect(body.version).toBeDefined();
+    expect(body.version).not.toBe('');
+  });
+
   test('Frontend loads', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle(/Bagad Men Ru/);
+  });
+
+  test('Footer displays version info', async ({ page }) => {
+    await page.goto('/auth/login');
+    const versionInfo = page.locator('text=/Frontend v/');
+    await expect(versionInfo).toBeVisible();
   });
 
   test('Login page accessible', async ({ page }) => {

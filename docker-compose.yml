@@ -85,6 +85,7 @@ services:
     ports:
       - 5173:5173
       - 6006:6006
+      - 5174:5174
     environment:
       - VITE_BBE2_API_URL=http://localhost:5173
 

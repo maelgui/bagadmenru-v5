@@ -8,9 +8,11 @@ import jwt
 from fastapi import Cookie, Depends, Header, HTTPException, status
 from itsdangerous import BadSignature, URLSafeTimedSerializer
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 
 from bbe2.config import Settings, get_settings
 from bbe2.crud.crud_profile import CRUDProfile
+from bbe2.dependencies import SessionDep
 from bbe2.models.user import UserDB
 from bbe2.schemas import JwtPayload
 from bbe2.utils.permissions import Action, Resource, is_allowed
@@ -121,6 +123,68 @@ def get_current_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
     return db_profile
+
+
+def user_is_campaign_manager(session: Session, user_id: str) -> bool:
+    """True if the user holds 'campaign_manager' in any group membership.
+
+    Non-raising counterpart of CampaignAuthorization, used by visibility
+    filtering and event-creation checks.
+    """
+    user = session.get(UserDB, user_id)
+    if not user:
+        return False
+    return any(
+        any(role.id == CampaignAuthorization.ROLE_ID for role in group.roles)
+        for group in user.groups
+    )
+
+
+class CampaignAuthorization:
+    """Checks that the current user holds 'campaign_manager' role in any group."""
+
+    ROLE_ID = "campaign_manager"
+
+    async def __call__(
+        self,
+        settings: Annotated[Settings, Depends(get_settings)],
+        access_token: Annotated[str, Depends(credentials)],
+        session: SessionDep,
+    ) -> JwtPayload:
+        """Checks JWT and campaign management permission.
+
+        Raises:
+            HTTPException: 401 when token invalid, 403 when permission denied
+
+        Returns:
+            JwtPayload: decoded access token content
+        """
+        decoded_token = verify_token(access_token, settings)
+        if not decoded_token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unauthorized",
+            )
+
+        # Admin users bypass the role check
+        if "admin" in decoded_token.roles:
+            return decoded_token
+
+        user = session.get(UserDB, decoded_token.sub)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unauthorized",
+            )
+
+        # Global check: user has campaign_manager role in ANY group
+        if not user_is_campaign_manager(session, decoded_token.sub):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+
+        return decoded_token
 
 
 myctx = CryptContext(

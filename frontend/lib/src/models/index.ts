@@ -2,6 +2,11 @@
 /* eslint-disable */
 export * from './Album';
 export * from './AlbumCreate';
+export * from './Campaign';
+export * from './CampaignCreate';
+export * from './CampaignEvent';
+export * from './CampaignListItem';
+export * from './CampaignUpdate';
 export * from './Costume';
 export * from './CredentialDeviceType';
 export * from './Event';

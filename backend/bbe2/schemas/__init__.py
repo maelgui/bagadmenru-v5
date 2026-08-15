@@ -1,5 +1,12 @@
 from .album import Album, AlbumCreate
 from .auth import JwtPayload, LoginData
+from .campaign import (
+    Campaign,
+    CampaignCreate,
+    CampaignEvent,
+    CampaignListItem,
+    CampaignUpdate,
+)
 from .event import Costume, Event, EventCreate
 from .file import FileOrFolder, FileOrFolderType, FileOrFolderUpdate, FolderCreate
 from .passkey import Passkey

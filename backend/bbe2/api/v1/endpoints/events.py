@@ -4,7 +4,7 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from ics import Calendar, Event  # type: ignore
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
@@ -17,6 +17,7 @@ from bbe2.utils.auth import (
     Authorization,
     Resource,
     get_current_user2,
+    user_is_campaign_manager,
 )
 
 events_router = APIRouter(prefix="/events")
@@ -32,13 +33,26 @@ responses_router = APIRouter(prefix="/responses")
 )
 async def list_events(
     session: SessionDep,
+    identifier: Annotated[str, Depends(get_current_user2)],
     limit: int = 10,
     date__gte: Optional[datetime] = None,
     date__lt: Optional[datetime] = None,
     is_in_doodle: Optional[bool] = None,
+    linkable: Optional[bool] = None,
     ordering: str = "date",
 ):
     q = session.query(models.EventDB)
+    # Draft visibility (Req 8.1, 8.2): an event is hidden iff it is linked to
+    # a draft campaign and the viewer is not a campaign manager.
+    if not user_is_campaign_manager(session, identifier):
+        q = q.outerjoin(models.CampaignDB).filter(
+            or_(
+                models.EventDB.campaign_id.is_(None),
+                models.CampaignDB.status != "draft",
+            )
+        )
+    if linkable:
+        q = q.filter(models.EventDB.campaign_id.is_(None))
     if date__gte:
         date__gte = date__gte.replace(hour=0, minute=0, second=0, microsecond=0)
         q = q.filter(models.EventDB.date >= date__gte)
@@ -82,9 +96,22 @@ async def export_ics(
 async def get_event(
     event_id: int,
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
+    session: SessionDep,
+    identifier: Annotated[str, Depends(get_current_user2)],
 ):
     db_event = event_crud.find_one_by(models.EventDB.id == event_id)
     if not db_event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+        )
+
+    # Draft visibility (Req 8.1, 8.4): an event linked to a draft campaign is
+    # hidden (404) from viewers who are not campaign managers.
+    if (
+        db_event.campaign is not None
+        and db_event.campaign.status == "draft"
+        and not user_is_campaign_manager(session, identifier)
+    ):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
@@ -101,13 +128,35 @@ async def get_event(
 async def create_event(
     event: schemas.EventCreate,
     event_crud: Annotated[CRUDEvent, Depends(CRUDEvent)],
+    session: SessionDep,
+    identifier: Annotated[str, Depends(get_current_user2)],
     settings: SettingsDep,
     sender: SenderDep,
     background_tasks: BackgroundTasks,
 ):
+    # Campaign linkage (Req 7.1-7.4): only campaign managers may create an
+    # event linked to a campaign, and the campaign must exist.
+    campaign = None
+    if event.campaign_id is not None:
+        if not user_is_campaign_manager(session, identifier):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        campaign = session.get(models.CampaignDB, event.campaign_id)
+        if not campaign:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Campaign not found",
+            )
+
     db_event = event_crud.create(**event.model_dump())
 
-    if event.is_in_doodle:
+    # Deferred notification (Req 9.1-9.3): skip notify_new_event at creation
+    # iff the event is linked to a draft campaign; notification happens at
+    # publish time instead.
+    campaign_is_draft = campaign is not None and campaign.status == "draft"
+    if event.is_in_doodle and not campaign_is_draft:
         background_tasks.add_task(
             notify_new_event, sender, settings, event, db_event.id
         )
@@ -193,6 +242,20 @@ async def create_response(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
+
+    # Campaign eligibility check
+    if db_event.campaign_id:
+        campaign = session.get(models.CampaignDB, db_event.campaign_id)
+        user = session.get(models.UserDB, identifier)
+        if (
+            campaign is None
+            or user is None
+            or not any(g.id == campaign.group_id for g in user.groups)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not eligible to respond",
+            )
 
     db_response = session.get(
         models.ResponseDB,

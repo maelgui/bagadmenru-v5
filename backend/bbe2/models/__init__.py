@@ -2,6 +2,7 @@
 
 from .album import AlbumDB, PhotoDB
 from .base import Base
+from .campaign import CampaignDB
 from .event import EventDB, ResponseDB
 from .file import FileOrFolderDB
 from .passkey import PasskeyDB

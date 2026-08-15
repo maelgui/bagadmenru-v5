@@ -6,6 +6,10 @@ import ChangePasswordPage from '../pages/auth/changePassword';
 import AuthPage from '../pages/auth/login';
 import LostPasswordPage from '../pages/auth/lostPassword';
 import UnsubscribePage from '../pages/auth/unsubscribe';
+import AddCampaignPage from '../pages/campaigns/add';
+import CampaignDetailPage from '../pages/campaigns/detail';
+import EditCampaignPage from '../pages/campaigns/edit';
+import CampaignListPage from '../pages/campaigns/list';
 import RoutingErrorComponent from '../pages/error/error';
 import AddEventPage from '../pages/events/add';
 import AnswerLinkPage from '../pages/events/answer';
@@ -119,6 +123,22 @@ export default createBrowserRouter([
               {
                 path: '/photos',
                 Component: AlbumsPage,
+              },
+              {
+                path: '/campaigns',
+                Component: CampaignListPage,
+              },
+              {
+                path: '/campaigns/add',
+                Component: AddCampaignPage,
+              },
+              {
+                path: '/campaigns/:id',
+                Component: CampaignDetailPage,
+              },
+              {
+                path: '/campaigns/:id/edit',
+                Component: EditCampaignPage,
               },
             ],
           },

@@ -69,6 +69,12 @@ export interface Event {
      * @memberof Event
      */
     id: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Event
+     */
+    campaignId?: number | null;
 }
 
 
@@ -104,6 +110,7 @@ export function EventFromJSONTyped(json: any, ignoreDiscriminator: boolean): Eve
         'category': json['category'],
         'isInDoodle': json['is_in_doodle'],
         'id': json['id'],
+        'campaignId': json['campaign_id'] == null ? undefined : json['campaign_id'],
     };
 }
 
@@ -125,6 +132,7 @@ export function EventToJSONTyped(value?: Event | null, ignoreDiscriminator: bool
         'category': value['category'],
         'is_in_doodle': value['isInDoodle'],
         'id': value['id'],
+        'campaign_id': value['campaignId'],
     };
 }
 

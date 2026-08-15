@@ -74,6 +74,9 @@ export default function Navbar() {
               <li className={`px-3 py-2 tracking-wide ${can('view', 'event') ? '' : 'hidden'}`}>
                 <CustomNavLink to={`/events/${can('create', 'response') ? '' : 'calendar'}`} onClick={close}>Évènements</CustomNavLink>
               </li>
+              <li className="px-3 py-2 tracking-wide">
+                <CustomNavLink to="/campaigns" onClick={close}>Campagnes</CustomNavLink>
+              </li>
               <li className={`px-3 py-2 tracking-wide ${can('view', 'file') ? '' : 'hidden'}`}>
                 <CustomNavLink to="/files" onClick={close}>Fichiers</CustomNavLink>
               </li>

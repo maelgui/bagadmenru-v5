@@ -19,6 +19,7 @@ class Resource(Enum):
 
     EVENT = "event"
     RESPONSE = "response"
+    CAMPAIGN = "campaign"
 
     ALBUM = "album"
     PHOTO = "photo"
@@ -31,10 +32,17 @@ class Resource(Enum):
 
 # Role → set of (action, resource) tuples
 ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
+    "campaign_manager": {
+        (Action.VIEW.value, Resource.CAMPAIGN.value),
+        (Action.CREATE.value, Resource.CAMPAIGN.value),
+        (Action.EDIT.value, Resource.CAMPAIGN.value),
+        (Action.DELETE.value, Resource.CAMPAIGN.value),
+    },
     "eleves": {
         (Action.VIEW.value, Resource.ME.value),
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.EVENT.value),
+        (Action.VIEW.value, Resource.CAMPAIGN.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
         (Action.VIEW.value, Resource.GROUP.value),
@@ -43,6 +51,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.ME.value),
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.FILE.value),
+        (Action.VIEW.value, Resource.CAMPAIGN.value),
     },
     "bagad": {
         (Action.VIEW.value, Resource.ME.value),
@@ -50,6 +59,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.EVENT.value),
         (Action.VIEW.value, Resource.RESPONSE.value),
         (Action.CREATE.value, Resource.RESPONSE.value),
+        (Action.VIEW.value, Resource.CAMPAIGN.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
         (Action.VIEW.value, Resource.GROUP.value),
@@ -63,6 +73,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.DELETE.value, Resource.EVENT.value),
         (Action.VIEW.value, Resource.RESPONSE.value),
         (Action.CREATE.value, Resource.RESPONSE.value),
+        (Action.VIEW.value, Resource.CAMPAIGN.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.CREATE.value, Resource.PROFILE.value),
         (Action.EDIT.value, Resource.PROFILE.value),

@@ -60,6 +60,11 @@ class _GroupBase(BaseModel):
 
 
 class MinimalGroup(_GroupBase):
+    # from_attributes is required here because parent models validated from
+    # ORM objects (e.g. Campaign) don't propagate it to nested models in
+    # Pydantic v2.
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
 
 

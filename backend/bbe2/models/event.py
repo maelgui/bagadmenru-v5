@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -7,6 +8,9 @@ from sqlalchemy.sql import func
 from bbe2.models.base import Base
 from bbe2.models.user import UserDB
 from bbe2.schemas import Costume
+
+if TYPE_CHECKING:
+    from bbe2.models.campaign import CampaignDB
 
 
 class EventDB(Base):
@@ -21,7 +25,11 @@ class EventDB(Base):
     costume: Mapped[Costume]
     category: Mapped[str] = mapped_column(String(30))
     is_in_doodle: Mapped[bool]
+    campaign_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("campaigns.id", ondelete="SET NULL"), nullable=True
+    )
 
+    campaign: Mapped[Optional["CampaignDB"]] = relationship(back_populates="events")
     responses: Mapped[list["ResponseDB"]] = relationship(
         back_populates="event", cascade="all, delete"
     )
