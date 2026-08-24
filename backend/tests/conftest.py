@@ -1,6 +1,10 @@
+import os
 from datetime import date, datetime, timedelta, timezone
 from typing import Generator
 from unittest.mock import patch
+
+# Required before importing bbe2.main, which fails fast if SECRET_KEY is unset.
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import bbe2.utils.auth
 import jwt

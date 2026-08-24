@@ -83,6 +83,10 @@ def process_login(
                 raise HTTPException(status_code=401, detail="Bad credentials")
             if not data.password:
                 raise HTTPException(status_code=400, detail="Password is required")
+            if not user.password:
+                # Passkey-only account with no password hash set.
+                myctx.dummy_verify()
+                raise HTTPException(status_code=401, detail="Bad credentials")
             valid, new_hash = myctx.verify_and_update(data.password, user.password)
             if not valid:
                 raise HTTPException(status_code=401, detail="Bad credentials")
@@ -101,23 +105,30 @@ def process_login(
             )
             if not passkey or not passkey.user.is_active:
                 raise HTTPException(status_code=401, detail="Bad credentials")
+            challenge = request.session.get("challenge")
+            if not challenge:
+                raise HTTPException(
+                    status_code=400, detail="No authentication challenge in session"
+                )
             try:
                 res = verify_authentication_response(
                     credential=credential,
                     credential_public_key=passkey.public_key,
                     credential_current_sign_count=passkey.sign_count,
-                    expected_challenge=base64.b64decode(request.session["challenge"]),
+                    expected_challenge=base64.b64decode(challenge),
                     expected_rp_id=settings.relying_party_id,
                     expected_origin=str(settings.frontend_base_url).rstrip("/"),
-                    require_user_verification=False,
+                    require_user_verification=True,
                 )
             except InvalidAuthenticationResponse as exc:
                 raise HTTPException(status_code=401, detail="Bad credentials") from exc
+            finally:
+                # A challenge is single-use, regardless of the outcome.
+                request.session.pop("challenge", None)
             if not res.user_verified:
                 raise HTTPException(status_code=401, detail="Bad credentials")
             # User authenticated, update sign count
             user = passkey.user
-            print(datetime.now())
             session.execute(
                 update(PasskeyDB)
                 .where(PasskeyDB.credential_id == credential.raw_id)
@@ -303,13 +314,22 @@ async def register_passkey(
     session: SessionDep,
     settings: SettingsDep,
 ) -> str:
-    verification = verify_registration_response(
-        credential=body,
-        expected_challenge=base64.b64decode(request.session["challenge"]),
-        expected_rp_id=settings.relying_party_id,
-        expected_origin=str(settings.frontend_base_url).rstrip("/"),
-        require_user_verification=False,
-    )
+    challenge = request.session.get("challenge")
+    if not challenge:
+        raise HTTPException(
+            status_code=400, detail="No registration challenge in session"
+        )
+    try:
+        verification = verify_registration_response(
+            credential=body,
+            expected_challenge=base64.b64decode(challenge),
+            expected_rp_id=settings.relying_party_id,
+            expected_origin=str(settings.frontend_base_url).rstrip("/"),
+            require_user_verification=True,
+        )
+    finally:
+        # A challenge is single-use, regardless of the outcome.
+        request.session.pop("challenge", None)
 
     passkey_db = PasskeyDB(
         passkey_user_id=current_user.passkey_user_id,
