@@ -5,15 +5,6 @@ class PermissionBase(Enum):
     pass
 
 
-class AlbumScopes(PermissionBase):
-    """Photo gallery related scopes."""
-
-    VIEW = "view_album"
-    CREATE = "create_album"
-    DELETE = "delete_album"
-    UPDATE = "update_album"
-
-
 class EventScopes(PermissionBase):
     """Events related scopes."""
 

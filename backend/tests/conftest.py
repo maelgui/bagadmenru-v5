@@ -29,13 +29,6 @@ def populate_db(session):
         # picture_key="blbabla.jpg",
     )
     session.merge(user)
-    # Albums
-    album = models.AlbumDB(
-        id=1,
-        title="Mon Album",
-        date=date(2022, 6, 3),
-    )
-    session.merge(album)
     # Events
     event = models.EventDB(
         id=1,
