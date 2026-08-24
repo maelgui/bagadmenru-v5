@@ -68,9 +68,9 @@ services:
       - IMAP_HOST=ssl0.ovh.net
       - IMAP_PORT=993
       - IMAP_USERNAME=contact@bagadmenru.bzh
-      - IMAP_PASSWORD=gJBSySEy7Vo
+      - IMAP_PASSWORD=${IMAP_PASSWORD}
       - SECRET_KEY=my-super-secret-key
-      - VAPID_PRIVATE_KEY=-YgwVxjbQ_DVQgqk6Hl-z0WJUz04FJsqJiep26scF90
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_PUBLIC_KEY=BEibjIo7p3zTBbEJc2Oywfvxe655TUTH-cklnkx0dPtAN2FktdtDEJV91xMrCdEbMaNBupoB699ENzTC3zr_ZWM
       - VAPID_CLAIMS_EMAIL=mailto:contact@bagadmenru.bzh
     depends_on:
