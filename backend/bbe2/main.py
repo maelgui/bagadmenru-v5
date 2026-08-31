@@ -58,7 +58,13 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     lifespan=lifespan,
 )
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "dev"))
+_session_secret = os.environ.get("SECRET_KEY")
+if not _session_secret:
+    raise RuntimeError(
+        "SECRET_KEY environment variable is required "
+        "(used to sign session cookies that hold WebAuthn challenges)."
+    )
+app.add_middleware(SessionMiddleware, secret_key=_session_secret)
 
 # CORS - required because frontend (beta.bagadmenru.bzh) calls API on different subdomain
 _cors_origins_raw = os.environ.get("CORS_ALLOWED_ORIGINS", "[]")

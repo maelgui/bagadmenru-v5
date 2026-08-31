@@ -20,8 +20,6 @@ class Resource(Enum):
     EVENT = "event"
     RESPONSE = "response"
 
-    ALBUM = "album"
-    PHOTO = "photo"
     FILE = "file"
 
     PROFILE = "profile"

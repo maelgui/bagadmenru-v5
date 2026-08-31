@@ -22,8 +22,11 @@ def get_session(settings: Annotated[Settings, Depends(get_settings)]):
     db = SessionLocal()
     try:
         yield db
-    finally:
         db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
         db.close()
 
 
