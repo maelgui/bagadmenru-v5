@@ -20,7 +20,6 @@ import EditGroupPage from '../pages/groups/edit';
 import GroupPage from '../pages/groups/group';
 import GroupListPage from '../pages/groups/list';
 import HomePage from '../pages/home/home';
-import AlbumsPage from '../pages/photos';
 import CreateProfilePage from '../pages/profiles/add';
 import EditProfilePage from '../pages/profiles/edit';
 import ProfilesPage from '../pages/profiles/list';
@@ -115,10 +114,6 @@ export default createBrowserRouter([
               {
                 path: '/groups/edit/:groupId',
                 Component: EditGroupPage,
-              },
-              {
-                path: '/photos',
-                Component: AlbumsPage,
               },
             ],
           },
