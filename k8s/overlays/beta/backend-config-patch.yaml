@@ -8,7 +8,7 @@ data:
   FRONTEND_BASE_URL: "https://beta.bagadmenru.bzh"
   S3_BUCKET_NAME: "bagadmenruv5-data-beta"
   RELYING_PARTY_ID: "beta.bagadmenru.bzh"
-  CORS_ALLOWED_ORIGINS: '["https://beta.bagadmenru.bzh"]'
+  CORS_ALLOWED_ORIGINS: '["https://beta.bagadmenru.bzh", "http://localhost:5173"]'
   # Email routed to Mailpit for E2E testing
   EMAIL_DRY_RUN: "false"
   SMTP_HOST: "mailpit"
