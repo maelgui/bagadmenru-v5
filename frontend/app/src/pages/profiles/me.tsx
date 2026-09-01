@@ -1,8 +1,8 @@
-import { faKey } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { KeyRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
+import { Button } from '@/components/ui/button';
 import { useUserProfile } from '../../config/client';
 import ProfileView from './components/profile';
 
@@ -20,8 +20,13 @@ export default function ShowMyProfilePage() {
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
         actions={[
-          <Header.Action key="passkeys" onClick={async () => await navigate('/profile/passkeys')} variant="outline"><FontAwesomeIcon icon={faKey} /></Header.Action>,
-          <Header.Action key="edit-profile" onClick={async () => await navigate('/profile/edit/me')}>Modifier mon profil</Header.Action>,
+          <Button key="passkeys" variant="outline" onClick={async () => await navigate('/profile/passkeys')}>
+            <KeyRound data-icon="inline-start" />
+            Passkeys
+          </Button>,
+          <Button key="edit-profile" onClick={async () => await navigate('/profile/edit/me')}>
+            Modifier mon profil
+          </Button>,
         ]}
         breadcrumb={[
           { title: 'Profils', link: '/profile' },

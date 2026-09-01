@@ -1,23 +1,43 @@
- 
-import { faSquare } from '@fortawesome/free-regular-svg-icons';
-import { faCircleCheck, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Event, EventCreate } from 'bagad-client';
-import {
-  Controller, type SubmitHandler, useForm,
-} from 'react-hook-form';
-import Input from '../../../components/input';
-
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import costume from '../../../assets/costume.svg';
 import polo from '../../../assets/polo.svg';
 import tshirt from '../../../assets/tshirt.svg';
-import Button from '../../../components/button';
-import Select from '../../../components/select';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
+import { fromIsoDate, toIsoDate } from '../../../utils/date';
 
 interface EventFormProps {
-  onSubmit: SubmitHandler<EventCreate>,
-  data?: Event,
+  onSubmit: SubmitHandler<EventCreate>;
+  data?: Event;
 }
+
+const categoryOptions = [
+  { value: 'sortie', id: 'category-outing', label: 'Sortie', description: 'Concert, défilé ou autre prestation.' },
+  { value: 'repetition', id: 'category-rehearsal', label: 'Répétition', description: 'Répétition de l’ensemble.' },
+  { value: 'autre', id: 'category-other', label: 'Autre évènement', description: 'Réunion ou activité hors prestation.' },
+] as const;
+
+const costumeOptions = [
+  { value: 'COSTUME', id: 'costume-costume', image: costume, label: 'Costume' },
+  { value: 'POLO', id: 'costume-polo', image: polo, label: 'Polo' },
+  { value: 'NONE', id: 'costume-none', image: tshirt, label: 'Aucune tenue définie' },
+] as const;
 
 export default function EventForm({ onSubmit, data = undefined }: EventFormProps) {
   const {
@@ -26,113 +46,144 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="title">Titre</label>
-        <Input
-          type="text"
-          id="title"
-          error={errors.title?.message}
-          {...register('title', { required: 'Ce champ est obligatoire.', maxLength: { value: 100, message: 'Titre trop long.' } })}
-        />
-      </div>
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="description">Description</label>
-        <Input
-          type="text"
-          id="description"
-          error={errors.description?.message}
-          {...register('description', { required: 'Ce champ est obligatoire.' })}
-        />
-      </div>
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="date">Date</label>
+      <FieldGroup>
+        <Field data-invalid={!!errors.title}>
+          <FieldLabel htmlFor="title">Titre</FieldLabel>
+          <Input
+            id="title"
+            type="text"
+            aria-invalid={!!errors.title}
+            {...register('title', { required: 'Ce champ est obligatoire.', maxLength: { value: 100, message: 'Titre trop long.' } })}
+          />
+          <FieldError>{errors.title?.message}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.description}>
+          <FieldLabel htmlFor="description">Description</FieldLabel>
+          <Input
+            id="description"
+            type="text"
+            aria-invalid={!!errors.description}
+            {...register('description', { required: 'Ce champ est obligatoire.' })}
+          />
+          <FieldError>{errors.description?.message}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.date}>
+          <FieldLabel htmlFor="date">Date</FieldLabel>
+          <Controller
+            name="date"
+            control={control}
+            rules={{ required: 'Ce champ est obligatoire.' }}
+            defaultValue={new Date()}
+            render={({ field }) => (
+              <Input
+                id="date"
+                type="date"
+                aria-invalid={!!errors.date}
+                value={toIsoDate(field.value)}
+                onChange={(event) => {
+                  if (event.target.value) field.onChange(fromIsoDate(event.target.value));
+                }}
+              />
+            )}
+          />
+          <FieldError>{errors.date?.message}</FieldError>
+        </Field>
+
         <Controller
-          name="date"
+          name="category"
           control={control}
           rules={{ required: 'Ce champ est obligatoire.' }}
-          defaultValue={new Date()}
           render={({ field }) => (
-            <Input
-              {...field}
-              type="date"
-              error={errors.date?.message}
-              value={field.value.toISOString().split('T')[0]}
-              onChange={(e) => field.onChange(new Date(e.target.value))}
-            />
+            <FieldSet>
+              <FieldLegend>Catégorie</FieldLegend>
+              <RadioGroup
+                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  if (!dirtyFields.isInDoodle) setValue('isInDoodle', value === 'sortie');
+                  if (!dirtyFields.costume) setValue('costume', value === 'sortie' ? 'COSTUME' : 'POLO');
+                }}
+                className="grid gap-3 md:grid-cols-3"
+              >
+                {categoryOptions.map((option) => (
+                  <FieldLabel
+                    key={option.value}
+                    htmlFor={option.id}
+                    className="cursor-pointer rounded-2xl border p-4 hover:bg-muted has-data-checked:border-primary has-data-checked:bg-primary/5"
+                  >
+                    <Field orientation="horizontal" data-invalid={!!errors.category}>
+                      <RadioGroupItem
+                        id={option.id}
+                        value={option.value}
+                        aria-invalid={!!errors.category}
+                      />
+                      <FieldContent>
+                        <FieldTitle>{option.label}</FieldTitle>
+                        <FieldDescription>{option.description}</FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                ))}
+              </RadioGroup>
+              <FieldError>{errors.category?.message}</FieldError>
+            </FieldSet>
           )}
         />
-      </div>
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="category">Catégorie</label>
-        <Select
-          id="category"
-          error={errors.category?.message}
-          {...register('category', {
-            required: 'Ce champ est obligatoire.',
-            onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
-              if (dirtyFields.isInDoodle !== true) setValue('isInDoodle', e.target.value === 'sortie');
-              if (dirtyFields.costume !== true) setValue('costume', e.target.value === 'sortie' ? 'COSTUME' : 'POLO');
-            },
-          })}
-        >
-          <option value="sortie">Sortie</option>
-          <option value="repetition">Répétition</option>
-          <option value="autre">Autre évènement</option>
-        </Select>
-      </div>
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="costume-costume">Costume</label>
-        <div className="grid md:grid-cols-3 gap-4 md:gap-16">
-          <div className="relative">
-            <input type="radio" value="COSTUME" id="costume-costume" className="hidden peer" {...register('costume')} />
-            <label htmlFor="costume-costume" className="flex items-center gap-8 md:block p-4 md:p-8 text-center cursor-pointer rounded border-2 ring-2 ring-transparent ring-offset-2 peer-checked:border-pourpre-500 hover:bg-gray-50 active:ring-pourpre-200 focus:ring-pourpre-200 focus:ring-offset-0">
-              <img className="h-8 md:h-32 inline" src={costume} alt="En Costume" />
-              <p>Costume</p>
-            </label>
-            <FontAwesomeIcon className="absolute invisible top-4 right-4 md:top-8 md:right-8 peer-checked:visible text-pourpre-500" icon={faCircleCheck} />
-          </div>
-          <div className="relative">
-            <input type="radio" value="POLO" id="costume-polo" className="hidden peer" {...register('costume')} />
-            <label htmlFor="costume-polo" className="flex items-center gap-8 md:block p-4 md:p-8 text-center cursor-pointer rounded border-2 ring-2 ring-transparent ring-offset-2 peer-checked:border-pourpre-500 hover:bg-gray-50 active:ring-pourpre-200 focus:ring-pourpre-200 focus:ring-offset-0">
-              <img className="h-8 md:h-32 inline" src={polo} alt="En polo" />
-              <p>Polo</p>
-            </label>
-            <FontAwesomeIcon className="absolute invisible top-4 right-4 md:top-8 md:right-8 peer-checked:visible text-pourpre-500" icon={faCircleCheck} />
-          </div>
-          <div className="relative">
-            <input type="radio" value="NONE" id="costume-none" defaultChecked className="hidden peer" {...register('costume')} />
-            <label htmlFor="costume-none" className="flex items-center gap-8 md:block p-4 md:p-8 text-center cursor-pointer rounded border-2 ring-2 ring-transparent ring-offset-2 peer-checked:border-pourpre-500 hover:bg-gray-50 active:ring-pourpre-200 focus:ring-pourpre-200 focus:ring-offset-0">
-              <img className="h-8 md:h-32 inline" src={tshirt} alt="Rien de définie" />
-              <p>Rien</p>
-            </label>
-            <FontAwesomeIcon className="absolute invisible top-4 right-4 md:top-8 md:right-8 peer-checked:visible text-pourpre-500" icon={faCircleCheck} />
-          </div>
-        </div>
-      </div>
-      <div className="mb-6">
-        <span className="mb-2 block font-semibold">Options</span>
-        <div className="relative mb-2">
-          <input
-            type="checkbox"
-            id="is_in_doodle"
-            {...register('isInDoodle')}
-            className="hidden peer"
-          />
 
-          <label htmlFor="is_in_doodle" className="block p-4 pl-16 cursor-pointer rounded border-2 ring-2 ring-transparent ring-offset-2 peer-checked:border-pourpre-500 hover:bg-gray-50 active:ring-pourpre-200 focus:ring-pourpre-200 focus:ring-offset-0">
-            <span className="mb-2 block font-semibold">Afficher dans le sondage</span>
-            <p className="text-gray-600">
-              Cette évènement apparaitra dans le sondage,
-              et tous les membres recevront un email lors de la création de l&apos;évènement.
-            </p>
-          </label>
-          <FontAwesomeIcon className="absolute invisible top-4 left-4 md:top-8 md:left-8 peer-checked:visible text-pourpre-500" icon={faSquareCheck} />
-          <FontAwesomeIcon className="absolute visible top-4 left-4 md:top-8 md:left-8 peer-checked:invisible text-gray-200" icon={faSquare} />
-        </div>
-      </div>
-      <div className="mb-6">
-        <Button type="submit" isLoading={isSubmitting}>Enregistrer</Button>
-      </div>
+        <Controller
+          name="costume"
+          control={control}
+          render={({ field }) => (
+            <FieldSet>
+              <FieldLegend>Costume</FieldLegend>
+              <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-4 md:grid-cols-3">
+                {costumeOptions.map((option) => (
+                  <FieldLabel
+                    key={option.value}
+                    htmlFor={option.id}
+                    className="cursor-pointer text-center hover:bg-muted has-data-checked:border-primary has-data-checked:bg-primary/5"
+                  >
+                    <Field orientation="horizontal" className="items-center">
+                      <RadioGroupItem id={option.id} value={option.value} />
+                      <FieldContent className="items-center text-center">
+                        <img className="h-16 md:h-32" src={option.image} alt="" />
+                        <FieldTitle>{option.label}</FieldTitle>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                ))}
+              </RadioGroup>
+            </FieldSet>
+          )}
+        />
+
+        <Controller
+          name="isInDoodle"
+          control={control}
+          render={({ field }) => (
+            <Field orientation="horizontal" className={cn('rounded-2xl border p-4 hover:bg-muted', field.value && 'border-primary bg-primary/5')}>
+              <Checkbox
+                id="is_in_doodle"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+              <FieldContent>
+                <FieldLabel htmlFor="is_in_doodle">Afficher dans le sondage</FieldLabel>
+                <FieldDescription>
+                  Cet évènement apparaîtra dans le sondage, et tous les membres recevront un email lors de la création de l&apos;évènement.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
+          )}
+        />
+
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? <Spinner data-icon="inline-start" /> : null}
+          Enregistrer
+        </Button>
+      </FieldGroup>
     </form>
   );
 }

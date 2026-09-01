@@ -1,88 +1,125 @@
-import { faApple, faChrome, faGoogle } from '@fortawesome/free-brands-svg-icons';
-import {
-  faArrowsRotate,
-  faTrash, type IconDefinition,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { KeyRound, RefreshCw, Trash2, type LucideIcon } from 'lucide-react';
 import {
   type PublicKeyCredentialCreationOptionsJSON, startRegistration, WebAuthnError,
 } from '@simplewebauthn/browser';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Passkey } from 'bagad-client';
 import { DateTime } from 'luxon';
+import { useState } from 'react';
 import { UAParser } from 'ua-parser-js';
 import passkeyBitwarden from '../../assets/passkeys/blue-shield.svg';
 import passkeyBlack from '../../assets/passkeys/FIDO_Passkey_mark_A_black.svg';
-import Badge from '../../components/badge';
-import Button from '../../components/button';
 import Container from '../../components/container';
 import Header from '../../components/header';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item';
 import { queryClient, useApiClient, useUserProfile } from '../../config/client';
 
-const aaguidMapping: Partial<Record<string, { icon: IconDefinition | string, name: string }>> = {
-  'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': { icon: faApple, name: 'iCloud Keychain' },
+const aaguidMapping: Partial<Record<string, { icon: LucideIcon | string, name: string }>> = {
+  'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': { icon: KeyRound, name: 'iCloud Keychain' },
   'd548826e-79b4-db40-a3d8-11116f7e8349': { icon: passkeyBitwarden, name: 'Bitwarden' },
-  'adce0002-35bc-c60a-648b-0b25f1f05503': { icon: faChrome, name: 'Chrome on Mac' },
-  'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': { icon: faGoogle, name: 'Google Password Manager' },
+  'adce0002-35bc-c60a-648b-0b25f1f05503': { icon: KeyRound, name: 'Chrome on Mac' },
+  'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': { icon: KeyRound, name: 'Google Password Manager' },
 };
 
 function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
   const icon = aaguidMapping[aaguid]?.icon;
   if (!icon) {
-    return <img src={passkeyBlack} alt="passkey" className="w-6 h-6" />;
+    return <img src={passkeyBlack} alt="Passkey" className="size-6" />;
   }
   if (typeof icon === 'string') {
-    return <img src={icon} alt="passkey" className="w-6 h-6" />;
+    return <img src={icon} alt="Passkey" className="size-6" />;
   }
-  return <FontAwesomeIcon icon={icon} className="w-6 h-6" />;
+  const Icon = icon;
+  return <Icon className="size-6" aria-hidden="true" />;
 }
 
 function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => void }) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { browser, os } = UAParser(passkey.lastUseUa ?? '');
 
   return (
-    <div className="md:flex items-center justify-between bg-gray-100 px-8 py-6 mb-8 rounded-lg">
-      <div>
-        <div className="flex items-center">
-          <div className="mr-4">
-            <AuthenticatorIcon aaguid={passkey.aaguid} />
-          </div>
-          <div>
-            <span className="font-semibold">{aaguidMapping[passkey.aaguid]?.name ?? 'Passkey'}</span>
-          </div>
+    <Item variant="muted" className="mb-4 items-start">
+      <ItemMedia>
+        <AuthenticatorIcon aaguid={passkey.aaguid} />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>
+          {aaguidMapping[passkey.aaguid]?.name ?? 'Passkey'}
           {passkey.backUp ? (
-            <Badge className="text-xs mx-4 bg-sky-200 !text-sky-600">
-              <FontAwesomeIcon icon={faArrowsRotate} className="pr-1" />
+            <Badge variant="secondary">
+              <RefreshCw data-icon="inline-start" />
               Sync
             </Badge>
           ) : null}
-        </div>
-        <div className="text-gray-500">
+        </ItemTitle>
+        <ItemDescription>
           Ajoutée
           {' '}
           <span title={passkey.createdAt.toLocaleString()}>
             {DateTime.fromJSDate(passkey.createdAt).toRelative()}
           </span>
-        </div>
-        <div className="text-sm mt-4">
-          <div className="font-semibold">Dernière utilisation</div>
-          <div className="text-gray-500">
-            {passkey.lastUseAt ? (
-              <>
-                <span title={passkey.lastUseAt.toLocaleString()}>
-                  {DateTime.fromJSDate(passkey.lastUseAt).toRelative()}
-                </span>
-                {` sur ${browser.name}, ${os.name}`}
-              </>
-            )
-              : 'jamais'}
-          </div>
-        </div>
-      </div>
-      <div className="pt-4 md:p-0">
-        <Button variant="ghost" icon={faTrash} size="sm" onClick={onDelete}>Supprimer</Button>
-      </div>
-    </div>
+        </ItemDescription>
+        <ItemDescription>
+          <span className="font-semibold text-foreground">Dernière utilisation : </span>
+          {passkey.lastUseAt ? (
+            <>
+              <span title={passkey.lastUseAt.toLocaleString()}>
+                {DateTime.fromJSDate(passkey.lastUseAt).toRelative()}
+              </span>
+              {` sur ${browser.name}, ${os.name}`}
+            </>
+          ) : 'jamais'}
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogTrigger render={<Button variant="ghost" size="sm" />}>
+            <Trash2 data-icon="inline-start" />
+            Supprimer
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer cette passkey ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette passkey ne pourra plus être utilisée pour vous connecter.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={() => {
+                  onDelete();
+                  setIsDeleteDialogOpen(false);
+                }}
+              >
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </ItemActions>
+    </Item>
   );
 }
 export default function PasskeysPage() {
@@ -138,7 +175,10 @@ export default function PasskeysPage() {
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
         actions={[
-          <Header.Action key="add-passkey" onClick={register}>Ajouter</Header.Action>,
+          <Button key="add-passkey" onClick={register}>
+            <KeyRound data-icon="inline-start" />
+            Ajouter
+          </Button>,
         ]}
         breadcrumb={[
           { title: 'Profils', link: '/profile' },

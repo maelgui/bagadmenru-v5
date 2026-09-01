@@ -1,35 +1,26 @@
-
-
-import {
-  faCalendarPlus,
-  faFloppyDisk,
-  faPen,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { CalendarPlus, Edit3, Info, Save } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Costume, type Response, type ResponseCreate } from 'bagad-client';
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
-import {
-  Link, Navigate,
-  useSearchParams,
-} from 'react-router-dom';
-import Alert from '../../components/alert';
-import Avatar from '../../components/avatar';
-import Badge from '../../components/badge';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/components/ui/toast';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { SkeletonImage, SkeletonText } from '../../components/skeleton';
-import Tooltip from '../../components/tooltip';
 import {
-  queryClient, useApiClient,
-  usePermissions,
-  useUserProfile,
+  queryClient, useApiClient, usePermissions, useUserProfile,
 } from '../../config/client';
 import EventCategories from '../../utils/event-category';
 import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
 import DisplaySelector from './components/selector';
+import { upcomingDoodleEventsQuery, upcomingResponsesQuery } from './queries';
 
 function sumByEvents(list: Response[]) {
   const map = new Map<number, number>();
@@ -51,45 +42,36 @@ interface ResponsesData {
 }
 
 function responseFormat(responses: Response[]): ResponsesData {
-  const existingUsers = new Set(responses.map((r) => r.userId));
-  const responsesByUserAndEvent = groupby(responses, (r) => keyFunc(r.eventId, r.userId));
+  const existingUsers = new Set(responses.map((response) => response.userId));
+  const responsesByUserAndEvent = groupby(responses, (response) => keyFunc(response.eventId, response.userId));
   const responsesSumByEvent = sumByEvents(responses);
-  return {
-    responsesByUserAndEvent, responsesSumByEvent, existingUsers,
-  };
+  return { responsesByUserAndEvent, responsesSumByEvent, existingUsers };
 }
 
 export default function DoodlePage() {
   const { usersApi, eventsApi } = useApiClient();
   const profile = useUserProfile();
-
   const [searchParams] = useSearchParams();
-  const [editing, setEditing] = useState<boolean>(false);
+  const [editing, setEditing] = useState(false);
 
-  const { data: events } = useQuery({
-    queryKey: ['events', 'next100doodle'],
-    queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date(), isInDoodle: true }),
-  });
+  const { data: events } = useQuery(upcomingDoodleEventsQuery(eventsApi));
   const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet() });
   const { data: responses } = useQuery({
-    queryKey: ['responses'],
-    queryFn: async () => await eventsApi.listResponsesApiV1ResponsesGet({ dateGte: new Date() }),
-    select: (data) => responseFormat(data),
+    ...upcomingResponsesQuery(eventsApi),
+    select: responseFormat,
   });
 
   const mutation = useMutation({
-    mutationFn: async ({ eventId, response }: { eventId: number, response: ResponseCreate }) => {
-      const params = { eventId, responseCreate: response };
-      return await eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
-    },
+    mutationFn: async ({ eventId, response }: { eventId: number; response: ResponseCreate }) => (
+      await eventsApi.createResponseApiV1EventsEventIdResponsesPut({ eventId, responseCreate: response })
+    ),
     onSettled: async () => await queryClient.invalidateQueries({ queryKey: ['responses'] }),
-    onSuccess: () => toast.success('Réponse enregistrée'),
+    onSuccess: () => toast.add({ title: 'Réponse enregistrée', type: 'success' }),
   });
 
   const { can } = usePermissions();
 
   if (!searchParams.get('noRedirect') && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-    // true for mobile device
     return <Navigate to="/events/planning" />;
   }
 
@@ -99,73 +81,77 @@ export default function DoodlePage() {
         title="Doodle"
         subtitle="Mes présences aux évènements du groupe"
         actions={[
-          <Header.Action variant="outline" icon={faCalendarPlus} key="add-event" as={Link} to="/events/manage" className={can('edit', 'event') ? '' : 'hidden'}>
+          <Link key="add-event" to="/events/manage" className={cn(buttonVariants({ variant: 'outline' }), can('edit', 'event') ? '' : 'hidden')}>
+            <CalendarPlus data-icon="inline-start" />
             Gérer
-          </Header.Action>,
+          </Link>,
           <DisplaySelector key="doodle-nav" />,
         ]}
-        breadcrumb={[
-          { link: '/events', title: 'Évènements' },
-          { title: 'Doodle' },
-        ]}
+        breadcrumb={[{ link: '/events', title: 'Évènements' }, { title: 'Doodle' }]}
       />
-      <Container className={mutation.isPending ? 'disabled' : ''}>
+      <Container className={cn(mutation.isPending && 'pointer-events-none opacity-50')}>
         {!events?.length ? (
-          <Alert type="info">Aucun évèvement prochainement.</Alert>
+          <Alert>
+            <Info />
+            <AlertDescription>Aucun évènement prochainement.</AlertDescription>
+          </Alert>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="table-auto min-w-full relative">
-              <thead className="divide-y divide-gray-200 sticky top-0">
-                <tr className="divide-x divide-gray-200">
-                  <th className="bg-white">{' '}</th>
-                  {events.map((event) => (
-                    <th key={event.id} className="text-center px-4 bg-white">
-                      <Tooltip
-                        content={(
-                          <span>
-                            {event.description !== '' ? event.description : 'Pas de description'}
-                            {event.costume !== Costume.None && (
-                              <span>
-                                <br />
-                                {event.costume === Costume.Costume ? 'En costume !' : 'En polo !'}
-                              </span>
-                            )}
-                          </span>
-                        )}
-                      >
-                        <div className="p-1">
-                          <Badge variant={EventCategories[event.category]?.variant ?? 'default'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
-                        </div>
-                        <strong>{event.title}</strong>
-                        <br />
-                        <span className="text-sm">
-                          {(new Date(event.date)).toLocaleDateString('fr-FR', {
-                            weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
-                          })}
-                        </span>
-                      </Tooltip>
-
-                    </th>
-                  ))}
+          <div className="overflow-x-auto surface rounded-4xl p-3">
+            <table className="relative min-w-full table-auto">
+              <thead className="sticky top-0 divide-y divide-border">
+                <tr className="divide-x divide-border">
+                  <th className="bg-card">{' '}</th>
+                  {events.map((event) => {
+                    const category = EventCategories[event.category];
+                    return (
+                      <th key={event.id} className="bg-card px-4 text-center">
+                        <Tooltip>
+                          <TooltipTrigger render={<div className="flex flex-col items-center p-1 text-center" />}>
+                            <Badge variant={category?.variant ?? 'default'} className={category?.className}>
+                              {category?.name ?? event.category}
+                            </Badge>
+                            <strong>{event.title}</strong>
+                            <span className="text-sm">
+                              {event.date.toLocaleDateString('fr-FR', {
+                                weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
+                              })}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>
+                              {event.description || 'Pas de description'}
+                              {event.costume !== Costume.None ? (
+                                <span>
+                                  <br />
+                                  {event.costume === Costume.Costume ? 'En costume !' : 'En polo !'}
+                                </span>
+                              ) : null}
+                            </span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
-                <tr className="divide-x divide-gray-200">
+                <tr className="divide-x divide-border">
                   <td>{' '}</td>
                   {events.map((event) => (
-                    <td key={event.id} className="text-center whitespace-nowrap  px-4 text-sm">
-                      <Badge variant="muted" className="m-1">
-                        {(responses?.responsesSumByEvent.get(event.id)) ?? 0}
-                        {' '}
-                        présents
+                    <td key={event.id} className="whitespace-nowrap px-4 text-center text-sm">
+                      <Badge variant="secondary" className="m-1">
+                        {responses?.responsesSumByEvent.get(event.id) ?? 0} présents
                       </Badge>
                     </td>
                   ))}
                 </tr>
-                {profiles ? profiles.filter((p) => p.id === profile?.id || responses?.existingUsers.has(p.id)).map((user) => (
+                {profiles ? profiles.filter((person) => person.id === profile?.id || responses?.existingUsers.has(person.id)).map((user) => (
                   <tr key={user.id}>
-                    <th className={`text-right whitespace-nowrap ${profile?.id === user.id ? 'font-bold' : 'font-normal'} flex justify-end items-center h-8`}>
-                      <Avatar src={user.pictureUrl} size="xxxs" className="rounded-full border-2 mr-2" style={{ borderColor: user.instrument?.color ?? '' }} />
+                    <th className={cn('flex h-8 items-center justify-end whitespace-nowrap', profile?.id === user.id ? 'font-bold' : 'font-normal')}>
+                      <Avatar size="sm" className="mr-2 border-2" style={{ borderColor: user.instrument?.color ?? '' }}>
+                        <AvatarImage src={user.pictureUrl ?? undefined} alt={`${user.firstName} ${user.lastName}`} />
+                        <AvatarFallback>{`${user.firstName[0]}${user.lastName[0]}`}</AvatarFallback>
+                      </Avatar>
                       <span>{`${user.firstName} ${user.lastName.slice(0, 1)}`}</span>
                     </th>
                     {events.map((event) => {
@@ -179,13 +165,12 @@ export default function DoodlePage() {
                         />
                       );
                     })}
-
                   </tr>
                 )) : (
                   <tr>
-                    <th className="text-right flex justify-end items-center">
-                      <SkeletonImage className="w-8 h-8 mr-2" />
-                      <SkeletonText className="w-24" />
+                    <th className="flex items-center justify-end text-right">
+                      <Skeleton className="mr-2 size-8 rounded-full" />
+                      <Skeleton className="h-4 w-24" />
                     </th>
                     <td />
                     <td />
@@ -194,13 +179,15 @@ export default function DoodlePage() {
                 )}
               </tbody>
             </table>
-            <button
+            <Button
               type="button"
-              className="w-16 h-16 shadow-md shadow-white text-white bg-pourpre-500 rounded-full fixed right-8 bottom-8"
-              onClick={() => setEditing(!editing)}
+              size="icon-lg"
+              className="fixed right-8 bottom-8 rounded-full shadow-md"
+              aria-label={editing ? 'Enregistrer les réponses' : 'Modifier les réponses'}
+              onClick={() => setEditing((current) => !current)}
             >
-              {editing ? <FontAwesomeIcon icon={faFloppyDisk} /> : <FontAwesomeIcon icon={faPen} />}
-            </button>
+              {editing ? <Save /> : <Edit3 />}
+            </Button>
           </div>
         )}
       </Container>

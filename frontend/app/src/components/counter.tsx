@@ -1,37 +1,35 @@
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
-import type { ReactNode } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 type CounterProps = {
   type: 'error' | 'warning' | 'success' | 'info' | 'ghost';
   description: string;
   value: number | ReactNode;
-} & React.ComponentPropsWithoutRef<'div'>;
+} & ComponentPropsWithoutRef<'div'>;
+
+const counterTypeClasses: Record<CounterProps['type'], string> = {
+  error: 'text-destructive',
+  warning: 'text-foreground',
+  success: 'text-primary',
+  info: 'text-foreground',
+  ghost: 'text-foreground',
+};
 
 export default function Counter({
-  type, description, value, className, ...rest
+  type,
+  description,
+  value,
+  className,
+  ...rest
 }: CounterProps) {
-  let bgClassName = '';
-  switch (type) {
-    case 'error':
-      bgClassName = 'bg-red-100 text-red-900';
-      break;
-    case 'warning':
-      bgClassName = 'bg-amber-100 text-amber-900';
-      break;
-    case 'success':
-      bgClassName = 'bg-emerald-100  text-emerald-950';
-      break;
-    case 'info':
-      bgClassName = 'bg-sky-100 text-sky-950';
-      break;
-    case 'ghost':
-      bgClassName = 'bg-gray-100 text-gray-950';
-      break;
-  }
   return (
-    <div className={`py-4 px-6 ${bgClassName} ${className} text-center flex flex-col items-center rounded-lg`} {...rest}>
-      <div className="text-4xl m-5">{value}</div>
-      <div>{description}</div>
-    </div>
+    <Card className={cn('surface rounded-4xl py-0 text-center', className)} {...rest}>
+      <CardContent className="flex flex-col items-center gap-2 p-6">
+        <div className={cn('font-heading text-4xl', counterTypeClasses[type])}>{value}</div>
+        <div className="text-muted-foreground">{description}</div>
+      </CardContent>
+    </Card>
   );
 }

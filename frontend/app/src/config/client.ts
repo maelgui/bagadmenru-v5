@@ -9,8 +9,8 @@ import {
   UtilsApi,
 } from 'bagad-client';
 import { useCallback } from 'react';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/toast';
 import env from '../env';
 
 const MAX_QUERY_RETRIES = 2;
@@ -21,11 +21,11 @@ export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (error instanceof ResponseError && error.response.status === HTTP_FORBIDDEN) {
-        toast.error("Vous n'avez pas les droits nécessaire pour accéder à cette ressources.");
+        toast.add({ title: "Vous n'avez pas les droits nécessaires pour accéder à cette ressource.", type: 'error' });
       } else if (error instanceof ResponseError && error.response.status === HTTP_UNAUTHORIZED) {
-        toast.error('Vous ne semblez pas authentifié.');
+        toast.add({ title: 'Vous ne semblez pas authentifié.', type: 'error' });
       } else {
-        toast.error(`Something went wrong: ${error.message}`);
+        toast.add({ title: `Something went wrong: ${error.message}`, type: 'error' });
       }
     },
 
@@ -114,7 +114,7 @@ export function useAuth() {
     void navigate('/auth/login');
   }, [navigate]);
 
-  const logout = useCallback(({ redirectTo = 'https://bagadmenru.bzh' }: { redirectTo: string }) => {
+  const logout = useCallback(({ redirectTo = 'https://bagadmenru.bzh' }: { redirectTo?: string } = {}) => {
     void authApi.logoutApiV1AuthLogoutPost().then(() => {
       queryClient.setQueryData(['profiles', 'me'], null);
       queryClient.removeQueries({ queryKey: ['profiles', 'me'] });

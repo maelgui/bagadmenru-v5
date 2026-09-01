@@ -19,8 +19,9 @@ test.describe('Home Page', () => {
 
     await page.waitForLoadState('networkidle');
 
-    // Navbar should be visible with main navigation links
-    const nav = page.locator('nav');
+    // The desktop primary navigation should be visible with main links
+    const nav = page.getByRole('navigation', { name: 'Navigation principale' }).first();
     await expect(nav).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Accueil' })).toBeVisible();
   });
 });

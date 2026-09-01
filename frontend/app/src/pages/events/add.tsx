@@ -1,16 +1,14 @@
 import { useMutation } from '@tanstack/react-query';
 import type { EventCreate } from 'bagad-client';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/toast';
 import Header from '../../components/header';
-
 import Container from '../../components/container';
 import { queryClient, useApiClient } from '../../config/client';
 import EventForm from './components/form';
 
 export default function AddEventPage() {
   const { eventsApi } = useApiClient();
-
   const navigate = useNavigate();
   const { mutateAsync } = useMutation({
     mutationFn: async (data: EventCreate) => await eventsApi.createEventApiV1EventsPost({ eventCreate: data }),
@@ -19,7 +17,7 @@ export default function AddEventPage() {
       void navigate('/events/manage');
     },
     onError: (error) => {
-      toast.error(`Erreur lors de la création de l'évènement : ${error.message}`);
+      toast.add({ title: `Erreur lors de la création de l'évènement : ${error.message}`, type: 'error' });
     },
   });
   const onSubmit = async (data: EventCreate) => await mutateAsync(data);

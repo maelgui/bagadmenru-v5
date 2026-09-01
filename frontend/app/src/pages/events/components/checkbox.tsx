@@ -1,42 +1,42 @@
-import { faCheck, faQuestion, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { ReactEventHandler } from 'react';
+import { Check, HelpCircle, X } from 'lucide-react';
+import { Checkbox as CheckboxControl } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 export default function Checkbox({
   value,
   disabled = false,
   onClick,
 }: {
-  disabled?: boolean,
-  value: boolean | undefined,
-  onClick: ReactEventHandler,
+  disabled?: boolean;
+  value: boolean | undefined;
+  onClick: () => void;
 }) {
-  let className = 'bg-sky-200';
-  let content = <FontAwesomeIcon icon={faQuestion} className="text-sky-800" />;
-  if (value === true) {
-    content = <FontAwesomeIcon icon={faCheck} className="text-emerald-800" />;
-    className = 'bg-emerald-300';
-  } else if (value === false) {
-    content = <FontAwesomeIcon icon={faXmark} className="text-red-900" />;
-    className = 'bg-red-300';
-  }
-
-  if (disabled) {
-    return <td className={`${className} h-8 text-center border-4 border-white`}>{content}</td>;
-  }
+  const stateClass = value === true
+    ? 'bg-emerald-300'
+    : value === false
+      ? 'bg-red-300'
+      : 'bg-sky-200';
+  const icon = value === true
+    ? <Check className="text-emerald-800" aria-hidden="true" />
+    : value === false
+      ? <X className="text-red-900" aria-hidden="true" />
+      : <HelpCircle className="text-sky-800" aria-hidden="true" />;
 
   return (
-    <td className={`${className} h-8 text-center border-4 border-white`}>
-      <span
-        role="checkbox"
-        aria-checked={value}
-        tabIndex={0}
-        className="flex h-6 w-6 cursor-pointer bg-white m-auto border-2 focus:border-pourpre-500 justify-center items-center"
-        onClick={onClick}
-        onKeyDown={(e) => ((e.key === 'Space') ? onClick(e) : null)}
-      >
-        {content}
-      </span>
+    <td className={cn(stateClass, 'h-8 border-4 border-background')}>
+      <div className="flex items-center justify-center">
+        {disabled ? icon : (
+          <CheckboxControl
+            aria-label="Modifier la réponse"
+            checked={value === true}
+            className="size-6 border-2 border-border bg-background data-checked:border-primary data-checked:bg-background data-checked:text-foreground [&>svg]:size-4"
+            onClick={onClick}
+          >
+            {value === false ? <X className="text-red-900" aria-hidden="true" /> : null}
+            {value === undefined ? <HelpCircle className="text-sky-800" aria-hidden="true" /> : null}
+          </CheckboxControl>
+        )}
+      </div>
     </td>
   );
 }

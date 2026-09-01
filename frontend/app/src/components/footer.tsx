@@ -1,18 +1,18 @@
-import { faHeart } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { HeartIcon } from 'lucide-react';
+
 import VersionInfo from './version-info';
 
 export default function Footer() {
   return (
-    <div className="shadow text-center py-8 px-4 mt-24 ">
-      <span className="text-gray-300 hover:text-gray-900 transition-colors group">
+    <footer className="mt-24 px-4 py-8 text-center shadow">
+      <span className="group text-gray-300 transition-colors hover:text-gray-900">
         Made with
         {' '}
-        <FontAwesomeIcon icon={faHeart} className="text-gray-300 group-hover:text-hotpink transition-colors" />
+        <HeartIcon className="inline size-4 text-gray-300 transition-colors group-hover:text-primary" aria-hidden="true" />
         {' '}
         by Mael G.
       </span>
       <VersionInfo />
-    </div>
+    </footer>
   );
 }

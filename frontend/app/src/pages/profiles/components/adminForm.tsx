@@ -1,12 +1,24 @@
-
 import { useQuery } from '@tanstack/react-query';
-import type { Profile, ProfileCreate, ProfileUpdate } from 'bagad-client';
+import type { Group, Profile, ProfileCreate, ProfileUpdate } from 'bagad-client';
 import {
   Controller, FormProvider, type SubmitHandler, useForm,
 } from 'react-hook-form';
-import Select from 'react-select';
-import Button from '../../../components/button';
-import Input from '../../../components/input';
+import { Button } from '@/components/ui/button';
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from '@/components/ui/combobox';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import { useApiClient } from '../../../config/client';
 import BaseProfileFormFields from './baseForm';
 
@@ -21,6 +33,7 @@ export default function AdminEditProfileForm(
   { profile = undefined, onSubmit }: AdminProfileForm,
 ) {
   const { usersApi } = useApiClient();
+  const groupsAnchor = useComboboxAnchor();
 
   const { data: groups } = useQuery({
     queryKey: ['groups'],
@@ -31,7 +44,7 @@ export default function AdminEditProfileForm(
     defaultValues: profile ? {
       firstName: profile.firstName,
       lastName: profile.lastName,
-      groupIds: profile.groups.map((g) => g.id),
+      groupIds: profile.groups.map((group) => group.id),
       instrumentId: profile.instrument?.id,
       receivesEmails: profile.receivesEmails,
     } : {},
@@ -47,58 +60,93 @@ export default function AdminEditProfileForm(
         <BaseProfileFormFields profile={profile} avatar={false} />
       </FormProvider>
       {!profile ? (
-        <div className="mb-6">
-          <label className="mb-2 block font-semibold" htmlFor="email">E-mail</label>
+        <Field data-invalid={!!errors.email} className="mb-6">
+          <FieldLabel htmlFor="email">E-mail</FieldLabel>
           <Input
             type="email"
             id="email"
-            error={errors.email?.message}
+            aria-invalid={!!errors.email}
             {...register('email', { required: 'Ce champ est obligatoire.' })}
           />
-        </div>
+          <FieldError>{errors.email?.message}</FieldError>
+        </Field>
       ) : null}
 
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="instrumentId">Instrument</label>
-        <Controller
-          name="instrumentId"
-          control={control}
-          render={({ field: { onChange, value, ref } }) => (
-            <Select
-              ref={ref}
-              inputId="instrumentId"
-              options={groups}
-              getOptionValue={(option) => option.id.toString()}
-              getOptionLabel={(option) => option.name}
-              value={groups?.find((c) => c.id === value)}
-              onChange={(val) => onChange(val?.id)}
-            />
-
-          )}
-        />
-      </div>
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="groupIds">Groupes</label>
-        <Controller
-          name="groupIds"
-          control={control}
-          defaultValue={[]}
-          render={({ field: { onChange, value, ref } }) => (
-            <Select
-              isMulti
-              inputId="groupIds"
-              ref={ref}
-              options={groups}
-              getOptionValue={(option) => option.id.toString()}
-              getOptionLabel={(option) => option.name}
-              value={groups?.filter((c) => value.includes(c.id))}
-              onChange={(val) => onChange(val.map((c) => c.id))}
-            />
-
-          )}
-        />
-      </div>
-      <Button type="submit" isLoading={isSubmitting}>Enregistrer</Button>
+      <FieldGroup className="mb-6">
+        <Field data-invalid={!!errors.instrumentId}>
+          <FieldLabel htmlFor="instrumentId">Instrument</FieldLabel>
+          <Controller
+            name="instrumentId"
+            control={control}
+            render={({ field }) => (
+              <Combobox
+                items={groups ?? []}
+                itemToStringLabel={(group: Group) => group.name}
+                value={groups?.find((group) => group.id === field.value) ?? null}
+                onValueChange={(group: Group | null) => field.onChange(group ? group.id : undefined)}
+              >
+                <ComboboxInput id="instrumentId" placeholder="Sélectionner un instrument" showClear />
+                <ComboboxContent>
+                  <ComboboxList>
+                    {(group: Group) => (
+                      <ComboboxItem key={group.id} value={group}>
+                        {group.name}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            )}
+          />
+          <FieldError>{errors.instrumentId?.message}</FieldError>
+        </Field>
+        <Field data-invalid={!!errors.groupIds}>          <FieldLabel htmlFor="groupIds">Groupes</FieldLabel>
+          <Controller
+            name="groupIds"
+            control={control}
+            defaultValue={[]}
+            render={({ field }) => (
+              <Combobox
+                multiple
+                items={groups ?? []}
+                itemToStringLabel={(group: Group) => group.name}
+                isItemEqualToValue={(a: Group, b: Group) => a.id === b.id}
+                value={groups?.filter((group) => field.value.includes(group.id)) ?? []}
+                onValueChange={(selected: Group[]) => field.onChange(selected.map((group) => group.id))}
+              >
+                <ComboboxChips ref={groupsAnchor}>
+                  <ComboboxValue>
+                    {(values: Group[]) => (
+                      <>
+                        {values.map((group) => (
+                          <ComboboxChip key={group.id} aria-label={group.name}>
+                            {group.name}
+                          </ComboboxChip>
+                        ))}
+                        <ComboboxChipsInput id="groupIds" placeholder={values.length ? '' : 'Sélectionner des groupes'} />
+                      </>
+                    )}
+                  </ComboboxValue>
+                </ComboboxChips>
+                <ComboboxContent anchor={groupsAnchor}>
+                  <ComboboxList>
+                    {(group: Group) => (
+                      <ComboboxItem key={group.id} value={group}>
+                        {group.name}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            )}
+          />
+          <FieldError>{errors.groupIds?.message}</FieldError>
+        </Field>
+      </FieldGroup>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting && <Spinner data-icon="inline-start" />}
+        Enregistrer
+      </Button>
     </form>
   );
 }

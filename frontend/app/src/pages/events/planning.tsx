@@ -1,30 +1,25 @@
-
 import {
-  faCalendarPlus,
-  faCheck,
-  faCircleCheck,
-  faCircleQuestion,
-  faCircleXmark,
-  faPen,
-  faSquareArrowUpRight,
-  faWandMagicSparkles, faXmark,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+  CalendarPlus, Check, CircleCheck, CircleHelp, CircleX, Edit3, ExternalLink, Sparkles, X,
+} from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type {
-  Event,
-  MinimalGroup, Profile, Response,
-} from 'bagad-client';
+import type { Event, MinimalGroup, Profile, Response } from 'bagad-client';
 import { useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
-import Alert from '../../components/alert';
-import AvatarGroup from '../../components/avatar-group';
-import Button from '../../components/button';
-import Container from '../../components/container';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
-  Dialog, DialogClose, DialogContent, DialogDescription, DialogHeading,
-} from '../../components/dialog';
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { toast } from '@/components/ui/toast';
+import AvatarGroup from '../../components/avatar-group';
+import Container from '../../components/container';
 import Header from '../../components/header';
 import {
   queryClient, useApiClient, usePermissions, useUserProfile,
@@ -32,224 +27,228 @@ import {
 import groupBy from '../../utils/groupby';
 import sum from '../../utils/sum';
 import DisplaySelector from './components/selector';
+import { upcomingDoodleEventsQuery, upcomingResponsesQuery } from './queries';
 
 type EnrichedResponse = Response & { user?: Profile };
+
 function groupResponsesByEventAndEnrichUser(responses: Response[], profiles: Profile[]) {
-  const enrichedResponses = responses.map((r: Response) => {
-    const enrichedResponse: EnrichedResponse = r;
-    enrichedResponse.user = profiles.find((p) => p.id === r.userId);
-    return enrichedResponse;
-  });
-  return groupBy(enrichedResponses, (r) => r.eventId);
+  return groupBy(responses.map((response) => ({
+    ...response,
+    user: profiles.find((profile) => profile.id === response.userId),
+  })), (response) => response.eventId);
 }
 
-function ResponseListItem({ response = undefined, user = undefined, showResponse = true }: { response?: EnrichedResponse, user?: Profile, showResponse?: boolean }) {
-  const profile = response?.user ?? user;
+function ResponseIcon({ value }: { value: boolean | undefined }) {
+  if (value === true) return <CircleCheck className="text-emerald-500" aria-label="Présent" />;
+  if (value === false) return <CircleX className="text-destructive" aria-label="Absent" />;
+  return <CircleHelp className="text-sky-500" aria-label="Sans réponse" />;
+}
+
+function ProfileLine({ profile, trailing }: { profile?: Profile; trailing?: React.ReactNode }) {
+  const color = profile?.instrument?.color ?? '';
   return (
-    <div key={profile?.id} className="flex items-center my-2">
-      <span
-        className="h-2 w-2 rounded-full"
-        style={{ backgroundColor: profile?.instrument?.color ?? '' }}
-      />
-      {/* <Avatar
-      src={profile?.pictureUrl}
-      title={profile?.firstName}
-      size="xxs"
-      className="border-2"
-      style={{ borderColor: profile?.instrument?.color ?? '' }}
-    /> */}
-      <span className="mx-2 text-nowrap">
-        {profile?.firstName}
-        {' '}
-        {profile?.lastName}
-      </span>
-      {showResponse ? (
-        <div className="ml-auto">
-          {response ? (
-            <span>
-              {response.value ? (
-                <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-300" />
-              ) : (
-                <FontAwesomeIcon icon={faCircleXmark} className="text-red-300" />
-              )}
-            </span>
-          ) : (
-            <FontAwesomeIcon icon={faCircleQuestion} className="text-sky-500" />
-
-          )}
-        </div>
-      ) : null}
+    <div key={profile?.id} className="my-2 flex items-center">
+      <span className="size-2 rounded-full" style={{ backgroundColor: color }} />
+      <span className="mx-2 text-nowrap">{profile?.firstName} {profile?.lastName}</span>
+      {trailing}
     </div>
-
   );
 }
 
-function responseSortFn(a: EnrichedResponse, b: EnrichedResponse) {
-  const str1 = `${!a.value}-${a.user?.instrument?.id}`;
-  const str2 = `${!b.value}-${b.user?.instrument?.id}`;
-  return str1 > str2 ? 1 : -1;
+function ResponseListItem({ response = undefined, user = undefined, showResponse = true }: { response?: EnrichedResponse; user?: Profile; showResponse?: boolean }) {
+  const trailing = showResponse ? (
+    <div className="ml-auto">
+      <ResponseIcon value={response?.value} />
+    </div>
+  ) : null;
+  return <ProfileLine profile={response?.user ?? user} trailing={trailing} />;
 }
-function EventCard({
-  event, responses, instruments, profiles,
-}: { event: Event, responses: EnrichedResponse[], instruments: MinimalGroup[], profiles: Profile[] }) {
-  const { eventsApi } = useApiClient();
-  const profile = useUserProfile();
+
+function responseSortFn(first: EnrichedResponse, second: EnrichedResponse) {
+  const firstString = `${!first.value}-${first.user?.instrument?.id}`;
+  const secondString = `${!second.value}-${second.user?.instrument?.id}`;
+  return firstString > secondString ? 1 : -1;
+}
+
+function AnswerButtons({
+  current, disabled, onAnswer,
+}: {
+  current?: boolean;
+  disabled: boolean;
+  onAnswer: (value: boolean) => void;
+}) {
+  return (
+    <div className="flex justify-center gap-2">
+      <Button variant={current === true ? 'default' : 'outline'} size="sm" disabled={disabled} onClick={() => onAnswer(true)}>
+        <Check data-icon="inline-start" />
+        Je participe
+      </Button>
+      <Button variant={current === false ? 'default' : 'outline'} size="sm" disabled={disabled} onClick={() => onAnswer(false)}>
+        <X data-icon="inline-start" />
+        Je ne participe pas
+      </Button>
+    </div>
+  );
+}
+
+function MyResponseBlock({
+  myResponse, isSaving, onAnswer,
+}: {
+  myResponse?: EnrichedResponse;
+  isSaving: boolean;
+  onAnswer: (value: boolean) => void;
+}) {
   const [editing, setEditing] = useState(false);
-  const [openUserList, setOpenUserList] = useState(false);
 
-  const responseByInstrument = useMemo(() => groupBy(responses, (r) => r.user?.instrument?.id), [responses]);
+  return (
+    <div className="mt-4">
+      <h4 className="flex items-baseline justify-between pb-1 font-semibold">
+        Votre réponse
+        {myResponse && !editing ? (
+          <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
+            <Edit3 data-icon="inline-start" />
+            Modifier
+          </Button>
+        ) : null}
+      </h4>
+      {myResponse === undefined || editing ? (
+        <AnswerButtons current={myResponse?.value} disabled={isSaving} onAnswer={onAnswer} />
+      ) : (
+        <div className="flex items-center gap-2 text-sm">
+          <ResponseIcon value={myResponse.value} />
+          {myResponse.value ? 'Vous serez présent' : 'Vous ne serez pas présent'}
+        </div>
+      )}
+    </div>
+  );
+}
 
-  const mutation = useMutation({
-    mutationFn: async (response: boolean) => {
-      const params = { eventId: event.id, responseCreate: { value: response } };
-      return await eventsApi.createResponseApiV1EventsEventIdResponsesPut(params);
-    },
-    onSettled: async () => await queryClient.invalidateQueries({ queryKey: ['responses'] }),
-    onSuccess: () => toast.success('Réponse enregistrée'),
-  });
+function ResponsesDialog({
+  event, responses, instruments, profiles, responseByInstrument, open, onOpenChange,
+}: {
+  event: Event;
+  responses: EnrichedResponse[];
+  instruments: MinimalGroup[];
+  profiles: Profile[];
+  responseByInstrument: Map<number | undefined, EnrichedResponse[]>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const noResponseProfiles = profiles.filter((person) => !responses.find((response) => response.userId === person.id));
 
-  const {
-    totalOtherInstrumentsResponses, myInstrumentResponses, otherInstrumentsResponses, myResponse,
-  } = useMemo(() => {
-    const othersInstruments = instruments.filter((i) => i.id !== profile?.instrument?.id);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Réponses pour l&apos;évènement <i>{event.title}</i></DialogTitle>
+          <DialogDescription>
+            <strong>{responses.filter((response) => response.value).length} réponses positives</strong> sur {responses.length} réponses
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <ul>
+            {instruments.map((instrument) => (
+              <li key={instrument.id}>
+                {responseByInstrument.get(instrument.id)?.filter((response) => response.value).length} {instrument.name}
+              </li>
+            ))}
+          </ul>
+          <div>
+            {responses.slice().sort(responseSortFn).map((response) => <ResponseListItem key={`${event.id}-${response.userId}`} response={response} />)}
+            <hr className="my-8 border-border" />
+            {noResponseProfiles.map((user) => <ResponseListItem key={`${event.id}-${user.id}`} user={user} />)}
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Fermer</DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function useEventResponsesSummary(responses: EnrichedResponse[], instruments: MinimalGroup[]) {
+  const profile = useUserProfile();
+  const responseByInstrument = useMemo(() => groupBy(responses, (response) => response.user?.instrument?.id), [responses]);
+
+  const summary = useMemo(() => {
+    const otherInstruments = instruments.filter((instrument) => instrument.id !== profile?.instrument?.id);
+    const positiveFor = (instrumentId: number | undefined) => responseByInstrument.get(instrumentId)?.filter((response) => response.value) ?? [];
     return {
-      myResponse: responses.find((r) => r.userId === profile?.id),
-      myInstrumentResponses: responseByInstrument.get(profile?.instrument?.id)?.filter((r) => r.value) ?? [],
-      otherInstrumentsResponses: othersInstruments.map((i) => responseByInstrument.get(i.id)?.filter((r) => r.value) ?? []).flat(),
-      totalOtherInstrumentsResponses: sum(othersInstruments.map((i) => responseByInstrument.get(i.id)?.filter((r) => r.value).length ?? 0)),
+      myResponse: responses.find((response) => response.userId === profile?.id),
+      myInstrumentResponses: positiveFor(profile?.instrument?.id),
+      otherInstrumentsResponses: otherInstruments.flatMap((instrument) => positiveFor(instrument.id)),
+      totalOtherInstrumentsResponses: sum(otherInstruments.map((instrument) => positiveFor(instrument.id).length)),
     };
   }, [instruments, responses, responseByInstrument, profile?.instrument?.id, profile?.id]);
 
+  return { ...summary, responseByInstrument };
+}
+
+function EventCard({
+  event, responses, instruments, profiles,
+}: { event: Event; responses: EnrichedResponse[]; instruments: MinimalGroup[]; profiles: Profile[] }) {
+  const { eventsApi } = useApiClient();
+  const [openUserList, setOpenUserList] = useState(false);
+  const {
+    myResponse, myInstrumentResponses, otherInstrumentsResponses, totalOtherInstrumentsResponses, responseByInstrument,
+  } = useEventResponsesSummary(responses, instruments);
+
+  const mutation = useMutation({
+    mutationFn: async (response: boolean) => await eventsApi.createResponseApiV1EventsEventIdResponsesPut({
+      eventId: event.id,
+      responseCreate: { value: response },
+    }),
+    onSettled: async () => await queryClient.invalidateQueries({ queryKey: ['responses'] }),
+    onSuccess: () => toast.add({ title: 'Réponse enregistrée', type: 'success' }),
+  });
+
   return (
-    <div key={event.id} className="shadow-md rounded-xl overflow-hidden">
-      <div className="flex flex-col justify-center text-center p-8 bg-linear-to-tr from-pourpre-50 to-gray-200">
-        <span className="text-xl font-bold">{event.date.getDate()}</span>
-        <span>{event.date.toLocaleString('fr', { month: 'long' })}</span>
+    <div className="overflow-hidden surface rounded-4xl">
+      <div className="flex flex-col justify-center border-b border-border/70 bg-primary/5 p-6 text-center">
+        <span className="font-heading text-3xl text-primary">{event.date.getDate()}</span>
+        <span className="text-sm text-muted-foreground uppercase">{event.date.toLocaleString('fr', { month: 'long' })}</span>
       </div>
       <div className="p-4">
         <h3 className="pb-1 font-semibold">{event.title}</h3>
         <div className="text-sm">{event.description}</div>
-
         <div className="my-4">
-          <h4 className="pb-1 font-semibold flex items-baseline justify-between">
+          <h4 className="flex items-baseline justify-between pb-1 font-semibold">
             Participants
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={faSquareArrowUpRight}
-              onClick={() => setOpenUserList(true)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setOpenUserList(true)}>
+              <ExternalLink data-icon="inline-start" />
               Liste complète
             </Button>
           </h4>
-
           <AvatarGroup
-            avatars={myInstrumentResponses.map((p) => ({
-              id: p.userId,
-              name: `${p.user?.firstName} ${p.user?.lastName}`,
-              src: p.user?.pictureUrl,
+            avatars={myInstrumentResponses.map((response) => ({
+              id: response.userId,
+              name: `${response.user?.firstName} ${response.user?.lastName}`,
+              src: response.user?.pictureUrl,
             }))}
             extraCount={totalOtherInstrumentsResponses}
-            extraTooltip={
-              otherInstrumentsResponses.map((r) => (
-                <ResponseListItem
-                  key={r.userId}
-                  showResponse={false}
-                  response={r}
-                  user={profiles.find((p) => p.id === r.userId)}
-                />
-              ))
-            }
+            extraTooltip={otherInstrumentsResponses.map((response) => (
+              <ResponseListItem
+                key={response.userId}
+                showResponse={false}
+                response={response}
+                user={profiles.find((person) => person.id === response.userId)}
+              />
+            ))}
             emptyMessage="Aucun participant"
           />
         </div>
-
-        <div className="mt-4">
-          <h4 className="pb-1 font-semibold flex items-baseline justify-between">
-            Votre réponse
-            {myResponse && !editing ? <Button size="sm" variant="ghost" icon={faPen} onClick={() => setEditing(true)}>Modifier</Button> : null}
-          </h4>
-          {myResponse === undefined || editing ? (
-            <div className="flex justify-center">
-              <Button
-                icon={faCheck}
-                variant={myResponse?.value ? 'solid' : 'outline'}
-                size="sm"
-                onClick={() => mutation.mutate(true)}
-              >
-                Je participe
-              </Button>
-              <Button
-                variant={myResponse !== undefined && !myResponse.value ? 'solid' : 'outline'}
-                icon={faXmark}
-                size="sm"
-                onClick={() => mutation.mutate(false)}
-              >
-                Je ne participe pas
-              </Button>
-            </div>
-          ) : (
-            <div className="text-sm">
-              {responses.find((r) => r.userId === profile?.id)?.value ? (
-                <>
-                  <FontAwesomeIcon icon={faCircleCheck} className="px-3 text-emerald-300" />
-                  Vous serez présent
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faCircleXmark} className="px-3 text-red-300" />
-                  Vous ne serez pas présent
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        <MyResponseBlock myResponse={myResponse} isSaving={mutation.isPending} onAnswer={(value) => mutation.mutate(value)} />
       </div>
-
-      <Dialog open={openUserList} onOpenChange={(open) => setOpenUserList(open)}>
-        <DialogContent>
-          <DialogHeading>
-            <h2>
-              <span>Réponses pour l&apos;évènement </span>
-              <i>{event.title}</i>
-            </h2>
-          </DialogHeading>
-          <DialogDescription>
-            <p className="text-left mb-4">
-              <strong>
-                {responses.filter((r) => r.value).length}
-                {' '}
-                réponses positives
-              </strong>
-              {' '}
-              sur
-              {' '}
-              {responses.length}
-              {' '}
-              réponses
-            </p>
-            <ul className="text-left mb-4">
-              {instruments.map((instrument) => (
-                <li key={instrument.id}>
-                  {responseByInstrument.get(instrument.id)?.filter((r) => r.value).length}
-                  {' '}
-                  {instrument.name}
-                </li>
-              ))}
-            </ul>
-            <div className="">
-              {responses.sort((a, b) => responseSortFn(a, b)).map((response) => (
-                <ResponseListItem key={`${event.id}-${response.userId}`} response={response} />
-              ))}
-              <hr className="my-8" />
-              {profiles.filter((p) => !responses.find((r) => r.userId === p.id)).map((user) => (
-                <ResponseListItem key={`${event.id}-${user.id}`} user={user} />
-              ))}
-            </div>
-          </DialogDescription>
-          <DialogClose />
-        </DialogContent>
-      </Dialog>
+      <ResponsesDialog
+        event={event}
+        responses={responses}
+        instruments={instruments}
+        profiles={profiles}
+        responseByInstrument={responseByInstrument}
+        open={openUserList}
+        onOpenChange={setOpenUserList}
+      />
     </div>
   );
 }
@@ -257,32 +256,18 @@ function EventCard({
 export default function PlanningPage() {
   const { usersApi, eventsApi } = useApiClient();
   const { can } = usePermissions();
-
-  const { data: events } = useQuery({
-    queryKey: ['events', 'next100doodle'],
-    queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 100, dateGte: new Date(), isInDoodle: true }),
-  });
-  const { data: profiles } = useQuery({
-    queryKey: ['profiles'],
-    queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet(),
-  });
-  const { data: responses } = useQuery({
-    queryKey: ['responses'],
-    queryFn: async () => await eventsApi.listResponsesApiV1ResponsesGet({ dateGte: new Date() }),
-  });
+  const { data: events } = useQuery(upcomingDoodleEventsQuery(eventsApi));
+  const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet() });
+  const { data: responses } = useQuery(upcomingResponsesQuery(eventsApi));
 
   const { filteredProfiles, enrichedResponses } = useMemo(() => ({
-    filteredProfiles: profiles?.filter((p) => responses?.find((r) => r.userId === p.id)) ?? [],
+    filteredProfiles: profiles?.filter((profile) => responses?.find((response) => response.userId === profile.id)) ?? [],
     enrichedResponses: groupResponsesByEventAndEnrichUser(responses ?? [], profiles ?? []),
   }), [profiles, responses]);
 
   const instruments: MinimalGroup[] = useMemo(() => {
-    if (!profiles) {
-      return [];
-    }
-    const instrumentsFiltered = profiles.map((p) => p.instrument).filter((i) => !!i);
-    const uniqueById = new Map(instrumentsFiltered.map((i) => [i.id, i]));
-    return [...uniqueById.values()];
+    const profileInstruments = profiles?.map((profile) => profile.instrument).filter((instrument) => !!instrument) ?? [];
+    return [...new Map(profileInstruments.map((instrument) => [instrument.id, instrument])).values()];
   }, [profiles]);
 
   return (
@@ -291,46 +276,29 @@ export default function PlanningPage() {
         title="Planning"
         subtitle="Mes présences aux évènements du groupe"
         actions={[
-          <Header.Action variant="outline" icon={faCalendarPlus} key="add-event" as={Link} to="/events/manage" className={can('edit', 'event') ? '' : 'hidden'}>
+          <Link key="add-event" to="/events/manage" className={cn(buttonVariants({ variant: 'outline' }), can('edit', 'event') ? '' : 'hidden')}>
+            <CalendarPlus data-icon="inline-start" />
             Gérer
-          </Header.Action>,
+          </Link>,
           <DisplaySelector key="doodle-nav" />,
         ]}
-        breadcrumb={[
-          { title: 'Évènements', link: '/events' },
-          { title: 'Planning' },
-        ]}
+        breadcrumb={[{ title: 'Évènements', link: '/events' }, { title: 'Planning' }]}
       />
       <Container>
-        <Alert type="gradient">
-          <p className="py-4 font-semibold">
-            Nouvelle vue sur mobile
-          </p>
-          <p className="pb-4">
-            Pour une meilleure expérience sur mobile, cette page a été ajoutée.
-            Elle remplace le grand tableau des présences, difficile à remplir sur petits écrans.
-          </p>
-          <p className="pb-4">
-            <strong className="font-semibold">Vous préfériez le tableau ?</strong>
-            <br />
-            Pas de panique, il est toujours disponible grâce au bouton ci-dessous.
-          </p>
-          <p className="pb-2">
-            <Button
-              variant="ghost"
-              icon={faWandMagicSparkles}
-              as={Link}
-              to="/events/?noRedirect=true"
-            >
+        <Alert className="mb-8">
+          <Sparkles />
+          <AlertDescription>
+            <p className="pb-4 font-semibold">Nouvelle vue sur mobile</p>
+            <p className="pb-4">Pour une meilleure expérience sur mobile, cette page a été ajoutée. Elle remplace le grand tableau des présences, difficile à remplir sur petits écrans.</p>
+            <p className="pb-4"><strong className="font-semibold">Vous préfériez le tableau ?</strong><br />Pas de panique, il est toujours disponible grâce au bouton ci-dessous.</p>
+            <Link className={buttonVariants({ variant: 'ghost' })} to="/events/?noRedirect=true">
+              <Sparkles data-icon="inline-start" />
               Accéder au tableau
-            </Button>
-          </p>
+            </Link>
+          </AlertDescription>
         </Alert>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {events?.map((event) => (
-            <EventCard key={event.id} event={event} responses={enrichedResponses.get(event.id) ?? []} instruments={instruments} profiles={filteredProfiles} />
-          ))}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {events?.map((event) => <EventCard key={event.id} event={event} responses={enrichedResponses.get(event.id) ?? []} instruments={instruments} profiles={filteredProfiles} />)}
         </div>
       </Container>
     </>

@@ -1,49 +1,55 @@
-import { faSquare, faSquareCheck } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from '@tanstack/react-query';
-import type {
-  GroupCreate,
-  Role,
-} from 'bagad-client';
+import type { GroupCreate } from 'bagad-client';
 import { useEffect } from 'react';
+import { Controller, type SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  Controller,
-  type SubmitHandler, useForm, useWatch,
-} from 'react-hook-form';
-import Select, { type FormatOptionLabelMeta } from 'react-select';
-import Badge from '../../../components/badge';
-import Button from '../../../components/button';
-import Input from '../../../components/input';
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from '@/components/ui/combobox';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { useApiClient } from '../../../config/client';
 
-function formatOptionLabel(data: Role, { context }: FormatOptionLabelMeta<Role>) {
-  if (context === 'value') {
-    return data.id;
-  }
-  return (
-    <div>
-      <div>{data.id}</div>
-      <div className="text-sm text-gray-500">{data.description}</div>
-    </div>
-  );
-}
-
 interface PermissionsFormProps {
-  onSubmit: SubmitHandler<GroupCreate>,
-  data?: GroupCreate,
+  onSubmit: SubmitHandler<GroupCreate>
+  data?: GroupCreate
 }
 
-export default function PermissionsForm({
-  onSubmit,
-  data = undefined,
-}: PermissionsFormProps) {
+export default function PermissionsForm({ onSubmit, data = undefined }: PermissionsFormProps) {
   const { usersApi } = useApiClient();
+  const rolesAnchor = useComboboxAnchor();
   const {
     register, handleSubmit, setValue, formState: { errors }, control,
-  } = useForm<GroupCreate & { mailingListEnabled: boolean }>(
-    { defaultValues: { mailingListEnabled: !!(data?.mailingList), ...(data || { color: '#932a58', roleIds: [] }) } },
-  );
-
+  } = useForm<GroupCreate & { mailingListEnabled: boolean }>({
+    defaultValues: {
+      mailingListEnabled: !!data?.mailingList,
+      ...(data || { color: '#932a58', roleIds: [] }),
+    },
+  });
   const watchName = useWatch({ control, name: 'name', defaultValue: 'groupe' });
   const watchColor = useWatch({ control, name: 'color', defaultValue: '' });
   const watchMailingListEnabled = useWatch({ control, name: 'mailingListEnabled' });
@@ -61,98 +67,111 @@ export default function PermissionsForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="name">Nom</label>
-        <Input
-          type="text"
-          id="name"
-          error={errors.name?.message}
-
-          {...register('name', { required: 'Ce champ est obligatoire.' })}
-        />
-      </div>
-      <div className="mb-6">
-        <label htmlFor="color">
-          <span className="mb-2 block font-semibold">Couleur</span>
-          <input
-            type="color"
-            id="color"
-            className="hidden"
-
-            {...register('color', { required: 'Ce champ est obligatoire.' })}
+      <FieldGroup>
+        <Field data-invalid={!!errors.name}>
+          <FieldLabel htmlFor="name">Nom</FieldLabel>
+          <Input
+            type="text"
+            id="name"
+            aria-invalid={!!errors.name}
+            {...register('name', { required: 'Ce champ est obligatoire.' })}
           />
+          <FieldError>{errors.name?.message}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.color}>
+          <FieldLabel htmlFor="color">Couleur</FieldLabel>
+          <input type="color" id="color" className="sr-only" {...register('color', { required: 'Ce champ est obligatoire.' })} />
           {!watchName ? (
-            <p className="text-gray-500 text-sm">Choisissez d&apos;abord un nom de groupe.</p>
+            <FieldDescription>Choisissez d&apos;abord un nom de groupe.</FieldDescription>
           ) : (
-            <Badge style={{ backgroundColor: watchColor }} className="cursor-pointer">{watchName}</Badge>
+            <Badge render={<label htmlFor="color" aria-label="Choisir la couleur du groupe" />} style={{ backgroundColor: watchColor }} className="cursor-pointer text-lg">
+              {watchName}
+            </Badge>
           )}
+          <FieldError>{errors.color?.message}</FieldError>
+        </Field>
 
-        </label>
-      </div>
+        <Field data-invalid={!!errors.roleIds}>
+          <FieldLabel htmlFor="roleIds">Permissions</FieldLabel>
+          <Controller
+            name="roleIds"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <Combobox
+                multiple
+                value={value}
+                onValueChange={(selected) => onChange(Array.isArray(selected) ? selected : [])}
+              >
+                <ComboboxChips ref={rolesAnchor}>
+                  <ComboboxValue>
+                    {(values: string[]) => (
+                      <>
+                        {values.map((roleId) => (
+                          <ComboboxChip key={roleId} aria-label={roleId}>
+                            {roleId}
+                          </ComboboxChip>
+                        ))}
+                        <ComboboxChipsInput id="roleIds" placeholder={values.length ? '' : 'Sélectionnez des permissions'} />
+                      </>
+                    )}
+                  </ComboboxValue>
+                </ComboboxChips>
+                <ComboboxContent anchor={rolesAnchor}>
+                  <ComboboxList>
+                    {roles?.map((role) => (
+                      <ComboboxItem key={role.id} value={role.id}>
+                        <span className="flex flex-col gap-1">
+                          <span>{role.id}</span>
+                          <span className="text-xs font-normal text-muted-foreground">{role.description}</span>
+                        </span>
+                      </ComboboxItem>
+                    ))}
+                  </ComboboxList>
+                  <ComboboxEmpty>Aucune permission trouvée.</ComboboxEmpty>
+                </ComboboxContent>
+              </Combobox>
+            )}
+          />
+          <FieldError>{errors.roleIds?.message}</FieldError>
+        </Field>
 
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="roleIds">Permissions</label>
         <Controller
-          name="roleIds"
+          name="mailingListEnabled"
           control={control}
-          render={({ field: { onChange, value, ref } }) => (
-            <Select
-              isMulti
-              ref={ref}
-              options={roles}
-              getOptionValue={(option) => option.id}
-              formatOptionLabel={formatOptionLabel}
-              value={roles?.filter((c) => value.includes(c.id))}
-              onChange={(val) => onChange(val.map((c) => c.id))}
-              className="basic-multi-select"
-              classNamePrefix="select"
-            />
-
+          render={({ field: { onChange, value } }) => (
+            <Field
+              orientation="horizontal"
+              className="rounded-2xl border-2 p-4 transition-colors hover:bg-muted data-[checked=true]:border-primary"
+              data-checked={value}
+            >
+              <Checkbox id="mailingListEnabled" checked={value} onCheckedChange={onChange} />
+              <FieldContent>
+                <FieldLabel htmlFor="mailingListEnabled" className="cursor-pointer">Associer une mailing liste</FieldLabel>
+                <FieldDescription>Les utilisateurs de ce groupe seront tous ajoutés à une mailing list</FieldDescription>
+              </FieldContent>
+            </Field>
           )}
         />
-      </div>
 
-      <div className="mb-6">
-        <label className="mb-2 block font-semibold" htmlFor="mailingList">Mailing liste</label>
-        <div className="relative mb-2">
-          <input
-            type="checkbox"
-            id="mailingListEnabled"
-
-            {...register('mailingListEnabled')}
-            className="hidden peer"
-          />
-
-          <label htmlFor="mailingListEnabled" className="block p-4 pl-16 cursor-pointer rounded border-2 ring-2 ring-transparent ring-offset-2 peer-checked:border-pourpre-500 hover:bg-gray-50 active:ring-pourpre-200 focus:ring-pourpre-200 focus:ring-offset-0">
-            <span className="mb-2 block font-semibold">Associer une mailing liste</span>
-            <p className="text-gray-600">
-              Les utilisateurs de ce groupe seront tous ajoutés à une mailing list
-            </p>
-          </label>
-          <FontAwesomeIcon className="absolute invisible top-4 left-4 md:top-8 md:left-8 peer-checked:visible text-pourpre-500" icon={faSquareCheck} />
-          <FontAwesomeIcon className="absolute visible top-4 left-4 md:top-8 md:left-8 peer-checked:invisible text-gray-200" icon={faSquare} />
-        </div>
         {watchMailingListEnabled ? (
-          <div className="relative">
-            <Input
-              type="text"
-              id="mailingList"
-              className="flex-1 grow"
-              error={errors.mailingList?.message}
-
-              {...register('mailingList', { required: 'Ce champ est obligatoire.' })}
-            />
-            <span className="absolute top-0 bottom-0 right-0 grid place-content-center">
-              <span className="px-4">
-                @bagadmenru.bzh
-              </span>
-            </span>
-          </div>
+          <Field data-invalid={!!errors.mailingList}>
+            <FieldLabel htmlFor="mailingList">Mailing liste</FieldLabel>
+            <InputGroup>
+              <InputGroupInput
+                type="text"
+                id="mailingList"
+                aria-invalid={!!errors.mailingList}
+                {...register('mailingList', { required: 'Ce champ est obligatoire.' })}
+              />
+              <InputGroupAddon align="inline-end"><InputGroupText>@bagadmenru.bzh</InputGroupText></InputGroupAddon>
+            </InputGroup>
+            <FieldError>{errors.mailingList?.message}</FieldError>
+          </Field>
         ) : null}
-      </div>
 
-      <Button type="submit">Enregistrer</Button>
+        <Button type="submit">Enregistrer</Button>
+      </FieldGroup>
     </form>
-
   );
 }

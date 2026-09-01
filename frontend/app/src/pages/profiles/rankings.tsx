@@ -1,5 +1,4 @@
-import { faMedal, faTrophy } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Medal, Trophy, type LucideIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import type { Profile, RankingInfo, UserRankingItem } from 'bagad-client';
 import { Link } from 'react-router-dom';
@@ -11,30 +10,27 @@ import { useApiClient } from '../../config/client';
 
 const TOP_RANKINGS_COUNT = 3;
 
-// Define medal colors
-const medalColors = {
-  gold: '#FFD700',
-  silver: '#C0C0C0',
-  bronze: '#CD7F32',
-};
-
-// Rank configuration lookup (indexed by rank - 1)
-const rankConfigs = [
+const rankConfigs: Array<{
+  icon: LucideIcon;
+  iconClassName: string;
+  title: string;
+  positionClass: string;
+}> = [
   {
-    color: medalColors.gold,
-    iconDef: faTrophy,
+    icon: Trophy,
+    iconClassName: 'text-primary',
     title: '1er',
     positionClass: 'order-2 mt-0 md:mt-0',
   },
   {
-    color: medalColors.silver,
-    iconDef: faMedal,
+    icon: Medal,
+    iconClassName: 'text-muted-foreground',
     title: '2ème',
     positionClass: 'order-1 mt-0 md:mt-8',
   },
   {
-    color: medalColors.bronze,
-    iconDef: faMedal,
+    icon: Medal,
+    iconClassName: 'text-accent-foreground',
     title: '3ème',
     positionClass: 'order-3 mt-0 md:mt-16',
   },
@@ -58,25 +54,25 @@ function PodiumPosition({
   title: string;
   formattedValue: string;
 }) {
-  const { color, iconDef } = rankConfigs[rank - 1];
+  const { icon: Icon, iconClassName } = rankConfigs[rank - 1];
 
   return (
-    <Link to={`/profile/${user.id}`} className="flex flex-col w-full items-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow bg-white">
+    <Link to={`/profile/${user.id}`} className="flex w-full flex-col items-center surface rounded-4xl p-4 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
       <div className="mb-2">
-        <FontAwesomeIcon icon={iconDef} className="text-2xl" style={{ color }} />
+        <Icon className={`size-6 ${iconClassName}`} aria-hidden="true" />
       </div>
-      <div className="w-24 h-24 rounded-full overflow-hidden mb-3 border-4" style={{ borderColor: color }}>
+      <div className={`mb-3 size-24 overflow-hidden rounded-full border-4 border-current ${iconClassName}`}>
         <img
           src={user.pictureUrl ?? defaultAvatar}
           alt={`${user.firstName} ${user.lastName[0]}`}
-          className="w-full h-full object-cover"
+          className="size-full object-cover"
         />
       </div>
-      <h3 className="font-bold text-lg">
+      <h3 className="text-lg font-bold">
         {user.firstName}
       </h3>
-      <div className="text-sm text-gray-600 mt-1">{title}</div>
-      <div className="font-semibold mt-1">{formattedValue}</div>
+      <div className="mt-1 text-sm text-muted-foreground">{title}</div>
+      <div className="mt-1 font-semibold">{formattedValue}</div>
     </Link>
   );
 }
@@ -118,15 +114,15 @@ function Podium<V extends RankingValueKey>({
 
   return (
     <div className="mb-12">
-      <h2 className="text-xl font-bold mb-6 text-center">{title}</h2>
-      <div className="flex flex-col md:flex-row justify-center items-start gap-4">
+      <h2 className="mb-6 text-center text-xl font-bold">{title}</h2>
+      <div className="flex flex-col items-start justify-center gap-4 md:flex-row">
         {podiumOrder.map((item) => {
           const { positionClass, title: rankTitle } = rankConfigs[item.rank - 1];
 
           return (
             <div
               key={item.user.user.id}
-              className={`w-48 flex justify-center ${positionClass}`}
+              className={`flex w-48 justify-center ${positionClass}`}
             >
               <PodiumPosition
                 rank={item.rank}
@@ -190,11 +186,11 @@ export default function RankingsPage() {
 
       <Container>
         {isLoading && (
-          <div className="text-center py-8">Chargement des classements...</div>
+          <div className="py-8 text-center">Chargement des classements...</div>
         )}
 
         {error && (
-          <div className="text-center py-8 text-red-600">
+          <div className="py-8 text-center text-destructive">
             Une erreur est survenue lors du chargement des classements.
           </div>
         )}
@@ -231,7 +227,7 @@ export default function RankingsPage() {
         )}
 
         {data?.rankings.length === 0 && (
-          <div className="text-center py-8">
+          <div className="py-8 text-center">
             Aucun classement disponible pour le moment.
           </div>
         )}

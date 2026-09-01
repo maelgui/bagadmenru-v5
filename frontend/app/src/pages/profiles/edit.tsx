@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { MyProfileUpdate, Profile, ProfileUpdate } from 'bagad-client';
-import toast from 'react-hot-toast';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
+import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient, usePermissions } from '../../config/client';
 import AdminEditProfileForm from './components/adminForm';
 import EditProfileForm from './components/myForm';
@@ -43,7 +43,7 @@ export default function EditProfilePage() {
   const { usersApi } = useApiClient();
   const navigate = useNavigate();
 
-  const { profileId } = useParams<"profileId">();
+  const { profileId } = useParams<'profileId'>();
   if (!profileId) {
     throw new Error('profileId is required');
   }
@@ -61,8 +61,7 @@ export default function EditProfilePage() {
   }
 
   if (!can('edit', 'profile') && profileId !== 'me') {
-    void navigate('/profile/edit/me');
-    return null;
+    return <Navigate to="/profile/edit/me" replace />;
   }
 
   const onSuccess = async () => {

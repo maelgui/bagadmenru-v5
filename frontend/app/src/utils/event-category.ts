@@ -1,16 +1,18 @@
 interface Category {
   name: string;
-  variant: 'sortie' | 'repetition' | 'default';
+  variant: 'default';
+  className?: string;
 }
 
 const EventCategories: Partial<Record<string, Category>> = {
   sortie: {
     name: 'Sortie',
-    variant: 'sortie',
+    variant: 'default',
   },
   repetition: {
     name: 'Répétition',
-    variant: 'repetition',
+    variant: 'default',
+    className: 'bg-amber-500 text-white',
   },
   autre: {
     name: 'Autre évènement',

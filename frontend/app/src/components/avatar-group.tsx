@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
-import Avatar from './avatar';
-import Tooltip from './tooltip';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 type AvatarSize = 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 
@@ -25,39 +27,62 @@ interface AvatarGroupProps {
   emptyMessage?: string;
 }
 
+const avatarSizeClasses: Record<AvatarSize, string> = {
+  xxs: 'size-10',
+  xs: 'size-12',
+  sm: 'size-24',
+  md: 'size-48',
+  lg: 'size-64',
+};
+
+const MAX_INITIALS = 2;
+
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, MAX_INITIALS)
+    .toUpperCase();
+}
+
 function OverflowAvatar({ count, tooltip, size }: { count: number; tooltip?: ReactNode; size: AvatarSize }) {
   if (count <= 0) return null;
-  const resolvedTooltip = tooltip ?? <span>+{count} autres</span>;
+
+  const content = tooltip ?? <span>+{count} autres</span>;
+
   return (
-    <Tooltip content={resolvedTooltip}>
-      <Avatar
-        className="border-4 border-white"
-        placeholder={`+${count}`}
-        size={size}
+    <Tooltip>
+      <TooltipTrigger
+        render={(
+          <Avatar className={cn(avatarSizeClasses[size], 'ring-4 ring-background')}>
+            <AvatarFallback>+{count}</AvatarFallback>
+          </Avatar>
+        )}
       />
+      <TooltipContent>{content}</TooltipContent>
     </Tooltip>
   );
 }
 
 function AvatarWithTooltip({ avatar, size }: { avatar: AvatarItem; size: AvatarSize }) {
   return (
-    <Tooltip content={<span>{avatar.name}</span>}>
-      <Avatar
-        className="border-4 border-white"
-        src={avatar.src}
-        title={avatar.name}
-        size={size}
+    <Tooltip>
+      <TooltipTrigger
+        render={(
+          <Avatar className={cn(avatarSizeClasses[size], 'ring-4 ring-background')}>
+            <AvatarImage src={avatar.src ?? undefined} alt={avatar.name} />
+            <AvatarFallback>{getInitials(avatar.name)}</AvatarFallback>
+          </Avatar>
+        )}
       />
+      <TooltipContent>{avatar.name}</TooltipContent>
     </Tooltip>
   );
 }
 
 function GroupEmptyMessage({ message = 'Aucun' }: { message?: string }) {
-  return <span className="text-sm text-gray-500">{message}</span>;
-}
-
-function isGroupEmpty(avatars: AvatarItem[], extraCount: number): boolean {
-  return avatars.length === 0 && extraCount === 0;
+  return <span className="text-sm text-muted-foreground">{message}</span>;
 }
 
 export default function AvatarGroup({
@@ -68,7 +93,7 @@ export default function AvatarGroup({
   extraTooltip,
   emptyMessage,
 }: AvatarGroupProps) {
-  if (isGroupEmpty(avatars, extraCount)) {
+  if (avatars.length === 0 && extraCount === 0) {
     return <GroupEmptyMessage message={emptyMessage} />;
   }
 
@@ -77,12 +102,8 @@ export default function AvatarGroup({
 
   return (
     <div className="flex -space-x-4">
-      {visible.map((avatar) => (
-        <AvatarWithTooltip key={avatar.id} avatar={avatar} size={size} />
-      ))}
-      {/* Show "+N" for truncated avatars from the same list */}
+      {visible.map((avatar) => <AvatarWithTooltip key={avatar.id} avatar={avatar} size={size} />)}
       <OverflowAvatar count={truncatedCount} size={size} />
-      {/* Show "+N" for an external extra group (e.g. other instruments) */}
       <OverflowAvatar count={extraCount} tooltip={extraTooltip} size={size} />
     </div>
   );

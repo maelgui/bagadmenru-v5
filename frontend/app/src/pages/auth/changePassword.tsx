@@ -1,24 +1,22 @@
-
-import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
+import { WandSparkles } from 'lucide-react';
 import type { ResetPassword } from 'bagad-client';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router-dom';
-import Button from '../../components/button';
-import Input from '../../components/input';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { FieldGroup } from '@/components/ui/field';
+import PasswordField from '../../components/PasswordField';
 import { useApiClient } from '../../config/client';
-
+import { cn } from '@/lib/utils';
 
 function ChangePasswordPage() {
   const { authApi } = useApiClient();
-
-  const { token } = useParams<"token">();
-
+  const { token } = useParams<'token'>();
   const {
     register, handleSubmit, formState: { errors, isSubmitSuccessful },
   } = useForm<ResetPassword>();
 
   if (token === undefined) {
-    return null
+    return null;
   }
 
   const onSubmit = async (data: ResetPassword) => {
@@ -27,51 +25,36 @@ function ChangePasswordPage() {
 
   return (
     <div>
-      <h1 className="text-2xl mb-2">Changer le mot de passe</h1>
-      <p className="text-gray-500 mb-8">Choisissez un nouveau mot de passe</p>
+      <h1 className="mb-2 text-2xl">Changer le mot de passe</h1>
+      <p className="mb-8 text-muted-foreground">Choisissez un nouveau mot de passe</p>
       {isSubmitSuccessful ? (
         <>
-          <div className="mb-6">
-            Mot de passe changé avec succès !
-          </div>
-          <Button as={Link} to="/" type="button" variant="ghost">Retour</Button>
+          <div className="mb-6">Mot de passe changé avec succès !</div>
+          <Link to="/" className={cn(buttonVariants({ variant: 'ghost' }))}>Retour</Link>
         </>
       ) : (
-
         <form onSubmit={handleSubmit(onSubmit)}>
-          <input
-            type="hidden"
-            id="email"
-            {...register('email')}
-          />
-
-          <div className="mb-6">
-            <label className="mb-2 block font-semibold" htmlFor="password">Mot de passe</label>
-            <Input
-              type="password"
+          <input type="hidden" id="email" {...register('email')} />
+          <FieldGroup>
+            <PasswordField
               id="password"
+              label="Mot de passe"
               error={errors.password?.message}
-              {...register('password', { required: 'Ce champ est obligatoire.' })}
+              autoComplete="new-password"
+              registration={register('password', { required: 'Ce champ est obligatoire.' })}
             />
-          </div>
-
-          <div className="mb-6">
-            <label className="mb-2 block font-semibold" htmlFor="passwordConfirm">Confirmation</label>
-            <Input
-              type="password"
+            <PasswordField
               id="passwordConfirm"
+              label="Confirmation"
               error={errors.passwordConfirm?.message}
-              {...register('passwordConfirm', { required: 'Ce champ est obligatoire.' })}
+              autoComplete="new-password"
+              registration={register('passwordConfirm', { required: 'Ce champ est obligatoire.' })}
             />
-          </div>
-
-          <div className="flex justify-between">
-            <Button as={Link} to="/auth/login" type="button" variant="ghost">Retour</Button>
-            <Button type="submit" icon={faWandMagicSparkles}>
-              Changer
-            </Button>
-          </div>
-
+            <div className="flex justify-between">
+              <Link to="/auth/login" className={cn(buttonVariants({ variant: 'ghost' }))}>Retour</Link>
+              <Button type="submit"><WandSparkles data-icon="inline-start" />Changer</Button>
+            </div>
+          </FieldGroup>
         </form>
       )}
     </div>

@@ -1,27 +1,37 @@
-import {
-  faCalendarDay,
-  faCaretDown,
-  faChessBoard,
-  faListCheck,
-} from '@fortawesome/free-solid-svg-icons';
+import { CalendarDays, ChevronDown, ListChecks, TableCellsMerge } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Button from '../../../components/button';
-import Dropdown, { DropdownContent, DropdownTrigger } from '../../../components/dropdown';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function DisplaySelector() {
   return (
-    <Dropdown>
-      <DropdownTrigger asChild>
-        <Button icon={faCaretDown}>
-          Affichage
-
-        </Button>
-      </DropdownTrigger>
-      <DropdownContent>
-        <Button as={Link} variant="ghost" to="/events/calendar" icon={faCalendarDay}>Calendrier</Button>
-        <Button as={Link} variant="ghost" to="/events/planning" icon={faListCheck}>Planning</Button>
-        <Button as={Link} variant="ghost" to="/events/?noRedirect=true" icon={faChessBoard}>Doodle</Button>
-      </DropdownContent>
-    </Dropdown>
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button />}>
+        Affichage
+        <ChevronDown data-icon="inline-end" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuItem render={<Link to="/events/calendar" />}>
+            <CalendarDays />
+            Calendrier
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/events/planning" />}>
+            <ListChecks />
+            Planning
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/events/?noRedirect=true" />}>
+            <TableCellsMerge />
+            Doodle
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

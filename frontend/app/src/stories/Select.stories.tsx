@@ -1,28 +1,74 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import Select from '../components/select';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-// More on how to set up stories at: https://storybook.js.org/docs/react/writing-stories/introduction#default-export
 const meta = {
+  title: 'Components/Select',
   component: Select,
   parameters: {
-    // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/react/configure/story-layout
-    layout: 'padded',
+    layout: 'centered',
   },
-  // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/react/writing-docs/autodocs
   tags: ['autodocs'],
 } satisfies Meta<typeof Select>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// More on writing stories with args: https://storybook.js.org/docs/react/writing-stories/args
-export const Text: Story = {
-  args: {
-    children: (
-      <>
-        <option value="1">Caisse Claire</option>
-        <option value="2">Cornemuse</option>
-      </>
-    ),
-  },
+export const Default: Story = {
+  render: () => (
+    <Select>
+      <SelectTrigger className="w-56">
+        <SelectValue placeholder="Choisir un instrument" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="cornemuse">Cornemuse</SelectItem>
+        <SelectItem value="bombarde">Bombarde</SelectItem>
+        <SelectItem value="caisse">Caisse claire</SelectItem>
+      </SelectContent>
+    </Select>
+  ),
+};
+
+export const WithGroups: Story = {
+  render: () => (
+    <Select>
+      <SelectTrigger className="w-56">
+        <SelectValue placeholder="Choisir un pupitre" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Bois</SelectLabel>
+          <SelectItem value="cornemuse">Cornemuse</SelectItem>
+          <SelectItem value="bombarde">Bombarde</SelectItem>
+        </SelectGroup>
+        <SelectSeparator />
+        <SelectGroup>
+          <SelectLabel>Percussions</SelectLabel>
+          <SelectItem value="caisse">Caisse claire</SelectItem>
+          <SelectItem value="grosse">Grosse caisse</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  ),
+};
+
+export const Disabled: Story = {
+  render: () => (
+    <Select disabled>
+      <SelectTrigger className="w-56">
+        <SelectValue placeholder="Indisponible" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="1">Indisponible</SelectItem>
+      </SelectContent>
+    </Select>
+  ),
 };

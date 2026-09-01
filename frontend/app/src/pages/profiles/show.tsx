@@ -1,9 +1,21 @@
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Trash2 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/toast';
 import {
   queryClient, useApiClient, usePermissions, useUserProfile,
 } from '../../config/client';
@@ -13,7 +25,7 @@ export default function ShowProfilePage() {
   const { usersApi } = useApiClient();
   const currentUser = useUserProfile();
   const { can } = usePermissions();
-  const { profileId } = useParams<"profileId">();
+  const { profileId } = useParams<'profileId'>();
   if (!profileId) {
     throw new Error('Missing profile id');
   }
@@ -39,13 +51,6 @@ export default function ShowProfilePage() {
     },
   });
 
-  const handleDelete = () => {
-
-    if (window.confirm(`Êtes-vous sûr de vouloir désactiver le profil de ${profile?.firstName} ${profile?.lastName} ?`)) {
-      deleteProfile();
-    }
-  };
-
   if (!profile) {
     return null;
   }
@@ -53,12 +58,31 @@ export default function ShowProfilePage() {
   const actions = [];
   if (can('edit', 'profile') || profileId === currentUser?.id) {
     actions.push(
-      <Header.Action key="edit-profile" onClick={async () => await navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Header.Action>,
+      <Button key="edit-profile" onClick={async () => await navigate(`/profile/edit/${profileId}`)}>Modifier le profil</Button>,
     );
   }
   if (can('delete', 'profile') && profileId !== currentUser?.id) {
     actions.push(
-      <Header.Action key="delete-profile" icon={faTrash} variant="outline" onClick={handleDelete}>Désactiver</Header.Action>,
+      <AlertDialog key="delete-profile">
+        <AlertDialogTrigger render={<Button variant="outline" />}>
+          <Trash2 data-icon="inline-start" />
+          Désactiver
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Désactiver ce profil ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {`Êtes-vous sûr de vouloir désactiver le profil de ${profile.firstName} ${profile.lastName} ?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => deleteProfile()}>
+              Désactiver
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>,
     );
   }
 

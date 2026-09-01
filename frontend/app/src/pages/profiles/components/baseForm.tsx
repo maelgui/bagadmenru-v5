@@ -1,14 +1,12 @@
-
-import { faBellSlash, faEdit } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import axios from 'axios';
+import { MailIcon, MailXIcon, Pencil } from 'lucide-react';
 import type { Profile, ProfileUpdate } from 'bagad-client';
 import { useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
-import toast from 'react-hot-toast';
-import Avatar from '../../../components/avatar';
-import Input from '../../../components/input';
-import PushNotificationToggle from '../../../components/PushNotificationToggle';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/toast';
 import { useApiClient } from '../../../config/client';
 
 interface AvatarInputProps {
@@ -26,15 +24,16 @@ function AvatarInput({
   const uploadAvatar = async (file: File) => {
     // API call to generate a pre-signed url to upload file object
     const presignedUploadUrl = await usersApi.uploadAvatarApiV1ProfilesMeAvatarPost();
-    await axios.put(
-      presignedUploadUrl.url,
-      file,
-      {
-        headers: {
-          'X-Amz-Tagging': new URLSearchParams({ user_id: profileId, temp: 'true' }).toString(),
-        },
+    const response = await fetch(presignedUploadUrl.url, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'X-Amz-Tagging': new URLSearchParams({ user_id: profileId, temp: 'true' }).toString(),
       },
-    );
+    });
+    if (!response.ok) {
+      throw new Error(`Avatar upload failed with status ${response.status}`);
+    }
     setPictureUrl(URL.createObjectURL(file));
     onChange(presignedUploadUrl.key);
   };
@@ -44,9 +43,9 @@ function AvatarInput({
       void toast.promise(
         uploadAvatar(event.target.files[0]),
         {
-          loading: 'Envoie...',
-          success: <b>Fichier téléchargé !</b>,
-          error: <b>Erreur.</b>,
+          loading: 'Envoi...',
+          success: 'Fichier téléchargé !',
+          error: 'Erreur.',
         },
       );
     }
@@ -54,13 +53,16 @@ function AvatarInput({
 
   return (
     <>
-      <Avatar src={pictureUrl} size="lg" />
+      <Avatar className="size-64">
+        <AvatarImage src={pictureUrl ?? undefined} alt="Avatar du profil" />
+        <AvatarFallback>Profil</AvatarFallback>
+      </Avatar>
       <label
         htmlFor="pictureFileInput"
-        className="cursor-pointer m-4 absolute right-0 bottom-0 rounded-full bg-white h-12 w-12 flex justify-center items-center shadow-lg"
+        className="absolute right-0 bottom-0 m-4 flex size-12 cursor-pointer items-center justify-center rounded-full bg-card shadow-lg"
         aria-label="Changer mon avatar"
       >
-        <FontAwesomeIcon icon={faEdit} />
+        <Pencil aria-hidden="true" />
       </label>
       <input
         type="file"
@@ -77,14 +79,14 @@ export default function BaseProfileFormFields(
   { profile = undefined, avatar = true }: { profile?: Profile, avatar?: boolean },
 ) {
   const {
-    register, watch, control, formState: { errors },
+    register, control, formState: { errors },
   } = useFormContext<ProfileUpdate>();
 
   return (
     <div>
       {profile && avatar ? (
-        <div className="text-center mb-6">
-          <div className="inline-block m-auto relative my-8">
+        <div className="mb-6 text-center">
+          <div className="relative my-8 inline-block">
             <Controller
               name="pictureKey"
               control={control}
@@ -101,47 +103,53 @@ export default function BaseProfileFormFields(
       )
         : null}
 
-      <div className="mb-6">
-        <label htmlFor="receivesEmails" className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            id="receivesEmails"
-            className="h-5 w-5 rounded border-gray-300 text-pourpre-500 focus:ring-pourpre-500"
-            {...register('receivesEmails')}
-          />
-          <span className="font-semibold">Recevoir les emails</span>
-          {!watch('receivesEmails') && (
-            <FontAwesomeIcon icon={faBellSlash} className="text-red-400 text-sm" />
+      <FieldGroup className="mb-6">
+        <Controller
+          name="receivesEmails"
+          control={control}
+          render={({ field }) => (
+            <Field orientation="horizontal">
+              <Switch
+                id="receivesEmails"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+              <FieldContent>
+                <FieldLabel htmlFor="receivesEmails">
+                  {field.value ? <MailIcon aria-hidden="true" /> : <MailXIcon aria-hidden="true" />}
+                  Notifications par email
+                </FieldLabel>
+                <FieldDescription>
+                  Recevoir les emails du groupe (événements, annonces...).
+                </FieldDescription>
+              </FieldContent>
+            </Field>
           )}
-        </label>
-        <p className="text-sm text-gray-500 mt-1 ml-8">
-          Décochez pour ne plus recevoir les notifications par email.
-        </p>
-      </div>
+        />
+      </FieldGroup>
 
-      <PushNotificationToggle />
-
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1">
-          <label className="mb-2 block font-semibold" htmlFor="first_name">Prénom</label>
+      <FieldGroup className="mb-6 md:grid md:grid-cols-2 md:gap-4">
+        <Field data-invalid={!!errors.firstName}>
+          <FieldLabel htmlFor="first_name">Prénom</FieldLabel>
           <Input
             type="text"
             id="first_name"
-            error={errors.firstName?.message}
+            aria-invalid={!!errors.firstName}
             {...register('firstName', { required: 'Ce champ est obligatoire.' })}
-
           />
-        </div>
-        <div className="flex-1">
-          <label className="mb-2 block font-semibold" htmlFor="last_name">Nom</label>
+          <FieldError>{errors.firstName?.message}</FieldError>
+        </Field>
+        <Field data-invalid={!!errors.lastName}>
+          <FieldLabel htmlFor="last_name">Nom</FieldLabel>
           <Input
             type="text"
             id="last_name"
-            error={errors.lastName?.message}
+            aria-invalid={!!errors.lastName}
             {...register('lastName', { required: 'Ce champ est obligatoire.' })}
           />
-        </div>
-      </div>
+          <FieldError>{errors.lastName?.message}</FieldError>
+        </Field>
+      </FieldGroup>
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react';
 
-export default function Container(
-  { className = undefined, children }: { className?: string, children: ReactNode },
-) {
-  return (
-    <div className={`container mx-auto p-4 ${className || ''}`}>{children}</div>
-  );
+import { cn } from '@/lib/utils';
+
+interface ContainerProps {
+  className?: string;
+  children: ReactNode;
+}
+
+export default function Container({ className, children }: ContainerProps) {
+  return <div className={cn('container mx-auto p-4', className)}>{children}</div>;
 }

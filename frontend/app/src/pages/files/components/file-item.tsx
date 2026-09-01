@@ -1,164 +1,119 @@
-
-import {
-  FloatingFocusManager,
-  autoUpdate,
-  flip,
-  offset,
-  shift,
-  useClick,
-  useDismiss,
-  useFloating,
-  useInteractions,
-  useRole,
-} from '@floating-ui/react';
-import { faFolder } from '@fortawesome/free-regular-svg-icons';
-import {
-  type IconDefinition,
-  faEllipsisVertical, faFile, faFilePdf,
-  faImage, faMusic, faPencil,
-  faTrashCan,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { type LucideIcon, EllipsisVertical, File, FileImage, FileMusic, FileText, Folder, Pencil, Trash2 } from 'lucide-react';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
-import { type MouseEventHandler, useState } from 'react';
+import { createElement, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LongPressEventType, useLongPress } from 'use-long-press';
-import Button from '../../../components/button';
-import { SkeletonText } from '../../../components/skeleton';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemHeader,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface FileItemProps {
   file: FileOrFolder
   big?: boolean
-  deleteFn?: MouseEventHandler<HTMLButtonElement>
-  renameFn?: MouseEventHandler<HTMLButtonElement>
+  deleteFn?: () => void
+  renameFn?: () => void
   noAction?: boolean
+  variant?: 'default' | 'outline' | 'muted'
 }
 
-const faFileIconType = new Map<string, IconDefinition>([
-  ['mp3', faMusic],
-  ['pdf', faFilePdf],
-  ['png', faImage],
-  ['jpg', faImage],
-  ['jpeg', faImage],
+const fileIconTypes = new Map<string, LucideIcon>([
+  ['mp3', FileMusic],
+  ['pdf', FileText],
+  ['png', FileImage],
+  ['jpg', FileImage],
+  ['jpeg', FileImage],
 ]);
 
-function getIcon(file: FileOrFolder) {
+function getIcon(file: FileOrFolder): LucideIcon {
   if (file.type === FileOrFolderType.Dir) {
-    return faFolder;
+    return Folder;
   }
-
   const extension = file.name.toLowerCase().split('.').pop();
-  if (!extension) {
-    return faFile;
-  }
-
-  return faFileIconType.get(extension) ?? faFile;
+  return extension ? (fileIconTypes.get(extension) ?? File) : File;
 }
 
 export default function FileItem({
-  file, big = false, deleteFn = undefined, renameFn = undefined, noAction = false,
+  file, big = false, deleteFn = undefined, renameFn = undefined, noAction = false, variant = 'outline',
 }: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  const bind = useLongPress(() => {
-    setIsOpen(true);
-  }, { detect: LongPressEventType.Touch });
-
-  const { refs, floatingStyles, context } = useFloating({
-    open: isOpen,
-    onOpenChange: setIsOpen,
-    placement: 'bottom-end',
-    whileElementsMounted: autoUpdate,
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- offset value for floating UI positioning
-    middleware: [offset(5), flip(), shift()],
-  });
-
-  const click = useClick(context);
-  const dismiss = useDismiss(context);
-  const role = useRole(context);
-
-  // Merge all the interactions into prop getters
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    click,
-    dismiss,
-    role,
-  ]);
+  const bind = useLongPress(() => setIsOpen(true), { detect: LongPressEventType.Touch });
+  const icon = createElement(getIcon(file), { 'aria-hidden': true });
 
   return (
-    <>
-      <div className="relative border rounded border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm">
-        {big && (
-          <div className="p-4 text-center h-32 [&>svg]:max-h-16 flex justify-center items-center border-b border-gray-50">
-            <FontAwesomeIcon size="3x" icon={getIcon(file)} className="mr-4" />
-          </div>
-        )}
-        <div className="flex justify-between p-4 items-center">
-          <div className="truncate">
-            {!big && <FontAwesomeIcon icon={getIcon(file)} className="mr-4" />}
-            <Link
-              to={file.fileUrl ?? `/files/${file.id}`}
-              className="truncate after:absolute after:top-0 after:bottom-0 after:left-0 after:right-0"
-              {...bind()}
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              {file.name}
-            </Link>
-          </div>
-          {!noAction ? (
-            <button
-              type="button"
-              data-dropdown-toggle={`dropdown-file-action-${file.id}`}
-              className="relative shrink-0 w-6 h-6 rounded hover:bg-gray-200 text-center"
-              ref={refs.setReference}
-              {...getReferenceProps()}
-            >
-              <FontAwesomeIcon icon={faEllipsisVertical} />
-            </button>
-          ) : null}
-        </div>
-      </div>
-
-      {(!noAction && isOpen) && (
-        <FloatingFocusManager context={context} modal={false}>
-          <div
-            // eslint-disable-next-line react-hooks/refs -- floating-ui requires callback ref for dynamic positioning
-            ref={refs.setFloating}
-            className="flex flex-col p-1 rounded border bg-white shadow z-10"
-            style={floatingStyles}
-            {...getFloatingProps()}
-          >
-            <Button variant="ghost" className="text-left capitalize font-medium" onClick={renameFn}>
-              <FontAwesomeIcon icon={faPencil} className="mr-3 w-4" />
-              {' '}
-              Renommer...
-            </Button>
-            <hr className="mx-2 my-1" />
-            <Button variant="ghost" className="text-left text-red-600 capitalize font-medium" onClick={deleteFn}>
-              <FontAwesomeIcon icon={faTrashCan} className="mr-3 w-4" />
-              {' '}
-              Supprimer...
-            </Button>
-          </div>
-        </FloatingFocusManager>
+    <Item variant={variant} className="relative transition-colors hover:bg-muted">
+      {big ? (
+        <ItemHeader className="justify-center py-4 [&_svg]:size-16">
+          {icon}
+        </ItemHeader>
+      ) : (
+        <ItemMedia variant="icon">{icon}</ItemMedia>
       )}
-    </>
+      <ItemContent>
+        <ItemTitle>
+          <Link
+            to={file.fileUrl ?? `/files/${file.id}`}
+            className="after:absolute after:inset-0"
+            {...bind()}
+            onContextMenu={(event) => event.preventDefault()}
+          >
+            {file.name}
+          </Link>
+        </ItemTitle>
+      </ItemContent>
+      {!noAction ? (
+        <ItemActions>
+          <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenuTrigger
+              render={<Button type="button" variant="ghost" size="icon-xs" className="relative shrink-0" aria-label={`Actions pour ${file.name}`} />}
+            >
+              <EllipsisVertical />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={renameFn}>
+                  <Pencil />
+                  Renommer...
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={deleteFn}>
+                  <Trash2 />
+                  Supprimer...
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ItemActions>
+      ) : null}
+    </Item>
   );
 }
 
-export function FileItemSkeleton({
-  big = false,
-}: { big?: boolean }) {
+export function FileItemSkeleton({ big = false, variant = 'outline' }: { big?: boolean; variant?: 'default' | 'outline' | 'muted' }) {
   return (
-    <div className="relative border rounded border-gray-200 shadow-sm animate-pulse">
-      {big && (
-        <div className="p-4 text-center h-32 [&>svg]:max-h-16 flex justify-center items-center border-b border-gray-50">
-          <div className="inline-block bg-gray-200 rounded animate-pulse w-24 h-24" />
-        </div>
+    <Item variant={variant}>
+      {big ? (
+        <ItemHeader className="justify-center py-4">
+          <Skeleton className="size-16" />
+        </ItemHeader>
+      ) : (
+        <ItemMedia variant="icon"><Skeleton className="size-6" /></ItemMedia>
       )}
-      <div className="flex p-4 items-center">
-        {!big && <div className="inline-block bg-gray-200 rounded animate-pulse w-6 h-6 mr-4" />}
-        <SkeletonText className="w-48" />
-      </div>
-    </div>
+      <ItemContent>
+        <Skeleton className="h-4 w-48" />
+      </ItemContent>
+    </Item>
   );
 }

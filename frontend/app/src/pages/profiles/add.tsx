@@ -1,9 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
 import type { ProfileCreate } from 'bagad-client';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
+import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../../config/client';
 import AdminEditProfileForm from './components/adminForm';
 
@@ -18,7 +18,7 @@ export default function CreateProfilePage() {
       }),
       {
         loading: 'Création...',
-        success: 'Profil crée avec succès !',
+        success: 'Profil créé avec succès !',
         error: 'Une erreur est survenue.',
       },
     ),

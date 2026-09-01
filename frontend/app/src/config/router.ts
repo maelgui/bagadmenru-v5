@@ -1,32 +1,17 @@
+import type { ComponentType } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import AuthGuard from '../guards/auth';
 import MainLayout from '../layout/main';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
-import ChangePasswordPage from '../pages/auth/changePassword';
-import AuthPage from '../pages/auth/login';
-import LostPasswordPage from '../pages/auth/lostPassword';
-import UnsubscribePage from '../pages/auth/unsubscribe';
 import RoutingErrorComponent from '../pages/error/error';
-import AddEventPage from '../pages/events/add';
-import AnswerLinkPage from '../pages/events/answer';
-import CalendarPage from '../pages/events/calendar';
-import DoodlePage from '../pages/events/doodle';
-import EditEventPage from '../pages/events/edit';
-import EventsManagePage from '../pages/events/events';
-import PlanningPage from '../pages/events/planning';
-import ListFilesPage from '../pages/files/list';
-import AddGroupPage from '../pages/groups/add';
-import EditGroupPage from '../pages/groups/edit';
-import GroupPage from '../pages/groups/group';
-import GroupListPage from '../pages/groups/list';
-import HomePage from '../pages/home/home';
-import CreateProfilePage from '../pages/profiles/add';
-import EditProfilePage from '../pages/profiles/edit';
-import ProfilesPage from '../pages/profiles/list';
-import ShowMyProfilePage from '../pages/profiles/me';
-import PasskeysPage from '../pages/profiles/passkeys';
-import RankingsPage from '../pages/profiles/rankings';
-import ShowProfilePage from '../pages/profiles/show';
+
+/**
+ * Wraps a dynamic import so React Router only loads the page chunk when the
+ * route is visited (route-based code splitting).
+ */
+function lazyPage(loader: () => Promise<{ default: ComponentType }>) {
+  return async () => ({ Component: (await loader()).default });
+}
 
 export default createBrowserRouter([
   {
@@ -41,79 +26,79 @@ export default createBrowserRouter([
             children: [
               {
                 index: true,
-                Component: HomePage,
+                lazy: lazyPage(async () => await import('../pages/home/home')),
               },
               {
                 path: '/events',
-                Component: DoodlePage,
+                lazy: lazyPage(async () => await import('../pages/events/doodle')),
               },
               {
                 path: '/events/planning',
-                Component: PlanningPage,
+                lazy: lazyPage(async () => await import('../pages/events/planning')),
               },
               {
                 path: '/events/manage',
-                Component: EventsManagePage,
+                lazy: lazyPage(async () => await import('../pages/events/events')),
               },
               {
                 path: '/events/calendar',
-                Component: CalendarPage,
+                lazy: lazyPage(async () => await import('../pages/events/calendar')),
               },
               {
                 path: '/events/add',
-                Component: AddEventPage,
+                lazy: lazyPage(async () => await import('../pages/events/add')),
               },
               {
                 path: '/events/edit/:eventId',
-                Component: EditEventPage,
+                lazy: lazyPage(async () => await import('../pages/events/edit')),
               },
               {
                 path: '/files/:folderId?',
-                Component: ListFilesPage,
+                lazy: lazyPage(async () => await import('../pages/files/list')),
               },
               {
                 path: '/profile',
-                Component: ProfilesPage,
+                lazy: lazyPage(async () => await import('../pages/profiles/list')),
               },
               {
                 path: '/profile/me',
-                Component: ShowMyProfilePage,
+                lazy: lazyPage(async () => await import('../pages/profiles/me')),
               },
               {
                 path: '/profile/passkeys',
-                Component: PasskeysPage,
+                lazy: lazyPage(async () => await import('../pages/profiles/passkeys')),
               },
               {
                 path: '/profile/:profileId',
-                Component: ShowProfilePage,
+                lazy: lazyPage(async () => await import('../pages/profiles/show')),
               },
               {
                 path: '/profile/edit/:profileId',
-                Component: EditProfilePage,
+                lazy: lazyPage(async () => await import('../pages/profiles/edit')),
               },
               {
                 path: '/profile/add',
-                Component: CreateProfilePage,
+                lazy: lazyPage(async () => await import('../pages/profiles/add')),
               },
               {
                 path: '/profile/rankings',
-                Component: RankingsPage,
+                lazy: lazyPage(async () => await import('../pages/profiles/rankings')),
               },
               {
                 path: '/groups',
-                Component: GroupListPage,
+                lazy: lazyPage(async () => await import('../pages/groups/list')),
               },
               {
                 path: '/groups/:groupId',
-                Component: GroupPage,
+                lazy: lazyPage(async () => await import('../pages/groups/group')),
               },
               {
                 path: '/groups/add',
-                Component: AddGroupPage,
+                lazy: lazyPage(async () => await import('../pages/groups/add')),
               },
               {
                 path: '/groups/edit/:groupId',
-                Component: EditGroupPage,
+                lazy: lazyPage(async () => await import('../pages/groups/edit')),
               },
             ],
           },
@@ -125,11 +110,11 @@ export default createBrowserRouter([
         children: [
           {
             path: 'answer/:token',
-            Component: AnswerLinkPage,
+            lazy: lazyPage(async () => await import('../pages/events/answer')),
           },
           {
             path: 'unsubscribe/:token',
-            Component: UnsubscribePage,
+            lazy: lazyPage(async () => await import('../pages/auth/unsubscribe')),
           },
         ],
       },
@@ -139,15 +124,15 @@ export default createBrowserRouter([
         children: [
           {
             path: 'login',
-            Component: AuthPage,
+            lazy: lazyPage(async () => await import('../pages/auth/login')),
           },
           {
             path: 'reset',
-            Component: LostPasswordPage,
+            lazy: lazyPage(async () => await import('../pages/auth/lostPassword')),
           },
           {
             path: 'reset/:token',
-            Component: ChangePasswordPage,
+            lazy: lazyPage(async () => await import('../pages/auth/changePassword')),
           },
         ],
       },

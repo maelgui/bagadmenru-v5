@@ -1,5 +1,22 @@
 @import "nprogress/nprogress.css";
 
+#nprogress .bar {
+    background: var(--primary);
+}
+
+#nprogress .peg {
+    box-shadow: 0 0 10px var(--primary), 0 0 5px var(--primary);
+}
+
+#nprogress .spinner-icon {
+    border-top-color: var(--primary);
+    border-left-color: var(--primary);
+}
+
+::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
 .loading {
     opacity: 0.25;
     transition: opacity 200ms;

@@ -1,65 +1,43 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SkeletonText, SkeletonImage } from '../components/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const metaText = {
-  title: 'Components/Skeleton/Text',
-  component: SkeletonText,
+const meta = {
+  title: 'Components/Skeleton',
+  component: Skeleton,
   parameters: {
     layout: 'padded',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof SkeletonText>;
+} satisfies Meta<typeof Skeleton>;
 
-export default metaText;
-type Story = StoryObj<typeof metaText>;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Text: Story = {
   args: {
-    className: 'w-48',
+    className: 'h-2 w-48',
   },
 };
 
-export const Short: Story = {
+export const ShortText: Story = {
   args: {
-    className: 'w-24',
+    className: 'h-2 w-24',
   },
 };
 
-export const Full: Story = {
+export const Image: Story = {
   args: {
-    className: 'w-full',
-  },
-};
-
-// Additional stories for SkeletonImage as a separate export
-export const ImageSmall: StoryObj<typeof SkeletonImage> = {
-  render: (args) => <SkeletonImage {...args} />,
-  args: {
-    className: 'h-12 w-12',
-  },
-};
-
-export const ImageMedium: StoryObj<typeof SkeletonImage> = {
-  render: (args) => <SkeletonImage {...args} />,
-  args: {
-    className: 'h-24 w-24',
-  },
-};
-
-export const ImageLarge: StoryObj<typeof SkeletonImage> = {
-  render: (args) => <SkeletonImage {...args} />,
-  args: {
-    className: 'h-48 w-48',
+    className: 'size-24 rounded-full',
   },
 };
 
 export const ProfileCardLoading: StoryObj = {
   render: () => (
-    <div className="flex items-center gap-4 p-4 border rounded">
-      <SkeletonImage className="h-12 w-12" />
+    <div className="flex items-center gap-4 rounded-lg border p-4">
+      <Skeleton className="size-12 rounded-full" />
       <div className="flex flex-col gap-2">
-        <SkeletonText className="w-32" />
-        <SkeletonText className="w-48" />
+        <Skeleton className="h-2 w-32" />
+        <Skeleton className="h-2 w-48" />
       </div>
     </div>
   ),

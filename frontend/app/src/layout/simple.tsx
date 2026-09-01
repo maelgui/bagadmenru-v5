@@ -2,13 +2,11 @@ import { useIsFetching } from '@tanstack/react-query';
 import nprogress from 'nprogress';
 import { type PropsWithChildren, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+
 import logo from '../assets/logov2fullsmallhorizontall.svg';
 import VersionInfo from '../components/version-info';
 
-interface SimpleLayoutProps extends PropsWithChildren {
-}
-
-export default function SimpleLayout({ children }: SimpleLayoutProps) {
+export default function SimpleLayout({ children }: PropsWithChildren) {
   const isFetching = useIsFetching();
 
   useEffect(() => {
@@ -20,20 +18,22 @@ export default function SimpleLayout({ children }: SimpleLayoutProps) {
   }, [isFetching]);
 
   return (
-    <div className={`${isFetching ? 'loading' : ''} p-4 min-h-screen flex flex-col`}>
-      <div className="m-auto max-w-md w-full align-middle">
-        <div>
-          <img src={logo} alt="logo du bagadmenru" className="h-16 my-16" />
-        </div>
+    <div className={`${isFetching ? 'loading' : ''} flex min-h-screen flex-col p-4`}>
+      <main className="m-auto w-full max-w-md">
+        <img src={logo} alt="Logo du Bagad Men Ru" className="my-16 h-16" />
         {children}
-      </div>
-      <div className="text-center">
+      </main>
+      <footer className="text-center">
         <VersionInfo />
-      </div>
+      </footer>
     </div>
   );
 }
 
 export function SimpleLayoutWithOutlet() {
-  return <SimpleLayout><Outlet /></SimpleLayout>;
+  return (
+    <SimpleLayout>
+      <Outlet />
+    </SimpleLayout>
+  );
 }

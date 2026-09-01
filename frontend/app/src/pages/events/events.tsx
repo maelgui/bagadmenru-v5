@@ -1,21 +1,141 @@
 import {
-  faChevronRight,
-  faPlusCircle,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useQuery } from '@tanstack/react-query';
+  MoreVertical, Pencil, PlusCircle, Trash2, TriangleAlert,
+} from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import type { Event } from 'bagad-client';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Alert from '../../components/alert';
-import Badge from '../../components/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { useApiClient } from '../../config/client';
+import { queryClient, useApiClient } from '../../config/client';
 import EventCategories from '../../utils/event-category';
+
+function EventRow({ event, onDelete }: { event: Event; onDelete: (id: number) => void }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const category = EventCategories[event.category];
+
+  return (
+    <Item variant="outline">
+      <ItemMedia>
+        <div className="w-24 shrink-0 text-sm leading-tight">
+          <div className="font-semibold text-foreground">
+            {event.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+          </div>
+          <div className="text-muted-foreground">
+            {event.date.toLocaleDateString('fr-FR', { year: 'numeric' })}
+          </div>
+        </div>
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>
+          <Link
+            to={`/events/edit/${event.id}`}
+            className="rounded-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            {event.title}
+          </Link>
+        </ItemTitle>
+        <ItemDescription>{event.description}</ItemDescription>
+      </ItemContent>
+      <ItemActions className="gap-3">
+        <Badge className={category?.className} variant={category?.variant ?? 'default'}>
+          {category?.name ?? event.category}
+        </Badge>
+        <Separator orientation="vertical" className="h-6 self-center!" />
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={(
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Actions pour ${event.title}`}
+              />
+            )}
+          >
+            <MoreVertical aria-hidden="true" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem render={<Link to={`/events/edit/${event.id}`} />}>
+              <Pencil data-icon="inline-start" />
+              Modifier
+            </DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => setConfirmOpen(true)}>
+              <Trash2 data-icon="inline-start" />
+              Supprimer
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </ItemActions>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cet évènement ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {`L'évènement « ${event.title} » et les réponses associées seront définitivement supprimés.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                onDelete(event.id);
+                setConfirmOpen(false);
+              }}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Item>
+  );
+}
 
 export default function EventsManagePage() {
   const { eventsApi } = useApiClient();
+  const { data: events } = useQuery({
+    queryKey: ['events', 'list', { limit: 100, ordering: '-date' }],
+    queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 100, ordering: '-date' }),
+  });
 
-  const { data: events } = useQuery({ queryKey: ['events'], queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 100, ordering: '-date' }) });
+  const { mutate: deleteEvent } = useMutation({
+    mutationFn: async (id: number) => await eventsApi.deleteEventApiV1EventsEventIdDelete({ eventId: id }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+  });
 
   return (
     <>
@@ -23,48 +143,26 @@ export default function EventsManagePage() {
         title="Gestion des évènements"
         subtitle="Ajouter, modifier, supprimer..."
         actions={[
-          <Header.Action key="add-event" icon={faPlusCircle} as={Link} to="/events/add">
+          <Link key="add-event" to="/events/add" className={cn(buttonVariants())}>
+            <PlusCircle data-icon="inline-start" />
             Ajouter
-          </Header.Action>,
+          </Link>,
         ]}
-        breadcrumb={[
-          { title: 'Évènements', link: '/events' },
-          { title: 'Gestion des évènements' },
-        ]}
-
+        breadcrumb={[{ title: 'Évènements', link: '/events' }, { title: 'Gestion des évènements' }]}
       />
       <Container>
-        {(events?.length) ? (
-          <div className="overflow-x-auto">
-            <ul className="divide-y divide-gray-200">
-              {events.map((event) => (
-                <li key={event.id} className="gap-2 md:flex items-center hover:bg-gray-50 relative px-8 py-4">
-                  <div className="flex-1 md:flex items-center">
-
-                    <div className="mr-4">
-                      <Link to={`/events/edit/${event.id}`}>
-                        <Badge className="align-middle" variant={EventCategories[event.category]?.variant ?? 'default'}>{EventCategories[event.category]?.name ?? event.category}</Badge>
-                        <span className="absolute top-0 bottom-0 left-0 right-0" />
-                        <span className="block">
-                          {event.title}
-                        </span>
-                        <span className="text-sm text-gray-500">{event.description}</span>
-                      </Link>
-                    </div>
-                    <div className="ml-auto whitespace-nowrap">
-                      {event.date.toLocaleDateString(undefined, { dateStyle: 'full' })}
-                    </div>
-                  </div>
-                  <div className="px-8 py-2 text-gray-500 text-sm font-semibold">
-                    DÉTAILS
-                    {' '}
-                    <FontAwesomeIcon icon={faChevronRight} className="" />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : <Alert type="warning">Aucun évènement</Alert>}
+        {events?.length ? (
+          <ItemGroup>
+            {events.map((event) => (
+              <EventRow key={event.id} event={event} onDelete={deleteEvent} />
+            ))}
+          </ItemGroup>
+        ) : (
+          <Alert>
+            <TriangleAlert />
+            <AlertDescription>Aucun évènement</AlertDescription>
+          </Alert>
+        )}
       </Container>
     </>
   );

@@ -1,19 +1,26 @@
-import { faBellSlash, faCirclePlus, faMedal } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { BellOff, CirclePlus, Medal } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
+import { buttonVariants } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '../../lib/utils';
 import { useApiClient, usePermissions } from '../../config/client';
 
 import defaultAvatar from '../../assets/default.svg';
 
 function GroupTag({ name, color }: { name: string, color: string | undefined }) {
   return (
-    <span className="py-0.5 px-1 m-1 tracking-tighter font-thin text-xs inline-bloc text-white rounded-sm whitespace-nowrap" style={{ backgroundColor: color }}>
+    <span
+      className="m-1 inline-block rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-muted-foreground"
+      style={color ? {
+        backgroundColor: `color-mix(in oklab, ${color} 16%, transparent)`,
+        color: `color-mix(in oklab, ${color} 55%, var(--foreground))`,
+      } : undefined}
+    >
       {name}
     </span>
-
   );
 }
 
@@ -32,11 +39,21 @@ export default function ProfilesPage() {
         title="Liste des membres"
         subtitle="Pensez à ajouter votre photo"
         actions={[
-          <Header.Action key="edit-profile" as={Link} to="/profile/edit/me" variant="outline">Modifier mon profil</Header.Action>,
-          <Header.Action key="rankings" icon={faMedal} as={Link} to="/profile/rankings" variant="outline">Classements</Header.Action>,
-          <Header.Action key="add-profile" icon={faCirclePlus} as={Link} to="/profile/add" className={can('create', 'profile') ? '' : 'hidden'}>
+          <Link key="edit-profile" className={buttonVariants({ variant: 'outline' })} to="/profile/edit/me">
+            Modifier mon profil
+          </Link>,
+          <Link key="rankings" className={buttonVariants({ variant: 'outline' })} to="/profile/rankings">
+            <Medal data-icon="inline-start" />
+            Classements
+          </Link>,
+          <Link
+            key="add-profile"
+            className={cn(buttonVariants(), !can('create', 'profile') && 'hidden')}
+            to="/profile/add"
+          >
+            <CirclePlus data-icon="inline-start" />
             Ajouter
-          </Header.Action>,
+          </Link>,
         ]}
         breadcrumb={[
           { title: 'Liste des membres' },
@@ -44,20 +61,24 @@ export default function ProfilesPage() {
       />
 
       <Container>
-        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6">
           {data ? data.map((profile) => (
-            <Link key={profile.id} to={`/profile/${profile.id}`}>
-              <div className="rounded overflow-hidden shadow flex pb-8 flex-col h-full">
+            <Link
+              key={profile.id}
+              to={`/profile/${profile.id}`}
+              className="block h-full rounded-4xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <div className="flex h-full flex-col overflow-hidden surface rounded-4xl pb-8 transition-shadow hover:shadow-md">
                 <div className="p-8">
-                  <div className="aspect-square relative rounded-full overflow-hidden">
-                    <img src={profile.pictureUrl ?? defaultAvatar} alt="profile" className="object-cover w-full h-full absolute bg-pourpre-50" />
+                  <div className="relative aspect-square overflow-hidden rounded-full">
+                    <img src={profile.pictureUrl ?? defaultAvatar} alt="profile" className="absolute size-full bg-primary/10 object-cover" />
                   </div>
                 </div>
-                <div className="pt-4 px-2 text-center">
+                <div className="px-2 pt-4 text-center">
                   <h4 className="my-2 text-lg font-semibold">
                     {`${profile.firstName} ${profile.lastName}`}
                     {!profile.receivesEmails && (
-                      <FontAwesomeIcon icon={faBellSlash} className="ml-1 text-red-400 text-xs" aria-label="Ne reçoit pas les emails" />
+                      <BellOff className="ml-1 inline size-3 text-destructive" aria-label="Ne reçoit pas les emails" />
                     )}
                   </h4>
                   <div className="flex flex-wrap">
@@ -69,7 +90,7 @@ export default function ProfilesPage() {
 
               </div>
             </Link>
-          )) : 'Loading'}
+          )) : Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-64" />)}
         </div>
       </Container>
 

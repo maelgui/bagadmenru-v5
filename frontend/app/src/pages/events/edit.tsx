@@ -1,8 +1,18 @@
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Trash2 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { EventCreate } from 'bagad-client';
 import { useNavigate, useParams } from 'react-router-dom';
-import Button from '../../components/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
@@ -10,10 +20,9 @@ import EventForm from './components/form';
 
 export default function EditEventPage() {
   const { eventsApi } = useApiClient();
-  const { eventId } = useParams<"eventId">();
-  if (!eventId) throw new Error("No event id");
+  const { eventId } = useParams<'eventId'>();
+  if (!eventId) throw new Error('No event id');
   const parsedEventId = parseInt(eventId, 10);
-
   const { data } = useQuery({
     queryKey: ['events', eventId],
     queryFn: async () => await eventsApi.getEventApiV1EventsEventIdGet({ eventId: parsedEventId }),
@@ -21,21 +30,16 @@ export default function EditEventPage() {
 
   const navigate = useNavigate();
   const { mutate } = useMutation({
-    mutationFn: async (d: EventCreate) => await eventsApi.updateEventApiV1EventsEventIdPut({
-      eventId: parsedEventId,
-      eventCreate: d,
-    }),
+    mutationFn: async (event: EventCreate) => await eventsApi.updateEventApiV1EventsEventIdPut({ eventId: parsedEventId, eventCreate: event }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['events'] });
       void navigate('/events/manage');
     },
   });
-  const onSubmit = (d: EventCreate) => mutate(d);
+  const onSubmit = (event: EventCreate) => mutate(event);
 
   const { mutate: deleteMutation } = useMutation({
-    mutationFn: async (eid: number) => await eventsApi.deleteEventApiV1EventsEventIdDelete({
-      eventId: eid,
-    }),
+    mutationFn: async (id: number) => await eventsApi.deleteEventApiV1EventsEventIdDelete({ eventId: id }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
       void navigate('/events/manage');
@@ -53,28 +57,30 @@ export default function EditEventPage() {
           { title: 'Modifier un évènement' },
         ]}
         actions={[
-          <Header.Action
-            key="event.delete"
-            as={Button}
-            onClick={() => {
-
-              const sure = window.confirm(`Supprimer la sortie ${data?.title} ?`);
-              if (sure) {
-                deleteMutation(parsedEventId);
-              }
-            }}
-            size="sm"
-            variant="outline"
-            icon={faTrash}
-          >
-            Supprimer
-          </Header.Action>,
-
+          <AlertDialog key="event.delete">
+            <AlertDialogTrigger render={<Header.Action size="sm" variant="outline" />}>
+              <Trash2 data-icon="inline-start" />
+              Supprimer
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer cet évènement ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {`L'évènement « ${data?.title ?? ''} » et les réponses associées seront définitivement supprimés.`}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" onClick={() => deleteMutation(parsedEventId)}>
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>,
         ]}
       />
       <Container>
-        {data
-          ? <EventForm onSubmit={onSubmit} data={data} /> : 'Chargement'}
+        {data ? <EventForm onSubmit={onSubmit} data={data} /> : 'Chargement'}
       </Container>
     </>
   );

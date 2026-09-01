@@ -59,6 +59,11 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 self.addEventListener('pushsubscriptionchange', (event) => {
+  // The API base URL is passed as a query parameter at registration time
+  // (see main.tsx): the API lives on a different origin in beta/prod, so a
+  // relative fetch from the service worker would hit the frontend host.
+  const apiUrl = new URL(self.location.href).searchParams.get('apiUrl') || '';
+
   event.waitUntil(
     self.registration.pushManager.subscribe(event.oldSubscription.options).then((subscription) => {
       const p256dh = btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh'))))
@@ -66,7 +71,7 @@ self.addEventListener('pushsubscriptionchange', (event) => {
       const auth = btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth'))))
         .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-      return fetch('/api/v1/push/subscribe', {
+      return fetch(`${apiUrl}/api/v1/push/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

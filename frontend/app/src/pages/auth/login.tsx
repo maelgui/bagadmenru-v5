@@ -1,41 +1,43 @@
-
-import { faKey } from '@fortawesome/free-solid-svg-icons';
 import {
   browserSupportsWebAuthn, type PublicKeyCredentialRequestOptionsJSON, startAuthentication,
   WebAuthnError,
 } from '@simplewebauthn/browser';
+import { KeyRound } from 'lucide-react';
 import { LoginType, ResponseError } from 'bagad-client';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import iconPasskeyWhite from '../../assets/passkeys/FIDO_Passkey_mark_A_white.svg';
-import Alert from '../../components/alert';
-import Button from '../../components/button';
-import Input from '../../components/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import PasswordField from '../../components/PasswordField';
 import { queryClient, useApiClient } from '../../config/client';
+import { cn } from '@/lib/utils';
 
 const HTTP_UNAUTHORIZED = 401;
 
 function AuthPage() {
   const { authApi, usersApi } = useApiClient();
-
   const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
-
   const {
     register, handleSubmit, formState: { errors, isSubmitting },
   } = useForm<{ email: string, password: string }>();
-
   const navigate = useNavigate();
+  const location = useLocation();
 
   const postLogin = useCallback(async () => {
     const res = await usersApi.getMyProfileApiV1ProfilesMeGet();
-
     queryClient.setQueryData(['profiles', 'me'], res);
-    void navigate('/');
-  }, [navigate, usersApi]);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- location.state is set by AuthGuard
+    const from = (location.state as { from?: string } | null)?.from;
+    void navigate(from ?? '/', { replace: true });
+  }, [navigate, usersApi, location.state]);
+
   const startPasskeyLogin = useCallback(async (conditional: boolean) => {
     try {
-
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The API response matches PublicKeyCredentialRequestOptionsJSON but the generated client types it as object
       const opt = await authApi.prepareLoginApiV1AuthLoginGet() as PublicKeyCredentialRequestOptionsJSON;
       const res = await startAuthentication({ optionsJSON: opt, useBrowserAutofill: conditional });
@@ -50,15 +52,20 @@ function AuthPage() {
       if (error instanceof WebAuthnError && error.name === 'AbortError') {
         return;
       }
-      // Some basic error handling
-
       console.error(error);
-      setErrorMsg(`Email inconnue : ${String(error)}`);
+      // Conditional (autofill) login runs silently on mount; only surface an
+      // error when the user explicitly clicked the Passkey button.
+      if (!conditional) {
+        setErrorMsg('La connexion par passkey a échoué. Veuillez réessayer ou utiliser votre mot de passe.');
+      }
     }
   }, [authApi, postLogin]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Passkey conditional login must be initiated on mount; it may set error state on failure which is acceptable here
+    if (!browserSupportsWebAuthn()) {
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- starts the WebAuthn conditional (autofill) login, an external async operation; state is only set asynchronously in its error handler
     void startPasskeyLogin(true);
   }, [startPasskeyLogin]);
 
@@ -78,7 +85,7 @@ function AuthPage() {
         if (error.response.status === HTTP_UNAUTHORIZED) {
           setErrorMsg('Email ou mot de passe incorrect.');
         } else {
-          setErrorMsg(`Erreur inconnue, veillez réessayer plus tard : ${error.message}`);
+          setErrorMsg(`Erreur inconnue, veuillez réessayer plus tard : ${error.message}`);
         }
       }
     }
@@ -86,43 +93,50 @@ function AuthPage() {
 
   return (
     <div>
-      <h1 className="text-2xl mb-2">Connexion</h1>
-      <p className="text-gray-500 mb-8">Connectez-vous à votre compte</p>
+      <h1 className="mb-2 text-3xl">Connexion</h1>
+      <p className="mb-8 text-muted-foreground">Connectez-vous à votre compte</p>
       <form onSubmit={handleSubmit(onSubmit)}>
         <fieldset disabled={isSubmitting}>
-          {errorMsg ? <Alert type="error">{errorMsg}</Alert> : null}
-          <div className="mb-6">
-            <label className="mb-2 block font-semibold" htmlFor="email">Email</label>
-            <Input
-              type="email"
-              id="email"
-              error={errors.email?.message}
-              {...register('email', { required: 'Ce champ est obligatoire.' })}
-              autoComplete="email webauthn"
-            />
-          </div>
-          <div className="mb-6">
-            <label className="mb-2 block font-semibold" htmlFor="password">Mot de passe</label>
-            <Input
-              type="password"
+          <FieldGroup>
+            {errorMsg ? (
+              <Alert variant="destructive">
+                <AlertTitle>Erreur de connexion</AlertTitle>
+                <AlertDescription>{errorMsg}</AlertDescription>
+              </Alert>
+            ) : null}
+            <Field data-invalid={!!errors.email}>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <Input
+                type="email"
+                id="email"
+                aria-invalid={!!errors.email}
+                {...register('email', { required: 'Ce champ est obligatoire.' })}
+                autoComplete="email webauthn"
+              />
+              <FieldError>{errors.email?.message}</FieldError>
+            </Field>
+            <PasswordField
               id="password"
+              label="Mot de passe"
               error={errors.password?.message}
-              {...register('password', { required: 'Ce champ est obligatoire.' })}
+              autoComplete="current-password"
+              registration={register('password', { required: 'Ce champ est obligatoire.' })}
             />
-          </div>
-          <div className="flex justify-between">
-            <Button as={Link} to="/auth/reset" type="button" variant="ghost">Mot de passe oublié</Button>
-            <Button type="submit" icon={faKey} isLoading={isSubmitting}>
-              Connexion
-            </Button>
-          </div>
+            <div className="flex justify-between">
+              <Link to="/auth/reset" className={cn(buttonVariants({ variant: 'ghost' }))}>Mot de passe oublié</Link>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Spinner data-icon="inline-start" /> : <KeyRound data-icon="inline-start" />}
+                Connexion
+              </Button>
+            </div>
+          </FieldGroup>
         </fieldset>
       </form>
       {browserSupportsWebAuthn() ? (
         <>
-          <div className="my-12 text-gray-500 flex items-center before:mr-3 before:block before:grow  before:h-px before:bg-gray-300 after:block after:grow after:h-px after:bg-gray-300 after:ml-3">Ou</div>
-          <Button type="button" onClick={async () => await startPasskeyLogin(false)} className="block w-full">
-            <span className="pr-3"><img src={iconPasskeyWhite} alt="passkey logo" className="h-6 inline" /></span>
+          <div className="my-12 flex items-center text-muted-foreground before:mr-3 before:block before:h-px before:grow before:bg-border after:ml-3 after:block after:h-px after:grow after:bg-border">Ou</div>
+          <Button type="button" onClick={async () => await startPasskeyLogin(false)} className="w-full">
+            <img src={iconPasskeyWhite} alt="passkey logo" className="size-6" />
             Passkey
           </Button>
         </>
