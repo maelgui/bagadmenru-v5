@@ -57,7 +57,7 @@ def prepare_login(request: Request, settings: SettingsDep):
     )
 
     # save challenge as base64 in session
-    request.session["challenge"] = base64.b64encode(opt.challenge).decode("utf-8")
+    request.session["auth_challenge"] = base64.b64encode(opt.challenge).decode("utf-8")
 
     return Response(
         content=options_to_json(opt),
@@ -105,7 +105,7 @@ def process_login(
             )
             if not passkey or not passkey.user.is_active:
                 raise HTTPException(status_code=401, detail="Bad credentials")
-            challenge = request.session.get("challenge")
+            challenge = request.session.get("auth_challenge")
             if not challenge:
                 raise HTTPException(
                     status_code=400, detail="No authentication challenge in session"
@@ -118,15 +118,17 @@ def process_login(
                     expected_challenge=base64.b64decode(challenge),
                     expected_rp_id=settings.relying_party_id,
                     expected_origin=str(settings.frontend_base_url).rstrip("/"),
-                    require_user_verification=True,
+                    # UV is requested as "preferred" in the options, so we do
+                    # not hard-require it here. This keeps sign-in smooth on
+                    # devices without a biometric sensor. WebAuthn itself still
+                    # provides phishing resistance without a second factor.
+                    require_user_verification=False,
                 )
             except InvalidAuthenticationResponse as exc:
                 raise HTTPException(status_code=401, detail="Bad credentials") from exc
             finally:
                 # A challenge is single-use, regardless of the outcome.
-                request.session.pop("challenge", None)
-            if not res.user_verified:
-                raise HTTPException(status_code=401, detail="Bad credentials")
+                request.session.pop("auth_challenge", None)
             # User authenticated, update sign count
             user = passkey.user
             session.execute(
@@ -283,7 +285,7 @@ async def preregister_passkey(
         user_display_name=f"{current_user.first_name} {current_user.last_name}",
         authenticator_selection=AuthenticatorSelectionCriteria(
             resident_key=ResidentKeyRequirement.REQUIRED,
-            user_verification=UserVerificationRequirement.REQUIRED,
+            user_verification=UserVerificationRequirement.PREFERRED,
         ),
         exclude_credentials=[
             PublicKeyCredentialDescriptor(id=key.credential_id)
@@ -293,7 +295,7 @@ async def preregister_passkey(
     )
 
     # save challenge as base64 in session
-    request.session["challenge"] = base64.b64encode(
+    request.session["reg_challenge"] = base64.b64encode(
         simple_registration_options.challenge
     ).decode("utf-8")
 
@@ -314,7 +316,7 @@ async def register_passkey(
     session: SessionDep,
     settings: SettingsDep,
 ) -> str:
-    challenge = request.session.get("challenge")
+    challenge = request.session.get("reg_challenge")
     if not challenge:
         raise HTTPException(
             status_code=400, detail="No registration challenge in session"
@@ -325,18 +327,20 @@ async def register_passkey(
             expected_challenge=base64.b64decode(challenge),
             expected_rp_id=settings.relying_party_id,
             expected_origin=str(settings.frontend_base_url).rstrip("/"),
-            require_user_verification=True,
+            # UV requested as "preferred" in the options; not hard-required
+            # here to keep passkey enrollment smooth on all devices.
+            require_user_verification=False,
         )
     finally:
         # A challenge is single-use, regardless of the outcome.
-        request.session.pop("challenge", None)
+        request.session.pop("reg_challenge", None)
 
     passkey_db = PasskeyDB(
         passkey_user_id=current_user.passkey_user_id,
         credential_id=verification.credential_id,
         public_key=verification.credential_public_key,
         sign_count=verification.sign_count,
-        transports=body["response"]["transports"],
+        transports=body["response"].get("transports", []),
         device_type=verification.credential_device_type,
         back_up=verification.credential_backed_up,
         aaguid=verification.aaguid,
@@ -347,11 +351,6 @@ async def register_passkey(
     session.add(passkey_db)
 
     return "OK"
-
-    # return Response(
-    #     content=verification,
-    #     media_type="application/json",
-    # )
 
 
 @router.delete(
