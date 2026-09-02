@@ -13,6 +13,9 @@ const meta = {
     id: 'password',
     label: 'Mot de passe',
     autoComplete: 'current-password',
+    // Placeholder to satisfy the required prop for type-checking; the decorator
+    // below replaces it at render time with a real react-hook-form registration.
+    registration: { name: 'password', onChange: async () => {}, onBlur: async () => {}, ref: () => {} },
   },
   // PasswordField expects a react-hook-form registration. A decorator with a
   // real useForm() supplies a valid one so the field renders standalone.
