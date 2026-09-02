@@ -1,4 +1,5 @@
 import { useArgs } from 'storybook/preview-api';
+import type { ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import PushNotificationField from '../components/PushNotificationField';
 import { Toaster } from '@/components/ui/toast';
@@ -18,7 +19,7 @@ const meta = {
   },
   args: {
     checked: false,
-    onCheckedChange: () => {},
+    onCheckedChange: () => undefined,
     isLoading: false,
     status: 'default',
     isSupported: true,
@@ -35,7 +36,7 @@ const meta = {
   render: (args) => {
     // `checked` is controlled by the parent; wire it to Storybook args so the
     // switch toggles live in the canvas.
-    const [{ checked }, updateArgs] = useArgs();
+    const [{ checked }, updateArgs] = useArgs<ComponentProps<typeof PushNotificationField>>();
     return (
       <PushNotificationField
         {...args}

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useForm } from 'react-hook-form';
+import type { ComponentProps } from 'react';
 import PasswordField from '@/components/PasswordField';
 
 const meta = {
@@ -13,22 +14,20 @@ const meta = {
     id: 'password',
     label: 'Mot de passe',
     autoComplete: 'current-password',
-    // Placeholder to satisfy the required prop for type-checking; the decorator
-    // below replaces it at render time with a real react-hook-form registration.
-    registration: { name: 'password', onChange: async () => {}, onBlur: async () => {}, ref: () => {} },
   },
-  // PasswordField expects a react-hook-form registration. A decorator with a
-  // real useForm() supplies a valid one so the field renders standalone.
-  decorators: [
-    (Story, { args }) => {
-      const { register } = useForm<{ password: string }>();
-      return <Story args={{ ...args, registration: register('password') }} />;
-    },
-  ],
+  // PasswordField expects a react-hook-form registration. `render` supplies a
+  // real one via useForm() so the field renders standalone in the canvas.
+  render: (args) => {
+    const { register } = useForm<{ password: string }>();
+    return <PasswordField {...args} registration={register('password')} />;
+  },
 } satisfies Meta<typeof PasswordField>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+
+// `registration` is injected by `render`, so story authors omit it; model the
+// story args with that prop optional.
+type Story = StoryObj<Omit<ComponentProps<typeof PasswordField>, 'registration'>>;
 
 export const Default: Story = {};
 
