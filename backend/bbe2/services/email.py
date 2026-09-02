@@ -5,6 +5,7 @@ Replaces the external Rust email-api microservice.
 
 import logging
 from datetime import datetime
+from email.header import decode_header, make_header
 from email.message import EmailMessage
 from typing import Optional
 
@@ -81,6 +82,23 @@ async def send_emails(
             raise
 
 
+def _decode_mime_header(raw: Optional[bytes]) -> str:
+    """Decode an RFC 2047 encoded-word header (e.g. ``=?utf-8?B?...?=``).
+
+    Handles Base64 (``B``) and Quoted-Printable (``Q``) encodings, multiple
+    concatenated encoded-words, and mixed charsets. Falls back to a UTF-8
+    replacement decode if the header is malformed.
+    """
+    if not raw:
+        return ""
+    try:
+        # decode_header accepts str; make_header re-assembles the parts into
+        # a single unicode string, decoding each encoded-word by its charset.
+        return str(make_header(decode_header(raw.decode("utf-8", errors="replace"))))
+    except (ValueError, UnicodeDecodeError):
+        return raw.decode("utf-8", errors="replace")
+
+
 def fetch_inbox_emails(settings: Settings) -> list[InboxEmail]:
     """Fetch unseen emails from IMAP inbox (headers only)."""
     if not settings.imap_username or not settings.imap_password:
@@ -106,13 +124,7 @@ def fetch_inbox_emails(settings: Settings) -> list[InboxEmail]:
         results: list[InboxEmail] = []
         for _uid, data in messages.items():  # type: ignore[union-attr]
             envelope = data[b"ENVELOPE"]  # type: ignore[index]
-            subject: str = (
-                getattr(envelope, "subject", b"").decode(  # type: ignore[union-attr]
-                    "utf-8", errors="replace"
-                )
-                if getattr(envelope, "subject", None)
-                else ""
-            )
+            subject = _decode_mime_header(getattr(envelope, "subject", None))
             date: datetime = getattr(envelope, "date", None) or datetime.now()
 
             # Extract from address
@@ -121,7 +133,7 @@ def fetch_inbox_emails(settings: Settings) -> list[InboxEmail]:
             if from_addrs:
                 addr = from_addrs[0]
                 if getattr(addr, "name", None):
-                    from_name = addr.name.decode("utf-8", errors="replace")
+                    from_name = _decode_mime_header(addr.name)
                 elif getattr(addr, "mailbox", None):
                     from_name = f"{addr.mailbox.decode()}@{addr.host.decode()}"
 
