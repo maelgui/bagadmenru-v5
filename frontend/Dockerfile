@@ -7,7 +7,7 @@ RUN apk add openjdk21-jre-headless
 
 COPY package.json yarn.lock ./
 COPY lib/package.json ./lib/
-COPY app/package.json app/yarn.lock ./app/
+COPY app/package.json ./app/
 
 RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install
 
