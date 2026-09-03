@@ -48,7 +48,7 @@ function ResponseIcon({ value }: { value: boolean | undefined }) {
 function ProfileLine({ profile, trailing }: { profile?: Profile; trailing?: React.ReactNode }) {
   const color = profile?.instrument?.color ?? '';
   return (
-    <div key={profile?.id} className="my-2 flex items-center">
+    <div key={profile?.id} className="flex items-center">
       <span className="size-2 rounded-full" style={{ backgroundColor: color }} />
       <span className="mx-2 text-nowrap">{profile?.firstName} {profile?.lastName}</span>
       {trailing}
