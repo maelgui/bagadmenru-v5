@@ -10,6 +10,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -145,7 +146,7 @@ function ResponsesDialog({
             <strong>{responses.filter((response) => response.value).length} réponses positives</strong> sur {responses.length} réponses
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
+        <DialogBody className="flex flex-col gap-4">
           <ul>
             {instruments.map((instrument) => (
               <li key={instrument.id}>
@@ -158,7 +159,7 @@ function ResponsesDialog({
             <hr className="my-8 border-border" />
             {noResponseProfiles.map((user) => <ResponseListItem key={`${event.id}-${user.id}`} user={user} />)}
           </div>
-        </div>
+        </DialogBody>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Fermer</DialogClose>
         </DialogFooter>
