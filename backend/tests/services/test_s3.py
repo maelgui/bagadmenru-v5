@@ -76,6 +76,26 @@ def test_window_is_half_the_expiration():
     )
 
 
+def test_expiration_is_clamped_below_sigv4_week_limit():
+    helper = _make_helper()
+    # Ask for well over a week; the signer must clamp it below the limit.
+    url = helper.generate_get_presigned_url(
+        "files/abc", expiration=30 * 24 * 60 * 60, stable=True
+    )
+    assert "X-Amz-Expires=%d" % s3mod.MAX_PRESIGNED_URL_EXPIRATION_SECONDS in url
+
+
+def test_asset_expirations_are_within_sigv4_limit():
+    assert (
+        s3mod.AVATAR_URL_EXPIRATION_SECONDS
+        <= s3mod.MAX_PRESIGNED_URL_EXPIRATION_SECONDS
+    )
+    assert (
+        s3mod.FILE_URL_EXPIRATION_SECONDS <= s3mod.MAX_PRESIGNED_URL_EXPIRATION_SECONDS
+    )
+    assert s3mod.MAX_PRESIGNED_URL_EXPIRATION_SECONDS < 7 * 24 * 60 * 60
+
+
 def test_cache_control_is_embedded():
     helper = _make_helper()
     expiration = s3mod.FILE_URL_EXPIRATION_SECONDS

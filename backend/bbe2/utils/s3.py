@@ -18,15 +18,21 @@ from bbe2.config import Settings
 # since these objects are served behind authorization via presigned URLs.
 ONE_YEAR_IMMUTABLE_CACHE_CONTROL = "private, max-age=31536000, immutable"
 
+# Hard upper bound the SigV4 presigner allows for X-Amz-Expires. AWS and
+# Scaleway reject any presigned GET whose expiry is >= one week with
+# "X-Amz-Expires must be less than 604800 seconds". The value is *exclusive*, so
+# we stay strictly below it.
+MAX_PRESIGNED_URL_EXPIRATION_SECONDS = 7 * 24 * 60 * 60 - 1  # just under 1 week
+
 # Presigned-GET expiration (seconds) for immutable private assets. These are
 # also the validity windows for stable URLs: a stable URL is signed at the start
 # of a window of ``expiration / 2`` seconds and is valid for the full
 # ``expiration``, so a URL minted at the tail of one window is still usable
 # through the next window (see ``_stable_window_seconds`` and
 # ``generate_get_presigned_url``). Longer expiration => the browser reuses the
-# same cached URL for longer.
-AVATAR_URL_EXPIRATION_SECONDS = 30 * 24 * 60 * 60  # 30 days
-FILE_URL_EXPIRATION_SECONDS = 7 * 24 * 60 * 60  # 7 days
+# same cached URL for longer. Both are capped below the one-week SigV4 limit.
+AVATAR_URL_EXPIRATION_SECONDS = 6 * 24 * 60 * 60  # 6 days
+FILE_URL_EXPIRATION_SECONDS = 6 * 24 * 60 * 60  # 6 days
 
 
 def _stable_window_seconds(expiration: int) -> int:
@@ -162,6 +168,10 @@ class S3Helper:
                             window.
         :return: Presigned URL as string. If error, returns None.
         """
+        # SigV4 (AWS and Scaleway) rejects presigned URLs whose expiry is a week
+        # or more, so never sign one past the limit.
+        expiration = min(expiration, MAX_PRESIGNED_URL_EXPIRATION_SECONDS)
+
         params = {"Bucket": self.bucket_name, "Key": object_name}
         if filename:
             params["ResponseContentDisposition"] = (
