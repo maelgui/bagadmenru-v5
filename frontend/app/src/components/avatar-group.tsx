@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 type AvatarSize = 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
@@ -52,23 +52,23 @@ function OverflowAvatar({ count, tooltip, size }: { count: number; tooltip?: Rea
   const content = tooltip ?? <span>+{count} autres</span>;
 
   return (
-    <Tooltip>
-      <TooltipTrigger
+    <Popover>
+      <PopoverTrigger
         render={(
           <Avatar className={cn(avatarSizeClasses[size], 'ring-4 ring-background')}>
             <AvatarFallback>+{count}</AvatarFallback>
           </Avatar>
         )}
       />
-      <TooltipContent>{content}</TooltipContent>
-    </Tooltip>
+      <PopoverContent>{content}</PopoverContent>
+    </Popover>
   );
 }
 
 function AvatarWithTooltip({ avatar, size }: { avatar: AvatarItem; size: AvatarSize }) {
   return (
-    <Tooltip>
-      <TooltipTrigger
+    <Popover>
+      <PopoverTrigger
         render={(
           <Avatar className={cn(avatarSizeClasses[size], 'ring-4 ring-background')}>
             <AvatarImage src={avatar.src ?? undefined} alt={avatar.name} />
@@ -76,8 +76,8 @@ function AvatarWithTooltip({ avatar, size }: { avatar: AvatarItem; size: AvatarS
           </Avatar>
         )}
       />
-      <TooltipContent>{avatar.name}</TooltipContent>
-    </Tooltip>
+      <PopoverContent>{avatar.name}</PopoverContent>
+    </Popover>
   );
 }
 

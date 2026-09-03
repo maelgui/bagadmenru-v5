@@ -1,6 +1,6 @@
 import type { Event } from 'bagad-client';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { calendarDays } from '../../../utils/calendar';
 import { toIsoDate } from '../../../utils/date';
@@ -42,8 +42,8 @@ function CalendarDay({
   const events = dayEvents ?? [];
 
   return (
-    <Tooltip>
-      <TooltipTrigger
+    <Popover>
+      <PopoverTrigger
         render={(
           <div
             className={cn(
@@ -70,18 +70,18 @@ function CalendarDay({
             </div>
           </div>
         )}
-      </TooltipTrigger>
+      </PopoverTrigger>
       {events.length > 0 ? (
-        <TooltipContent>
+        <PopoverContent>
           {events.map((event) => (
             <div key={event.id} className="py-1">
               <div className="font-bold">{event.title}</div>
               <div>{event.description || 'Pas de description'}</div>
             </div>
           ))}
-        </TooltipContent>
+        </PopoverContent>
       ) : null}
-    </Tooltip>
+    </Popover>
   );
 }
 

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/toast';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -105,8 +105,8 @@ export default function DoodlePage() {
                     const category = EventCategories[event.category];
                     return (
                       <th key={event.id} className="bg-card px-4 text-center">
-                        <Tooltip>
-                          <TooltipTrigger render={<div className="flex flex-col items-center p-1 text-center" />}>
+                        <Popover>
+                          <PopoverTrigger render={<div className="flex flex-col items-center p-1 text-center" />}>
                             <Badge variant={category?.variant ?? 'default'} className={category?.className}>
                               {category?.name ?? event.category}
                             </Badge>
@@ -116,8 +116,8 @@ export default function DoodlePage() {
                                 weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
                               })}
                             </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
+                          </PopoverTrigger>
+                          <PopoverContent>
                             <span>
                               {event.description || 'Pas de description'}
                               {event.costume !== Costume.None ? (
@@ -127,8 +127,8 @@ export default function DoodlePage() {
                                 </span>
                               ) : null}
                             </span>
-                          </TooltipContent>
-                        </Tooltip>
+                          </PopoverContent>
+                        </Popover>
                       </th>
                     );
                   })}
