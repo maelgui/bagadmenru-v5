@@ -2,7 +2,11 @@ from typing import ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict, computed_field
 
-from bbe2.utils.s3 import S3Helper
+from bbe2.utils.s3 import (
+    AVATAR_URL_EXPIRATION_SECONDS,
+    ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
+    S3Helper,
+)
 
 
 class _ProfileBase(BaseModel):
@@ -46,7 +50,12 @@ class Profile(_ProfileBase):
     def picture_url(self) -> Optional[str]:
         if not self.picture_key:
             return None
-        return self.s3_helper.generate_get_presigned_url(object_name=self.picture_key)
+        return self.s3_helper.generate_get_presigned_url(
+            object_name=self.picture_key,
+            cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
+            expiration=AVATAR_URL_EXPIRATION_SECONDS,
+            stable=True,
+        )
 
 
 class Role(BaseModel):

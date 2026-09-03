@@ -1,12 +1,83 @@
 """S3 file storage utils functions."""
 
-from typing import BinaryIO, Optional
+import contextlib
+from datetime import datetime, timezone
+from typing import BinaryIO, Iterator, Optional
 from urllib.parse import urlencode
 
 import boto3
+import botocore.auth
 from botocore.client import Config
 
 from bbe2.config import Settings
+
+# Cache-Control for immutable, per-user private assets. Objects are keyed by a
+# random UUID and are never replaced at the same key (a new upload gets a new
+# key), so the user's own browser may cache them for a year and skip
+# revalidation entirely. "private" keeps shared/CDN caches from storing them,
+# since these objects are served behind authorization via presigned URLs.
+ONE_YEAR_IMMUTABLE_CACHE_CONTROL = "private, max-age=31536000, immutable"
+
+# Presigned-GET expiration (seconds) for immutable private assets. These are
+# also the validity windows for stable URLs: a stable URL is signed at the start
+# of a window of ``expiration / 2`` seconds and is valid for the full
+# ``expiration``, so a URL minted at the tail of one window is still usable
+# through the next window (see ``_stable_window_seconds`` and
+# ``generate_get_presigned_url``). Longer expiration => the browser reuses the
+# same cached URL for longer.
+AVATAR_URL_EXPIRATION_SECONDS = 30 * 24 * 60 * 60  # 30 days
+FILE_URL_EXPIRATION_SECONDS = 7 * 24 * 60 * 60  # 7 days
+
+
+def _stable_window_seconds(expiration: int) -> int:
+    """Window over which a stable presigned URL stays byte-identical.
+
+    Derived from the expiration: the URL is signed at the window start and must
+    remain valid until a fresh one is issued in the *next* window, so the
+    validity (``expiration``) must cover two windows. Inverting that gives a
+    window of half the expiration.
+    """
+    return max(1, expiration // 2)
+
+
+@contextlib.contextmanager
+def _frozen_signing_time(window_seconds: int) -> Iterator[None]:
+    """Pin botocore's SigV4 signing clock to the start of the current window.
+
+    botocore stamps ``X-Amz-Date`` with ``datetime.datetime.utcnow()`` where the
+    ``datetime`` module is looked up as ``botocore.auth.datetime``. Snapping that
+    value to a fixed window makes the resulting presigned URL identical for every
+    call within the window, so the browser can cache the object under a stable
+    URL. We swap in a shim module whose ``datetime`` class returns the snapped
+    time from ``utcnow()`` and otherwise defers to the real class.
+    """
+    now = datetime.now(timezone.utc)
+    epoch = int(now.timestamp())
+    snapped = epoch - (epoch % window_seconds)
+
+    real_module = botocore.auth.datetime  # type: ignore[attr-defined]
+    real_datetime_cls = real_module.datetime
+
+    class _FrozenDatetime(real_datetime_cls):  # type: ignore[misc, valid-type]
+        @classmethod
+        def utcnow(cls):
+            # botocore formats this with strftime and no tz handling, so it must
+            # be a naive UTC datetime (matching the real utcnow's contract).
+            return real_datetime_cls.fromtimestamp(snapped, timezone.utc).replace(
+                tzinfo=None
+            )
+
+    class _FrozenModule:
+        datetime = _FrozenDatetime
+
+        def __getattr__(self, name):
+            return getattr(real_module, name)
+
+    botocore.auth.datetime = _FrozenModule()  # type: ignore[attr-defined]
+    try:
+        yield
+    finally:
+        botocore.auth.datetime = real_module  # type: ignore[attr-defined]
 
 
 class S3Helper:
@@ -33,11 +104,14 @@ class S3Helper:
         object_name: str,
         content_type: Optional[str] = None,
         tags: Optional[dict[str, str | int]] = None,
+        cache_control: Optional[str] = None,
     ):
         """Upload a file to an S3 bucket
 
         :param file_name: File to upload
         :param object_name: S3 object name. If not specified then file_name is used
+        :param cache_control: Value stored as the object's ``Cache-Control``
+            metadata and returned on every GET.
         :return: True if file was uploaded, else False
         """
         extra_args = {}
@@ -46,6 +120,8 @@ class S3Helper:
             extra_args["Tagging"] = urlencode(tags)
         if content_type:
             extra_args["ContentType"] = content_type
+        if cache_control:
+            extra_args["CacheControl"] = cache_control
 
         response = self.client.upload_fileobj(
             Fileobj=file_obj,
@@ -57,20 +133,57 @@ class S3Helper:
         return response
 
     def generate_get_presigned_url(
-        self, object_name, expiration=3600, filename: Optional[str] = None
+        self,
+        object_name,
+        expiration=3600,
+        filename: Optional[str] = None,
+        disposition: str = "inline",
+        cache_control: Optional[str] = None,
+        stable: bool = False,
     ):
         """Generate a presigned URL to share an S3 object
 
         :param bucket_name: string
         :param object_name: string
         :param expiration: Time in seconds for the presigned URL to remain valid
-        :param filename: If provided, sets Content-Disposition so the browser
-                         downloads the file with this name.
+        :param filename: If provided, sets the filename in Content-Disposition.
+        :param disposition: Content-Disposition type: "inline" (default) so the
+                            browser displays the file in place, or "attachment"
+                            so the browser downloads it.
+        :param cache_control: If provided, overrides the ``Cache-Control`` header
+                            S3 returns for this object (via ``ResponseCacheControl``),
+                            letting the browser cache the response.
+        :param stable: If True, the signing time is snapped to a window of
+                            ``expiration / 2`` so repeated calls for the same
+                            object return a byte-identical URL. Combined with
+                            ``cache_control`` this lets the browser actually
+                            reuse its cache across requests. A longer
+                            ``expiration`` therefore also means a longer stable
+                            window.
         :return: Presigned URL as string. If error, returns None.
         """
         params = {"Bucket": self.bucket_name, "Key": object_name}
         if filename:
-            params["ResponseContentDisposition"] = f'attachment; filename="{filename}"'
+            params["ResponseContentDisposition"] = (
+                f'{disposition}; filename="{filename}"'
+            )
+        else:
+            params["ResponseContentDisposition"] = disposition
+        if cache_control:
+            params["ResponseCacheControl"] = cache_control
+
+        if stable:
+            # Snap signing time to a window of half the expiration, so the URL
+            # stays byte-identical within the window and remains valid across the
+            # boundary into the next one. The browser can then serve the object
+            # from cache without a new request for the whole window.
+            window = _stable_window_seconds(expiration)
+            with _frozen_signing_time(window):
+                return self.client.generate_presigned_url(
+                    "get_object",
+                    Params=params,
+                    ExpiresIn=expiration,
+                )
 
         return self.client.generate_presigned_url(
             "get_object",

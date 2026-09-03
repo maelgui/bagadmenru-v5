@@ -3,7 +3,11 @@ from typing import ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict, computed_field
 
-from bbe2.utils.s3 import S3Helper
+from bbe2.utils.s3 import (
+    FILE_URL_EXPIRATION_SECONDS,
+    ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
+    S3Helper,
+)
 
 
 class FileOrFolderType(Enum):
@@ -39,5 +43,24 @@ class FileOrFolder(_FileOrFolderBase):
         if not self.file_key:
             return None
         return self.s3_helper.generate_get_presigned_url(
-            object_name=self.file_key, filename=self.name
+            object_name=self.file_key,
+            filename=self.name,
+            disposition="inline",
+            cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
+            expiration=FILE_URL_EXPIRATION_SECONDS,
+            stable=True,
+        )
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def downloadUrl(self) -> Optional[str]:
+        if not self.file_key:
+            return None
+        return self.s3_helper.generate_get_presigned_url(
+            object_name=self.file_key,
+            filename=self.name,
+            disposition="attachment",
+            cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
+            expiration=FILE_URL_EXPIRATION_SECONDS,
+            stable=True,
         )

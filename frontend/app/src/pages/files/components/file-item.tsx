@@ -1,6 +1,6 @@
-import { type LucideIcon, EllipsisVertical, File, FileImage, FileMusic, FileText, Folder, Pencil, Trash2 } from 'lucide-react';
+import { type LucideIcon, Download, EllipsisVertical, File, FileImage, FileMusic, FileText, Folder, Pencil, Trash2 } from 'lucide-react';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
-import { createElement, useState } from 'react';
+import { createElement, type MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LongPressEventType, useLongPress } from 'use-long-press';
 import { Button } from '@/components/ui/button';
@@ -46,12 +46,38 @@ function getIcon(file: FileOrFolder): LucideIcon {
   return extension ? (fileIconTypes.get(extension) ?? File) : File;
 }
 
+function FileItemLink({
+  file, bind,
+}: {
+  file: FileOrFolder;
+  bind: ReturnType<typeof useLongPress>;
+}) {
+  const commonProps = {
+    className: 'after:absolute after:inset-0',
+    onContextMenu: (event: MouseEvent) => event.preventDefault(),
+    ...bind(),
+  };
+  if (file.type === FileOrFolderType.File && file.fileUrl) {
+    return (
+      <a href={file.fileUrl} target="_blank" rel="noopener noreferrer" {...commonProps}>
+        {file.name}
+      </a>
+    );
+  }
+  return (
+    <Link to={`/files/${file.id}`} {...commonProps}>
+      {file.name}
+    </Link>
+  );
+}
+
 export default function FileItem({
   file, big = false, deleteFn = undefined, renameFn = undefined, noAction = false, variant = 'outline',
 }: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const bind = useLongPress(() => setIsOpen(true), { detect: LongPressEventType.Touch });
   const icon = createElement(getIcon(file), { 'aria-hidden': true });
+  const isFile = file.type === FileOrFolderType.File;
 
   return (
     <Item variant={variant} className="relative transition-colors hover:bg-muted">
@@ -64,14 +90,7 @@ export default function FileItem({
       )}
       <ItemContent>
         <ItemTitle>
-          <Link
-            to={file.fileUrl ?? `/files/${file.id}`}
-            className="after:absolute after:inset-0"
-            {...bind()}
-            onContextMenu={(event) => event.preventDefault()}
-          >
-            {file.name}
-          </Link>
+          <FileItemLink file={file} bind={bind} />
         </ItemTitle>
       </ItemContent>
       {!noAction ? (
@@ -84,6 +103,20 @@ export default function FileItem({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuGroup>
+                {isFile && file.downloadUrl ? (
+                  <DropdownMenuItem
+                    render={(
+                      <a
+                        href={file.downloadUrl}
+                        download={file.name}
+                        rel="noopener noreferrer"
+                      />
+                    )}
+                  >
+                    <Download />
+                    Télécharger
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem onClick={renameFn}>
                   <Pencil />
                   Renommer...

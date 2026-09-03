@@ -17,6 +17,7 @@ def test_get_file(client: TestClient):
         "id": 1,
         "file_key": None,
         "fileUrl": None,
+        "downloadUrl": None,
         "name": "root",
         "parent_id": None,
         "type": "DIR",
@@ -31,6 +32,7 @@ def test_get_children(client: TestClient):
             "id": 2,
             "file_key": None,
             "fileUrl": ANY,
+            "downloadUrl": ANY,
             "name": "file1",
             "parent_id": 1,
             "type": "DIR",
@@ -39,6 +41,7 @@ def test_get_children(client: TestClient):
             "id": 3,
             "file_key": None,
             "fileUrl": ANY,
+            "downloadUrl": ANY,
             "name": "file2",
             "parent_id": 1,
             "type": "DIR",
@@ -69,6 +72,7 @@ def test_upload_file(mock_upload_file: MagicMock, client: TestClient):
         "file_key": ANY,
         "parent_id": 1,
         "fileUrl": ANY,
+        "downloadUrl": ANY,
     }
 
 
@@ -87,6 +91,7 @@ def test_edit_file(client: TestClient):
         "parent_id": 1,
         "type": "DIR",
         "fileUrl": None,
+        "downloadUrl": None,
         "file_key": None,
     }
 
