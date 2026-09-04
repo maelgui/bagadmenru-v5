@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 .coverage
+htmlcov/
 
 # Environment file
 .env
@@ -14,3 +15,4 @@ venv
 
 # DB
 sql_app.db
+tests.sqlite
