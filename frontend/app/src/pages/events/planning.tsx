@@ -1,11 +1,12 @@
 import {
-  CalendarPlus, Check, CircleCheck, CircleHelp, CircleX, Edit3, ExternalLink, Sparkles, X,
+  CalendarPlus, Check, CircleCheck, CircleHelp, CircleX, Edit3, ExternalLink, Sparkles, TriangleAlert, X,
 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Event, MinimalGroup, Profile, Response } from 'bagad-client';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CircularProgress } from '@/components/ui/circular-progress';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -19,6 +20,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from '@/components/ui/tooltip';
 import AvatarGroup from '../../components/avatar-group';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -31,6 +35,8 @@ import DisplaySelector from './components/selector';
 import { upcomingDoodleEventsQuery, upcomingResponsesQuery } from './queries';
 
 type EnrichedResponse = Response & { user?: Profile };
+
+const PERCENT = 100;
 
 function groupResponsesByEventAndEnrichUser(responses: Response[], profiles: Profile[]) {
   return groupBy(responses.map((response) => ({
@@ -187,13 +193,15 @@ function useEventResponsesSummary(responses: EnrichedResponse[], instruments: Mi
 }
 
 function EventCard({
-  event, responses, instruments, profiles,
-}: { event: Event; responses: EnrichedResponse[]; instruments: MinimalGroup[]; profiles: Profile[] }) {
+  event, responses, instruments, profiles, totalMembers,
+}: { event: Event; responses: EnrichedResponse[]; instruments: MinimalGroup[]; profiles: Profile[]; totalMembers: number }) {
   const { eventsApi } = useApiClient();
   const [openUserList, setOpenUserList] = useState(false);
   const {
     myResponse, myInstrumentResponses, otherInstrumentsResponses, totalOtherInstrumentsResponses, responseByInstrument,
   } = useEventResponsesSummary(responses, instruments);
+
+  const responseRate = totalMembers > 0 ? Math.round((responses.length / totalMembers) * PERCENT) : 0;
 
   const mutation = useMutation({
     mutationFn: async (response: boolean) => await eventsApi.createResponseApiV1EventsEventIdResponsesPut({
@@ -207,6 +215,7 @@ function EventCard({
   return (
     <div className="overflow-hidden surface rounded-4xl">
       <div className="flex flex-col justify-center border-b border-border/70 bg-primary/5 p-6 text-center">
+        <span className="text-sm text-muted-foreground capitalize">{event.date.toLocaleString('fr', { weekday: 'long' })}</span>
         <span className="font-heading text-3xl text-primary">{event.date.getDate()}</span>
         <span className="text-sm text-muted-foreground uppercase">{event.date.toLocaleString('fr', { month: 'long' })}</span>
       </div>
@@ -215,7 +224,24 @@ function EventCard({
         <div className="text-sm">{event.description}</div>
         <div className="my-4">
           <h4 className="flex items-baseline justify-between pb-1 font-semibold">
-            Participants
+            <span className="flex items-center gap-2">
+              Participants
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={(
+                      <span className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
+                        <CircularProgress value={responseRate} size={16} strokeWidth={2} label={null} aria-label={`${responses.length} réponses sur ${totalMembers} membres`} />
+                        {responseRate}%
+                      </span>
+                    )}
+                  />
+                  <TooltipContent>
+                    {responses.length} membre{responses.length > 1 ? 's ont' : ' a'} répondu sur {totalMembers} — {responseRate}% de participation renseignée
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
             <Button variant="ghost" size="sm" onClick={() => setOpenUserList(true)}>
               <ExternalLink data-icon="inline-start" />
               Liste complète
@@ -266,6 +292,9 @@ export default function PlanningPage() {
     enrichedResponses: groupResponsesByEventAndEnrichUser(responses ?? [], profiles ?? []),
   }), [profiles, responses]);
 
+  const myProfile = useUserProfile();
+  const hasNeverAnswered = myProfile !== undefined && !(responses ?? []).some((response) => response.userId === myProfile.id);
+
   const instruments: MinimalGroup[] = useMemo(() => {
     const profileInstruments = profiles?.map((profile) => profile.instrument).filter((instrument) => !!instrument) ?? [];
     return [...new Map(profileInstruments.map((instrument) => [instrument.id, instrument])).values()];
@@ -298,8 +327,25 @@ export default function PlanningPage() {
             </Link>
           </AlertDescription>
         </Alert>
+        {hasNeverAnswered ? (
+          <Alert className="mb-8 border-amber-500/50 text-amber-700 dark:text-amber-400 [&>svg]:text-current">
+            <TriangleAlert />
+            <AlertTitle>Vous n&apos;apparaissez pas encore dans les sondages</AlertTitle>
+            <AlertDescription>
+              <p>
+                Tant que vous n&apos;avez répondu à aucun évènement, vous n&apos;êtes pas
+                comptabilisé dans les participations.
+              </p>
+              <p>
+                Dès que vous répondez à un premier évènement de la saison, vous vous engagez à
+                répondre à <strong className="font-semibold">tous</strong> les évènements — que ce
+                soit oui ou non. Le but est simplement d&apos;avoir votre réponse.
+              </p>
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {events?.map((event) => <EventCard key={event.id} event={event} responses={enrichedResponses.get(event.id) ?? []} instruments={instruments} profiles={filteredProfiles} />)}
+          {events?.map((event) => <EventCard key={event.id} event={event} responses={enrichedResponses.get(event.id) ?? []} instruments={instruments} profiles={filteredProfiles} totalMembers={filteredProfiles.length} />)}
         </div>
       </Container>
     </>
