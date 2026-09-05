@@ -1,6 +1,6 @@
 import base64
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Iterable
 
 import jwt
@@ -48,6 +48,22 @@ from bbe2.utils.auth import (
 from bbe2.utils.templates import EmailData
 
 router = APIRouter()
+
+
+def _client_ip(request: Request) -> str | None:
+    """Return the real client IP.
+
+    Behind the Traefik ingress every request reaches the app from the proxy,
+    so request.client.host is the proxy address. Uvicorn is started with
+    --proxy-headers, which rewrites request.client.host from the last hop of
+    X-Forwarded-For; we still read the header's first entry directly to capture
+    the original client when the chain has multiple hops.
+    """
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        # X-Forwarded-For: client, proxy1, proxy2 -> take the first entry.
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else None
 
 
 @router.get("/auth/login")
@@ -136,8 +152,8 @@ def process_login(
                 .where(PasskeyDB.credential_id == credential.raw_id)
                 .values(
                     sign_count=res.new_sign_count,
-                    last_use_at=datetime.now(),
-                    last_use_ip=request.client.host,  # type: ignore
+                    last_use_at=datetime.now(timezone.utc),
+                    last_use_ip=_client_ip(request),
                     last_use_ua=request.headers.get("user-agent"),
                 )
             )
@@ -147,8 +163,8 @@ def process_login(
         roles=[r.id for g in user.groups for r in g.roles],
         first_name=user.first_name,
         last_name=user.last_name,
-        iat=datetime.now(),
-        exp=datetime.now() + timedelta(days=90),
+        iat=datetime.now(timezone.utc),
+        exp=datetime.now(timezone.utc) + timedelta(days=90),
     ).model_dump()
     access_token = jwt.encode(payload, settings.jwt_secret_key, algorithm="HS256")
     response.set_cookie(
@@ -260,7 +276,7 @@ async def preregister_passkey(
     settings: SettingsDep,
 ):
     existing_credentials: Iterable[PasskeyDB] = []
-    if current_user.passkey_user_id == None:
+    if current_user.passkey_user_id is None:
         # Generate
         passkey_user_id = secrets.token_bytes()
         session.execute(
@@ -290,7 +306,10 @@ async def preregister_passkey(
             PublicKeyCredentialDescriptor(id=key.credential_id)
             for key in existing_credentials
         ],
-        attestation=AttestationConveyancePreference.INDIRECT,
+        # We do not verify attestation statements server-side, so request none.
+        # Asking for attestation we ignore only adds a privacy prompt on some
+        # platforms without any security benefit here.
+        attestation=AttestationConveyancePreference.NONE,
     )
 
     # save challenge as base64 in session
@@ -339,7 +358,9 @@ async def register_passkey(
         credential_id=verification.credential_id,
         public_key=verification.credential_public_key,
         sign_count=verification.sign_count,
-        transports=body["response"].get("transports", []),
+        # The column/schema store transports as a space-delimited string
+        # (the WebAuthn convention), so normalise the JS array here.
+        transports=" ".join(body["response"].get("transports", []) or []),
         device_type=verification.credential_device_type,
         back_up=verification.credential_backed_up,
         aaguid=verification.aaguid,

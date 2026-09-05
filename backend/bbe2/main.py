@@ -67,7 +67,20 @@ if not _session_secret:
         "SECRET_KEY environment variable is required "
         "(used to sign session cookies that hold WebAuthn challenges)."
     )
-app.add_middleware(SessionMiddleware, secret_key=_session_secret)
+# The session cookie holds short-lived WebAuthn challenges. Harden it:
+# - https_only: never send over plain HTTP (ingress already forces HTTPS/HSTS,
+#   this is defence in depth).
+# - same_site="lax": front and API share one origin now, so lax is enough and
+#   keeps top-level navigations working.
+# - max_age: challenges are consumed within seconds; no need for the 14-day
+#   Starlette default.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=_session_secret,
+    https_only=True,
+    same_site="lax",
+    max_age=600,
+)
 
 
 @app.middleware("http")

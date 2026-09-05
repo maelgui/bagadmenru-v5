@@ -36,7 +36,7 @@ spec:
       containers:
         - name: backend
           image: ghcr.io/maelgui/bagadmenru-v5/backend:MUST_BE_SET
-          command: ["uvicorn", "bbe2.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          command: ["uvicorn", "bbe2.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
           ports:
             - containerPort: 8000
           envFrom:
