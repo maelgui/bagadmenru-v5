@@ -76,7 +76,11 @@ function AvatarInput({
 }
 
 export default function BaseProfileFormFields(
-  { profile = undefined, avatar = true }: { profile?: Profile, avatar?: boolean },
+  {
+    profile = undefined,
+    avatar = true,
+    showEmailToggle = true,
+  }: { profile?: Profile, avatar?: boolean, showEmailToggle?: boolean },
 ) {
   const {
     register, control, formState: { errors },
@@ -103,30 +107,32 @@ export default function BaseProfileFormFields(
       )
         : null}
 
-      <FieldGroup className="mb-6">
-        <Controller
-          name="receivesEmails"
-          control={control}
-          render={({ field }) => (
-            <Field orientation="horizontal">
-              <Switch
-                id="receivesEmails"
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-              <FieldContent>
-                <FieldLabel htmlFor="receivesEmails">
-                  {field.value ? <MailIcon aria-hidden="true" /> : <MailXIcon aria-hidden="true" />}
-                  Notifications par email
-                </FieldLabel>
-                <FieldDescription>
-                  Recevoir les emails du groupe (événements, annonces...).
-                </FieldDescription>
-              </FieldContent>
-            </Field>
-          )}
-        />
-      </FieldGroup>
+      {showEmailToggle ? (
+        <FieldGroup className="mb-6">
+          <Controller
+            name="receivesEmails"
+            control={control}
+            render={({ field }) => (
+              <Field orientation="horizontal">
+                <Switch
+                  id="receivesEmails"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+                <FieldContent>
+                  <FieldLabel htmlFor="receivesEmails">
+                    {field.value ? <MailIcon aria-hidden="true" /> : <MailXIcon aria-hidden="true" />}
+                    Notifications par email
+                  </FieldLabel>
+                  <FieldDescription>
+                    Recevoir les emails du groupe (événements, annonces...).
+                  </FieldDescription>
+                </FieldContent>
+              </Field>
+            )}
+          />
+        </FieldGroup>
+      ) : null}
 
       <FieldGroup className="mb-6 md:grid md:grid-cols-2 md:gap-4">
         <Field data-invalid={!!errors.firstName}>

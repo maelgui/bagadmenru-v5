@@ -5,17 +5,20 @@ import { Toaster } from '@/components/ui/toast';
 import './App.css';
 import { queryClient } from './config/client';
 import router from './config/router';
+import { ThemeProvider } from './config/theme';
 import env from './env';
 
 DefaultConfig.config = new Configuration({ basePath: env.VITE_BBE2_API_URL });
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Toaster>
-        <RouterProvider router={router} />
-      </Toaster>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <Toaster>
+          <RouterProvider router={router} />
+        </Toaster>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

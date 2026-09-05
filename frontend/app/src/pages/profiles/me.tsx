@@ -1,4 +1,4 @@
-import { KeyRound } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -20,12 +20,9 @@ export default function ShowMyProfilePage() {
         title="Profil"
         subtitle={`${profile.firstName} ${profile.lastName}`}
         actions={[
-          <Button key="passkeys" variant="outline" onClick={async () => await navigate('/profile/passkeys')}>
-            <KeyRound data-icon="inline-start" />
-            Passkeys
-          </Button>,
-          <Button key="edit-profile" onClick={async () => await navigate('/profile/edit/me')}>
-            Modifier mon profil
+          <Button key="settings" onClick={async () => await navigate('/profile/settings')}>
+            <Settings data-icon="inline-start" />
+            Paramètres
           </Button>,
         ]}
         breadcrumb={[

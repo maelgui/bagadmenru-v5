@@ -1,4 +1,4 @@
-import { KeyRound, RefreshCw, Trash2, type LucideIcon } from 'lucide-react';
+import { KeyRound, Plus, RefreshCw, Trash2, type LucideIcon } from 'lucide-react';
 import {
   type PublicKeyCredentialCreationOptionsJSON, startRegistration, WebAuthnError,
 } from '@simplewebauthn/browser';
@@ -7,10 +7,8 @@ import type { Passkey } from 'bagad-client';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { UAParser } from 'ua-parser-js';
-import passkeyBitwarden from '../../assets/passkeys/blue-shield.svg';
-import passkeyBlack from '../../assets/passkeys/FIDO_Passkey_mark_A_black.svg';
-import Container from '../../components/container';
-import Header from '../../components/header';
+import passkeyBitwarden from '../../../../assets/passkeys/blue-shield.svg';
+import passkeyBlack from '../../../../assets/passkeys/FIDO_Passkey_mark_A_black.svg';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +23,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import {
   Item,
   ItemActions,
   ItemContent,
@@ -32,7 +39,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item';
-import { queryClient, useApiClient, useUserProfile } from '../../config/client';
+import { queryClient, useApiClient } from '../../../../config/client';
 
 const aaguidMapping: Partial<Record<string, { icon: LucideIcon | string, name: string }>> = {
   'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': { icon: KeyRound, name: 'iCloud Keychain' },
@@ -58,7 +65,7 @@ function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => 
   const { browser, os } = UAParser(passkey.lastUseUa ?? '');
 
   return (
-    <Item variant="muted" className="mb-4 items-start">
+    <Item variant="muted" className="items-start" data-credential-id={passkey.credentialId}>
       <ItemMedia>
         <AuthenticatorIcon aaguid={passkey.aaguid} />
       </ItemMedia>
@@ -122,36 +129,32 @@ function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => 
     </Item>
   );
 }
-export default function PasskeysPage() {
-  const profile = useUserProfile();
+
+/**
+ * "Passkeys" section: list, register and delete the current user's passkeys.
+ */
+export default function PasskeysSection() {
   const { authApi } = useApiClient();
 
   const { data } = useQuery({
     queryKey: ['passkeys'],
     queryFn: async () => await authApi.listPasskeysApiV1WebauthnGet(),
-    enabled: !!profile,
   });
 
   const register = async () => {
-
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The API response type is not narrowed to PublicKeyCredentialCreationOptionsJSON
     const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet() as PublicKeyCredentialCreationOptionsJSON;
 
     try {
-      // Pass the options to the authenticator and wait for a response
       const attResp = await startRegistration({ optionsJSON: registrationOpt });
       await authApi.registerPasskeyApiV1WebauthnRegisterPost({ requestBody: attResp });
       await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
     } catch (error) {
-      // Some basic error handling
       if (error instanceof WebAuthnError && error.name === 'InvalidStateError') {
-
         console.error('Error: Authenticator was probably already registered by user');
       } else {
-
         console.error(error);
       }
-
       throw error;
     }
   };
@@ -165,36 +168,41 @@ export default function PasskeysPage() {
     },
   });
 
-  if (!profile) {
-    return null;
-  }
-
   return (
-    <>
-      <Header
-        title="Profil"
-        subtitle={`${profile.firstName} ${profile.lastName}`}
-        actions={[
-          <Button key="add-passkey" onClick={register}>
-            <KeyRound data-icon="inline-start" />
+    <Card>
+      <CardHeader>
+        <CardTitle>Passkeys</CardTitle>
+        <CardDescription>
+          Connectez-vous sans mot de passe avec vos appareils.
+        </CardDescription>
+        <CardAction>
+          <Button size="sm" onClick={register}>
+            <Plus data-icon="inline-start" />
             Ajouter
-          </Button>,
-        ]}
-        breadcrumb={[
-          { title: 'Profils', link: '/profile' },
-          { title: 'Mon profil' },
-        ]}
-      />
-
-      <Container>
-        {data?.map((e) => (
-          <PasskeyItem
-            passkey={e}
-            key={e.credentialId}
-            onDelete={() => deleteMutation(e.credentialId)}
-          />
-        ))}
-      </Container>
-    </>
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {data && data.length > 0 ? (
+          data.map((e) => (
+            <PasskeyItem
+              passkey={e}
+              key={e.credentialId}
+              onDelete={() => deleteMutation(e.credentialId)}
+            />
+          ))
+        ) : (
+          <Empty>
+            <EmptyMedia variant="icon">
+              <KeyRound aria-hidden="true" />
+            </EmptyMedia>
+            <EmptyTitle>Aucune passkey</EmptyTitle>
+            <EmptyDescription>
+              Ajoutez une passkey pour vous connecter plus rapidement et en toute sécurité.
+            </EmptyDescription>
+          </Empty>
+        )}
+      </CardContent>
+    </Card>
   );
 }

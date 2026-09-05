@@ -16,6 +16,19 @@
 
 <body>
   <div id="root"></div>
+  <script>
+    // Apply the persisted theme before React renders to avoid a flash of the
+    // wrong theme (FOUC). Keep the storage key in sync with src/config/theme.tsx.
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var theme = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'system';
+        var isDark = theme === 'dark'
+          || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
+      } catch (e) { /* storage unavailable: default light */ }
+    })();
+  </script>
   <script src="/app-config.js"></script>
   <script type="module" src="/src/main.tsx"></script>
 </body>

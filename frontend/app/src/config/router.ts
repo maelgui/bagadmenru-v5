@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, redirect } from 'react-router-dom';
 import AuthGuard from '../guards/auth';
 import MainLayout from '../layout/main';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
@@ -65,8 +65,40 @@ export default createBrowserRouter([
                 lazy: lazyPage(async () => await import('../pages/profiles/me')),
               },
               {
+                path: '/profile/settings',
+                lazy: async () => ({
+                  Component: (await import('../pages/profiles/settingsLayout')).default,
+                }),
+                children: [
+                  {
+                    index: true,
+                    loader: () => redirect('/profile/settings/profile'),
+                  },
+                  {
+                    path: 'profile',
+                    lazy: lazyPage(async () => await import('../pages/profiles/settings/profile')),
+                  },
+                  {
+                    path: 'account',
+                    lazy: lazyPage(async () => await import('../pages/profiles/settings/account')),
+                  },
+                  {
+                    path: 'appearance',
+                    lazy: lazyPage(async () => await import('../pages/profiles/settings/appearance')),
+                  },
+                  {
+                    path: 'security',
+                    lazy: lazyPage(async () => await import('../pages/profiles/settings/security')),
+                  },
+                  {
+                    path: 'notifications',
+                    lazy: lazyPage(async () => await import('../pages/profiles/settings/notifications')),
+                  },
+                ],
+              },
+              {
                 path: '/profile/passkeys',
-                lazy: lazyPage(async () => await import('../pages/profiles/passkeys')),
+                loader: () => redirect('/profile/settings/security'),
               },
               {
                 path: '/profile/:profileId',
