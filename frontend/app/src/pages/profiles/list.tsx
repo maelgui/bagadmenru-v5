@@ -39,8 +39,8 @@ export default function ProfilesPage() {
         title="Liste des membres"
         subtitle="Pensez à ajouter votre photo"
         actions={[
-          <Link key="edit-profile" className={buttonVariants({ variant: 'outline' })} to="/profile/edit/me">
-            Modifier mon profil
+          <Link key="edit-profile" className={buttonVariants({ variant: 'outline' })} to="/profile/settings/profile">
+            Mes paramètres
           </Link>,
           <Link key="rankings" className={buttonVariants({ variant: 'outline' })} to="/profile/rankings">
             <Medal data-icon="inline-start" />

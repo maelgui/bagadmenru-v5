@@ -105,6 +105,10 @@ export default createBrowserRouter([
                 lazy: lazyPage(async () => await import('../pages/profiles/show')),
               },
               {
+                path: '/profile/edit/me',
+                loader: () => redirect('/profile/settings/profile'),
+              },
+              {
                 path: '/profile/edit/:profileId',
                 lazy: lazyPage(async () => await import('../pages/profiles/edit')),
               },
