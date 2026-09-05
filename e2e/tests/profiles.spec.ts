@@ -90,7 +90,7 @@ test.describe('Profiles UI', () => {
     // Should display the user's name (in the h4 subtitle)
     await expect(page.locator('h1').filter({ hasText: `${E2E_USER.firstName} ${E2E_USER.lastName}` })).toBeVisible();
 
-    // Should have "Modifier mon profil" action button
-    await expect(page.getByText('Modifier mon profil')).toBeVisible();
+    // Should have the "Paramètres" action button (links to /profile/settings)
+    await expect(page.getByRole('button', { name: 'Paramètres' })).toBeVisible();
   });
 });
