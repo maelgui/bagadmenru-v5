@@ -170,4 +170,10 @@ def downgrade() -> None:
     op.drop_table("files")
     op.drop_table("events")
     op.drop_table("albums")
+    # The columns above use PostgreSQL ENUM types created implicitly by
+    # ``sa.Enum(...)`` during upgrade. Dropping the tables does not drop the
+    # types, so they must be removed explicitly or a subsequent upgrade fails
+    # with "type ... already exists". ``sa.Enum`` is a no-op on SQLite.
+    sa.Enum(name="costume").drop(op.get_bind(), checkfirst=True)
+    sa.Enum(name="fileorfoldertype").drop(op.get_bind(), checkfirst=True)
     # ### end Alembic commands ###
