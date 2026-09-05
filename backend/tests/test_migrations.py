@@ -8,13 +8,13 @@ run the migrations exactly as production does — on PostgreSQL — to catch:
 - downgrades that don't round-trip,
 - drift between the ORM models and the migration chain.
 
-They require a Postgres instance reachable via the ``MIGRATION_TEST_DATABASE_URL``
-environment variable and are skipped otherwise, so the SQLite unit-test run is
-unaffected.
+They require a Postgres instance reachable via the ``DATABASE_URL``
+environment variable and are skipped otherwise, so the SQLite unit-test run
+(which never sets ``DATABASE_URL``) is unaffected.
 
 Locally:
     docker compose up -d db
-    MIGRATION_TEST_DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@localhost:5432/postgres \
+    DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@localhost:5432/postgres \
         poetry run pytest -m migrations
 """
 
@@ -31,11 +31,11 @@ from bbe2.models.base import Base
 
 pytestmark = pytest.mark.migrations
 
-DATABASE_URL = os.environ.get("MIGRATION_TEST_DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 skip_without_pg = pytest.mark.skipif(
     not DATABASE_URL,
-    reason="MIGRATION_TEST_DATABASE_URL not set (requires a PostgreSQL instance)",
+    reason="DATABASE_URL not set (requires a PostgreSQL instance)",
 )
 
 

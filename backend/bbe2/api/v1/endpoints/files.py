@@ -138,7 +138,7 @@ async def list_children(
         rows = (
             session.query(
                 models.FileOrFolderDB.parent_id,
-                func.count(models.FileOrFolderDB.id),
+                func.count(models.FileOrFolderDB.id),  # pylint: disable=not-callable
             )
             .filter(models.FileOrFolderDB.parent_id.in_(folder_ids))
             .group_by(models.FileOrFolderDB.parent_id)

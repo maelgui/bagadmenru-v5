@@ -25,7 +25,14 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+# The database URL is provided via the ``DATABASE_URL`` environment variable in
+# every context that runs migrations (production, dev, and the migration tests).
+database_url = os.environ.get("DATABASE_URL")
+if not database_url:
+    raise RuntimeError(
+        "DATABASE_URL is not set; it is required to run database migrations."
+    )
+config.set_main_option("sqlalchemy.url", database_url)
 
 
 def run_migrations_offline() -> None:
