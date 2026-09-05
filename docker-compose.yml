@@ -75,6 +75,7 @@ services:
       - VAPID_CLAIMS_EMAIL=mailto:contact@bagadmenru.bzh
     depends_on:
       - backend-init
+      - db
 
   frontend:
     build:
@@ -91,5 +92,3 @@ services:
 volumes:
   s3data:
   pgdata:
-  orydata:
-  authdata:
