@@ -11,7 +11,9 @@ services:
       - 5173:5173
       - 6006:6006
     environment:
-      - VITE_BBE2_API_URL=https://api.beta.bagadmenru.bzh
+      # Front-only dev talks to the deployed beta backend directly. API is now
+      # same-origin under /api on the beta host (no api subdomain).
+      - VITE_BBE2_API_URL=https://beta.bagadmenru.bzh
       - VITE_OIDC_PROVIDER_URL=https://auth.beta.bagadmenru.bzh/realms/bagadmenru
       - VITE_OIDC_CLIENT_ID=bbe2-frontend-${CODESPACE_NAME:-dev}
 

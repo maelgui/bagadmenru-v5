@@ -23,11 +23,11 @@ export const E2E_ADMIN = {
 };
 
 /**
- * API base URL — separate from frontend BASE_URL.
+ * API base URL — defaults to the frontend BASE_URL because the API is now
+ * served on the same origin under /api (no separate api subdomain).
  * Locally the API lives on localhost:8888 (docker-compose maps 8888→8000).
- * In beta/prod, the API lives on a separate subdomain (api.beta.bagadmenru.bzh).
  */
-export const API_URL = process.env.API_URL || 'http://localhost:8888';
+export const API_URL = process.env.API_URL || process.env.BASE_URL || 'http://localhost:8888';
 
 /**
  * HTTP header used to correlate a request, its response, and any email it

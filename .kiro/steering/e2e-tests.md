@@ -20,7 +20,7 @@ npm run test:ui                           # Interactive UI mode
 
 Tests use environment variables for target URLs:
 - `BASE_URL` — Frontend URL (default: http://localhost:5173)
-- `API_URL` — Backend API URL (default: http://localhost:8888)
+- `API_URL` — Backend API URL (default: same as `BASE_URL`; API is same-origin under `/api`)
 - `MAILPIT_URL` — Mailpit API for email verification (default: http://localhost:8025)
 
 ## CI Configuration
@@ -28,7 +28,7 @@ Tests use environment variables for target URLs:
 In CI, tests run against the beta environment:
 ```bash
 BASE_URL=https://beta.bagadmenru.bzh \
-API_URL=https://api.beta.bagadmenru.bzh \
+API_URL=https://beta.bagadmenru.bzh \
 MAILPIT_URL=http://localhost:8025 \
 npm run test:ci
 ```

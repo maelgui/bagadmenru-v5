@@ -19,7 +19,10 @@ export default defineConfig({
 
   server: {
     proxy: {
-      '/api': 'https://api.beta.bagadmenru.bzh',
+      // Local dev: forward backend paths to the backend container. The API is
+      // same-origin under /api (no api subdomain). For front-only dev against
+      // beta, VITE_BBE2_API_URL points at the beta host instead of using this.
+      '/api': 'http://backend:8000',
       '/docs': 'http://backend:8000',
       '/openapi.json': 'http://backend:8000',
     },

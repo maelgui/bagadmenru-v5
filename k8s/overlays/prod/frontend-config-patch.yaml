@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: frontend-config
 data:
-  VITE_BBE2_API_URL: "https://api.prod.bagadmenru.bzh"
+  VITE_BBE2_API_URL: "https://prod.bagadmenru.bzh"

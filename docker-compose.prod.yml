@@ -45,13 +45,12 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.bagadmenru-backend.rule=Host(`api.beta.bagadmenru.bzh`)"
+      # Same origin as the frontend — API lives under /api, OpenAPI schema at
+      # /openapi.json. Higher priority than the frontend catch-all so these
+      # paths reach the backend. No CORS needed (same origin).
+      - "traefik.http.routers.bagadmenru-backend.rule=Host(`beta.bagadmenru.bzh`) && (PathPrefix(`/api`) || PathPrefix(`/openapi.json`))"
+      - "traefik.http.routers.bagadmenru-backend.priority=100"
       - "traefik.http.routers.bagadmenru-backend.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,DELETE"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowheaders=authorization,content-type,token"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolalloworiginlist=https://beta.bagadmenru.bzh"
-      - "traefik.http.middlewares.corsheader.headers.accesscontrolallowcredentials=true"
-      - "traefik.http.routers.bagadmenru-backend.middlewares=corsheader@docker"
     depends_on:
       backend-migrate:
         condition: service_completed_successfully
@@ -68,7 +67,7 @@ services:
       - "traefik.http.routers.bagadmenru-frontend.tls.certresolver=myresolver"
     restart: unless-stopped
     environment:
-      - VITE_BBE2_API_URL=https://api.beta.bagadmenru.bzh
+      - VITE_BBE2_API_URL=https://beta.bagadmenru.bzh
       - VITE_OIDC_PROVIDER_URL=https://auth.beta.bagadmenru.bzh
       - VITE_OIDC_CLIENT_ID=bagad-frontend
 

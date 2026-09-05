@@ -26,8 +26,8 @@ if (import.meta.env.PROD) {
     ],
     // Sample a fraction of transactions: 100% is unnecessary volume in production.
     tracesSampleRate: 0.2,
-    // Attach trace headers only to our own API calls.
-    tracePropagationTargets: [/^https:\/\/api\.(beta\.)?bagadmenru\.bzh/],
+    // Attach trace headers only to our own API calls (same origin, /api path).
+    tracePropagationTargets: [/^https:\/\/(beta\.|prod\.)?bagadmenru\.bzh\/api/],
     // Session Replay: 10% of sessions, 100% of sessions with an error.
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,

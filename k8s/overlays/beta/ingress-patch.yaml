@@ -6,12 +6,29 @@ spec:
   tls:
     - hosts:
         - beta.bagadmenru.bzh
-        - api.beta.bagadmenru.bzh
       secretName: bagadmenru-beta-tls
   rules:
     - host: beta.bagadmenru.bzh
       http:
         paths:
+          # Backend API (same origin — no CORS needed). The backend serves
+          # all routes under /api/v1, so no path rewriting is required.
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          # OpenAPI schema kept reachable for client generation (beta only).
+          - path: /openapi.json
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          # Frontend catch-all.
           - path: /
             pathType: Prefix
             backend:
@@ -19,13 +36,3 @@ spec:
                 name: frontend
                 port:
                   number: 80
-    - host: api.beta.bagadmenru.bzh
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: backend
-                port:
-                  number: 8000

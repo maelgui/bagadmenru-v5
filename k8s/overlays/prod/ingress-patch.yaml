@@ -6,12 +6,21 @@ spec:
   tls:
     - hosts:
         - prod.bagadmenru.bzh
-        - api.prod.bagadmenru.bzh
       secretName: bagadmenru-prod-tls
   rules:
     - host: prod.bagadmenru.bzh
       http:
         paths:
+          # Backend API (same origin — no CORS needed). The backend serves
+          # all routes under /api/v1, so no path rewriting is required.
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          # Frontend catch-all.
           - path: /
             pathType: Prefix
             backend:
@@ -19,13 +28,3 @@ spec:
                 name: frontend
                 port:
                   number: 80
-    - host: api.prod.bagadmenru.bzh
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: backend
-                port:
-                  number: 8000

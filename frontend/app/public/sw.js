@@ -60,8 +60,9 @@ self.addEventListener('notificationclick', (event) => {
 
 self.addEventListener('pushsubscriptionchange', (event) => {
   // The API base URL is passed as a query parameter at registration time
-  // (see main.tsx): the API lives on a different origin in beta/prod, so a
-  // relative fetch from the service worker would hit the frontend host.
+  // (see main.tsx). The API is now same-origin (served under /api on the same
+  // host), but the service worker runs without a page context, so we use an
+  // explicit absolute base rather than relying on relative resolution.
   const apiUrl = new URL(self.location.href).searchParams.get('apiUrl') || '';
 
   event.waitUntil(

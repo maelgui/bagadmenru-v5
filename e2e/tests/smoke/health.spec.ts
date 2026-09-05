@@ -4,9 +4,9 @@ import { CORRELATION_ID_HEADER } from '../helpers/constants';
 test.describe('Smoke Tests', () => {
   test('API health check', async ({ request }) => {
     const baseURL = process.env.BASE_URL || 'https://beta.bagadmenru.bzh';
-    const apiURL = baseURL.replace('://', '://api.');
 
-    const res = await request.get(`${apiURL}/api/v1/health`);
+    // API is served on the same origin under /api (no api subdomain).
+    const res = await request.get(`${baseURL}/api/v1/health`);
     expect(res.ok()).toBeTruthy();
 
     const body = await res.json();

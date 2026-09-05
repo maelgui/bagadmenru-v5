@@ -97,8 +97,12 @@ The backend exposes these API groups (all under `/api/v1`):
 | Environment | Frontend URL | API URL |
 |-------------|-------------|---------|
 | Local | http://localhost:5173 | http://localhost:8888 |
-| Beta | https://beta.bagadmenru.bzh | https://api.beta.bagadmenru.bzh |
-| Production | https://bagadmenru.bzh | https://api.bagadmenru.bzh |
+| Beta | https://beta.bagadmenru.bzh | https://beta.bagadmenru.bzh/api |
+| Production | https://bagadmenru.bzh | https://bagadmenru.bzh/api |
+
+The API is served on the same origin as the frontend under the `/api` path
+(no separate `api.*` subdomain, so no CORS is needed). On beta, the OpenAPI
+schema is also reachable at `/openapi.json` for client generation.
 
 ## CI/CD Pipeline
 
