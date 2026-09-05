@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { useApiClient } from '../../../config/client';
 import { cn } from '@/lib/utils';
 
@@ -40,38 +41,49 @@ export default function Mailbox() {
     queryFn: async () => await utilsApi.getEmailsApiV1UtilsEmailsGet().then((data) => data.map(parseElem).sort((a, b) => a.ago - b.ago)),
   });
   const [dialogOpen, setDialogOpen] = useState(false);
-  if (!emails || emails.length === 0) return null;
+  const emailList = emails ?? [];
+  const count = emailList.length;
 
   return (
     <>
-      <Button type="button" variant="outline" onClick={() => setDialogOpen(true)} aria-label={`${emails.length} mail${emails.length > 1 ? 's' : ''} non lu${emails.length > 1 ? 's' : ''}`}>
+      <Button type="button" variant="outline" onClick={() => setDialogOpen(true)} aria-label={count > 0 ? `${count} mail${count > 1 ? 's' : ''} non lu${count > 1 ? 's' : ''}` : 'Boite mail'}>
         <Inbox data-icon="inline-start" />
         Boite mail
-        <Badge>{emails.length}</Badge>
+        {count > 0 ? <Badge>{count}</Badge> : null}
       </Button>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="text-left">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Inbox />Emails non lus ({emails.length})</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Inbox />{count > 0 ? `Emails non lus (${count})` : 'Boite mail'}</DialogTitle>
             <DialogDescription>Consultez les derniers emails arrivés dans la boite mail.</DialogDescription>
           </DialogHeader>
           <DialogBody>
-            <ul className="divide-y divide-border">
-              {emails.map((email, index) => (
-                <li key={`${email.subject}-${index}`} className="flex items-center gap-2 px-2 py-4">
-                  <Avatar className="size-12 bg-primary/10 font-bold" title={email.from}>
-                    <AvatarFallback>{email.fromSm}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    {email.subject}
-                    <br />
-                    <small title={email.datetime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} className="text-muted-foreground">
-                      Il y a {email.ago} jour{email.ago > 1 ? 's' : ''}
-                    </small>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {count > 0 ? (
+              <ul className="divide-y divide-border">
+                {emailList.map((email, index) => (
+                  <li key={`${email.subject}-${index}`} className="flex items-center gap-2 px-2 py-4">
+                    <Avatar className="size-12 bg-primary/10 font-bold" title={email.from}>
+                      <AvatarFallback>{email.fromSm}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      {email.subject}
+                      <br />
+                      <small title={email.datetime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} className="text-muted-foreground">
+                        Il y a {email.ago} jour{email.ago > 1 ? 's' : ''}
+                      </small>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Empty className="py-8">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon"><Inbox /></EmptyMedia>
+                  <EmptyTitle>Aucun email non lu</EmptyTitle>
+                  <EmptyDescription>Aucun nouvel email dans la boite mail pour le moment.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
             <div>
               <h3 className="mb-2 text-lg font-semibold">Accès</h3>
               <dl className="px-2">
