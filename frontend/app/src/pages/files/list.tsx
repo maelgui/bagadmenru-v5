@@ -352,11 +352,12 @@ export default function ListFilesPage() {
         subtitle={folder?.name ?? <Skeleton className="h-4 w-32" />}
         breadcrumb={buildBreadcrumb(params.folderId, breadcrumb)}
         actions={can('create', 'file') ? [
-          <label key="upload-file" className={cn(buttonVariants({ variant: 'outline' }), 'cursor-pointer')}>
+          <label key="upload-file" className={cn(buttonVariants({ variant: 'outline' }), 'w-full cursor-pointer md:w-auto')}>
+            <CloudUpload data-icon="inline-start" />
             Ajouter un fichier
             <input {...getInputProps()} />
           </label>,
-          <Header.Action key="add-folder" type="button" onClick={() => setCreatingFolder(true)}>
+          <Header.Action key="add-folder" type="button" className="w-full md:w-auto" onClick={() => setCreatingFolder(true)}>
             <FolderPlus data-icon="inline-start" />
             Créer un dossier
           </Header.Action>,
