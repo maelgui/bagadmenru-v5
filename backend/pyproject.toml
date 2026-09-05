@@ -55,6 +55,9 @@ extension-pkg-whitelist = "pydantic"
 
 [tool.pytest.ini_options]
 addopts = "--cov=bbe2 --cov-report html"
+markers = [
+    "migrations: tests that run Alembic migrations against a real PostgreSQL database",
+]
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
