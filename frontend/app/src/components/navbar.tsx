@@ -4,11 +4,13 @@ import { MenuIcon, XIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import logo from '../assets/logov2.svg';
+import logoDark from '../assets/logov2-dark.svg';
 import {
   useAuth,
   usePermissions,
   useUserProfile,
 } from '../config/client';
+import { useTheme } from '../config/theme';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -85,6 +87,7 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
 
 export default function Navbar() {
   const navigationItems = useNavigationItems();
+  const { resolvedTheme } = useTheme();
   const [show, setShow] = useState(false);
 
   const close = () => setShow(false);
@@ -110,12 +113,12 @@ export default function Navbar() {
             onClick={close}
           >
             <div className="mx-8 w-12">
-              <img src={logo} alt="Bagad Men Ru" />
+              <img src={resolvedTheme === 'dark' ? logoDark : logo} alt="Bagad Men Ru" />
             </div>
             <div>
-              <span className="font-semibold whitespace-nowrap text-gray-950">Bagad Men Ru</span>
+              <span className="font-semibold whitespace-nowrap text-foreground">Bagad Men Ru</span>
               <br />
-              <span className="whitespace-nowrap text-gray-700">Espace membres</span>
+              <span className="whitespace-nowrap text-muted-foreground">Espace membres</span>
             </div>
           </NavLink>
         </div>
