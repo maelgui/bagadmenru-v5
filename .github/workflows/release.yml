@@ -205,6 +205,24 @@ jobs:
           kubectl rollout status deployment/backend -n bagadmenru-beta --timeout=120s
           kubectl rollout status deployment/frontend -n bagadmenru-beta --timeout=120s
 
+      - name: Verify migrations applied
+        run: |
+          # The migrate initContainer runs `alembic upgrade head`; a failed
+          # migration otherwise surfaces only as an obscure rollout timeout.
+          # Assert explicitly, inside the pod (which has alembic + the code),
+          # that the DB revision matches the image's head so a failure is
+          # actionable ("DB at X, head Y") instead of silent.
+          HEAD=$(kubectl exec deploy/backend -n bagadmenru-beta -- \
+            sh -c "alembic heads 2>/dev/null | awk '{print \$1}'")
+          CURRENT=$(kubectl exec deploy/backend -n bagadmenru-beta -- \
+            sh -c "alembic current 2>/dev/null | awk '{print \$1}'")
+          echo "Image head: $HEAD"
+          echo "DB current: $CURRENT"
+          if [ -z "$HEAD" ] || [ "$HEAD" != "$CURRENT" ]; then
+            echo "::error::Migration mismatch — DB is at '$CURRENT' but image head is '$HEAD'"
+            exit 1
+          fi
+
   e2e-beta:
     needs:
       - deploy-beta
@@ -284,6 +302,19 @@ jobs:
         run: |
           kubectl rollout status deployment/backend -n bagadmenru-prod --timeout=180s
           kubectl rollout status deployment/frontend -n bagadmenru-prod --timeout=180s
+
+      - name: Verify migrations applied
+        run: |
+          HEAD=$(kubectl exec deploy/backend -n bagadmenru-prod -- \
+            sh -c "alembic heads 2>/dev/null | awk '{print \$1}'")
+          CURRENT=$(kubectl exec deploy/backend -n bagadmenru-prod -- \
+            sh -c "alembic current 2>/dev/null | awk '{print \$1}'")
+          echo "Image head: $HEAD"
+          echo "DB current: $CURRENT"
+          if [ -z "$HEAD" ] || [ "$HEAD" != "$CURRENT" ]; then
+            echo "::error::Migration mismatch — DB is at '$CURRENT' but image head is '$HEAD'"
+            exit 1
+          fi
 
   smoke-prod:
     needs:
