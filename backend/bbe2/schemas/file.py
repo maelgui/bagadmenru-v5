@@ -36,6 +36,9 @@ class FileOrFolder(_FileOrFolderBase):
     id: int
     parent_id: Optional[int] = None
     file_key: Optional[str] = None
+    # Number of direct children. Populated only when listing a folder's
+    # children; None elsewhere (e.g. single-item lookups).
+    child_count: Optional[int] = None
 
     @computed_field  # type: ignore[misc]
     @property

@@ -15,6 +15,7 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemHeader,
   ItemMedia,
   ItemTitle,
@@ -44,6 +45,18 @@ function getIcon(file: FileOrFolder): LucideIcon {
   }
   const extension = file.name.toLowerCase().split('.').pop();
   return extension ? (fileIconTypes.get(extension) ?? File) : File;
+}
+
+function folderCountLabel(count: number): string {
+  if (count === 0) return 'Vide';
+  return `${count} élément${count > 1 ? 's' : ''}`;
+}
+
+function FolderCount({ file }: { file: FileOrFolder }) {
+  if (file.type !== FileOrFolderType.Dir || file.childCount == null) {
+    return null;
+  }
+  return <ItemDescription>{folderCountLabel(file.childCount)}</ItemDescription>;
 }
 
 function FileItemLink({
@@ -92,6 +105,7 @@ export default function FileItem({
         <ItemTitle>
           <FileItemLink file={file} bind={bind} />
         </ItemTitle>
+        <FolderCount file={file} />
       </ItemContent>
       {!noAction ? (
         <ItemActions>

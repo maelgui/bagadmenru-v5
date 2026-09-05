@@ -4,7 +4,7 @@ import uuid
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
@@ -116,6 +116,7 @@ async def get_breadcrumb(
 )
 async def list_children(
     folder_id: int,
+    session: SessionDep,
     file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Get all chidren of a folder."""
@@ -124,7 +125,34 @@ async def list_children(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
-    return db_file.children
+
+    children = db_file.children
+
+    # Compute the direct child count for each sub-folder in a single aggregate
+    # query, then attach it so it is serialized into FileOrFolder.child_count.
+    folder_ids = [
+        child.id for child in children if child.type == FileOrFolderType.DIRECTORY
+    ]
+    counts: dict[int, int] = {}
+    if folder_ids:
+        rows = (
+            session.query(
+                models.FileOrFolderDB.parent_id,
+                func.count(models.FileOrFolderDB.id),
+            )
+            .filter(models.FileOrFolderDB.parent_id.in_(folder_ids))
+            .group_by(models.FileOrFolderDB.parent_id)
+            .all()
+        )
+        counts = {parent_id: count for parent_id, count in rows}
+
+    result = []
+    for child in children:
+        item = schemas.FileOrFolder.model_validate(child)
+        if child.type == FileOrFolderType.DIRECTORY:
+            item.child_count = counts.get(child.id, 0)
+        result.append(item)
+    return result
 
 
 @router.post(

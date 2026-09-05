@@ -69,6 +69,12 @@ export interface FileOrFolder {
      * @memberof FileOrFolder
      */
     downloadUrl: string | null;
+    /**
+     * Number of direct children. Populated only when listing a folder's children; null elsewhere.
+     * @type {number}
+     * @memberof FileOrFolder
+     */
+    childCount?: number | null;
 }
 
 
@@ -102,6 +108,7 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'fileKey': json['file_key'] == null ? undefined : json['file_key'],
         'fileUrl': json['fileUrl'],
         'downloadUrl': json['downloadUrl'],
+        'childCount': json['child_count'] == null ? undefined : json['child_count'],
     };
 }
 
@@ -123,6 +130,7 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'file_key': value['fileKey'],
         'fileUrl': value['fileUrl'],
         'downloadUrl': value['downloadUrl'],
+        'child_count': value['childCount'],
     };
 }
 

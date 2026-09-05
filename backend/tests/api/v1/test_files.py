@@ -21,6 +21,7 @@ def test_get_file(client: TestClient):
         "name": "root",
         "parent_id": None,
         "type": "DIR",
+        "child_count": None,
     }
 
 
@@ -36,6 +37,7 @@ def test_get_children(client: TestClient):
             "name": "file1",
             "parent_id": 1,
             "type": "DIR",
+            "child_count": 0,
         },
         {
             "id": 3,
@@ -45,8 +47,22 @@ def test_get_children(client: TestClient):
             "name": "file2",
             "parent_id": 1,
             "type": "DIR",
+            "child_count": 0,
         },
     ]
+
+
+def test_get_children_counts_direct_children(client: TestClient):
+    # Create two sub-folders inside folder 2 (initially empty).
+    client.post("/api/v1/files/2", json={"name": "sub-a"})
+    client.post("/api/v1/files/2", json={"name": "sub-b"})
+
+    response = client.get("/api/v1/files/1/children")
+    assert response.status_code == 200
+    children = {child["id"]: child for child in response.json()}
+    # folder 2 now has two direct children, folder 3 remains empty.
+    assert children[2]["child_count"] == 2
+    assert children[3]["child_count"] == 0
 
 
 @patch("bbe2.utils.s3.S3Helper.upload_file")
@@ -73,6 +89,7 @@ def test_upload_file(mock_upload_file: MagicMock, client: TestClient):
         "parent_id": 1,
         "fileUrl": ANY,
         "downloadUrl": ANY,
+        "child_count": None,
     }
 
 
@@ -93,6 +110,7 @@ def test_edit_file(client: TestClient):
         "fileUrl": None,
         "downloadUrl": None,
         "file_key": None,
+        "child_count": None,
     }
 
 
