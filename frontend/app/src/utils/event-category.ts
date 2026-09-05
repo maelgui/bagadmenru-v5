@@ -17,6 +17,7 @@ const EventCategories: Partial<Record<string, Category>> = {
   autre: {
     name: 'Autre évènement',
     variant: 'default',
+    className: 'bg-slate-500 text-white',
   },
 };
 
