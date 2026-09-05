@@ -53,7 +53,7 @@ export default function CalendarPage() {
         title="Calendrier"
         subtitle={currentMonth}
         actions={[
-          <Link key="add-event" to="/events/manage" className={cn(buttonVariants({ variant: 'outline' }), can('update', 'event') ? '' : 'hidden')}>
+          <Link key="add-event" to="/events/manage" className={cn(buttonVariants({ variant: 'outline' }), can('edit', 'event') ? '' : 'hidden')}>
             <CalendarPlus data-icon="inline-start" />
             Gérer
           </Link>,
