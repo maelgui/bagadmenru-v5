@@ -41,18 +41,19 @@ function SettingsNav() {
 
   return (
     <nav aria-label="Sections des paramètres">
-      <ul
-        className={cn(
-          // Mobile: horizontal scroll bar. Desktop: vertical sticky column.
-          'flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0',
-        )}
-      >
+      {/*
+        A single vertical list for all sizes: it stacks full-width above the
+        content on mobile and becomes the sticky sidebar column on desktop
+        (see the layout wrapper). With only a handful of sections this stays
+        fully discoverable, unlike a dropdown or a scrollable tab bar.
+      */}
+      <ul className="flex flex-col gap-1">
         {items.map(({ to, label, icon: Icon }) => (
-          <li key={to} className="shrink-0">
+          <li key={to}>
             <NavLink
               to={to}
               className={({ isActive }) => cn(
-                'flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors',
+                'flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors',
                 'hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
                 isActive ? 'bg-muted text-primary' : 'text-foreground',
               )}
