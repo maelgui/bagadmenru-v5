@@ -7,15 +7,16 @@ They only receive plain/serializable data (no ORM objects).
 import logging
 
 import aiosmtplib
-from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import select
 
 from bbe2.config import Settings
 from bbe2.database import session_ctx
+from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.user import UserDB
 from bbe2.schemas.event import EventCreate
 from bbe2.services.push_service import send_push_to_users
-from bbe2.utils.auth import Action, ActionTokenValue
+from bbe2.utils.action_token import create_action_token
+from bbe2.utils.auth import Action
 from bbe2.utils.permissions import Resource, is_allowed
 from bbe2.utils.templates import EmailData, EmailSender
 
@@ -56,8 +57,25 @@ async def notify_new_event(
         if not users:
             return
 
-        token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
         frontend_url = str(settings.frontend_base_url).rstrip("/")
+
+        # Issue one RSVP quick-answer token and one unsubscribe token per user.
+        # Tokens are random secrets stored (hashed) in the action_tokens table;
+        # commit once after creating them all.
+        tokens_by_user: dict[str, tuple[str, str]] = {}
+        for user in users:
+            rsvp_token = create_action_token(
+                session,
+                ActionTokenValue.CreateResponseByToken,
+                {"user_id": user.id, "event_id": event_id},
+            )
+            unsubscribe_token = create_action_token(
+                session,
+                ActionTokenValue.Unsubscribe,
+                {"user_id": user.id},
+            )
+            tokens_by_user[user.id] = (rsvp_token, unsubscribe_token)
+        session.commit()
 
         # Send emails
         try:
@@ -70,19 +88,8 @@ async def notify_new_event(
                         template_data={
                             "event": event,
                             "frontend_url": frontend_url,
-                            "token": token_serializer.dumps(
-                                {
-                                    "user_id": user.id,
-                                    "event_id": event_id,
-                                    "action": ActionTokenValue.CreateResponseByToken.value,
-                                }
-                            ),
-                            "unsubscribe_token": token_serializer.dumps(
-                                {
-                                    "user_id": user.id,
-                                    "action": ActionTokenValue.Unsubscribe.value,
-                                }
-                            ),
+                            "token": tokens_by_user[user.id][0],
+                            "unsubscribe_token": tokens_by_user[user.id][1],
                         },
                     )
                     for user in users

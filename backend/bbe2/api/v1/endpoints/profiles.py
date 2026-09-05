@@ -5,7 +5,6 @@ from typing import Annotated
 
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
-from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import cast, func, or_, select, update
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import functions as sql_fn
@@ -14,6 +13,7 @@ from sqlalchemy.types import Integer
 from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
 from bbe2.dependencies import S3Dep, SenderDep, SessionDep, SettingsDep, get_s3_helper
+from bbe2.models.action_token import ActionTokenValue
 from bbe2.schemas.profile import MinimalGroup, Profile
 from bbe2.schemas.utils import (
     GlobalStats,
@@ -22,10 +22,10 @@ from bbe2.schemas.utils import (
     UserRankingItem,
     UserRankings,
 )
+from bbe2.utils.action_token import create_action_token
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
-    ActionTokenValue,
     Authorization,
     Resource,
     get_current_user2,
@@ -266,7 +266,17 @@ async def create_profile(
     session.commit()
     session.refresh(profile_db)
 
-    token_serializer = URLSafeTimedSerializer(settings.token_secret_key)
+    reset_token = create_action_token(
+        session,
+        ActionTokenValue.ResetPassword,
+        {"user_id": profile_db.id},
+    )
+    unsubscribe_token = create_action_token(
+        session,
+        ActionTokenValue.Unsubscribe,
+        {"user_id": profile_db.id},
+    )
+    session.commit()
     await sender.batch_send_emails(
         subject="[bagadmenru] Bienvenue !",
         template_name="email_welcome",
@@ -276,18 +286,8 @@ async def create_profile(
                 template_data={
                     "user": profile_db,
                     "frontend_url": str(settings.frontend_base_url).rstrip("/"),
-                    "token": token_serializer.dumps(
-                        {
-                            "user_id": profile_db.id,
-                            "action": ActionTokenValue.ResetPassword.value,
-                        }
-                    ),
-                    "unsubscribe_token": token_serializer.dumps(
-                        {
-                            "user_id": profile_db.id,
-                            "action": ActionTokenValue.Unsubscribe.value,
-                        }
-                    ),
+                    "token": reset_token,
+                    "unsubscribe_token": unsubscribe_token,
                 },
             )
         ],

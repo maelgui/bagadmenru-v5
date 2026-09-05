@@ -5,7 +5,6 @@ from typing import Annotated, Iterable
 
 import jwt
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response
-from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import select, update
 from webauthn import (
     generate_authentication_options,
@@ -26,6 +25,7 @@ from webauthn.helpers.structs import (
 
 from bbe2 import schemas
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
+from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.passkey import PasskeyDB
 from bbe2.models.user import UserDB
 from bbe2.schemas.auth import (
@@ -36,10 +36,10 @@ from bbe2.schemas.auth import (
     ResetPasswordRequest,
     Token,
 )
+from bbe2.utils.action_token import create_action_token
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
-    ActionTokenValue,
     Authorization,
     Resource,
     get_current_profile,
@@ -208,13 +208,12 @@ async def reset_password_request(
     if not user or not user.is_active:
         return "OK"
 
-    serializer = URLSafeTimedSerializer(settings.token_secret_key)
-    token = serializer.dumps(
-        {
-            "user_id": user.id,
-            "action": ActionTokenValue.ResetPassword.value,
-        }
+    token = create_action_token(
+        session,
+        ActionTokenValue.ResetPassword,
+        {"user_id": user.id},
     )
+    session.commit()
 
     await sender.batch_send_emails(
         "Reinitialisation de votre mot de passe.",

@@ -1,31 +1,40 @@
 from unittest.mock import ANY
 
 from fastapi.testclient import TestClient
-from itsdangerous import URLSafeTimedSerializer
+from sqlalchemy.orm import sessionmaker
 
-from bbe2.utils.auth import ActionTokenValue
+from bbe2.database import get_engine
+from bbe2.models.action_token import ActionTokenValue
+from bbe2.utils.action_token import create_action_token
 
-# Must match token_secret_key in tests/conftest.py::get_fake_settings
-TOKEN_SECRET_KEY = "fakesecretkey"
 # Existing user / event seeded by tests/conftest.py::populate_db
 SEEDED_USER_ID = "a8e2d3249e9d997e"
 SEEDED_EVENT_ID = 1
+# Must match DATABASE_URL in tests/conftest.py
+DATABASE_URL = "sqlite:///tests.sqlite?check_same_thread=false"
 
 
 def make_response_token(
     user_id: str = SEEDED_USER_ID,
     event_id: int = SEEDED_EVENT_ID,
-    action: str = ActionTokenValue.CreateResponseByToken.value,
+    token_type: ActionTokenValue = ActionTokenValue.CreateResponseByToken,
 ) -> str:
-    """Forge the same signed token that the new-event email embeds.
+    """Issue a real action token in the test DB and return the raw value.
 
-    Mirrors bbe2.services.notifications.notify_new_event, which builds the
-    email quick link as ``{frontend_url}/s/answer/{token}``.
+    Replaces the old itsdangerous-signed token: tokens are now random secrets
+    persisted (hashed) in the action_tokens table, so a test must create the row
+    the same way the new-event email does. Mirrors
+    bbe2.services.notifications.notify_new_event.
     """
-    serializer = URLSafeTimedSerializer(TOKEN_SECRET_KEY)
-    return serializer.dumps(
-        {"user_id": user_id, "event_id": event_id, "action": action}
-    )
+    engine = get_engine(DATABASE_URL)
+    session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    payload = {"user_id": user_id}
+    if token_type is ActionTokenValue.CreateResponseByToken:
+        payload["event_id"] = event_id
+    with session_local() as session:
+        raw = create_action_token(session, token_type, payload)
+        session.commit()
+    return raw
 
 
 def test_list_events(client: TestClient):
@@ -182,8 +191,8 @@ def test_get_response_by_token_rejects_invalid_signature(client: TestClient):
 
 
 def test_get_response_by_token_rejects_wrong_action(client: TestClient):
-    # A validly-signed token but for a different action must be refused.
-    token = make_response_token(action=ActionTokenValue.Unsubscribe.value)
+    # A valid token but for a different action must be refused.
+    token = make_response_token(token_type=ActionTokenValue.Unsubscribe)
     response = client.get(
         "/api/v1/responses/link/prepare",
         headers={"token": token},

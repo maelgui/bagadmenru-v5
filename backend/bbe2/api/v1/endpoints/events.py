@@ -9,11 +9,11 @@ from sqlalchemy import select
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
+from bbe2.models.action_token import ActionTokenValue
 from bbe2.services.notifications import notify_new_event
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
-    ActionTokenValue,
     Authorization,
     Resource,
     get_current_user2,

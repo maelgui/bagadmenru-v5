@@ -1,37 +1,21 @@
 """Authentication fastapi dependencies."""
 
 import logging
-from enum import Enum
 from typing import Annotated
 
 import jwt
 from fastapi import Cookie, Depends, Header, HTTPException, status
-from itsdangerous import BadSignature, URLSafeTimedSerializer
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session as DbSession
 
 from bbe2.config import Settings, get_settings
 from bbe2.crud.crud_profile import CRUDProfile
+from bbe2.database import get_session
+from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.user import UserDB
 from bbe2.schemas import JwtPayload
+from bbe2.utils.action_token import consume_action_token
 from bbe2.utils.permissions import Action, Resource, is_allowed
-
-
-class ActionTokenValue(Enum):
-    CreateResponseByToken = "CreateResponseByToken"
-    ResetPassword = "ResetPassword"
-    Unsubscribe = "Unsubscribe"
-
-    @property
-    def max_age(self) -> int:
-        match self:
-            case ActionTokenValue.CreateResponseByToken:
-                return 3600 * 24 * 7  # 7 jours
-            case ActionTokenValue.ResetPassword:
-                return 3600  # 1h
-            case ActionTokenValue.Unsubscribe:
-                return 3600 * 24 * 7  # 7 jours
-            case _:
-                return 0
 
 
 def credentials(
@@ -135,26 +119,18 @@ class ActionTokenAuthorization:
 
     async def __call__(
         self,
-        settings: Annotated[Settings, Depends(get_settings)],
+        session: Annotated[DbSession, Depends(get_session)],
         token: Annotated[str, Header()],
     ) -> dict:
-
-        # Check user has a valid token
-        serializer = URLSafeTimedSerializer(settings.token_secret_key)
-
-        try:
-            decoded_payload = serializer.loads(
-                token,
-                max_age=self.action.max_age,
-            )
-        except BadSignature as e:
-            logging.error("Invalid token %s", e)
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
-            ) from e
-        if decoded_payload.get("action") != self.action.value:
+        payload = consume_action_token(session, token, self.action)
+        if payload is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
             )
-
-        return decoded_payload
+        # For single-use tokens, consume_action_token stamps used_at on the row.
+        # We deliberately do not commit here: the shared get_session dependency
+        # commits when the request handler returns successfully, so the token is
+        # marked used only if the whole operation (e.g. the password reset)
+        # succeeds. If the handler fails and rolls back, the token stays valid
+        # for a retry.
+        return payload
