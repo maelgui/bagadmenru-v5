@@ -16,7 +16,7 @@
     "lint": "yarn workspace bagad-frontend lint"
   },
   "dependencies": {
-    "@openapitools/openapi-generator-cli": "^2.34.0"
+    "@openapitools/openapi-generator-cli": "^2.41.0"
   },
   "resolutions": {
     "**/vite": "^8.0.11"
