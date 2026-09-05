@@ -18,6 +18,7 @@ from bbe2.utils.auth import (
     Resource,
     get_current_user2,
 )
+from bbe2.utils.correlation import get_correlation_id
 
 events_router = APIRouter(prefix="/events")
 responses_router = APIRouter(prefix="/responses")
@@ -108,8 +109,16 @@ async def create_event(
     db_event = event_crud.create(**event.model_dump())
 
     if event.is_in_doodle:
+        # Capture the current correlation ID now; the background task runs
+        # after the response, outside this request's context, so we pass it
+        # explicitly and re-set it inside the task.
         background_tasks.add_task(
-            notify_new_event, sender, settings, event, db_event.id
+            notify_new_event,
+            sender,
+            settings,
+            event,
+            db_event.id,
+            get_correlation_id(),
         )
 
     return db_event

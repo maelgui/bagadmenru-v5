@@ -1,8 +1,12 @@
 """Unit tests for the email service helpers."""
 
+import asyncio
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
-from bbe2.services.email import _decode_mime_header
+from bbe2.services.email import OutgoingEmail, _decode_mime_header, send_emails
+from bbe2.utils.correlation import CORRELATION_ID_HEADER, set_correlation_id
 
 
 @pytest.mark.parametrize(
@@ -36,3 +40,79 @@ def test_decode_mime_header_malformed_falls_back():
     raw = b"=?utf-8?B?not-valid-base64??="
     # Should return a string without raising.
     assert isinstance(_decode_mime_header(raw), str)
+
+
+class _FakeSettings:
+    """Minimal stand-in for Settings covering what send_emails reads."""
+
+    email_dry_run = False
+    email_from = "noreply@example.test"
+    smtp_host = "smtp.example.test"
+    smtp_port = 25
+    smtp_username = None
+    smtp_password = None
+    smtp_use_tls = False
+
+
+def test_send_emails_stamps_correlation_header():
+    """The current correlation ID must be added as an email header."""
+    set_correlation_id("abc12345")
+    sent = []
+
+    async def _fake_send(msg, **_kwargs):
+        sent.append(msg)
+
+    with patch(
+        "bbe2.services.email.aiosmtplib.send", new=AsyncMock(side_effect=_fake_send)
+    ):
+        asyncio.run(
+            send_emails(
+                _FakeSettings(),
+                [
+                    OutgoingEmail(
+                        to="a@b.test",
+                        subject="Hi",
+                        body_html="<p>x</p>",
+                        body_text="x",
+                    )
+                ],
+            )
+        )
+
+    assert len(sent) == 1
+    assert sent[0][CORRELATION_ID_HEADER] == "abc12345"
+
+
+def test_send_emails_without_correlation_id_omits_header():
+    """When no correlation ID is set, no correlation header is added."""
+    from bbe2.utils.correlation import _correlation_id_ctx  # type: ignore
+
+    token = _correlation_id_ctx.set(None)
+    sent = []
+
+    async def _fake_send(msg, **_kwargs):
+        sent.append(msg)
+
+    try:
+        with patch(
+            "bbe2.services.email.aiosmtplib.send",
+            new=AsyncMock(side_effect=_fake_send),
+        ):
+            asyncio.run(
+                send_emails(
+                    _FakeSettings(),
+                    [
+                        OutgoingEmail(
+                            to="a@b.test",
+                            subject="Hi",
+                            body_html="<p>x</p>",
+                            body_text="x",
+                        )
+                    ],
+                )
+            )
+    finally:
+        _correlation_id_ctx.reset(token)
+
+    assert len(sent) == 1
+    assert CORRELATION_ID_HEADER not in sent[0]

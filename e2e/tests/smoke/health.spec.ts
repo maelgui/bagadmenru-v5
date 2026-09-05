@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { CORRELATION_ID_HEADER } from '../helpers/constants';
 
 test.describe('Smoke Tests', () => {
   test('API health check', async ({ request }) => {
@@ -10,6 +11,18 @@ test.describe('Smoke Tests', () => {
 
     const body = await res.json();
     expect(body.status).toBe('healthy');
+  });
+
+  test('API echoes a client-supplied correlation ID', async ({ request }) => {
+    const baseURL = process.env.BASE_URL || 'https://beta.bagadmenru.bzh';
+    const supplied = 'smoke-correlation-1234';
+
+    const res = await request.get(`${baseURL}/api/v1/health`, {
+      headers: { [CORRELATION_ID_HEADER]: supplied },
+    });
+    expect(res.ok()).toBeTruthy();
+    // The backend trusts a well-formed client ID and echoes it back.
+    expect(res.headers()[CORRELATION_ID_HEADER.toLowerCase()]).toBe(supplied);
   });
 
   test('Frontend loads', async ({ page }) => {

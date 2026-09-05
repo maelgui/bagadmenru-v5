@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import time
@@ -6,13 +5,17 @@ from contextlib import asynccontextmanager
 
 import sentry_sdk
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2 import __version__
 from bbe2.api.v1.api import api_router
 from bbe2.scheduler import scheduler
+from bbe2.utils.correlation import (
+    CORRELATION_ID_HEADER,
+    resolve_correlation_id,
+    set_correlation_id,
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -66,19 +69,15 @@ if not _session_secret:
     )
 app.add_middleware(SessionMiddleware, secret_key=_session_secret)
 
-# CORS - required because frontend (beta.bagadmenru.bzh) calls API on different subdomain
-_cors_origins_raw = os.environ.get("CORS_ALLOWED_ORIGINS", "[]")
-_cors_origins = json.loads(_cors_origins_raw) if _cors_origins_raw else []
-_cors_origin_regex = os.environ.get("CORS_ALLOWED_ORIGIN_REGEX")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_cors_origins,
-    allow_origin_regex=_cors_origin_regex,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.middleware("http")
+async def add_correlation_id_header(request: Request, call_next):
+    # Reuse a well-formed client-supplied ID, otherwise generate one.
+    correlation_id = resolve_correlation_id(request.headers.get(CORRELATION_ID_HEADER))
+    set_correlation_id(correlation_id)
+    response = await call_next(request)
+    response.headers[CORRELATION_ID_HEADER] = correlation_id
+    return response
 
 
 @app.middleware("http")

@@ -1,4 +1,7 @@
 import { request } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+
+import { CORRELATION_ID_HEADER } from './constants';
 
 const MAILPIT_URL = process.env.MAILPIT_URL || 'http://localhost:8025';
 
@@ -55,6 +58,88 @@ export async function waitForEmail(
 
   await ctx.dispose();
   throw new Error(`Timeout waiting for email to ${to} (${timeout}ms)`);
+}
+
+/**
+ * Generate a fresh correlation ID for a test.
+ *
+ * The value must satisfy the backend's strict format
+ * (^[A-Za-z0-9._-]{8,64}$, see backend/bbe2/utils/correlation.py) so the
+ * backend trusts and echoes it back rather than replacing it. A bare UUID hex
+ * (32 chars, [a-f0-9]) qualifies; we prefix it to make test-originated IDs
+ * easy to spot in logs.
+ */
+export function newCorrelationId(prefix = 'e2e'): string {
+  return `${prefix}-${randomUUID().replace(/-/g, '')}`;
+}
+
+/**
+ * Fetch all headers of a message as a case-insensitive lookup.
+ * Mailpit returns headers as { "Header-Name": ["value", ...] }.
+ */
+async function getMessageHeaders(
+  ctx: Awaited<ReturnType<typeof request.newContext>>,
+  id: string
+): Promise<Record<string, string[]>> {
+  const res = await ctx.get(`/api/v1/message/${id}/headers`);
+  if (!res.ok()) return {};
+  const raw = (await res.json()) as Record<string, string[]>;
+  const lower: Record<string, string[]> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    lower[key.toLowerCase()] = value;
+  }
+  return lower;
+}
+
+/**
+ * Wait for the email carrying a specific correlation ID.
+ *
+ * This is the robust way to locate the exact email a request produced: the
+ * test sends `X-Correlation-ID: <id>` on the request that triggers the email,
+ * and the backend stamps the same header on the outgoing message. We poll
+ * Mailpit, then read each candidate's headers (Mailpit does not index custom
+ * headers for its text search, so we must fetch them) and match on the ID.
+ *
+ * Optionally narrow candidates by recipient with `to` to reduce header reads.
+ */
+export async function waitForEmailByCorrelationId(
+  correlationId: string,
+  options?: { to?: string; timeout?: number }
+): Promise<MailpitMessageDetail> {
+  const timeout = options?.timeout || 15_000;
+  const start = Date.now();
+  const target = correlationId.toLowerCase();
+  const headerKey = CORRELATION_ID_HEADER.toLowerCase();
+
+  const ctx = await request.newContext({ baseURL: MAILPIT_URL });
+
+  try {
+    while (Date.now() - start < timeout) {
+      const query = options?.to ? `to:${options.to}` : '';
+      const res = query
+        ? await ctx.get(`/api/v1/search?query=${encodeURIComponent(query)}`)
+        : await ctx.get('/api/v1/messages');
+      const data = await res.json();
+      const messages: MailpitMessage[] = data.messages || [];
+
+      for (const msg of messages) {
+        const headers = await getMessageHeaders(ctx, msg.ID);
+        const values = headers[headerKey] || [];
+        if (values.some((v) => v.toLowerCase() === target)) {
+          const detail = await ctx.get(`/api/v1/message/${msg.ID}`);
+          return (await detail.json()) as MailpitMessageDetail;
+        }
+      }
+
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  } finally {
+    await ctx.dispose();
+  }
+
+  throw new Error(
+    `Timeout waiting for email with ${CORRELATION_ID_HEADER}=${correlationId} (${timeout}ms)`
+  );
 }
 
 /**

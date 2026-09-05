@@ -14,6 +14,7 @@ from imapclient import IMAPClient  # type: ignore
 from pydantic import BaseModel, Field
 
 from bbe2.config import Settings
+from bbe2.utils.correlation import CORRELATION_ID_HEADER, get_correlation_id
 
 logger = logging.getLogger(__name__)
 
@@ -49,12 +50,18 @@ async def send_emails(
         return
 
     # Build messages
+    correlation_id = get_correlation_id()
     messages: list[EmailMessage] = []
     for email_data in emails:
         msg = EmailMessage()
         msg["From"] = settings.email_from
         msg["To"] = email_data.to
         msg["Subject"] = email_data.subject
+        # Correlation header lets consumers (e.g. E2E tests) locate the exact
+        # email a request produced. The value is already validated upstream
+        # (strict charset), so it is safe against CRLF/header injection.
+        if correlation_id:
+            msg[CORRELATION_ID_HEADER] = correlation_id
 
         # Set plain text body and HTML alternative
         msg.set_content(email_data.body_text)

@@ -1,10 +1,11 @@
 import { test, expect, request, type APIRequestContext } from '@playwright/test';
 import {
-  waitForEmail,
+  waitForEmailByCorrelationId,
   extractLinks,
   deleteEmail,
+  newCorrelationId,
 } from './helpers/mailpit';
-import { E2E_USER, E2E_ADMIN, API_URL } from './helpers/constants';
+import { E2E_USER, E2E_ADMIN, API_URL, CORRELATION_ID_HEADER } from './helpers/constants';
 import { createAuthenticatedContext } from './helpers/auth';
 
 /**
@@ -18,8 +19,9 @@ import { createAuthenticatedContext } from './helpers/auth';
  * calls (the token is sent in the `token` header).
  */
 test.describe('Event response via email quick link', () => {
-  // Run serially: these tests share one Mailpit inbox and each matches its own
-  // email by unique title, so parallel runs must not interleave inbox reads.
+  // Run serially: these tests share one Mailpit inbox. Each request carries a
+  // unique X-Correlation-ID and we match the resulting email by that header,
+  // so interleaving is safe, but serial keeps inbox reads predictable.
   test.describe.configure({ mode: 'serial' });
 
   let adminCtx: APIRequestContext;
@@ -34,13 +36,20 @@ test.describe('Event response via email quick link', () => {
 
   /**
    * Create an event as admin and return the quick-link email sent to E2E_USER.
+   *
+   * The create-event request carries a unique correlation ID; the backend
+   * propagates it to the (background-task) notification email as an
+   * X-Correlation-ID header, letting us fetch exactly this email regardless of
+   * subject/title or other messages sharing the inbox.
    */
   async function createEventAndGetLinkEmail(title: string) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateStr = tomorrow.toISOString().split('T')[0];
 
+    const correlationId = newCorrelationId();
     const res = await adminCtx.post('/api/v1/events/', {
+      headers: { [CORRELATION_ID_HEADER]: correlationId },
       data: {
         title,
         date: dateStr,
@@ -53,12 +62,13 @@ test.describe('Event response via email quick link', () => {
       },
     });
     expect(res.ok()).toBeTruthy();
+    // The backend echoes the correlation ID back on the response.
+    expect(res.headers()[CORRELATION_ID_HEADER.toLowerCase()]).toBe(correlationId);
 
-    // The notification email is sent as a background task. Match on the unique
-    // title (part of the subject) so we pick up this test's email, not another
-    // "[Nouvelle sortie] ..." message sharing the inbox.
-    const email = await waitForEmail(E2E_USER.email, {
-      subject: title,
+    // The notification email is sent as a background task. Match on the
+    // correlation ID (stamped as an email header) rather than the subject.
+    const email = await waitForEmailByCorrelationId(correlationId, {
+      to: E2E_USER.email,
       timeout: 20_000,
     });
     expect(email.Subject).toContain(title);

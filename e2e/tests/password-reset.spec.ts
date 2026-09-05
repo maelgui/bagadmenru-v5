@@ -1,6 +1,13 @@
 import { test, expect, request } from '@playwright/test';
-import { waitForEmail, extractLinks, deleteAllEmails, deleteEmail } from './helpers/mailpit';
-import { E2E_USER, API_URL } from './helpers/constants';
+import {
+  waitForEmail,
+  waitForEmailByCorrelationId,
+  extractLinks,
+  deleteAllEmails,
+  deleteEmail,
+  newCorrelationId,
+} from './helpers/mailpit';
+import { E2E_USER, API_URL, CORRELATION_ID_HEADER } from './helpers/constants';
 
 test.describe('Password Reset Flow', () => {
   test.beforeEach(async () => {
@@ -72,19 +79,23 @@ test.describe('Password Reset Flow', () => {
   });
 
   test('should send reset email via API', async () => {
-    // Test the API endpoint directly
+    // Test the API endpoint directly, correlating request → email by header.
     const ctx = await request.newContext({ baseURL: API_URL });
+    const correlationId = newCorrelationId();
     const res = await ctx.post('/api/v1/auth/reset_password_request', {
+      headers: { [CORRELATION_ID_HEADER]: correlationId },
       data: { email: E2E_USER.email },
     });
 
     // Should return 200/202/204 regardless of whether email exists
     // (to not reveal user existence)
     expect([200, 202, 204]).toContain(res.status());
+    // The backend echoes the correlation ID back on the response.
+    expect(res.headers()[CORRELATION_ID_HEADER.toLowerCase()]).toBe(correlationId);
 
-    // Verify email arrived in mailpit
-    const email = await waitForEmail(E2E_USER.email, {
-      subject: 'mot de passe',
+    // Locate the exact email by its correlation header rather than subject.
+    const email = await waitForEmailByCorrelationId(correlationId, {
+      to: E2E_USER.email,
       timeout: 10_000,
     });
 

@@ -28,3 +28,14 @@ export const E2E_ADMIN = {
  * In beta/prod, the API lives on a separate subdomain (api.beta.bagadmenru.bzh).
  */
 export const API_URL = process.env.API_URL || 'http://localhost:8888';
+
+/**
+ * HTTP header used to correlate a request, its response, and any email it
+ * triggers. The backend accepts a well-formed client-supplied value and
+ * echoes it back (and stamps it on outgoing emails); otherwise it generates
+ * one. E2E tests set their own value so they can locate the exact email a
+ * request produced, without matching on subject/body.
+ *
+ * Must match backend/bbe2/utils/correlation.py (CORRELATION_ID_HEADER).
+ */
+export const CORRELATION_ID_HEADER = 'X-Correlation-ID';
