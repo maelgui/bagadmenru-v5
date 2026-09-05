@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -22,10 +22,13 @@ class PasskeyDB(Base):
     back_up: Mapped[bool]
     aaguid: Mapped[str]
 
-    last_use_at: Mapped[datetime] = mapped_column(nullable=True)
+    last_use_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     last_use_ip: Mapped[str] = mapped_column(nullable=True)
     last_use_ua: Mapped[str] = mapped_column(nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
-        default=func.now()  # pylint: disable=not-callable
+        DateTime(timezone=True),
+        default=func.now(),  # pylint: disable=not-callable
     )
