@@ -66,7 +66,7 @@ function CalendarDay({
               <DayEventBadge key={event.id} event={event} />
             ))}
             <div className="pt-1 pl-2 text-sm">
-              {events.slice(MAX_VISIBLE_EVENTS).length ? '+1' : ''}
+              {events.length > MAX_VISIBLE_EVENTS ? `+${events.length - MAX_VISIBLE_EVENTS}` : ''}
             </div>
           </div>
         )}
