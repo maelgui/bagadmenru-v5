@@ -1,7 +1,5 @@
 /* tslint:disable */
 /* eslint-disable */
-export * from './Album';
-export * from './AlbumCreate';
 export * from './Costume';
 export * from './CredentialDeviceType';
 export * from './Event';
@@ -20,11 +18,11 @@ export * from './HealthResponse';
 export * from './InboxEmail';
 export * from './LoginData';
 export * from './LoginType';
+export * from './LogoutRequest';
 export * from './MinimalGroup';
 export * from './MyProfileUpdate';
 export * from './MyStats';
 export * from './Passkey';
-export * from './Photo';
 export * from './Profile';
 export * from './ProfileCreate';
 export * from './ProfileUpdate';
@@ -37,6 +35,7 @@ export * from './ResetPasswordRequest';
 export * from './Response';
 export * from './ResponseCreate';
 export * from './Role';
+export * from './SessionInfo';
 export * from './Token';
 export * from './UserRankingItem';
 export * from './UserRankings';

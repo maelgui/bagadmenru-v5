@@ -15,20 +15,12 @@
 
 import * as runtime from '../runtime';
 import type {
-  HTTPValidationError,
   InboxEmail,
 } from '../models/index';
 import {
-    HTTPValidationErrorFromJSON,
-    HTTPValidationErrorToJSON,
     InboxEmailFromJSON,
     InboxEmailToJSON,
 } from '../models/index';
-
-export interface GetEmailsApiV1UtilsEmailsGetRequest {
-    authorization?: string | null;
-    accessToken?: string | null;
-}
 
 /**
  * 
@@ -38,15 +30,19 @@ export class UtilsApi extends runtime.BaseAPI {
     /**
      * Get Emails
      */
-    async getEmailsApiV1UtilsEmailsGetRaw(requestParameters: GetEmailsApiV1UtilsEmailsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<InboxEmail>>> {
+    async getEmailsApiV1UtilsEmailsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<InboxEmail>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/utils/emails`,
             method: 'GET',
@@ -60,8 +56,8 @@ export class UtilsApi extends runtime.BaseAPI {
     /**
      * Get Emails
      */
-    async getEmailsApiV1UtilsEmailsGet(requestParameters: GetEmailsApiV1UtilsEmailsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<InboxEmail>> {
-        const response = await this.getEmailsApiV1UtilsEmailsGetRaw(requestParameters, initOverrides);
+    async getEmailsApiV1UtilsEmailsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<InboxEmail>> {
+        const response = await this.getEmailsApiV1UtilsEmailsGetRaw(initOverrides);
         return await response.value();
     }
 

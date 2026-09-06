@@ -37,6 +37,12 @@ export interface MinimalGroup {
      * @memberof MinimalGroup
      */
     id: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof MinimalGroup
+     */
+    isInstrument?: boolean;
 }
 
 /**
@@ -61,6 +67,7 @@ export function MinimalGroupFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
         'id': json['id'],
+        'isInstrument': json['is_instrument'] == null ? undefined : json['is_instrument'],
     };
 }
 
@@ -78,6 +85,7 @@ export function MinimalGroupToJSONTyped(value?: MinimalGroup | null, ignoreDiscr
         'name': value['name'],
         'color': value['color'],
         'id': value['id'],
+        'is_instrument': value['isInstrument'],
     };
 }
 

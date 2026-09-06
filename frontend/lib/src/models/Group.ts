@@ -54,6 +54,12 @@ export interface Group {
     id: number;
     /**
      * 
+     * @type {boolean}
+     * @memberof Group
+     */
+    isInstrument?: boolean;
+    /**
+     * 
      * @type {string}
      * @memberof Group
      */
@@ -97,6 +103,7 @@ export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Gro
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
         'id': json['id'],
+        'isInstrument': json['is_instrument'] == null ? undefined : json['is_instrument'],
         'mailingList': json['mailing_list'],
         'roles': ((json['roles'] as Array<any>).map(RoleFromJSON)),
         'members': ((json['members'] as Array<any>).map(ProfileFromJSON)),
@@ -117,6 +124,7 @@ export function GroupToJSONTyped(value?: Group | null, ignoreDiscriminator: bool
         'name': value['name'],
         'color': value['color'],
         'id': value['id'],
+        'is_instrument': value['isInstrument'],
         'mailing_list': value['mailingList'],
         'roles': ((value['roles'] as Array<any>).map(RoleToJSON)),
         'members': ((value['members'] as Array<any>).map(ProfileToJSON)),

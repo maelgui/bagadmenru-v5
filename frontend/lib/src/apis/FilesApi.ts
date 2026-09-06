@@ -37,59 +37,38 @@ import {
 export interface CreateFolderApiV1FilesFolderIdPostRequest {
     folderId: number;
     folderCreate: FolderCreate;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface DeleteFileApiV1FilesFileIdDeleteRequest {
     fileId: number;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest {
     fileId: number;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface GetFileApiV1FilesFileIdGetRequest {
     fileId: number;
-    authorization?: string | null;
-    accessToken?: string | null;
-}
-
-export interface GetRootApiV1FilesRootGetRequest {
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
     folderId: number;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface ListFilesApiV1FilesGetRequest {
     t?: FileOrFolderType | null;
     limit?: number;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
     fileId: number;
     fileOrFolderUpdate: FileOrFolderUpdate;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface UploadFileApiV1FilesFolderIdUploadPostRequest {
     folderId: number;
     file: Blob;
     force?: boolean;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 /**
@@ -122,10 +101,14 @@ export class FilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/files/{folder_id}`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters['folderId']))),
             method: 'POST',
@@ -162,10 +145,14 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
             method: 'DELETE',
@@ -200,10 +187,14 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/files/{file_id}/breadcrumb`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
             method: 'GET',
@@ -239,10 +230,14 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
             method: 'GET',
@@ -266,15 +261,19 @@ export class FilesApi extends runtime.BaseAPI {
      * Get root folder entity.
      * Get Root
      */
-    async getRootApiV1FilesRootGetRaw(requestParameters: GetRootApiV1FilesRootGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async getRootApiV1FilesRootGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/files/root`,
             method: 'GET',
@@ -289,8 +288,8 @@ export class FilesApi extends runtime.BaseAPI {
      * Get root folder entity.
      * Get Root
      */
-    async getRootApiV1FilesRootGet(requestParameters: GetRootApiV1FilesRootGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
-        const response = await this.getRootApiV1FilesRootGetRaw(requestParameters, initOverrides);
+    async getRootApiV1FilesRootGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
+        const response = await this.getRootApiV1FilesRootGetRaw(initOverrides);
         return await response.value();
     }
 
@@ -310,10 +309,14 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/files/{folder_id}/children`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters['folderId']))),
             method: 'GET',
@@ -350,10 +353,14 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/files/`,
             method: 'GET',
@@ -398,10 +405,14 @@ export class FilesApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
             method: 'PUT',
@@ -449,10 +460,14 @@ export class FilesApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const consumes: runtime.Consume[] = [
             { contentType: 'multipart/form-data' },
         ];
@@ -461,8 +476,6 @@ export class FilesApi extends runtime.BaseAPI {
 
         let formParams: { append(param: string, value: any): any };
         let useForm = false;
-        // use FormData to transmit files using content-type "multipart/form-data"
-        useForm = canConsumeForm;
         if (useForm) {
             formParams = new FormData();
         } else {

@@ -17,9 +17,11 @@ import * as runtime from '../runtime';
 import type {
   HTTPValidationError,
   LoginData,
+  LogoutRequest,
   Passkey,
   ResetPassword,
   ResetPasswordRequest,
+  SessionInfo,
   Token,
 } from '../models/index';
 import {
@@ -27,30 +29,26 @@ import {
     HTTPValidationErrorToJSON,
     LoginDataFromJSON,
     LoginDataToJSON,
+    LogoutRequestFromJSON,
+    LogoutRequestToJSON,
     PasskeyFromJSON,
     PasskeyToJSON,
     ResetPasswordFromJSON,
     ResetPasswordToJSON,
     ResetPasswordRequestFromJSON,
     ResetPasswordRequestToJSON,
+    SessionInfoFromJSON,
+    SessionInfoToJSON,
     TokenFromJSON,
     TokenToJSON,
 } from '../models/index';
 
 export interface DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest {
     credentialId: string;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
-export interface ListPasskeysApiV1WebauthnGetRequest {
-    authorization?: string | null;
-    accessToken?: string | null;
-}
-
-export interface PreregisterPasskeyApiV1WebauthnPreregisterGetRequest {
-    authorization?: string | null;
-    accessToken?: string | null;
+export interface LogoutApiV1AuthLogoutPostRequest {
+    logoutRequest?: LogoutRequest;
 }
 
 export interface ProcessLoginApiV1AuthLoginPostRequest {
@@ -59,8 +57,6 @@ export interface ProcessLoginApiV1AuthLoginPostRequest {
 
 export interface RegisterPasskeyApiV1WebauthnRegisterPostRequest {
     requestBody: { [key: string]: any; };
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface ResetPasswordApiV1AuthResetPostRequest {
@@ -92,10 +88,14 @@ export class AuthenticationApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/webauthn/{credential_id}`.replace(`{${"credential_id"}}`, encodeURIComponent(String(requestParameters['credentialId']))),
             method: 'DELETE',
@@ -121,15 +121,19 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * List Passkeys
      */
-    async listPasskeysApiV1WebauthnGetRaw(requestParameters: ListPasskeysApiV1WebauthnGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Passkey>>> {
+    async listPasskeysApiV1WebauthnGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Passkey>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/webauthn/`,
             method: 'GET',
@@ -143,38 +147,67 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * List Passkeys
      */
-    async listPasskeysApiV1WebauthnGet(requestParameters: ListPasskeysApiV1WebauthnGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Passkey>> {
-        const response = await this.listPasskeysApiV1WebauthnGetRaw(requestParameters, initOverrides);
+    async listPasskeysApiV1WebauthnGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Passkey>> {
+        const response = await this.listPasskeysApiV1WebauthnGetRaw(initOverrides);
         return await response.value();
     }
 
     /**
-     * Logout
+     * Return all accounts currently signed in this browser (multi-account).  Public endpoint (no auth dependency): it only reflects the cookies the caller already holds and never reveals anything about accounts whose signed session cookie is not present.
+     * List Sessions
      */
-    async logoutApiV1AuthLogoutPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async listSessionsApiV1AuthSessionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SessionInfo>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/v1/auth/sessions`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SessionInfoFromJSON));
+    }
+
+    /**
+     * Return all accounts currently signed in this browser (multi-account).  Public endpoint (no auth dependency): it only reflects the cookies the caller already holds and never reveals anything about accounts whose signed session cookie is not present.
+     * List Sessions
+     */
+    async listSessionsApiV1AuthSessionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<SessionInfo>> {
+        const response = await this.listSessionsApiV1AuthSessionsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Sign out of a single account and return the remaining sessions.  Deletes only the targeted account\'s session cookie (``account_id`` in the body, defaulting to the active account). Other accounts stay signed in. When no sessions remain the ``active_account`` selector is cleared too. The legacy single-session ``access_token`` cookie is also cleared when it is the thing being logged out, for backward compatibility.
+     * Logout
+     */
+    async logoutApiV1AuthLogoutPostRaw(requestParameters: LogoutApiV1AuthLogoutPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SessionInfo>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
             path: `/api/v1/auth/logout`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: LogoutRequestToJSON(requestParameters['logoutRequest']),
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SessionInfoFromJSON));
     }
 
     /**
+     * Sign out of a single account and return the remaining sessions.  Deletes only the targeted account\'s session cookie (``account_id`` in the body, defaulting to the active account). Other accounts stay signed in. When no sessions remain the ``active_account`` selector is cleared too. The legacy single-session ``access_token`` cookie is also cleared when it is the thing being logged out, for backward compatibility.
      * Logout
      */
-    async logoutApiV1AuthLogoutPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.logoutApiV1AuthLogoutPostRaw(initOverrides);
+    async logoutApiV1AuthLogoutPost(requestParameters: LogoutApiV1AuthLogoutPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<SessionInfo>> {
+        const response = await this.logoutApiV1AuthLogoutPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -211,15 +244,19 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Preregister Passkey
      */
-    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/webauthn/preregister`,
             method: 'GET',
@@ -237,8 +274,8 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Preregister Passkey
      */
-    async preregisterPasskeyApiV1WebauthnPreregisterGet(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters, initOverrides);
+    async preregisterPasskeyApiV1WebauthnPreregisterGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.preregisterPasskeyApiV1WebauthnPreregisterGetRaw(initOverrides);
         return await response.value();
     }
 
@@ -295,10 +332,14 @@ export class AuthenticationApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/webauthn/register`,
             method: 'POST',
