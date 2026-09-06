@@ -43,6 +43,12 @@ export interface GroupUpdate {
      * @memberof GroupUpdate
      */
     roleIds: Array<string>;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof GroupUpdate
+     */
+    isInstrument?: boolean;
 }
 
 /**
@@ -69,6 +75,7 @@ export function GroupUpdateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'color': json['color'] == null ? undefined : json['color'],
         'mailingList': json['mailing_list'],
         'roleIds': json['role_ids'],
+        'isInstrument': json['is_instrument'] == null ? undefined : json['is_instrument'],
     };
 }
 
@@ -87,6 +94,7 @@ export function GroupUpdateToJSONTyped(value?: GroupUpdate | null, ignoreDiscrim
         'color': value['color'],
         'mailing_list': value['mailingList'],
         'role_ids': value['roleIds'],
+        'is_instrument': value['isInstrument'],
     };
 }
 

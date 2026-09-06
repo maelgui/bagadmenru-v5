@@ -590,7 +590,9 @@ async def create_group(
     group: schemas.GroupCreate,
     session: SessionDep,
 ):
-    group_db = models.GroupDB(name=group.name, color=group.color)
+    group_db = models.GroupDB(
+        name=group.name, color=group.color, is_instrument=group.is_instrument
+    )
     roles = (
         session.query(models.RoleDB).filter(models.RoleDB.id.in_(group.role_ids)).all()
     )
@@ -624,6 +626,7 @@ async def update_group(
     group_db.color = group.color
     group_db.name = group.name
     group_db.mailing_list = group.mailing_list
+    group_db.is_instrument = group.is_instrument
     session.commit()
     return group_db
 

@@ -170,6 +170,24 @@ export default function PermissionsForm({ onSubmit, data = undefined }: Permissi
           </Field>
         ) : null}
 
+        <Controller
+          name="isInstrument"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <Field
+              orientation="horizontal"
+              className="rounded-2xl border-2 p-4 transition-colors hover:bg-muted data-[checked=true]:border-primary"
+              data-checked={!!value}
+            >
+              <Checkbox id="isInstrument" checked={!!value} onCheckedChange={onChange} />
+              <FieldContent>
+                <FieldLabel htmlFor="isInstrument" className="cursor-pointer">Pupitre d&apos;instrument</FieldLabel>
+                <FieldDescription>Ce groupe représente un instrument (bombarde, cornemuse, percussions…) et sera proposé à l&apos;inscription des membres.</FieldDescription>
+              </FieldContent>
+            </Field>
+          )}
+        />
+
         <Button type="submit">Enregistrer</Button>
       </FieldGroup>
     </form>

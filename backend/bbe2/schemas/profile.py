@@ -76,11 +76,13 @@ class MinimalGroup(_GroupBase):
 class GroupCreate(_GroupBase):
     mailing_list: Optional[str]
     role_ids: list[str]
+    is_instrument: bool = False
 
 
 class GroupUpdate(_GroupBase):
     mailing_list: Optional[str]
     role_ids: list[str]
+    is_instrument: bool = False
 
 
 class Group(MinimalGroup):
