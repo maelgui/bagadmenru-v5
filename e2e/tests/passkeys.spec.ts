@@ -106,13 +106,19 @@ test.describe('Passkeys (WebAuthn)', () => {
 
       // Second attempt with the SAME authenticator: the backend lists the
       // existing credential in excludeCredentials, so the browser throws
-      // InvalidStateError. The app handles it gracefully (no crash, no toast) —
-      // the observable UX is that no duplicate is created.
+      // InvalidStateError. The app handles it gracefully — it is surfaced as a
+      // benign "already registered" outcome (an info toast), NOT an error, so it
+      // never reaches Sentry and no duplicate is created.
       await authenticator.arm();
       try {
         await page.getByRole('button', { name: 'Ajouter' }).click();
-        // Give the ceremony time to reject and settle.
-        await page.waitForTimeout(2_000);
+
+        // UX oracle: the user is told the device already has a passkey, via an
+        // info toast (not an error). This asserts the InvalidStateError →
+        // "already-registered" handling path specifically.
+        await expect(
+          page.getByText('Cet appareil possède déjà une passkey', { exact: false })
+        ).toBeVisible({ timeout: 10_000 });
       } finally {
         await authenticator.disarm();
       }
@@ -145,7 +151,7 @@ test.describe('Passkeys (WebAuthn)', () => {
         // UX oracle: the user ends up authenticated (left login page AND an
         // authenticated affordance is visible), not merely redirected.
         await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 15_000 });
-        await expect(page.getByRole('button', { name: 'Déconnexion' })).toBeVisible({
+        await expect(page.getByRole('button', { name: /^Comptes —/ })).toBeVisible({
           timeout: 15_000,
         });
       } finally {
@@ -171,7 +177,7 @@ test.describe('Passkeys (WebAuthn)', () => {
 
       // UX oracle: conditional autofill signed the user in automatically.
       await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 15_000 });
-      await expect(page.getByRole('button', { name: 'Déconnexion' })).toBeVisible({
+      await expect(page.getByRole('button', { name: /^Comptes —/ })).toBeVisible({
         timeout: 15_000,
       });
     });
