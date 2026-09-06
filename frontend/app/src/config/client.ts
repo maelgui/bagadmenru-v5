@@ -1,4 +1,5 @@
 import { QueryCache, QueryClient, useQuery } from '@tanstack/react-query';
+import * as Sentry from '@sentry/react';
 import {
   AuthenticationApi,
   Configuration, DefaultApi, EventsApi, FilesApi,
@@ -9,7 +10,7 @@ import {
   type SessionInfo,
   UtilsApi,
 } from 'bagad-client';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/toast';
 import env from '../env';
@@ -144,6 +145,20 @@ export function useAuth() {
     if (isError) return AuthStatus.Guest;
     return AuthStatus.Authenticated;
   })();
+
+  // Attach the authenticated member to Sentry so errors/replays are grouped per
+  // user. Only the pseudonymous id and a display name are sent (never the
+  // email), mirroring the backend and keeping the exposure minimal.
+  useEffect(() => {
+    if (account) {
+      Sentry.setUser({
+        id: account.id,
+        username: `${account.firstName} ${account.lastName}`,
+      });
+    } else {
+      Sentry.setUser(null);
+    }
+  }, [account]);
 
   const login = useCallback(() => {
     // Navigating to login *adds* a session (multi-account) rather than

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 import jwt
+import sentry_sdk
 from fastapi import Depends, Header, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
@@ -250,6 +251,18 @@ class Authorization:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Unauthorized",
             )
+
+        # Attach the authenticated user to the Sentry scope so errors and traces
+        # are grouped per member. We deliberately send only the pseudonymous id
+        # and a human-readable name (never the email) and keep send_default_pii
+        # off, so no IP address or request body is captured — enough to identify
+        # who hit a bug without shipping contact details to Sentry.
+        sentry_sdk.set_user(
+            {
+                "id": decoded_token.sub,
+                "username": f"{decoded_token.first_name} {decoded_token.last_name}",
+            }
+        )
 
         # Check user is authorized to perform action on resource
         if not is_allowed(decoded_token.roles, self.action, self.resource):
