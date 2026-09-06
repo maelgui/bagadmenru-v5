@@ -24,6 +24,7 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -46,9 +47,18 @@ export default function PermissionsForm({ onSubmit, data = undefined }: Permissi
     register, handleSubmit, setValue, formState: { errors }, control,
   } = useForm<GroupCreate & { mailingListEnabled: boolean }>({
     defaultValues: {
-      mailingListEnabled: !!data?.mailingList,
-      ...(data || { color: '#932a58', roleIds: [] }),
+      color: '#932a58',
+      roleIds: [],
+      isInstrument: false,
+      mailingListEnabled: false,
     },
+    values: data
+      ? {
+        ...data,
+        mailingListEnabled: !!data.mailingList,
+        isInstrument: !!data.isInstrument,
+      }
+      : undefined,
   });
   const watchName = useWatch({ control, name: 'name', defaultValue: 'groupe' });
   const watchColor = useWatch({ control, name: 'color', defaultValue: '' });
@@ -140,17 +150,19 @@ export default function PermissionsForm({ onSubmit, data = undefined }: Permissi
           name="mailingListEnabled"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Field
-              orientation="horizontal"
-              className="rounded-2xl border-2 p-4 transition-colors hover:bg-muted data-[checked=true]:border-primary"
+            <FieldLabel
+              htmlFor="mailingListEnabled"
+              className="cursor-pointer rounded-2xl border-2 p-4 transition-colors hover:bg-muted data-[checked=true]:border-primary"
               data-checked={value}
             >
-              <Checkbox id="mailingListEnabled" checked={value} onCheckedChange={onChange} />
-              <FieldContent>
-                <FieldLabel htmlFor="mailingListEnabled" className="cursor-pointer">Associer une mailing liste</FieldLabel>
-                <FieldDescription>Les utilisateurs de ce groupe seront tous ajoutés à une mailing list</FieldDescription>
-              </FieldContent>
-            </Field>
+              <Field orientation="horizontal">
+                <Checkbox id="mailingListEnabled" checked={value} onCheckedChange={onChange} />
+                <FieldContent>
+                  <FieldTitle>Associer une mailing liste</FieldTitle>
+                  <FieldDescription>Les utilisateurs de ce groupe seront tous ajoutés à une mailing list</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
           )}
         />
 
@@ -174,17 +186,19 @@ export default function PermissionsForm({ onSubmit, data = undefined }: Permissi
           name="isInstrument"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Field
-              orientation="horizontal"
-              className="rounded-2xl border-2 p-4 transition-colors hover:bg-muted data-[checked=true]:border-primary"
+            <FieldLabel
+              htmlFor="isInstrument"
+              className="cursor-pointer rounded-2xl border-2 p-4 transition-colors hover:bg-muted data-[checked=true]:border-primary"
               data-checked={!!value}
             >
-              <Checkbox id="isInstrument" checked={!!value} onCheckedChange={onChange} />
-              <FieldContent>
-                <FieldLabel htmlFor="isInstrument" className="cursor-pointer">Pupitre d&apos;instrument</FieldLabel>
-                <FieldDescription>Ce groupe représente un instrument (bombarde, cornemuse, percussions…) et sera proposé à l&apos;inscription des membres.</FieldDescription>
-              </FieldContent>
-            </Field>
+              <Field orientation="horizontal">
+                <Checkbox id="isInstrument" checked={!!value} onCheckedChange={onChange} />
+                <FieldContent>
+                  <FieldTitle>Pupitre d&apos;instrument</FieldTitle>
+                  <FieldDescription>Ce groupe représente un instrument (bombarde, cornemuse, percussions…) et sera proposé à l&apos;inscription des membres.</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
           )}
         />
 
