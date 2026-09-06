@@ -40,7 +40,7 @@ class UserDB(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(
-        String(64), primary_key=True, index=True, default=uuid.uuid4
+        String(64), primary_key=True, index=True, default=lambda: str(uuid.uuid4())
     )
     email: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     password: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
@@ -72,6 +72,10 @@ class GroupDB(Base):
     name: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False, default="#fff")
     is_default: Mapped[bool] = mapped_column(default=False, server_default=false())
+    # Marks a group that represents a musical instrument (piccolo, bombarde,
+    # caisse, ...). Only instrument groups are offered as the "instrument"
+    # choice on the public self-service signup form.
+    is_instrument: Mapped[bool] = mapped_column(default=False, server_default=false())
     mailing_list: Mapped[Optional[str]] = mapped_column(
         String(100), unique=True, nullable=True
     )

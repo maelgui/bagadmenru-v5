@@ -70,6 +70,7 @@ class _GroupBase(BaseModel):
 
 class MinimalGroup(_GroupBase):
     id: int
+    is_instrument: bool = False
 
 
 class GroupCreate(_GroupBase):

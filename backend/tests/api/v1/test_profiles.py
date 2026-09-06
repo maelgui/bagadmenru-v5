@@ -16,6 +16,7 @@ def test_read_my_profile(client: TestClient):
         "instrument": {
             "color": "#fff",
             "id": 1,
+            "is_instrument": False,
             "name": "Piccolo",
         },
         "groups": [],
@@ -37,6 +38,7 @@ def test_read_profile(client: TestClient):
         "instrument": {
             "color": "#fff",
             "id": 1,
+            "is_instrument": False,
             "name": "Piccolo",
         },
         "groups": [],
@@ -72,6 +74,7 @@ def test_update_my_profile(mock_set_tags: MagicMock, client: TestClient):
         "instrument": {
             "color": "#fff",
             "id": 1,
+            "is_instrument": False,
             "name": "Piccolo",
         },
         "groups": [],
@@ -94,6 +97,7 @@ def test_list_profiles(client: TestClient):
             "instrument": {
                 "color": "#fff",
                 "id": 1,
+                "is_instrument": False,
                 "name": "Piccolo",
             },
             "groups": [],
