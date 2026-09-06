@@ -17,9 +17,14 @@ if ('serviceWorker' in navigator) {
 }
 
 // Only report to Sentry from production builds: local dev errors are noise.
+// import.meta.env.PROD decides *whether* to init; VITE_ENVIRONMENT (injected at
+// runtime via window.env, mirroring the backend's ENVIRONMENT) decides which
+// environment tag beta vs production errors carry. Falls back to 'development'
+// when unset (empty string after envsubst, or absent in local dev).
 if (import.meta.env.PROD) {
   Sentry.init({
     dsn: 'https://7433cee9b0a5720226161fdcab710d8e@o1008469.ingest.us.sentry.io/4508480032800768',
+    environment: env.VITE_ENVIRONMENT || 'development',
     integrations: [
       Sentry.browserTracingIntegration(),
       Sentry.replayIntegration(),

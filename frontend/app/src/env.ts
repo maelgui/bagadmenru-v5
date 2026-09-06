@@ -1,5 +1,9 @@
 interface EnvInterface {
   readonly VITE_BBE2_API_URL: string
+  // Deployment environment ('beta' | 'production' | ...). Injected at runtime
+  // via window.env (app-config.js) from the per-overlay ConfigMap, mirroring
+  // the backend's ENVIRONMENT. Absent in local dev (window.env = {}).
+  readonly VITE_ENVIRONMENT?: string
 }
 
 declare global {

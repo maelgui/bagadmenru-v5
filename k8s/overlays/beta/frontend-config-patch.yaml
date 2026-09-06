@@ -4,3 +4,4 @@ metadata:
   name: frontend-config
 data:
   VITE_BBE2_API_URL: "https://beta.bagadmenru.bzh"
+  VITE_ENVIRONMENT: "beta"

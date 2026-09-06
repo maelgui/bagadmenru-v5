@@ -4,3 +4,7 @@ metadata:
   name: frontend-config
 data:
   VITE_BBE2_API_URL: "PLACEHOLDER"
+  # Fail safe: an unset environment defaults to production so a misconfigured
+  # deploy does not silently report beta/preview errors as production noise.
+  # Overridden per environment (see overlays).
+  VITE_ENVIRONMENT: "production"
