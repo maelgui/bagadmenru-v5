@@ -10,6 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2 import __version__
 from bbe2.api.v1.api import api_router
+from bbe2.logging_config import setup_logging
 from bbe2.scheduler import scheduler
 from bbe2.utils.correlation import (
     CORRELATION_ID_HEADER,
@@ -17,7 +18,8 @@ from bbe2.utils.correlation import (
     set_correlation_id,
 )
 
-logging.basicConfig(level=logging.INFO)
+setup_logging()
+logger = logging.getLogger("bbe2.access")
 
 
 tags_metadata = [
@@ -84,22 +86,54 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def add_correlation_id_header(request: Request, call_next):
-    # Reuse a well-formed client-supplied ID, otherwise generate one.
+async def request_context(request: Request, call_next):
+    # Establish the correlation ID first so every log line emitted while
+    # handling this request (including the access line below) carries it.
     correlation_id = resolve_correlation_id(request.headers.get(CORRELATION_ID_HEADER))
     set_correlation_id(correlation_id)
-    response = await call_next(request)
+
+    start_time = time.perf_counter()
+    client_host = request.client.host if request.client else None
+    base_extra = {
+        "http_method": request.method,
+        "http_path": request.url.path,
+        "http_query": request.url.query or None,
+        "client_ip": client_host,
+        "user_agent": request.headers.get("user-agent"),
+    }
+
+    try:
+        response = await call_next(request)
+    except Exception:
+        # Emit an access line for the failed request before re-raising so the
+        # 500 is never invisible in the logs.
+        duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        logger.exception(
+            "%s %s -> 500",
+            request.method,
+            request.url.path,
+            extra={**base_extra, "http_status": 500, "duration_ms": duration_ms},
+        )
+        raise
+
+    duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
     response.headers[CORRELATION_ID_HEADER] = correlation_id
-    return response
+    response.headers["X-Process-Time"] = str(duration_ms / 1000)
 
-
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = time.time()
-    # time.sleep(random.randint(0, 3))
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
+    level = logging.WARNING if response.status_code >= 500 else logging.INFO
+    logger.log(
+        level,
+        "%s %s -> %d (%.2fms)",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+        extra={
+            **base_extra,
+            "http_status": response.status_code,
+            "duration_ms": duration_ms,
+        },
+    )
     return response
 
 
