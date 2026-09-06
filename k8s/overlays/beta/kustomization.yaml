@@ -15,7 +15,13 @@ generatorOptions:
 patches:
   - path: ingress-patch.yaml
   - path: backend-config-patch.yaml
-  - path: backend-seed-patch.yaml
   - path: frontend-config-patch.yaml
+  # Append the E2E seed initContainer after the base `migrate` container.
+  # See backend-seed-patch.yaml for the ordering rationale.
+  - path: backend-seed-patch.yaml
+    target:
+      kind: Deployment
+      name: backend
+
 
 # images: tags are set explicitly by CI via `kustomize edit set image`

@@ -1,28 +1,27 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: backend
-spec:
-  template:
-    spec:
-      initContainers:
-        - name: seed-e2e
-          image: ghcr.io/maelgui/bagadmenru-v5/backend:MUST_BE_SET
-          command: ["bbe2", "seed-e2e"]
-          envFrom:
-            - secretRef:
-                name: backend-secrets
-            - secretRef:
-                name: e2e-credentials
-            - configMapRef:
-                name: backend-config
-          env:
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secrets
-                  key: POSTGRES_PASSWORD
-            - name: DATABASE_URL
-              value: "postgresql+psycopg://bagadmenru:$(POSTGRES_PASSWORD)@postgres:5432/bagadmenru"
-            - name: ENVIRONMENT
-              value: "beta"
+# Append the E2E seed initContainer *after* the base `migrate` container so
+# seeding runs against the migrated schema. A JSON6902 append (path `.../-`)
+# preserves order without redefining `migrate`; a strategic-merge patch that
+# only adds `seed-e2e` gets prepended ahead of `migrate`, inverting the order.
+- op: add
+  path: /spec/template/spec/initContainers/-
+  value:
+    name: seed-e2e
+    image: ghcr.io/maelgui/bagadmenru-v5/backend:MUST_BE_SET
+    command: ["bbe2", "seed-e2e"]
+    envFrom:
+      - secretRef:
+          name: backend-secrets
+      - secretRef:
+          name: e2e-credentials
+      - configMapRef:
+          name: backend-config
+    env:
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: postgres-secrets
+            key: POSTGRES_PASSWORD
+      - name: DATABASE_URL
+        value: "postgresql+psycopg://bagadmenru:$(POSTGRES_PASSWORD)@postgres:5432/bagadmenru"
+      - name: ENVIRONMENT
+        value: "beta"
