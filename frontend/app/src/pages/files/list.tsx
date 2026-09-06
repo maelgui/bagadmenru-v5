@@ -286,11 +286,12 @@ function buildBreadcrumb(folderId: string | undefined, breadcrumb?: FileOrFolder
 }
 
 function FolderBody({
-  status, content, isDragActive, onDelete, onRename,
+  status, content, isDragActive, canCreate, onDelete, onRename,
 }: {
   status: 'pending' | 'error' | 'success';
   content?: { folders: FileOrFolder[]; files: FileOrFolder[] };
   isDragActive: boolean;
+  canCreate: boolean;
   onDelete: (file: FileOrFolder) => void;
   onRename: (file: FileOrFolder) => void;
 }) {
@@ -315,7 +316,11 @@ function FolderBody({
           <EmptyHeader>
             <EmptyMedia variant="icon"><CloudUpload /></EmptyMedia>
             <EmptyTitle>Dossier vide</EmptyTitle>
-            <EmptyDescription>Déposez des fichiers ici ou utilisez le bouton pour en ajouter.</EmptyDescription>
+            <EmptyDescription>
+              {canCreate
+                ? 'Déposez des fichiers ici ou utilisez le bouton pour en ajouter.'
+                : 'Ce dossier ne contient aucun fichier.'}
+            </EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : null}
@@ -352,12 +357,12 @@ export default function ListFilesPage() {
         subtitle={folder?.name ?? <Skeleton className="h-4 w-32" />}
         breadcrumb={buildBreadcrumb(params.folderId, breadcrumb)}
         actions={can('create', 'file') ? [
-          <label key="upload-file" className={cn(buttonVariants({ variant: 'outline' }), 'w-full cursor-pointer md:w-auto')}>
+          <label key="upload-file" className={cn(buttonVariants({ variant: 'outline' }), 'cursor-pointer')}>
             <CloudUpload data-icon="inline-start" />
             Ajouter un fichier
-            <input {...getInputProps()} />
+            <input {...getInputProps()} className="sr-only" />
           </label>,
-          <Header.Action key="add-folder" type="button" className="w-full md:w-auto" onClick={() => setCreatingFolder(true)}>
+          <Header.Action key="add-folder" type="button" onClick={() => setCreatingFolder(true)}>
             <FolderPlus data-icon="inline-start" />
             Créer un dossier
           </Header.Action>,
@@ -369,6 +374,7 @@ export default function ListFilesPage() {
             status={status}
             content={children}
             isDragActive={isDragActive}
+            canCreate={can('create', 'file')}
             onDelete={setFileToDelete}
             onRename={setFileToRename}
           />
