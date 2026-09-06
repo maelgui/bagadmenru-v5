@@ -10,6 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2 import __version__
 from bbe2.api.v1.api import api_router
+from bbe2.config import Environment, get_environment
 from bbe2.logging_config import setup_logging
 from bbe2.scheduler import scheduler
 from bbe2.utils.correlation import (
@@ -29,19 +30,28 @@ tags_metadata = [
     },
 ]
 
-sentry_sdk.init(
-    dsn="https://de1e28317ac8c43ef670553301bdb84d@o1008469.ingest.us.sentry.io/4508480010518528",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
-    traces_sample_rate=1.0,
-    _experiments={
-        # Set continuous_profiling_auto_start to True
-        # to automatically start the profiler on when
-        # possible.
-        "continuous_profiling_auto_start": True,
-    },
-    environment=os.environ.get("ENVIRONMENT", "development"),
-)
+_SENTRY_DSN = "https://de1e28317ac8c43ef670553301bdb84d@o1008469.ingest.us.sentry.io/4508480010518528"  # pylint: disable=line-too-long  # noqa: E501
+
+# Reporting is disabled in local development and CI so dev-only errors and
+# traces are not shipped to Sentry. get_environment() reads os.environ directly
+# (not get_settings()) because this runs at import time, before FastAPI's
+# dependency injection — how tests mock settings — is available.
+_ENVIRONMENT = get_environment()
+
+if _ENVIRONMENT not in (Environment.DEVELOPMENT, Environment.CI):
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        _experiments={
+            # Set continuous_profiling_auto_start to True
+            # to automatically start the profiler on when
+            # possible.
+            "continuous_profiling_auto_start": True,
+        },
+        environment=_ENVIRONMENT.value,
+    )
 
 
 @asynccontextmanager

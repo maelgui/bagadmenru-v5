@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from functools import lru_cache
 from typing import Optional
@@ -76,3 +77,21 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()  # type: ignore
+
+
+def get_environment() -> Environment:
+    """Environment resolved at import time, before the request cycle.
+
+    Bootstrap code such as the Sentry init in ``main.py`` needs the environment
+    before FastAPI's dependency injection is available, so it cannot rely on
+    ``get_settings()`` (its value is not affected by test ``dependency_overrides``
+    and is frozen by ``lru_cache``). This reads ``os.environ`` directly instead.
+
+    Fail safe: an unset or unrecognised ``ENVIRONMENT`` degrades to DEVELOPMENT,
+    which keeps error reporting off outside beta/production (tests never set it).
+    """
+    raw = os.environ.get("ENVIRONMENT", Environment.DEVELOPMENT.value)
+    try:
+        return Environment(raw)
+    except ValueError:
+        return Environment.DEVELOPMENT
