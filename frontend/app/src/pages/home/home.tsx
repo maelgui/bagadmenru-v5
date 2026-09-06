@@ -1,8 +1,7 @@
-import { ArrowRight, CircleCheck, FolderOpen } from 'lucide-react';
+import { ArrowRight, CalendarDays, CircleCheck, FolderOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { FileOrFolderType, type Event, type FileOrFolder, type GlobalStats, type MyStats } from 'bagad-client';
 import { Link } from 'react-router-dom';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
@@ -84,8 +83,7 @@ function NextEventsSection({
       <CardContent className="flex-1">
         {nextEvents ? (
           <div className="flex flex-col gap-3">
-            {!nextEvents.length ? <Alert><AlertDescription>Aucun évènement à venir.</AlertDescription></Alert> : null}
-            {nextEvents.map((event) => (
+            {nextEvents.length ? nextEvents.map((event) => (
               <EventListItem
                 key={event.id}
                 event={event}
@@ -93,7 +91,15 @@ function NextEventsSection({
                 response={responses?.get(event.id)?.at(0)?.value}
                 showResponse={canRespond}
               />
-            ))}
+            )) : (
+              <Empty className="py-8">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon"><CalendarDays /></EmptyMedia>
+                  <EmptyTitle>Aucun évènement à venir</EmptyTitle>
+                  <EmptyDescription>Les prochaines sorties apparaîtront ici.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
           </div>
         ) : <EventListItemSkeleton variant="muted" />}
       </CardContent>
