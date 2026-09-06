@@ -50,6 +50,7 @@ services:
     ports:
       - 8888:8000
     environment:
+      - ENVIRONMENT=development
       - DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@db/postgres
       - FRONTEND_BASE_URL=http://localhost:5173
       - S3_ENDPOINT=http://storage:9000

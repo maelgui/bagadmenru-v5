@@ -14,7 +14,10 @@ class Environment(str, Enum):
 
 
 class Settings(BaseSettings):
-    environment: Environment = Environment.DEVELOPMENT
+    # Fail safe: an unset ENVIRONMENT must degrade to the most secure posture
+    # (Secure cookies, etc.), so the default is PRODUCTION. Local development
+    # opts in explicitly via ENVIRONMENT=development (see docker-compose.yml).
+    environment: Environment = Environment.PRODUCTION
     database_url: str
 
     s3_endpoint: AnyHttpUrl
@@ -55,6 +58,19 @@ class Settings(BaseSettings):
     vapid_private_key: Optional[str] = None
     vapid_public_key: Optional[str] = None
     vapid_claims_email: Optional[str] = None
+
+    @property
+    def cookie_secure(self) -> bool:
+        """Whether auth cookies must carry the Secure attribute.
+
+        Disabled in local development so the cookie is stored over plain HTTP
+        (http://localhost); Safari, unlike Chrome, refuses to store a Secure
+        cookie on an insecure origin. Enabled everywhere else.
+        """
+        return self.environment not in (
+            Environment.DEVELOPMENT,
+            Environment.CI,
+        )
 
 
 @lru_cache

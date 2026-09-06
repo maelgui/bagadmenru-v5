@@ -172,8 +172,9 @@ def process_login(
         value=access_token,
         max_age=90 * 24 * 60 * 60,  # 90 jours
         httponly=True,
-        secure=True,
+        secure=settings.cookie_secure,
         samesite="lax",
+        path="/",
     )
     return Token(access_token=access_token, token_type="bearer")
 
@@ -203,12 +204,13 @@ def reset_password(
 
 
 @router.post("/auth/logout")
-def logout(response: Response):
+def logout(response: Response, settings: SettingsDep):
     response.delete_cookie(
         key="access_token",
         httponly=True,
-        secure=True,
+        secure=settings.cookie_secure,
         samesite="lax",
+        path="/",
     )
     return {}
 
