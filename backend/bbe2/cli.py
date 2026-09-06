@@ -99,6 +99,7 @@ def _bootstrap(s: Session) -> None:
     s.commit()
     console.log("Default roles created")
     admin_role = merged_roles["admin"]
+    eleves_role = merged_roles["eleves"]
 
     # Create or update the admin group. Look it up by name (do NOT hard-code an
     # id): the "Add default group" migration already inserts the "Membres"
@@ -124,10 +125,13 @@ def _bootstrap(s: Session) -> None:
 
     # Create or update the default group that every user belongs to. This is the
     # single source of truth for the default flag: force it on "Membres" and
-    # ensure no other group keeps a stale is_default=True.
+    # ensure no other group keeps a stale is_default=True. It carries the base
+    # "eleves" role so a plain member can sign in and use /me, view events,
+    # profiles, files and groups.
     default_group = s.scalars(select(models.GroupDB).filter_by(name="Membres")).first()
     if default_group:
         default_group.is_default = True
+        default_group.roles = [eleves_role]
         console.log(
             f"Existing 'Membres' group (id={default_group.id}) marked as default"
         )
@@ -136,7 +140,7 @@ def _bootstrap(s: Session) -> None:
             name="Membres",
             color="#3498db",
             is_default=True,
-            roles=[],
+            roles=[eleves_role],
         )
         s.add(default_group)
         console.log("Default 'Membres' group created")
