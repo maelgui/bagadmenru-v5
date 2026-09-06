@@ -92,19 +92,39 @@ def _bootstrap(s: Session) -> None:
         RoleDB(id="intervenants", description="Voit seulement les partitions"),
         RoleDB(id="staff", description="Presque un administrateur"),
     ]
-    for role in default_roles:
-        s.merge(role)
+    # Keep the persistent instances returned by merge(): the transient objects
+    # above must NOT be attached to relationships afterwards, or SQLAlchemy
+    # would try to INSERT them again and violate roles_pkey.
+    merged_roles = {role.id: s.merge(role) for role in default_roles}
     s.commit()
     console.log("Default roles created")
+    admin_role = merged_roles["admin"]
 
-    s.merge(
-        models.GroupDB(
-            id=1, name="Administrateur", color="#000", roles=[default_roles[0]]
+    # Create or update the admin group. Look it up by name (do NOT hard-code an
+    # id): the "Add default group" migration already inserts the "Membres"
+    # group and it may occupy id=1, so merging a hard-coded id=1 here would
+    # overwrite "Membres" (renaming it "Administrateur" while inheriting its
+    # is_default=True flag). Always force is_default=False for the admin group.
+    admin_group = s.scalars(
+        select(models.GroupDB).filter_by(name="Administrateur")
+    ).first()
+    if admin_group:
+        admin_group.color = "#000"
+        admin_group.roles = [admin_role]
+        admin_group.is_default = False
+    else:
+        admin_group = models.GroupDB(
+            name="Administrateur",
+            color="#000",
+            is_default=False,
+            roles=[admin_role],
         )
-    )
+        s.add(admin_group)
     console.log("Admin group created")
 
-    # Create or update the default group that every user belongs to
+    # Create or update the default group that every user belongs to. This is the
+    # single source of truth for the default flag: force it on "Membres" and
+    # ensure no other group keeps a stale is_default=True.
     default_group = s.scalars(select(models.GroupDB).filter_by(name="Membres")).first()
     if default_group:
         default_group.is_default = True
