@@ -2,33 +2,48 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [tailwindcss(), react(), sentryVitePlugin({
-    org: "bagadmenru",
-    project: "bbe2-frontend"
-  })],
+export default defineConfig(({ mode }) => {
+  // Only the dev-server port is parameterized (set from docker-compose), so
+  // several checkouts can run side by side without clashing.
+  const env = loadEnv(mode, process.cwd(), '');
+  const port = Number(env.VITE_PORT ?? 5173);
 
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+  return {
+    plugins: [tailwindcss(), react(), sentryVitePlugin({
+      org: "bagadmenru",
+      project: "bbe2-frontend"
+    })],
+
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
     },
-  },
 
-  server: {
-    proxy: {
-      // Local dev: forward backend paths to the backend container. The API is
-      // same-origin under /api (no api subdomain). For front-only dev against
-      // beta, VITE_BBE2_API_URL points at the beta host instead of using this.
-      '/api': 'http://backend:8000',
-      '/docs': 'http://backend:8000',
-      '/openapi.json': 'http://backend:8000',
+    server: {
+      port,
+      proxy: {
+        // In the compose network these resolve to the service names; the stack
+        // publishes only the frontend, so dev-tool UIs are reached here too.
+        '/api': 'http://backend:8000',
+        '/docs': 'http://backend:8000',
+        '/openapi.json': 'http://backend:8000',
+        // Mailpit runs with MP_WEBROOT=mailpit, so it serves under /mailpit and
+        // emits prefix-aware URLs — no rewrite needed.
+        '/mailpit': { target: 'http://mailpit:8025', changeOrigin: true },
+        '/minio': {
+          target: 'http://storage:9090',
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/minio/, ''),
+        },
+      },
     },
-  },
 
-  build: {
-    sourcemap: true
-  }
+    build: {
+      sourcemap: true
+    }
+  };
 })

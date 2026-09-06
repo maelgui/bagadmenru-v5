@@ -29,6 +29,11 @@ function AuthPage() {
   const location = useLocation();
 
   const postLogin = useCallback(async () => {
+    // A login makes a (possibly different) account active, so treat it like an
+    // account switch: clear the whole query cache first so no data from a
+    // previously active account lingers (cache isolation), then warm the new
+    // account's profile. Everything else refetches under the new session.
+    queryClient.clear();
     const res = await usersApi.getMyProfileApiV1ProfilesMeGet();
     queryClient.setQueryData(['profiles', 'me'], res);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- location.state is set by AuthGuard

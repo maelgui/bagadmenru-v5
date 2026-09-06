@@ -35,7 +35,11 @@ def test_login_sets_cookie_with_root_path(client: TestClient):
 
     assert response.status_code == 200
     set_cookie = response.headers.get("set-cookie", "")
-    assert "access_token=" in set_cookie
+    # Login now sets the per-account multi-account session cookie
+    # (bmr_session_<id>) plus the active_account selector, not the legacy
+    # single access_token cookie.
+    assert "bmr_session_" in set_cookie
+    assert "active_account=" in set_cookie
     # The cookie must be scoped to Path=/ so browsers (Safari in particular,
     # which enforces the RFC 6265 default-path strictly) send it on every
     # endpoint, not just /api/v1/auth. Regression guard for the "login 200 but
@@ -90,7 +94,8 @@ def test_login_cookie_is_secure_in_production(client: TestClient):
 
     assert response.status_code == 200
     set_cookie = response.headers.get("set-cookie", "")
-    # Outside development the cookie must be Secure.
+    # Outside development the session cookie must be Secure.
+    assert "bmr_session_" in set_cookie
     assert "Secure" in set_cookie
     assert "Path=/" in set_cookie
 
@@ -125,9 +130,14 @@ def test_login_passkey_only_account_returns_401(client: TestClient):
 
 
 def test_logout_clears_cookie(client: TestClient):
+    # A client whose only credential is the legacy access_token cookie must
+    # still be able to log out (backward compatibility). Drop the Bearer header
+    # the fixture sets and rely on the cookie instead.
+    client.headers.pop("Authorization", None)
+    client.cookies.set("access_token", _legacy_token())
     response = client.post("/api/v1/auth/logout")
     assert response.status_code == 200
-    # The access_token cookie must be expired/cleared on logout.
+    # The legacy access_token cookie must be expired/cleared on logout.
     set_cookie = response.headers.get("set-cookie", "")
     assert "access_token=" in set_cookie
     # The cookie must be pinned to Path=/ so the browser matches (and clears)
@@ -135,3 +145,23 @@ def test_logout_clears_cookie(client: TestClient):
     # scope it to /api/v1/auth and fail to send it on other endpoints,
     # producing a 401 right after login. Regression guard.
     assert "Path=/" in set_cookie
+
+
+def _legacy_token() -> str:
+    from datetime import datetime, timedelta, timezone
+
+    import jwt
+
+    from bbe2.schemas.auth import JwtPayload
+    from tests.conftest import get_fake_settings
+
+    payload = JwtPayload(
+        sub="a8e2d3249e9d997e",
+        roles=[],
+        first_name="john",
+        last_name="doe",
+        email="john.doe@example.com",
+        exp=datetime.now(tz=timezone.utc) + timedelta(minutes=5),
+        iat=datetime.now(tz=timezone.utc),
+    ).model_dump()
+    return jwt.encode(payload, get_fake_settings().jwt_secret_key, algorithm="HS256")

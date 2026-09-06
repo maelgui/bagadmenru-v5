@@ -39,15 +39,11 @@ import {
 
 export interface CreateEventApiV1EventsPostRequest {
     eventCreate: EventCreate;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface CreateResponseApiV1EventsEventIdResponsesPutRequest {
     eventId: number;
     responseCreate: ResponseCreate;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface CreateResponseByTokenApiV1ResponsesLinkSavePutRequest {
@@ -57,14 +53,10 @@ export interface CreateResponseByTokenApiV1ResponsesLinkSavePutRequest {
 
 export interface DeleteEventApiV1EventsEventIdDeleteRequest {
     eventId: number;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface GetEventApiV1EventsEventIdGetRequest {
     eventId: number;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest {
@@ -77,23 +69,17 @@ export interface ListEventsApiV1EventsGetRequest {
     dateLt?: Date | null;
     isInDoodle?: boolean | null;
     ordering?: string;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface ListResponsesApiV1ResponsesGetRequest {
     dateGte?: Date | null;
     dateLt?: Date | null;
     userId?: string | null;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface UpdateEventApiV1EventsEventIdPutRequest {
     eventId: number;
     eventCreate: EventCreate;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 /**
@@ -118,10 +104,14 @@ export class EventsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/events/`,
             method: 'POST',
@@ -165,10 +155,14 @@ export class EventsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/events/{event_id}/responses`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
             method: 'PUT',
@@ -250,10 +244,14 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
             method: 'DELETE',
@@ -316,10 +314,14 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
             method: 'GET',
@@ -403,10 +405,14 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/events/`,
             method: 'GET',
@@ -445,10 +451,14 @@ export class EventsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/responses/`,
             method: 'GET',
@@ -491,10 +501,14 @@ export class EventsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
             method: 'PUT',

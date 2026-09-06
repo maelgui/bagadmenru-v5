@@ -6,9 +6,12 @@ from unittest.mock import patch
 # Required before importing bbe2.main, which fails fast if SECRET_KEY is unset.
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import bbe2.utils.auth
 import jwt
 import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import sessionmaker
+
+import bbe2.utils.auth
 from bbe2 import models
 from bbe2.config import Settings, get_settings
 from bbe2.database import get_engine
@@ -16,8 +19,6 @@ from bbe2.main import app
 from bbe2.models.base import Base
 from bbe2.schemas import Costume, FileOrFolderType
 from bbe2.schemas.auth import JwtPayload
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import sessionmaker
 
 
 def populate_db(session):
@@ -116,6 +117,7 @@ def client(monkeypatch) -> Generator:
         roles=[],
         first_name="Mael",
         last_name="Gui",
+        email="mael.gui@example.com",
         exp=datetime.now(tz=timezone.utc) + timedelta(minutes=5),
         iat=datetime.now(tz=timezone.utc),
     ).model_dump()

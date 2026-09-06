@@ -9,7 +9,16 @@ vi.mock('../config/client', () => ({
   useUserProfile: () => ({
     id: '1', firstName: 'Jean', lastName: 'Test', pictureUrl: null,
   }),
-  useAuth: () => ({ logout: vi.fn() }),
+  useAuth: () => ({
+    logout: vi.fn(), login: vi.fn(), switchAccount: vi.fn(),
+  }),
+  useSessions: () => ({ data: [{ id: '1', firstName: 'Jean', lastName: 'Test', active: true }] }),
+}));
+
+// Navbar reads the resolved theme to pick a logo; the tests don't render a
+// ThemeProvider, so stub the hook to a stable value.
+vi.mock('../config/theme', () => ({
+  useTheme: () => ({ resolvedTheme: 'light' }),
 }));
 
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting

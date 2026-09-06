@@ -33,19 +33,10 @@ import {
 
 export interface SubscribeApiV1PushSubscribePostRequest {
     pushSubscriptionCreate: PushSubscriptionCreate;
-    authorization?: string | null;
-    accessToken?: string | null;
-}
-
-export interface TestPushApiV1PushTestPostRequest {
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 export interface UnsubscribeApiV1PushUnsubscribeDeleteRequest {
     pushSubscriptionCreate: PushSubscriptionCreate;
-    authorization?: string | null;
-    accessToken?: string | null;
 }
 
 /**
@@ -99,10 +90,14 @@ export class PushNotificationsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/push/subscribe`,
             method: 'POST',
@@ -127,15 +122,19 @@ export class PushNotificationsApi extends runtime.BaseAPI {
      * Send a test push notification to the current user.
      * Test Push
      */
-    async testPushApiV1PushTestPostRaw(requestParameters: TestPushApiV1PushTestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async testPushApiV1PushTestPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/push/test`,
             method: 'POST',
@@ -154,8 +153,8 @@ export class PushNotificationsApi extends runtime.BaseAPI {
      * Send a test push notification to the current user.
      * Test Push
      */
-    async testPushApiV1PushTestPost(requestParameters: TestPushApiV1PushTestPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.testPushApiV1PushTestPostRaw(requestParameters, initOverrides);
+    async testPushApiV1PushTestPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.testPushApiV1PushTestPostRaw(initOverrides);
         return await response.value();
     }
 
@@ -177,10 +176,14 @@ export class PushNotificationsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['authorization'] != null) {
-            headerParameters['authorization'] = String(requestParameters['authorization']);
-        }
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
 
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
         const response = await this.request({
             path: `/api/v1/push/unsubscribe`,
             method: 'DELETE',

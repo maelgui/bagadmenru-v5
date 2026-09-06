@@ -163,6 +163,10 @@ export default createBrowserRouter([
             lazy: lazyPage(async () => await import('../pages/auth/login')),
           },
           {
+            path: 'choose',
+            lazy: lazyPage(async () => await import('../pages/auth/chooseAccount')),
+          },
+          {
             path: 'reset',
             lazy: lazyPage(async () => await import('../pages/auth/lostPassword')),
           },

@@ -59,6 +59,12 @@ export interface FileOrFolder {
     fileKey?: string | null;
     /**
      * 
+     * @type {number}
+     * @memberof FileOrFolder
+     */
+    childCount?: number | null;
+    /**
+     * 
      * @type {string}
      * @memberof FileOrFolder
      */
@@ -69,12 +75,6 @@ export interface FileOrFolder {
      * @memberof FileOrFolder
      */
     downloadUrl: string | null;
-    /**
-     * Number of direct children. Populated only when listing a folder's children; null elsewhere.
-     * @type {number}
-     * @memberof FileOrFolder
-     */
-    childCount?: number | null;
 }
 
 
@@ -106,9 +106,9 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'id': json['id'],
         'parentId': json['parent_id'] == null ? undefined : json['parent_id'],
         'fileKey': json['file_key'] == null ? undefined : json['file_key'],
+        'childCount': json['child_count'] == null ? undefined : json['child_count'],
         'fileUrl': json['fileUrl'],
         'downloadUrl': json['downloadUrl'],
-        'childCount': json['child_count'] == null ? undefined : json['child_count'],
     };
 }
 
@@ -128,9 +128,9 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'id': value['id'],
         'parent_id': value['parentId'],
         'file_key': value['fileKey'],
+        'child_count': value['childCount'],
         'fileUrl': value['fileUrl'],
         'downloadUrl': value['downloadUrl'],
-        'child_count': value['childCount'],
     };
 }
 

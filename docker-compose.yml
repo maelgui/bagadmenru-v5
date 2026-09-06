@@ -2,9 +2,8 @@ services:
   storage:
     image: minio/minio
     command: server /data --console-address :9090
-    ports:
-      - 9090:9090
-      - 9000:9000
+    # No published host ports: the MinIO console is reached through the vite
+    # proxy (/minio) on the frontend origin. The API talks to it in-network.
     volumes:
       - s3data:/data
 
@@ -17,9 +16,13 @@ services:
 
   mailpit:
     image: axllent/mailpit
-    ports:
-      - 1025:1025
-      - 8025:8025
+    # No published host ports: the Mailpit web UI is reached through the vite
+    # proxy (/mailpit) on the frontend origin; SMTP is in-network only.
+    # MP_WEBROOT makes Mailpit serve under /mailpit and emit prefix-aware asset
+    # and API URLs, so the proxy needs no path rewrite (its own /css, /js, /api
+    # requests already carry the /mailpit prefix).
+    environment:
+      - MP_WEBROOT=mailpit
 
   backend-init:
     build: backend
@@ -47,12 +50,12 @@ services:
       ]
     volumes:
       - ./backend:/project
-    ports:
-      - 8888:8000
+    # No published host port: the backend is reached in-network via the vite
+    # proxy (/api, /docs, /openapi.json) on the frontend origin.
     environment:
       - ENVIRONMENT=development
       - DATABASE_URL=postgresql+psycopg://postgres:kcwRzG4coiE@db/postgres
-      - FRONTEND_BASE_URL=http://localhost:5173
+      - FRONTEND_BASE_URL=http://localhost:${FRONTEND_PORT:-5173}
       - S3_ENDPOINT=http://storage:9000
       - S3_BUCKET_NAME=bagadmenru5-dev
       - S3_ACCESS_KEY_ID=minioadmin
@@ -84,11 +87,22 @@ services:
       target: node-env
     volumes:
       - ./frontend:/project
+      # Keep the container's own (linux) node_modules — the source bind-mount
+      # above would otherwise shadow them with the host's (macOS) install,
+      # which carries incompatible native binaries (e.g. rolldown/vite).
+      - /project/node_modules
+      - /project/app/node_modules
+      - /project/lib/node_modules
     ports:
-      - 5173:5173
-      - 6006:6006
+      - ${FRONTEND_PORT:-5173}:5173
+      - ${STORYBOOK_PORT:-6006}:6006
     environment:
-      - VITE_BBE2_API_URL=http://localhost:5173
+      # The app calls /api on its own origin; vite proxies it to the backend.
+      - VITE_BBE2_API_URL=http://localhost:${FRONTEND_PORT:-5173}
+      # Vite listens on this port inside the container (published via
+      # FRONTEND_PORT). Proxy targets are fixed to the compose service names in
+      # vite.config.ts.
+      - VITE_PORT=5173
 
 volumes:
   s3data:

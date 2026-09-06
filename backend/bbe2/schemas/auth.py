@@ -48,10 +48,33 @@ class Token(BaseModel):
     token_type: str
 
 
+class SessionInfo(BaseModel):
+    """One signed-in account in the current browser (multi-account)."""
+
+    id: str
+    first_name: str
+    last_name: str
+    # None for sessions whose token predates the email claim (until reissued).
+    email: Optional[str] = None
+    active: bool
+
+
+class LogoutRequest(BaseModel):
+    """Optional logout body naming which account to sign out.
+
+    Defaults to the active account when omitted.
+    """
+
+    account_id: Optional[str] = None
+
+
 class JwtPayload(BaseModel):
     sub: str
     roles: list[str]
     first_name: str
     last_name: str
+    # Optional so tokens issued before email was added still validate — existing
+    # sessions must not be logged out on deploy. New tokens always carry it.
+    email: Optional[str] = None
     iat: datetime
     exp: datetime

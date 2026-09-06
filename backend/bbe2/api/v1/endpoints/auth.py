@@ -1,9 +1,8 @@
 import base64
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Annotated, Iterable
 
-import jwt
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response
 from sqlalchemy import select, update
 from webauthn import (
@@ -24,26 +23,37 @@ from webauthn.helpers.structs import (
 )
 
 from bbe2 import schemas
+from bbe2.config import Settings
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
 from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.passkey import PasskeyDB
 from bbe2.models.user import UserDB
 from bbe2.schemas.auth import (
-    JwtPayload,
     LoginData,
     LoginType,
+    LogoutRequest,
     ResetPassword,
     ResetPasswordRequest,
+    SessionInfo,
     Token,
 )
 from bbe2.utils.action_token import create_action_token
 from bbe2.utils.auth import (
+    ACTIVE_ACCOUNT_COOKIE,
+    LEGACY_ACCESS_TOKEN_COOKIE,
+    SESSION_COOKIE_PREFIX,
     Action,
     ActionTokenAuthorization,
     Authorization,
     Resource,
+    clear_active_account_cookie,
+    clear_session_cookie,
+    create_access_token,
     get_current_profile,
     myctx,
+    set_active_account_cookie,
+    set_session_cookies,
+    verify_token,
 )
 from bbe2.utils.templates import EmailData
 
@@ -158,24 +168,10 @@ def process_login(
                 )
             )
 
-    payload = JwtPayload(
-        sub=user.id,
-        roles=[r.id for g in user.groups for r in g.roles],
-        first_name=user.first_name,
-        last_name=user.last_name,
-        iat=datetime.now(timezone.utc),
-        exp=datetime.now(timezone.utc) + timedelta(days=90),
-    ).model_dump()
-    access_token = jwt.encode(payload, settings.jwt_secret_key, algorithm="HS256")
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        max_age=90 * 24 * 60 * 60,  # 90 jours
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        path="/",
-    )
+    # Add this account as an additive browser session (multi-account) and make
+    # it the active one. Any other signed-in accounts keep their sessions.
+    access_token = create_access_token(user, settings)
+    set_session_cookies(response, user.id, access_token, settings)
     return Token(access_token=access_token, token_type="bearer")
 
 
@@ -203,16 +199,100 @@ def reset_password(
     return "OK"
 
 
-@router.post("/auth/logout")
-def logout(response: Response, settings: SettingsDep):
-    response.delete_cookie(
-        key="access_token",
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        path="/",
+def _enumerate_sessions(
+    request: Request, settings: Settings, active_account: str | None
+) -> list[SessionInfo]:
+    """Decode every ``bmr_session_*`` cookie into a SessionInfo list.
+
+    Invalid or expired session cookies are skipped. Identity (name + email)
+    comes straight from the JWT, so no DB hit is needed.
+    """
+    sessions: list[SessionInfo] = []
+    for name, value in request.cookies.items():
+        if not name.startswith(SESSION_COOKIE_PREFIX):
+            continue
+        payload = verify_token(value, settings)
+        if payload is None:
+            continue
+        sessions.append(
+            SessionInfo(
+                id=payload.sub,
+                first_name=payload.first_name,
+                last_name=payload.last_name,
+                email=payload.email,
+                active=payload.sub == active_account,
+            )
+        )
+    return sessions
+
+
+@router.get("/auth/sessions", response_model=list[SessionInfo])
+def list_sessions(request: Request, settings: SettingsDep) -> list[SessionInfo]:
+    """Return all accounts currently signed in this browser (multi-account).
+
+    Public endpoint (no auth dependency): it only reflects the cookies the
+    caller already holds and never reveals anything about accounts whose signed
+    session cookie is not present.
+    """
+    active_account = request.cookies.get(ACTIVE_ACCOUNT_COOKIE)
+    return _enumerate_sessions(request, settings, active_account)
+
+
+@router.post("/auth/logout", response_model=list[SessionInfo])
+def logout(
+    request: Request,
+    response: Response,
+    settings: SettingsDep,
+    body: LogoutRequest | None = None,
+) -> list[SessionInfo]:
+    """Sign out of a single account and return the remaining sessions.
+
+    Deletes only the targeted account's session cookie (``account_id`` in the
+    body, defaulting to the active account). Other accounts stay signed in. When
+    no sessions remain the ``active_account`` selector is cleared too. The
+    legacy single-session ``access_token`` cookie is also cleared when it is the
+    thing being logged out, for backward compatibility.
+    """
+    active_account = request.cookies.get(ACTIVE_ACCOUNT_COOKIE)
+    target = (body.account_id if body else None) or active_account
+
+    if target:
+        clear_session_cookie(response, target, settings)
+
+    # Backward-compat: if the user only had the legacy cookie, honour a logout.
+    has_session_cookies = any(
+        name.startswith(SESSION_COOKIE_PREFIX) for name in request.cookies
     )
-    return {}
+    if not has_session_cookies and request.cookies.get(LEGACY_ACCESS_TOKEN_COOKIE):
+        response.delete_cookie(
+            key=LEGACY_ACCESS_TOKEN_COOKIE,
+            httponly=True,
+            secure=settings.cookie_secure,
+            samesite="lax",
+            path="/",
+        )
+
+    # Compute the sessions that will remain (exclude the one we just deleted).
+    remaining = [
+        s
+        for s in _enumerate_sessions(request, settings, active_account)
+        if s.id != target
+    ]
+
+    if not remaining:
+        # Nothing left active: drop the stale selector so the browser is clean.
+        clear_active_account_cookie(response, settings)
+    elif target == active_account:
+        # The active account was removed: promote the first remaining session so
+        # the very next request already resolves to a valid account even before
+        # the frontend rewrites the selector.
+        new_active = remaining[0]
+        set_active_account_cookie(response, new_active.id, settings)
+        remaining = [
+            s.model_copy(update={"active": s.id == new_active.id}) for s in remaining
+        ]
+
+    return remaining
 
 
 @router.post("/auth/reset_password_request")
