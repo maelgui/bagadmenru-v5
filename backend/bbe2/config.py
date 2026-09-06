@@ -33,6 +33,11 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str
 
+    # Lifetime of an access token (JWT exp) and the session / active-account
+    # cookies that carry it. Defaults to 90 days; override via
+    # ACCESS_TOKEN_MAX_AGE_SECONDS.
+    access_token_max_age_seconds: int = 90 * 24 * 60 * 60
+
     # Email (SMTP for sending, IMAP for reading inbox)
     smtp_host: str = "ssl0.ovh.net"
     smtp_port: int = 465
