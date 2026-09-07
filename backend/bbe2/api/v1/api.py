@@ -1,6 +1,14 @@
 from fastapi import APIRouter
 
-from bbe2.api.v1.endpoints import auth, events, files, profiles, push, utils
+from bbe2.api.v1.endpoints import (
+    auth,
+    events,
+    files,
+    instruments,
+    profiles,
+    push,
+    utils,
+)
 
 api_router = APIRouter()
 api_router.include_router(profiles.router, tags=["Profiles"])
@@ -8,4 +16,5 @@ api_router.include_router(events.router, tags=["Events"])
 api_router.include_router(files.router, tags=["Files"])
 api_router.include_router(utils.router, tags=["Utils"])
 api_router.include_router(auth.router, tags=["Authentication"])
+api_router.include_router(instruments.router, tags=["Instruments"])
 api_router.include_router(push.router)

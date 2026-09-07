@@ -47,7 +47,7 @@ class UserDB(Base):
     first_name: Mapped[str] = mapped_column(String(30), nullable=False)
     last_name: Mapped[str] = mapped_column(String(30), nullable=False)
     picture_key: Mapped[str] = mapped_column(String(128), nullable=True)
-    instrument_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
+    instrument_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=False)
     instrument: Mapped["GroupDB"] = relationship()
     groups: Mapped[List["GroupDB"]] = relationship(
         secondary=user_group_association_table, back_populates="members"

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { Group, Profile, ProfileCreate, ProfileUpdate } from 'bagad-client';
+import type { Group, Profile, ProfileCreate, ProfileUpdate, PublicInstrument } from 'bagad-client';
 import {
   Controller, FormProvider, type SubmitHandler, useForm,
 } from 'react-hook-form';
@@ -32,12 +32,19 @@ interface AdminProfileForm {
 export default function AdminEditProfileForm(
   { profile = undefined, onSubmit }: AdminProfileForm,
 ) {
-  const { usersApi } = useApiClient();
+  const { usersApi, instrumentsApi } = useApiClient();
   const groupsAnchor = useComboboxAnchor();
 
   const { data: groups } = useQuery({
     queryKey: ['groups'],
     queryFn: async () => await usersApi.listGroupsApiV1GroupsGet(),
+  });
+
+  // Instruments come from the dedicated public endpoint (only is_instrument
+  // groups), so the instrument picker no longer offers non-instrument groups.
+  const { data: instruments } = useQuery({
+    queryKey: ['instruments'],
+    queryFn: async () => await instrumentsApi.listInstrumentsApiV1InstrumentsGet(),
   });
 
   const methods = useForm<ProfileFormData>({
@@ -80,15 +87,15 @@ export default function AdminEditProfileForm(
             control={control}
             render={({ field }) => (
               <Combobox
-                items={groups ?? []}
-                itemToStringLabel={(group: Group) => group.name}
-                value={groups?.find((group) => group.id === field.value) ?? null}
-                onValueChange={(group: Group | null) => field.onChange(group ? group.id : undefined)}
+                items={instruments ?? []}
+                itemToStringLabel={(group: PublicInstrument) => group.name}
+                value={instruments?.find((group) => group.id === field.value) ?? null}
+                onValueChange={(group: PublicInstrument | null) => field.onChange(group ? group.id : undefined)}
               >
                 <ComboboxInput id="instrumentId" placeholder="Sélectionner un instrument" showClear />
                 <ComboboxContent>
                   <ComboboxList>
-                    {(group: Group) => (
+                    {(group: PublicInstrument) => (
                       <ComboboxItem key={group.id} value={group}>
                         {group.name}
                       </ComboboxItem>

@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/react';
 import {
   AuthenticationApi,
   Configuration, DefaultApi, EventsApi, FilesApi,
+  InstrumentsApi,
   type Profile,
   ProfilesApi,
   PushNotificationsApi,
@@ -92,6 +93,7 @@ const apiClient = {
   utilsApi: new UtilsApi(apiConf),
   authApi: new AuthenticationApi(apiConf),
   pushApi: new PushNotificationsApi(apiConf),
+  instrumentsApi: new InstrumentsApi(apiConf),
 };
 
 export function useApiClient() {
