@@ -26,6 +26,7 @@ export * from './Passkey';
 export * from './Profile';
 export * from './ProfileCreate';
 export * from './ProfileUpdate';
+export * from './PublicInstrument';
 export * from './PushSubscriptionCreate';
 export * from './PushSubscriptionResponse';
 export * from './RankingInfo';

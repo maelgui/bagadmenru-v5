@@ -73,6 +73,21 @@ class MinimalGroup(_GroupBase):
     is_instrument: bool = False
 
 
+class PublicInstrument(BaseModel):
+    """Instrument as exposed on the *public* ``/instruments`` endpoint.
+
+    Deliberately a standalone schema (not derived from ``_GroupBase`` /
+    ``MinimalGroup``) so that adding a field to a shared group schema can never
+    silently widen this unauthenticated surface. Keep it to non-sensitive
+    display data only; ``tests/api/v1/test_instruments.py`` freezes the exact
+    field set.
+    """
+
+    id: int
+    name: str
+    color: str
+
+
 class GroupCreate(_GroupBase):
     mailing_list: Optional[str]
     role_ids: list[str]

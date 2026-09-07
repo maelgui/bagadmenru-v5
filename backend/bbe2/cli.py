@@ -207,6 +207,19 @@ def seed_e2e():
             s.flush()
             console.log("E2E Members group created")
 
+        # Every member must belong to an instrument (users.instrument_id is
+        # NOT NULL), so seed a dedicated instrument group and assign it below.
+        e2e_instrument = s.scalars(
+            select(GroupDB).filter_by(name="E2E Instrument")
+        ).first()
+        if not e2e_instrument:
+            e2e_instrument = GroupDB(
+                name="E2E Instrument", color="#3498db", is_instrument=True
+            )
+            s.add(e2e_instrument)
+            s.flush()
+            console.log("E2E Instrument group created")
+
         # 4. Create or update E2E users (always update password/email)
         e2e_user = s.get(UserDB, E2E_USER_ID)
         if not e2e_user:
@@ -216,6 +229,7 @@ def seed_e2e():
                 password=myctx.hash(E2E_USER_PASSWORD),
                 first_name="E2E",
                 last_name="User",
+                instrument_id=e2e_instrument.id,
                 is_active=True,
             )
             e2e_user.groups = [e2e_member_group]
@@ -224,6 +238,9 @@ def seed_e2e():
         else:
             e2e_user.email = E2E_USER_EMAIL
             e2e_user.password = myctx.hash(E2E_USER_PASSWORD)
+            # Backfill instrument for pre-existing rows (idempotent).
+            if e2e_user.instrument_id is None:
+                e2e_user.instrument_id = e2e_instrument.id
             console.log(f"E2E user updated: {E2E_USER_EMAIL}")
 
         e2e_admin = s.get(UserDB, E2E_ADMIN_ID)
@@ -234,6 +251,7 @@ def seed_e2e():
                 password=myctx.hash(E2E_ADMIN_PASSWORD),
                 first_name="E2E",
                 last_name="Admin",
+                instrument_id=e2e_instrument.id,
                 is_active=True,
             )
             e2e_admin.groups = [e2e_admin_group]
@@ -242,6 +260,9 @@ def seed_e2e():
         else:
             e2e_admin.email = E2E_ADMIN_EMAIL
             e2e_admin.password = myctx.hash(E2E_ADMIN_PASSWORD)
+            # Backfill instrument for pre-existing rows (idempotent).
+            if e2e_admin.instrument_id is None:
+                e2e_admin.instrument_id = e2e_instrument.id
             console.log(f"E2E admin updated: {E2E_ADMIN_EMAIL}")
 
         s.commit()
