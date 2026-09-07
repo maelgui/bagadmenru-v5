@@ -25,18 +25,49 @@ from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.config import Config
 from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
 
 from bbe2.models.base import Base
 
-pytestmark = pytest.mark.migrations
-
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-skip_without_pg = pytest.mark.skipif(
-    not DATABASE_URL,
-    reason="DATABASE_URL not set (requires a PostgreSQL instance)",
-)
+
+def test_single_head_revision():
+    """The migration chain must have exactly one head.
+
+    When two Git branches each add a migration with the same
+    ``down_revision`` and both get merged, the chain forks into two heads.
+    ``alembic upgrade head`` then refuses to run ("Multiple head revisions
+    are present"), which otherwise only surfaces at deploy time.
+
+    This check reads the migration files only — it needs no database, so it
+    is NOT marked ``migrations`` and runs (and fails) in the plain unit-test
+    job and locally, catching a divergent chain before it ever reaches CI's
+    PostgreSQL job or a deployment.
+    """
+    script = ScriptDirectory.from_config(Config("alembic.ini"))
+    heads = script.get_heads()
+    assert len(heads) == 1, (
+        f"Multiple migration heads detected: {heads}. "
+        f"Resolve with `alembic merge {' '.join(heads)}` or rebase one "
+        f"migration's down_revision onto the other."
+    )
+
+
+# Tests decorated with ``@skip_without_pg`` need a real PostgreSQL instance:
+# they carry the ``migrations`` marker (so CI's dedicated PG job selects them
+# via ``-m migrations`` and the SQLite job excludes them via ``-m "not
+# migrations"``) and are skipped when ``DATABASE_URL`` is unset (local runs).
+# ``test_single_head_revision`` deliberately gets neither: it reads the
+# migration files only, so it runs in every job and locally.
+def skip_without_pg(func):
+    func = pytest.mark.migrations(func)
+    func = pytest.mark.skipif(
+        not DATABASE_URL,
+        reason="DATABASE_URL not set (requires a PostgreSQL instance)",
+    )(func)
+    return func
 
 
 def _alembic_config(url: str) -> Config:
