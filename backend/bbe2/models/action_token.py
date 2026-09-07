@@ -28,6 +28,15 @@ class ActionTokenValue(Enum):
     CreateResponseByToken = "CreateResponseByToken"
     ResetPassword = "ResetPassword"
     Unsubscribe = "Unsubscribe"
+    # Self-service onboarding invitation. The raw token is embedded in a signup
+    # link (and QR code). Its payload carries the delivery channel and any
+    # prefilled profile data. See api/v1/endpoints/invitations.py.
+    Invitation = "Invitation"
+    # One-time passcode used to prove ownership of an email address during
+    # self-service signup when the invitation email was not proven (QR / copied
+    # link). Payload holds the target email, the SHA-256 hash of the 6-digit
+    # code, and a remaining-attempts counter.
+    EmailVerification = "EmailVerification"
 
     @property
     def max_age(self) -> int:
@@ -38,6 +47,13 @@ class ActionTokenValue(Enum):
                 return 3600  # 1h
             case ActionTokenValue.Unsubscribe:
                 return 3600 * 24 * 7  # 7 jours
+            case ActionTokenValue.Invitation:
+                # One validity window for both channels (link/QR and emailed):
+                # use the longer one so an invitation handed out in person or
+                # forwarded still works for a few days.
+                return 3600 * 24 * 3  # 3 jours
+            case ActionTokenValue.EmailVerification:
+                return 600  # 10 min
             case _:
                 return 0
 
@@ -48,8 +64,18 @@ class ActionTokenValue(Enum):
         Password resets must not be replayable, so they are single-use. The RSVP
         quick-answer and unsubscribe links are meant to be re-openable within
         their validity window, so they are reusable.
+
+        Invitations are single-use: one invitation onboards exactly one member.
+        The EmailVerification (OTP) token is *not* marked single-use here because
+        it is validated in-place (matching the submitted code against the stored
+        hash and decrementing an attempt counter) and revoked explicitly once the
+        signup succeeds; treating it as single_use would consume it on the first
+        read before the code is even checked.
         """
-        return self is ActionTokenValue.ResetPassword
+        return self in (
+            ActionTokenValue.ResetPassword,
+            ActionTokenValue.Invitation,
+        )
 
 
 class ActionTokenDB(Base):

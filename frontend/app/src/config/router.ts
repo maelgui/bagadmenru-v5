@@ -117,6 +117,10 @@ export default createBrowserRouter([
                 lazy: lazyPage(async () => await import('../pages/profiles/add')),
               },
               {
+                path: '/profile/invite',
+                lazy: lazyPage(async () => await import('../pages/invitations/generate')),
+              },
+              {
                 path: '/profile/rankings',
                 lazy: lazyPage(async () => await import('../pages/profiles/rankings')),
               },
@@ -151,6 +155,16 @@ export default createBrowserRouter([
           {
             path: 'unsubscribe/:token',
             lazy: lazyPage(async () => await import('../pages/auth/unsubscribe')),
+          },
+        ],
+      },
+      {
+        path: '/invite/',
+        Component: SimpleLayoutWithOutlet,
+        children: [
+          {
+            path: ':token',
+            lazy: lazyPage(async () => await import('../pages/invitations/invite')),
           },
         ],
       },

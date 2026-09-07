@@ -14,7 +14,13 @@
 
 import { mapValues } from '../runtime';
 /**
- * Instrument as exposed on the *public* `/instruments` endpoint.
+ * Instrument as exposed on the *public* ``/instruments`` endpoint.
+ * 
+ * Deliberately a standalone schema (not derived from ``_GroupBase`` /
+ * ``MinimalGroup``) so that adding a field to a shared group schema can never
+ * silently widen this unauthenticated surface. Keep it to non-sensitive
+ * display data only; ``tests/api/v1/test_instruments.py`` freezes the exact
+ * field set.
  * @export
  * @interface PublicInstrument
  */
@@ -81,3 +87,4 @@ export function PublicInstrumentToJSONTyped(value?: PublicInstrument | null, ign
         'color': value['color'],
     };
 }
+

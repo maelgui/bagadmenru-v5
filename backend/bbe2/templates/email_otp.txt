@@ -1,0 +1,3 @@
+Votre code de vérification : {{ code }}
+
+Ce code expire dans 10 minutes.

@@ -5,6 +5,7 @@ from bbe2.api.v1.endpoints import (
     events,
     files,
     instruments,
+    invitations,
     profiles,
     push,
     utils,
@@ -16,5 +17,6 @@ api_router.include_router(events.router, tags=["Events"])
 api_router.include_router(files.router, tags=["Files"])
 api_router.include_router(utils.router, tags=["Utils"])
 api_router.include_router(auth.router, tags=["Authentication"])
+api_router.include_router(invitations.router, tags=["Invitations"])
 api_router.include_router(instruments.router, tags=["Instruments"])
 api_router.include_router(push.router)

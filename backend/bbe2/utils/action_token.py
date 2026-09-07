@@ -63,6 +63,57 @@ def create_action_token(
     return raw_token
 
 
+def peek_action_token(
+    db: DbSession,
+    raw_token: str,
+    token_type: ActionTokenValue,
+) -> Optional[ActionTokenDB]:
+    """Return the token row if valid, without consuming it.
+
+    Applies the same validity checks as :func:`consume_action_token` (type,
+    revoked, used, expired) but never stamps ``used_at``. Use this to inspect a
+    token (e.g. to render a signup form from an invitation) before the action is
+    actually performed. Returns the ORM row so callers can read/patch its
+    ``payload`` (e.g. to decrement an OTP attempt counter) within the same
+    session.
+    """
+    row = db.scalars(
+        select(ActionTokenDB).where(
+            ActionTokenDB.token_hash == hash_action_token(raw_token)
+        )
+    ).first()
+
+    if row is None:
+        return None
+    if row.token_type != token_type.value:
+        return None
+
+    now = datetime.now(timezone.utc)
+    if row.revoked_at is not None:
+        return None
+    if row.used_at is not None:
+        return None
+    if _as_aware(row.expires_at) <= now:
+        return None
+
+    return row
+
+
+def revoke_action_token(
+    db: DbSession,
+    raw_token: str,
+) -> None:
+    """Explicitly invalidate a token before its expiry (idempotent)."""
+    row = db.scalars(
+        select(ActionTokenDB).where(
+            ActionTokenDB.token_hash == hash_action_token(raw_token)
+        )
+    ).first()
+    if row is not None and row.revoked_at is None:
+        row.revoked_at = datetime.now(timezone.utc)
+        db.flush()
+
+
 def consume_action_token(
     db: DbSession,
     raw_token: str,
