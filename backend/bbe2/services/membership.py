@@ -7,10 +7,10 @@ current season.
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Iterable, List, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from bbe2.models import HelloAssoMembershipDB, UserDB
@@ -150,6 +150,47 @@ def compute_info_by_user(
         user_id: compute_membership_info(memberships, now=now)
         for user_id, memberships in by_user.items()
     }
+
+
+def purge_unlinked_memberships(
+    session: Session, *, ttl_days: int, now: Optional[datetime] = None
+) -> int:
+    """Delete unlinked memberships older than ``ttl_days``.
+
+    "Unlinked" means ``user_id IS NULL`` — an order we could not attach to a
+    member. Most are noise (the Cercle Montfortais handles memberships for
+    activities other than the bagad), so they are pruned after a reconciliation
+    window. Age is measured from ``received_at`` (when we ingested the row), not
+    the order date, so admins always get the full window regardless of how old
+    the order itself is.
+
+    ``ttl_days <= 0`` disables the purge (no-op). Returns the number of rows
+    deleted. Linked memberships are never touched.
+    """
+    if ttl_days <= 0:
+        return 0
+
+    now = now or _now()
+    cutoff = now - timedelta(days=ttl_days)
+
+    result = session.execute(
+        delete(HelloAssoMembershipDB).where(
+            HelloAssoMembershipDB.user_id.is_(None),
+            HelloAssoMembershipDB.received_at < cutoff,
+        )
+    )
+    session.commit()
+
+    # ``session.execute`` of a Core DELETE returns a CursorResult exposing
+    # rowcount; mypy only sees the base Result, so read it defensively.
+    deleted = getattr(result, "rowcount", 0) or 0
+    if deleted:
+        logger.info(
+            "Purged %d unlinked membership(s) older than %d day(s)",
+            deleted,
+            ttl_days,
+        )
+    return deleted
 
 
 def ingest_notification(

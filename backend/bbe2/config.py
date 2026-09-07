@@ -82,6 +82,15 @@ class Settings(BaseSettings):
     helloasso_signature_key: Optional[str] = None
     helloasso_webhook_token: Optional[str] = None
 
+    # Unlinked HelloAsso memberships (``user_id IS NULL``) are orders we could
+    # not attach to a member automatically. Most are noise: the Cercle
+    # Montfortais handles memberships for several activities, so we receive
+    # orders for people who are not in the bagad. A daily job deletes unlinked
+    # rows older than this many days (based on ``received_at``), leaving admins
+    # a reconciliation window to attach the genuine ones first. Set to 0 to
+    # disable the purge entirely.
+    unlinked_membership_ttl_days: int = 30
+
     @property
     def cookie_secure(self) -> bool:
         """Whether auth cookies must carry the Secure attribute.

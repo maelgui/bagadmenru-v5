@@ -7,7 +7,9 @@ containing its order date, and a member is *active* only when a valid (paid)
 membership exists for the season that ``now`` falls into.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import delete, func, select
 
 from bbe2 import models
 from bbe2.database import get_engine
@@ -25,19 +27,22 @@ def _session():
     return Session(engine)
 
 
-def _add_membership(session, user_id: str, order_date: datetime, item_id: int):
-    session.add(
-        models.HelloAssoMembershipDB(
-            helloasso_order_id=item_id,
-            helloasso_item_id=item_id,
-            user_id=user_id,
-            tier_description="Adhésion",
-            amount=2500,
-            order_date=order_date,
-            state="Processed",
-            raw_payload={},
-        )
+def _add_membership(
+    session, user_id, order_date: datetime, item_id: int, received_at=None
+):
+    kwargs = dict(
+        helloasso_order_id=item_id,
+        helloasso_item_id=item_id,
+        user_id=user_id,
+        tier_description="Adhésion",
+        amount=2500,
+        order_date=order_date,
+        state="Processed",
+        raw_payload={},
     )
+    if received_at is not None:
+        kwargs["received_at"] = received_at
+    session.add(models.HelloAssoMembershipDB(**kwargs))
 
 
 def test_season_start_year_boundary():
@@ -91,3 +96,57 @@ def test_status_by_user_follows_season(client):
         )
         assert next_season["a8e2d3249e9d997e"].status == MembershipStatus.EXPIRED
         assert next_season["a8e2d3249e9d997e"].active_season is None
+
+
+def test_purge_unlinked_memberships_removes_only_stale_unlinked():
+    """Purge deletes old unlinked rows, keeps linked and recent unlinked ones."""
+    now = datetime(2026, 9, 8, tzinfo=timezone.utc)
+    old = now - timedelta(days=40)
+    recent = now - timedelta(days=5)
+
+    with _session() as session:
+        # Wipe any rows from other tests sharing the SQLite file.
+        session.execute(delete(models.HelloAssoMembershipDB))
+        session.commit()
+
+        # Stale + unlinked -> should be deleted.
+        _add_membership(session, None, old, item_id=1, received_at=old)
+        # Recent + unlinked -> kept (still within the reconciliation window).
+        _add_membership(session, None, recent, item_id=2, received_at=recent)
+        # Stale but LINKED -> never touched.
+        _add_membership(session, "some-user", old, item_id=3, received_at=old)
+        session.commit()
+
+        deleted = membership_service.purge_unlinked_memberships(
+            session, ttl_days=30, now=now
+        )
+        assert deleted == 1
+
+        remaining = {
+            row.helloasso_item_id
+            for row in session.scalars(select(models.HelloAssoMembershipDB)).all()
+        }
+        assert remaining == {2, 3}
+
+
+def test_purge_unlinked_memberships_disabled_when_ttl_zero():
+    """A ttl_days of 0 disables the purge entirely (no-op)."""
+    now = datetime(2026, 9, 8, tzinfo=timezone.utc)
+    old = now - timedelta(days=400)
+
+    with _session() as session:
+        session.execute(delete(models.HelloAssoMembershipDB))
+        session.commit()
+        _add_membership(session, None, old, item_id=10, received_at=old)
+        session.commit()
+
+        deleted = membership_service.purge_unlinked_memberships(
+            session, ttl_days=0, now=now
+        )
+        assert deleted == 0
+        assert (
+            session.scalar(
+                select(func.count()).select_from(models.HelloAssoMembershipDB)
+            )
+            == 1
+        )
