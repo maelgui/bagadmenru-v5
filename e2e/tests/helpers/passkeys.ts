@@ -103,3 +103,25 @@ export async function deleteAllPasskeys(): Promise<void> {
   }
 }
 
+/**
+ * Count the passkeys currently registered on the E2E user account via the API.
+ *
+ * This is the authoritative, non-flaky oracle for "no duplicate was created":
+ * it reads the backend's source of truth instead of relying on a transient UI
+ * toast. Returns 0 if the list cannot be fetched.
+ */
+export async function countPasskeys(): Promise<number> {
+  const token = await loginViaAPI(E2E_USER.email, E2E_USER.password);
+  const ctx = await request.newContext({ baseURL: API_URL });
+  try {
+    const res = await ctx.get('/api/v1/webauthn/', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok()) return 0;
+    const list = (await res.json()) as unknown[];
+    return list.length;
+  } finally {
+    await ctx.dispose();
+  }
+}
+
