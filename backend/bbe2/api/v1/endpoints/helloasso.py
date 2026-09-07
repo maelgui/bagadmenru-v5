@@ -35,6 +35,10 @@ def _verify_authenticity(
     Fails closed: if neither mechanism is configured, no request is accepted.
     """
     if settings.helloasso_signature_key and signature:
+        # HelloAsso signs the raw request body with HMAC-SHA256 keyed on the
+        # partner signatureKey and sends the result as a lowercase hex digest in
+        # the ``x-ha-signature`` header. ``.hexdigest()`` is already lowercase;
+        # ``signature.lower()`` guards against a differently-cased header.
         expected = hmac.new(
             settings.helloasso_signature_key.encode("utf-8"),
             raw_body,
