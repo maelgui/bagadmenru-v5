@@ -32,8 +32,30 @@ self.addEventListener('push', (event) => {
     renotify: true,
   };
 
+  // Update the installed PWA icon badge with the recipient's number of
+  // unanswered doodle events (sent by the backend in the push payload). This
+  // works even while the app is closed. Feature-detected and non-blocking:
+  // failures must not prevent the notification itself from showing.
+  const applyBadge = (async () => {
+    if (typeof data.badgeCount !== 'number' || !('setAppBadge' in self.registration)) {
+      return;
+    }
+    try {
+      if (data.badgeCount > 0) {
+        await self.registration.setAppBadge(data.badgeCount);
+      } else {
+        await self.registration.clearAppBadge();
+      }
+    } catch (e) {
+      // Badging is a non-critical enhancement; ignore failures.
+    }
+  })();
+
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Bagad Men Ru', options)
+    Promise.all([
+      self.registration.showNotification(data.title || 'Bagad Men Ru', options),
+      applyBadge,
+    ])
   );
 });
 

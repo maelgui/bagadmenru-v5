@@ -16,3 +16,4 @@ venv
 # DB
 sql_app.db
 tests.sqlite
+*.sqlite
