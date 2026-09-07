@@ -1,10 +1,9 @@
-import { KeyRound, Plus, RefreshCw, Trash2, type LucideIcon } from 'lucide-react';
+import { KeyRound, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Passkey } from 'bagad-client';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { UAParser } from 'ua-parser-js';
-import passkeyBitwarden from '../../../../assets/passkeys/blue-shield.svg';
 import passkeyBlack from '../../../../assets/passkeys/FIDO_Passkey_mark_A_black.svg';
 import {
   AlertDialog,
@@ -38,30 +37,26 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { queryClient, useApiClient } from '../../../../config/client';
+import { useTheme } from '../../../../config/theme';
+import { resolveAuthenticator } from '../../../../utils/authenticators';
 import { useRegisterPasskey } from '../../../../utils/usePasskey';
 
-const aaguidMapping: Partial<Record<string, { icon: LucideIcon | string, name: string }>> = {
-  'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': { icon: KeyRound, name: 'iCloud Keychain' },
-  'd548826e-79b4-db40-a3d8-11116f7e8349': { icon: passkeyBitwarden, name: 'Bitwarden' },
-  'adce0002-35bc-c60a-648b-0b25f1f05503': { icon: KeyRound, name: 'Chrome on Mac' },
-  'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': { icon: KeyRound, name: 'Google Password Manager' },
-};
-
+/**
+ * Provider brand icon for a passkey, resolved from its AAGUID via the official
+ * community mapping. Falls back to the generic FIDO passkey mark for unknown
+ * authenticators. Honors the active light/dark theme.
+ */
 function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
-  const icon = aaguidMapping[aaguid]?.icon;
-  if (!icon) {
-    return <img src={passkeyBlack} alt="Passkey" className="size-6" />;
-  }
-  if (typeof icon === 'string') {
-    return <img src={icon} alt="Passkey" className="size-6" />;
-  }
-  const Icon = icon;
-  return <Icon className="size-6" aria-hidden="true" />;
+  const { resolvedTheme } = useTheme();
+  const { icon } = resolveAuthenticator(aaguid, resolvedTheme);
+  return <img src={icon ?? passkeyBlack} alt="" className="size-6" />;
 }
 
 function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => void }) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { resolvedTheme } = useTheme();
   const { browser, os } = UAParser(passkey.lastUseUa ?? '');
+  const authenticatorName = resolveAuthenticator(passkey.aaguid, resolvedTheme).name ?? 'Passkey';
 
   return (
     <Item variant="muted" className="items-start" data-credential-id={passkey.credentialId}>
@@ -70,7 +65,7 @@ function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => 
       </ItemMedia>
       <ItemContent>
         <ItemTitle>
-          {aaguidMapping[passkey.aaguid]?.name ?? 'Passkey'}
+          {authenticatorName}
           {passkey.backUp ? (
             <Badge variant="secondary">
               <RefreshCw data-icon="inline-start" />
