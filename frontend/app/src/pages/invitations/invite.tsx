@@ -98,7 +98,15 @@ export default function InvitePage() {
       // accept() signed the new member in (additive session cookie, now the
       // active account). Refresh cached auth/session state so the app acts as
       // the new member for the passkey enrolment that follows.
-      await queryClient.invalidateQueries();
+      //
+      // Exclude the invitation query: accept() consumed the (single-use) token,
+      // so a refetch of GET /invitations/{token} would 404 and flip the page to
+      // the "invalid invitation" state mid-flow. The invitation data is static
+      // for the whole signup anyway (staleTime: Infinity), so it never needs a
+      // refresh here.
+      await queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] !== 'invitation',
+      });
       setStep('passkey');
     },
     onError: async (error) => {
