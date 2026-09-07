@@ -196,6 +196,19 @@ def test_webhook_auto_links_by_email(helloasso_client: TestClient):
     assert unlinked.json() == []
 
 
+def test_webhook_auto_links_by_email_case_insensitive(helloasso_client: TestClient):
+    # HelloAsso payer email differs only in case from the stored member email;
+    # it must still auto-link rather than surface as unlinked.
+    helloasso_client.post(
+        "/api/v1/helloasso/webhook?token=" + WEBHOOK_TOKEN,
+        json=_membership_order(email="John.Doe@Example.com"),
+    )
+    resp = helloasso_client.get("/api/v1/profiles/me/membership")
+    assert resp.json()["status"] == MembershipStatus.ACTIVE.value
+    unlinked = helloasso_client.get("/api/v1/helloasso/orders/unlinked")
+    assert unlinked.json() == []
+
+
 def test_webhook_unknown_email_stays_unlinked(helloasso_client: TestClient):
     helloasso_client.post(
         "/api/v1/helloasso/webhook?token=" + WEBHOOK_TOKEN,
