@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from bbe2.config import Settings
 from bbe2.models.push_subscription import PushSubscriptionDB
+from bbe2.services.events import count_unanswered_events
 
 logger = logging.getLogger(__name__)
 
@@ -61,11 +62,16 @@ def _send_push(
         logger.warning("VAPID keys not configured, skipping push notification")
         return
 
+    # Recipient-specific count so the service worker can update the installed
+    # PWA icon badge even while the app is closed.
+    badge_count = count_unanswered_events(session, subscription.user_id)
+
     payload = json.dumps(
         {
             "title": title,
             "body": body,
             "url": url,
+            "badgeCount": badge_count,
         }
     )
 
