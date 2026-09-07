@@ -4,6 +4,7 @@ import {
   AuthenticationApi,
   Configuration, DefaultApi, EventsApi, FilesApi,
   InstrumentsApi,
+  InvitationsApi,
   type Profile,
   ProfilesApi,
   PushNotificationsApi,
@@ -94,6 +95,7 @@ const apiClient = {
   authApi: new AuthenticationApi(apiConf),
   pushApi: new PushNotificationsApi(apiConf),
   instrumentsApi: new InstrumentsApi(apiConf),
+  invitationsApi: new InvitationsApi(apiConf),
 };
 
 export function useApiClient() {

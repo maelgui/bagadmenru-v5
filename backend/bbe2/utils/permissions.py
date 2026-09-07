@@ -25,6 +25,11 @@ class Resource(Enum):
     PROFILE = "profile"
     GROUP = "group"
     EMAIL = "email"
+    # Member-to-member onboarding: holders may generate self-service signup
+    # invitations (link/QR or backend-sent email). Deliberately granted broadly
+    # (parrainage) since invited accounts are created with default groups only,
+    # i.e. no privileged roles.
+    INVITATION = "invitation"
 
 
 # Role → set of (action, resource) tuples
@@ -51,6 +56,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
         (Action.VIEW.value, Resource.GROUP.value),
+        (Action.CREATE.value, Resource.INVITATION.value),
     },
     "staff": {
         (Action.VIEW.value, Resource.ME.value),
@@ -73,6 +79,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.EDIT.value, Resource.GROUP.value),
         (Action.DELETE.value, Resource.GROUP.value),
         (Action.VIEW.value, Resource.EMAIL.value),
+        (Action.CREATE.value, Resource.INVITATION.value),
     },
 }
 

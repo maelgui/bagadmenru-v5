@@ -36,6 +36,22 @@ if (import.meta.env.PROD) {
     // Session Replay: 10% of sessions, 100% of sessions with an error.
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
+    // Drop benign WebAuthn duplicate-registration errors. The browser throws
+    // InvalidStateError when the presented authenticator already holds a
+    // credential the server listed in `excludeCredentials` — a normal user
+    // situation (re-adding a passkey on the same device), not a fault. The app
+    // already handles it as an "already registered" outcome; this is a safety
+    // net so it never reaches Sentry as an error.
+    beforeSend(event, hint) {
+      const error = hint.originalException;
+      if (
+        error instanceof Error &&
+        error.name === 'InvalidStateError'
+      ) {
+        return null;
+      }
+      return event;
+    },
   });
 }
 

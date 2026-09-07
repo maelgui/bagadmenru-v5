@@ -1,0 +1,5 @@
+{% if first_name %}Bonjour {{ first_name }},
+
+{% endif %}Vous êtes invité·e à rejoindre le Bagad Men Ru !
+
+Complétez votre inscription : {{ url }}

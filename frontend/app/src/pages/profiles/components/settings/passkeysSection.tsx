@@ -1,7 +1,4 @@
 import { KeyRound, Plus, RefreshCw, Trash2, type LucideIcon } from 'lucide-react';
-import {
-  type PublicKeyCredentialCreationOptionsJSON, startRegistration, WebAuthnError,
-} from '@simplewebauthn/browser';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Passkey } from 'bagad-client';
 import { DateTime } from 'luxon';
@@ -31,6 +28,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { toast } from '@/components/ui/toast';
 import {
   Item,
   ItemActions,
@@ -40,6 +38,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { queryClient, useApiClient } from '../../../../config/client';
+import { useRegisterPasskey } from '../../../../utils/usePasskey';
 
 const aaguidMapping: Partial<Record<string, { icon: LucideIcon | string, name: string }>> = {
   'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': { icon: KeyRound, name: 'iCloud Keychain' },
@@ -141,23 +140,7 @@ export default function PasskeysSection() {
     queryFn: async () => await authApi.listPasskeysApiV1WebauthnGet(),
   });
 
-  const register = async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The API response type is not narrowed to PublicKeyCredentialCreationOptionsJSON
-    const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet() as PublicKeyCredentialCreationOptionsJSON;
-
-    try {
-      const attResp = await startRegistration({ optionsJSON: registrationOpt });
-      await authApi.registerPasskeyApiV1WebauthnRegisterPost({ requestBody: attResp });
-      await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
-    } catch (error) {
-      if (error instanceof WebAuthnError && error.name === 'InvalidStateError') {
-        console.error('Error: Authenticator was probably already registered by user');
-      } else {
-        console.error(error);
-      }
-      throw error;
-    }
-  };
+  const register = useRegisterPasskey();
 
   const { mutate: deleteMutation } = useMutation({
     mutationFn: async (cid: string) => await authApi.deletePasskeyApiV1WebauthnCredentialIdDelete({
@@ -176,7 +159,25 @@ export default function PasskeysSection() {
           Connectez-vous sans mot de passe avec vos appareils.
         </CardDescription>
         <CardAction>
-          <Button size="sm" onClick={register}>
+          <Button
+            size="sm"
+            onClick={() => register.mutate(undefined, {
+              onSuccess: (result) => {
+                toast.add(
+                  result.status === 'already-registered'
+                    ? {
+                        title: 'Cet appareil possède déjà une passkey pour votre compte.',
+                        type: 'info',
+                      }
+                    : { title: 'Passkey ajoutée !', type: 'success' },
+                );
+              },
+              onError: () => {
+                toast.add({ title: "Impossible d'ajouter la passkey.", type: 'error' });
+              },
+            })}
+            disabled={register.isPending}
+          >
             <Plus data-icon="inline-start" />
             Ajouter
           </Button>

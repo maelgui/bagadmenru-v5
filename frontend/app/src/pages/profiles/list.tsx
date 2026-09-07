@@ -1,4 +1,4 @@
-import { BellOff, CirclePlus, Medal } from 'lucide-react';
+import { BellOff, CirclePlus, Medal, UserPlus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Container from '../../components/container';
@@ -45,6 +45,14 @@ export default function ProfilesPage() {
           <Link key="rankings" className={buttonVariants({ variant: 'outline' })} to="/profile/rankings">
             <Medal data-icon="inline-start" />
             Classements
+          </Link>,
+          <Link
+            key="invite"
+            className={cn(buttonVariants({ variant: 'outline' }), !can('create', 'invitation') && 'hidden')}
+            to="/profile/invite"
+          >
+            <UserPlus data-icon="inline-start" />
+            Inviter
           </Link>,
           <Link
             key="add-profile"

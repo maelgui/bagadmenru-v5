@@ -28,7 +28,7 @@ import {
 export class InstrumentsApi extends runtime.BaseAPI {
 
     /**
-     * Public: the instrument groups a member can be assigned to.
+     * Public: the instrument groups a member can be assigned to.  Returns only the ``PublicInstrument`` fields (id/name/color) and only groups flagged ``is_instrument``, ordered by name — safe to expose unauthenticated. The response schema is a dedicated, closed shape (not a shared group schema) so this public surface cannot be widened by accident.
      * List Instruments
      */
     async listInstrumentsApiV1InstrumentsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PublicInstrument>>> {
@@ -47,7 +47,7 @@ export class InstrumentsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Public: the instrument groups a member can be assigned to.
+     * Public: the instrument groups a member can be assigned to.  Returns only the ``PublicInstrument`` fields (id/name/color) and only groups flagged ``is_instrument``, ordered by name — safe to expose unauthenticated. The response schema is a dedicated, closed shape (not a shared group schema) so this public surface cannot be widened by accident.
      * List Instruments
      */
     async listInstrumentsApiV1InstrumentsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PublicInstrument>> {

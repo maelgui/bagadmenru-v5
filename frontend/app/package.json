@@ -26,6 +26,8 @@
     "lucide-react": "^1.39.0",
     "luxon": "^3.7.2",
     "nprogress": "^0.2.0",
+    "qrcode.react": "4.2.0",
+    "input-otp": "1.5.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-dropzone": "^20.1.1",

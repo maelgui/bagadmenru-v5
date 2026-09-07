@@ -5,7 +5,7 @@ from typing import Annotated
 
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import cast, func, or_, select, update
+from sqlalchemy import cast, func, select, update
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import functions as sql_fn
 from sqlalchemy.types import Integer
@@ -30,6 +30,7 @@ from bbe2.utils.auth import (
     Resource,
     get_current_user2,
 )
+from bbe2.utils.groups import resolve_groups_with_defaults
 from bbe2.utils.permissions import get_permissions_for_roles
 from bbe2.utils.templates import EmailData
 
@@ -180,17 +181,7 @@ async def update_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
     profile.group_ids.append(profile.instrument_id)
-    # Fetch requested groups + always include default groups in a single query
-    groups = (
-        profile_crud.db_session.query(models.GroupDB)
-        .filter(
-            or_(
-                models.GroupDB.id.in_(profile.group_ids),
-                models.GroupDB.is_default,
-            )
-        )
-        .all()
-    )
+    groups = resolve_groups_with_defaults(profile_crud.db_session, profile.group_ids)
     db_profile.groups = groups
     db_profile = profile_crud.update(db_profile, profile)
     return db_profile
@@ -251,16 +242,7 @@ async def create_profile(
     )
     profile.group_ids.append(profile.instrument_id)
     # Fetch requested groups + always include default groups in a single query
-    groups = (
-        session.query(models.GroupDB)
-        .filter(
-            or_(
-                models.GroupDB.id.in_(profile.group_ids),
-                models.GroupDB.is_default,
-            )
-        )
-        .all()
-    )
+    groups = resolve_groups_with_defaults(session, profile.group_ids)
     profile_db.groups = groups
     session.add(profile_db)
     session.commit()

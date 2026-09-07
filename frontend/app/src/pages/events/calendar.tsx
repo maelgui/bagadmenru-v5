@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { CopyButton } from '@/components/ui/copy-button';
 import { cn } from '@/lib/utils';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -16,7 +17,6 @@ import Calendar from './components/calendar';
 import EventListItem from './components/event';
 import DisplaySelector from './components/selector';
 
-const COPY_FEEDBACK_DELAY_MS = 2000;
 const EVENTS_FETCH_LIMIT = 100;
 
 function getStartDate() {
@@ -40,12 +40,7 @@ export default function CalendarPage() {
 
   const [monthOffset, setMonthOffset] = useState(0);
   const currentMonth = new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset).toLocaleString('fr', { month: 'long', year: 'numeric' });
-  const [copyButtonLabel, setCopyButtonLabel] = useState('ICS');
-  const copy = () => {
-    void navigator.clipboard.writeText(`${env.VITE_BBE2_API_URL}/api/v1/events/export/ics`);
-    setCopyButtonLabel('Copié !');
-    setTimeout(() => setCopyButtonLabel('ICS'), COPY_FEEDBACK_DELAY_MS);
-  };
+  const icsUrl = `${env.VITE_BBE2_API_URL}/api/v1/events/export/ics`;
 
   return (
     <>
@@ -74,10 +69,7 @@ export default function CalendarPage() {
                 <CalendarDays data-icon="inline-start" />
                 Google Agenda
               </Link>
-              <Button variant="ghost" onClick={copy}>
-                <CalendarDays data-icon="inline-start" />
-                {copyButtonLabel}
-              </Button>
+              <CopyButton value={icsUrl} label="ICS" icon={CalendarDays} variant="ghost" />
             </div>
           </AlertDescription>
         </Alert>
