@@ -34,17 +34,22 @@ self.addEventListener('push', (event) => {
 
   // Update the installed PWA icon badge with the recipient's number of
   // unanswered doodle events (sent by the backend in the push payload). This
-  // works even while the app is closed. Feature-detected and non-blocking:
-  // failures must not prevent the notification itself from showing.
+  // works even while the app is closed.
+  //
+  // The Badging API is exposed on `navigator` (WorkerNavigator) inside a
+  // service worker, NOT on `self.registration`. Using the registration silently
+  // no-ops, so the badge would never update when a push arrives. Feature-
+  // detected and non-blocking: failures must not prevent the notification from
+  // showing.
   const applyBadge = (async () => {
-    if (typeof data.badgeCount !== 'number' || !('setAppBadge' in self.registration)) {
+    if (typeof data.badgeCount !== 'number' || !('setAppBadge' in navigator)) {
       return;
     }
     try {
       if (data.badgeCount > 0) {
-        await self.registration.setAppBadge(data.badgeCount);
+        await navigator.setAppBadge(data.badgeCount);
       } else {
-        await self.registration.clearAppBadge();
+        await navigator.clearAppBadge();
       }
     } catch (e) {
       // Badging is a non-critical enhancement; ignore failures.
