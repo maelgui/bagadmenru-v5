@@ -7,6 +7,7 @@ import {
 } from './helpers/mailpit';
 import { E2E_USER, E2E_ADMIN, API_URL, CORRELATION_ID_HEADER } from './helpers/constants';
 import { createAuthenticatedContext } from './helpers/auth';
+import { deleteE2EEvents } from './helpers/events';
 
 /**
  * Event response via the email quick link.
@@ -31,6 +32,8 @@ test.describe('Event response via email quick link', () => {
   });
 
   test.afterAll(async () => {
+    // Delete the events created for the quick-link flow so they don't linger.
+    await deleteE2EEvents();
     await adminCtx.dispose();
   });
 

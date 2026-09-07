@@ -170,7 +170,10 @@ test.describe('Passkeys (WebAuthn)', () => {
         // UX oracle: the user ends up authenticated (left login page AND an
         // authenticated affordance is visible), not merely redirected.
         await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 15_000 });
-        await expect(page.getByRole('button', { name: /^Comptes —/ })).toBeVisible({
+        // The navbar account button reads "Comptes - <name>". Accept either a
+        // hyphen or an em dash so the locator survives the app's dash style
+        // (the label flipped em dash → hyphen in a codebase-wide sweep).
+        await expect(page.getByRole('button', { name: /^Comptes [-—]/ })).toBeVisible({
           timeout: 15_000,
         });
       } finally {
@@ -196,7 +199,8 @@ test.describe('Passkeys (WebAuthn)', () => {
 
       // UX oracle: conditional autofill signed the user in automatically.
       await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 15_000 });
-      await expect(page.getByRole('button', { name: /^Comptes —/ })).toBeVisible({
+      // See note above: match hyphen or em dash in the account button label.
+      await expect(page.getByRole('button', { name: /^Comptes [-—]/ })).toBeVisible({
         timeout: 15_000,
       });
     });

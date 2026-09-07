@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { E2E_ADMIN } from './helpers/constants';
 import { createAuthenticatedContext, loginViaUI } from './helpers/auth';
+import { deleteE2EEvents } from './helpers/events';
 
 /**
  * Regression test for the event date off-by-one bug.
@@ -33,6 +34,9 @@ test.describe('Event date selection', () => {
   });
 
   test.afterAll(async () => {
+    // Remove events this spec created so they don't accumulate on beta and
+    // eventually push a freshly created event past the list's page limit.
+    await deleteE2EEvents();
     await adminCtx.dispose();
   });
 
