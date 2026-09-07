@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 import sentry_sdk
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -13,6 +14,7 @@ from bbe2.api.v1.api import api_router
 from bbe2.config import Environment, get_environment
 from bbe2.logging_config import setup_logging
 from bbe2.scheduler import scheduler
+from bbe2.services.email import EmailSendError
 from bbe2.utils.correlation import (
     CORRELATION_ID_HEADER,
     resolve_correlation_id,
@@ -148,6 +150,26 @@ async def request_context(request: Request, call_next):
 
 
 app.include_router(api_router, prefix="/api/v1")
+
+
+@app.exception_handler(EmailSendError)
+async def email_send_error_handler(
+    _request: Request, _exc: EmailSendError
+) -> JSONResponse:
+    """Return a clean 503 when an email could not be sent.
+
+    Avoids leaking a bare 500 when the SMTP server is unreachable or rejects
+    the message. The detail is user-facing (French) and intentionally generic.
+    """
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": (
+                "L'envoi de l'email a échoué (service indisponible). "
+                "Merci de réessayer dans quelques minutes."
+            )
+        },
+    )
 
 
 class HealthResponse(BaseModel):

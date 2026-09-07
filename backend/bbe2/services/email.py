@@ -28,6 +28,15 @@ class OutgoingEmail(BaseModel):
     body_text: str
 
 
+class EmailSendError(RuntimeError):
+    """Raised when an outgoing email cannot be sent.
+
+    Wraps any transport-level failure (SMTP protocol errors, connection
+    refused/timeout, DNS resolution failures) so callers and the global
+    exception handler can turn it into a clean 503 instead of a bare 500.
+    """
+
+
 class InboxEmail(BaseModel):
     """An email from the inbox (headers only)."""
 
@@ -84,9 +93,12 @@ async def send_emails(
         try:
             await aiosmtplib.send(msg, **smtp_kwargs)
             logger.info("Email sent to %s: %s", msg["To"], msg["Subject"])
-        except aiosmtplib.SMTPException as e:
+        except (aiosmtplib.SMTPException, OSError) as e:
+            # SMTPException covers protocol/auth errors; OSError covers a
+            # refused connection, timeout, or DNS failure when the SMTP server
+            # is unreachable. Wrap both so callers can return a clean 503.
             logger.error("Failed to send email to %s: %s", msg["To"], e)
-            raise
+            raise EmailSendError(f"Failed to send email to {msg['To']}") from e
 
 
 def _decode_mime_header(raw: Optional[bytes]) -> str:
