@@ -43,10 +43,23 @@ import { toast } from '@/components/ui/toast';
 import {
   queryClient,
   useApiClient,
-  useUnlinkedMemberships,
 } from '../../config/client';
 
 const CENTS_PER_EURO = 100;
+
+/**
+ * HelloAsso membership orders that could not be auto-linked to a member
+ * (payer email did not match). Admin reconciliation only, so the hook lives
+ * here with its sole consumer rather than in the shared client module.
+ */
+function useUnlinkedMemberships() {
+  const { helloAssoApi } = useApiClient();
+
+  return useQuery<UnlinkedMembership[]>({
+    queryKey: ['helloasso', 'unlinked'],
+    queryFn: async () => await helloAssoApi.listUnlinkedMembershipsApiV1HelloassoOrdersUnlinkedGet(),
+  });
+}
 
 /**
  * Member option for the picker. base-ui's Combobox uses the `{ value, label }`

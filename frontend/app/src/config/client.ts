@@ -12,7 +12,6 @@ import {
   PushNotificationsApi,
   ResponseError,
   type SessionInfo,
-  type UnlinkedMembership,
   UtilsApi,
 } from 'bagad-client';
 import { useCallback, useEffect } from 'react';
@@ -137,19 +136,6 @@ export function useMembership(profileId?: string) {
     queryFn: async () => (profileId
       ? await usersApi.getProfileMembershipApiV1ProfilesProfileIdMembershipGet({ profileId })
       : await usersApi.getMyMembershipApiV1ProfilesMeMembershipGet()),
-  });
-}
-
-/**
- * HelloAsso membership orders that could not be auto-linked to a member
- * (payer email did not match). Used by the admin reconciliation screen.
- */
-export function useUnlinkedMemberships() {
-  const { helloAssoApi } = useApiClient();
-
-  return useQuery<UnlinkedMembership[]>({
-    queryKey: ['helloasso', 'unlinked'],
-    queryFn: async () => await helloAssoApi.listUnlinkedMembershipsApiV1HelloassoOrdersUnlinkedGet(),
   });
 }
 
