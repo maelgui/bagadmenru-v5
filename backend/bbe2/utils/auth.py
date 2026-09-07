@@ -164,7 +164,7 @@ def credentials(
     Selection order:
 
     1. ``Authorization: Bearer`` header (documented via the HTTPBearer security
-       scheme) — used by API clients.
+       scheme) - used by API clients.
     2. The session named by the ``active_account`` selector cookie, if its
        ``bmr_session_<active_account>`` cookie is present.
     3. If exactly one ``bmr_session_*`` cookie exists, use it.
@@ -255,7 +255,7 @@ class Authorization:
         # Attach the authenticated user to the Sentry scope so errors and traces
         # are grouped per member. We deliberately send only the pseudonymous id
         # and a human-readable name (never the email) and keep send_default_pii
-        # off, so no IP address or request body is captured — enough to identify
+        # off, so no IP address or request body is captured - enough to identify
         # who hit a bug without shipping contact details to Sentry.
         sentry_sdk.set_user(
             {

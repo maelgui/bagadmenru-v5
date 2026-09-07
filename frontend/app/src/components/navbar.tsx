@@ -81,7 +81,7 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
       <DropdownMenu>
         <DropdownMenuTrigger
           className="flex w-full flex-row-reverse items-center justify-end gap-3 rounded-2xl p-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:bg-muted lg:mx-4 lg:w-auto lg:flex-row"
-          aria-label={`Comptes — ${profile.firstName} ${profile.lastName}`}
+          aria-label={`Comptes - ${profile.firstName} ${profile.lastName}`}
         >
           <span className="flex min-w-0 flex-col text-left lg:text-right">
             <span className="truncate font-medium">

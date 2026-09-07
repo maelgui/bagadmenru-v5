@@ -237,7 +237,7 @@ function EventCard({
                     )}
                   />
                   <TooltipContent>
-                    {responses.length} membre{responses.length > 1 ? 's ont' : ' a'} répondu sur {totalMembers} — {responseRate}% de participation renseignée
+                    {responses.length} membre{responses.length > 1 ? 's ont' : ' a'} répondu sur {totalMembers} - {responseRate}% de participation renseignée
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -338,7 +338,7 @@ export default function PlanningPage() {
               </p>
               <p>
                 Dès que vous répondez à un premier évènement de la saison, vous vous engagez à
-                répondre à <strong className="font-semibold">tous</strong> les évènements — que ce
+                répondre à <strong className="font-semibold">tous</strong> les évènements - que ce
                 soit oui ou non. Le but est simplement d&apos;avoir votre réponse.
               </p>
             </AlertDescription>

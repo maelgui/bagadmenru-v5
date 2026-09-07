@@ -36,7 +36,7 @@ export function useRegisterPasskey() {
       } catch (error) {
         // The browser throws InvalidStateError when the presented authenticator
         // already holds one of the credentials the server listed in
-        // `excludeCredentials` — i.e. this device already has a passkey for this
+        // `excludeCredentials` - i.e. this device already has a passkey for this
         // account. This is a *normal* user situation (a WebAuthn duplicate
         // guard), not an application failure, so we resolve the mutation with a
         // benign "already registered" outcome instead of rejecting. Rejecting

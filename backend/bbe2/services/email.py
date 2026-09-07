@@ -53,7 +53,7 @@ async def send_emails(
 ) -> None:
     """Send a batch of emails via SMTP."""
     if settings.email_dry_run:
-        logger.warning("Email dry_run enabled — not sending %d email(s).", len(emails))
+        logger.warning("Email dry_run enabled - not sending %d email(s).", len(emails))
         for email in emails:
             logger.info("  Would send to=%s subject=%s", email.to, email.subject)
         return

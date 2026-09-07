@@ -28,7 +28,7 @@ export const Default: Story = {
     <Card className="w-80">
       <CardHeader>
         <CardTitle>Répétition hebdomadaire</CardTitle>
-        <CardDescription>Mercredi 20h — Salle des fêtes</CardDescription>
+        <CardDescription>Mercredi 20h - Salle des fêtes</CardDescription>
       </CardHeader>
       <CardContent>
         Pensez à apporter vos partitions et votre instrument. La répétition
@@ -47,7 +47,7 @@ export const WithAction: Story = {
     <Card className="w-80">
       <CardHeader>
         <CardTitle>Yann Le Bris</CardTitle>
-        <CardDescription>Sonneur — Cornemuse</CardDescription>
+        <CardDescription>Sonneur - Cornemuse</CardDescription>
         <CardAction>
           <Badge variant="secondary">Actif</Badge>
         </CardAction>

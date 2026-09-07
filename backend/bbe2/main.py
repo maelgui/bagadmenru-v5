@@ -37,7 +37,7 @@ _SENTRY_DSN = "https://de1e28317ac8c43ef670553301bdb84d@o1008469.ingest.us.sentr
 # Reporting is disabled in local development and CI so dev-only errors and
 # traces are not shipped to Sentry. get_environment() reads os.environ directly
 # (not get_settings()) because this runs at import time, before FastAPI's
-# dependency injection — how tests mock settings — is available.
+# dependency injection - how tests mock settings - is available.
 _ENVIRONMENT = get_environment()
 
 if _ENVIRONMENT not in (Environment.DEVELOPMENT, Environment.CI):

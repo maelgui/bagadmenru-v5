@@ -176,7 +176,7 @@ async def accept_invitation(
     submitted email is unchanged. The account gets its instrument plus the
     default groups only (never a privileged role). On success the new member is
     signed in as an *additive* multi-account session (no other account is logged
-    out) and becomes the active account — no password is set and no email is
+    out) and becomes the active account - no password is set and no email is
     sent, the account is passkey-first.
     """
     invitation = peek_invitation(session, token)

@@ -4,9 +4,9 @@ Groups the token/OTP mechanics behind small functions so the endpoint handlers
 in ``api/v1/endpoints/invitations.py`` stay thin and read as a sequence of
 intent-revealing calls. Two token kinds are involved:
 
-* ``Invitation`` — single-use, carries an :class:`InvitationPayload`
+* ``Invitation`` - single-use, carries an :class:`InvitationPayload`
   (channel/email_proven/email) plus transient OTP bookkeeping.
-* ``EmailVerification`` — the short-lived one-time code proving a submitted
+* ``EmailVerification`` - the short-lived one-time code proving a submitted
   email when the invitation did not.
 """
 
