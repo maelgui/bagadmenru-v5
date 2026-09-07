@@ -23,7 +23,7 @@ async def list_instruments(session: SessionDep) -> list[models.GroupDB]:
     """Public: the instrument groups a member can be assigned to.
 
     Returns only the ``PublicInstrument`` fields (id/name/color) and only groups
-    flagged ``is_instrument``, ordered by name — safe to expose unauthenticated.
+    flagged ``is_instrument``, ordered by name - safe to expose unauthenticated.
     The response schema is a dedicated, closed shape (not a shared group schema)
     so this public surface cannot be widened by accident.
     """

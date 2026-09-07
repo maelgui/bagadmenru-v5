@@ -155,7 +155,7 @@ def bootstrap():
 
 
 # ---------------------------------------------------------------------------
-# E2E seed data constants — override via env vars for flexibility
+# E2E seed data constants - override via env vars for flexibility
 # If no password is provided, a random one is generated each time.
 # ---------------------------------------------------------------------------
 E2E_USER_ID = "e2e-user-00000000"

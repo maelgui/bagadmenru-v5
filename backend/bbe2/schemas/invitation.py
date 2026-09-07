@@ -2,11 +2,11 @@
 
 Two delivery paths share a single permission (``CREATE:INVITATION``):
 
-* **Link / QR** — the backend returns the signup link and lets the inviter share
+* **Link / QR** - the backend returns the signup link and lets the inviter share
   it by any channel (shown in person, WhatsApp, SMS, ...). The target email is
   *not* proven, so completing the signup requires an emailed one-time code
   (OTP).
-* **Emailed invitation** — the backend sends the invitation email itself, which
+* **Emailed invitation** - the backend sends the invitation email itself, which
   proves control of that address. Signing up with the *same* address skips the
   OTP. Changing the email on the form falls back to OTP.
 """
@@ -33,7 +33,7 @@ class InvitationCreate(BaseModel):
     ``channel`` selects delivery: ``LINK`` returns the signup link/QR to the
     caller; ``EMAIL`` sends the invitation to ``email`` (which then must be
     provided). ``first_name`` is optional and only used to personalise the
-    emailed invitation — it is not persisted on the token nor used to prefill
+    emailed invitation - it is not persisted on the token nor used to prefill
     the signup form (the invitee fills in their own profile).
     """
 

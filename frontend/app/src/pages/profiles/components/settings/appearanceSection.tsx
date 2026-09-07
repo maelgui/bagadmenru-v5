@@ -31,7 +31,7 @@ const THEME_OPTIONS: ThemeOption[] = [
 
 /**
  * "Apparence" section: theme (light/dark/system, fully functional) and
- * language. Language is UI-only for now — Brezhoneg is shown but disabled
+ * language. Language is UI-only for now - Brezhoneg is shown but disabled
  * until the i18n infrastructure lands (see TODO below).
  */
 export default function AppearanceSection() {

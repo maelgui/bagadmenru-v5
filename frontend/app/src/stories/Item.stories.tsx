@@ -45,7 +45,7 @@ export const Default: Story = {
       </ItemMedia>
       <ItemContent>
         <ItemTitle>Cornemuse</ItemTitle>
-        <ItemDescription>Pupitre des bois — 12 sonneurs</ItemDescription>
+        <ItemDescription>Pupitre des bois - 12 sonneurs</ItemDescription>
       </ItemContent>
       <ItemActions>
         <Button variant="ghost" size="icon-sm" aria-label="Supprimer">

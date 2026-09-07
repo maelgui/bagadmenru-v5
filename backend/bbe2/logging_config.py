@@ -77,7 +77,7 @@ class JsonFormatter(logging.Formatter):
             "environment": self._environment,
         }
 
-        # Source location — cheap and invaluable when triaging.
+        # Source location - cheap and invaluable when triaging.
         payload["module"] = record.module
         payload["function"] = record.funcName
         payload["line"] = record.lineno

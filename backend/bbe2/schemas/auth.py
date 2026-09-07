@@ -73,7 +73,7 @@ class JwtPayload(BaseModel):
     roles: list[str]
     first_name: str
     last_name: str
-    # Optional so tokens issued before email was added still validate — existing
+    # Optional so tokens issued before email was added still validate - existing
     # sessions must not be logged out on deploy. New tokens always carry it.
     email: Optional[str] = None
     iat: datetime

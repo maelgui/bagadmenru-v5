@@ -45,7 +45,7 @@ const PROFILE_DETAIL_RE = /^\/profile\/[^/]+$/;
 
 /**
  * Where to land after switching accounts: keep the current page unless it is
- * scoped to a specific resource (or an /auth page — switching from the account
+ * scoped to a specific resource (or an /auth page - switching from the account
  * chooser or login must not just reload that page), in which case go home.
  */
 export function destinationAfterSwitch(pathname: string): string {
@@ -166,7 +166,7 @@ export function useAuth() {
 
   const login = useCallback(() => {
     // Navigating to login *adds* a session (multi-account) rather than
-    // replacing the current one — the backend sets an additive cookie.
+    // replacing the current one - the backend sets an additive cookie.
     void navigate('/auth/login');
   }, [navigate]);
 
@@ -209,7 +209,7 @@ export function useAuth() {
             window.location.href = '/auth/choose';
           } else {
             // Exactly one account remains, or a non-active account was removed:
-            // no choice to make. Follow the switch rule — keep the current page
+            // no choice to make. Follow the switch rule - keep the current page
             // unless it is resource-scoped.
             const { pathname, search } = window.location;
             const dest = destinationAfterSwitch(pathname);

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 
 /**
  * Popover that opens on hover on hover-capable devices (mouse/trackpad) and on
- * tap on touch devices, using the browser's native `openOnHover` handling — no
+ * tap on touch devices, using the browser's native `openOnHover` handling - no
  * device detection or runtime branching.
  *
  * This is used where a tooltip-style hint is needed but must also be reachable

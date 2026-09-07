@@ -4,7 +4,7 @@ import VersionInfo from '../components/version-info';
 
 // VersionInfo fetches the backend version via react-query. In Storybook the
 // request won't resolve against a real API, so the component falls back to
-// "version inconnue" — which is exactly the offline/loading state we want to
+// "version inconnue" - which is exactly the offline/loading state we want to
 // document.
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },

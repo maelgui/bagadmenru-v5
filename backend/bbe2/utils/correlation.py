@@ -1,7 +1,7 @@
 """Correlation ID handling.
 
 A correlation ID ties together an HTTP request, its response, any emails it
-triggers, and log lines — useful for debugging, tracing, and letting E2E tests
+triggers, and log lines - useful for debugging, tracing, and letting E2E tests
 (Playwright) locate the exact email produced by a given request.
 
 The ID is stored in a ``ContextVar`` so it is reachable from anywhere in the
