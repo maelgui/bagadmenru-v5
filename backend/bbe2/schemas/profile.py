@@ -2,6 +2,7 @@ from typing import ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict, computed_field
 
+from bbe2.schemas.helloasso import MembershipStatus
 from bbe2.utils.s3 import (
     AVATAR_URL_EXPIRATION_SECONDS,
     ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
@@ -45,6 +46,17 @@ class Profile(_ProfileBase):
 
     is_active: bool
 
+    # Membership status for the current season. Only populated on the member
+    # list for callers holding ``view:membership`` (staff/admin); it stays
+    # ``None`` for everyone else so this endpoint never leaks other members'
+    # adhesion status to unauthorized users. Computed, not stored on UserDB.
+    membership_status: Optional[MembershipStatus] = None
+
+    # Season label of the member's active membership, e.g. "2026-2027". Set
+    # only when ``membership_status`` is populated and the member is active;
+    # lets the UI show which season an "up to date" member has paid for.
+    membership_active_season: Optional[str] = None
+
     @computed_field  # type: ignore[misc]
     @property
     def picture_url(self) -> Optional[str]:
@@ -69,6 +81,7 @@ class _GroupBase(BaseModel):
 
 
 class MinimalGroup(_GroupBase):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     is_instrument: bool = False
 

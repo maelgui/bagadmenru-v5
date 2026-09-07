@@ -124,6 +124,34 @@ def get_membership_info_for_user(
     return compute_membership_info(rows, now=now)
 
 
+def compute_info_by_user(
+    session: Session, *, now: Optional[datetime] = None
+) -> dict[str, MembershipInfo]:
+    """Return each linked member's computed membership info in a single query.
+
+    Loads every linked membership row once and groups them per member, so the
+    member list can be enriched without an N+1 per-member lookup. Members with
+    no membership row are absent from the mapping; the caller treats a missing
+    key as "no membership" (status NONE, no active season).
+    """
+    rows = session.scalars(
+        select(HelloAssoMembershipDB).where(HelloAssoMembershipDB.user_id.is_not(None))
+    ).all()
+
+    by_user: dict[str, list[HelloAssoMembershipDB]] = {}
+    for row in rows:
+        # user_id is guaranteed non-None by the WHERE clause above; assert for
+        # the type checker.
+        if row.user_id is None:
+            continue
+        by_user.setdefault(row.user_id, []).append(row)
+
+    return {
+        user_id: compute_membership_info(memberships, now=now)
+        for user_id, memberships in by_user.items()
+    }
+
+
 def ingest_notification(
     session: Session, notification: HelloAssoNotification, raw_payload: dict
 ) -> int:

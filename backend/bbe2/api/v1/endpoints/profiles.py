@@ -33,7 +33,7 @@ from bbe2.utils.auth import (
     get_current_user2,
 )
 from bbe2.utils.groups import resolve_groups_with_defaults
-from bbe2.utils.permissions import get_permissions_for_roles
+from bbe2.utils.permissions import get_permissions_for_roles, is_allowed
 from bbe2.utils.templates import EmailData
 
 profiles_router = APIRouter(prefix="/profiles")
@@ -243,10 +243,14 @@ async def delete_profile(
 @profiles_router.get(
     "/",
     response_model=list[schemas.Profile],
-    dependencies=[Depends(Authorization(Action.VIEW, Resource.PROFILE))],
+    dependencies=[Depends(get_s3_helper)],
 )
 async def list_profiles(
     session: SessionDep,
+    payload: Annotated[
+        schemas.JwtPayload,
+        Depends(Authorization(Action.VIEW, Resource.PROFILE)),
+    ],
 ):
     q = (
         select(models.UserDB)
@@ -254,8 +258,22 @@ async def list_profiles(
         .order_by(models.UserDB.instrument_id, models.UserDB.first_name)
         .options(selectinload(models.UserDB.groups))  # Magic happens here!
     )
-    res = session.scalars(q).all()
-    return res
+    profiles = [schemas.Profile.model_validate(p) for p in session.scalars(q).all()]
+
+    # Enrich with membership status only for callers allowed to view other
+    # members' adhesion status. Computed in a single grouped query (no N+1);
+    # members without a membership row are left at MembershipStatus.NONE.
+    if is_allowed(payload.roles, Action.VIEW, Resource.MEMBERSHIP):
+        info_by_user = membership_service.compute_info_by_user(session)
+        for profile in profiles:
+            info = info_by_user.get(profile.id)
+            if info is None:
+                profile.membership_status = schemas.MembershipStatus.NONE
+            else:
+                profile.membership_status = info.status
+                profile.membership_active_season = info.active_season
+
+    return profiles
 
 
 @profiles_router.post(

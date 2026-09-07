@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { MembershipStatus } from './MembershipStatus';
+import {
+    MembershipStatusFromJSON,
+    MembershipStatusFromJSONTyped,
+    MembershipStatusToJSON,
+    MembershipStatusToJSONTyped,
+} from './MembershipStatus';
 import type { MinimalGroup } from './MinimalGroup';
 import {
     MinimalGroupFromJSON,
@@ -83,11 +90,25 @@ export interface Profile {
     isActive: boolean;
     /**
      * 
+     * @type {MembershipStatus}
+     * @memberof Profile
+     */
+    membershipStatus?: MembershipStatus | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof Profile
+     */
+    membershipActiveSeason?: string | null;
+    /**
+     * 
      * @type {string}
      * @memberof Profile
      */
     pictureUrl: string | null;
 }
+
+
 
 /**
  * Check if a given object implements the Profile interface.
@@ -123,6 +144,8 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'groups': ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
         'instrument': json['instrument'] == null ? undefined : MinimalGroupFromJSON(json['instrument']),
         'isActive': json['is_active'],
+        'membershipStatus': json['membership_status'] == null ? undefined : MembershipStatusFromJSON(json['membership_status']),
+        'membershipActiveSeason': json['membership_active_season'] == null ? undefined : json['membership_active_season'],
         'pictureUrl': json['picture_url'],
     };
 }
@@ -147,6 +170,8 @@ export function ProfileToJSONTyped(value?: Profile | null, ignoreDiscriminator: 
         'groups': ((value['groups'] as Array<any>).map(MinimalGroupToJSON)),
         'instrument': MinimalGroupToJSON(value['instrument']),
         'is_active': value['isActive'],
+        'membership_status': MembershipStatusToJSON(value['membershipStatus']),
+        'membership_active_season': value['membershipActiveSeason'],
         'picture_url': value['pictureUrl'],
     };
 }
