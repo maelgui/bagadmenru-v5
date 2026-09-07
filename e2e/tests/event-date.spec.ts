@@ -13,11 +13,19 @@ import { createAuthenticatedContext, loginViaUI } from './helpers/auth';
  *
  * This test drives the real add-event form through the browser (the only path
  * that reproduces the bug: a pure API call already sends a YYYY-MM-DD string)
- * and asserts the persisted date equals the picked date. The invariant
- * "what I select is what gets stored" holds in every timezone, and fails with
- * the old code when the runner sits at a positive UTC offset.
+ * and asserts the persisted date equals the picked date.
+ *
+ * The browser timezone is pinned to Europe/Paris (a positive UTC offset) so the
+ * regression is caught regardless of the runner's own timezone. Without this,
+ * a UTC runner (e.g. CI) would never trigger the shift and the test would pass
+ * even against the buggy code.
  */
 test.describe('Event date selection', () => {
+  // Pin a positive-offset timezone: this is where the UTC serialization bug
+  // shows up. On a UTC runner the local midnight and UTC midnight coincide, so
+  // the shift would not occur and the test would give a false pass.
+  test.use({ timezoneId: 'Europe/Paris' });
+
   let adminCtx: APIRequestContext;
 
   test.beforeAll(async () => {
