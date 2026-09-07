@@ -12,12 +12,16 @@ import { useApiClient } from '../../../config/client';
 interface AvatarInputProps {
   defaultUrl: string | null;
   profileId: string;
+  firstName: string;
+  lastName: string;
   onChange: (value: string | null) => void;
 }
 function AvatarInput({
-  defaultUrl, profileId, onChange,
+  defaultUrl, profileId, firstName, lastName, onChange,
 }: AvatarInputProps) {
   const { usersApi } = useApiClient();
+
+  const initials = `${firstName.slice(0, 1)}${lastName.slice(0, 1)}`.toUpperCase();
 
   const [pictureUrl, setPictureUrl] = useState<string | null>(defaultUrl);
 
@@ -55,7 +59,7 @@ function AvatarInput({
     <>
       <Avatar className="size-64">
         <AvatarImage src={pictureUrl ?? undefined} alt="Avatar du profil" />
-        <AvatarFallback>Profil</AvatarFallback>
+        <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <label
         htmlFor="pictureFileInput"
@@ -98,6 +102,8 @@ export default function BaseProfileFormFields(
                 <AvatarInput
                   defaultUrl={profile.pictureUrl}
                   profileId={profile.id}
+                  firstName={profile.firstName}
+                  lastName={profile.lastName}
                   onChange={onChange}
                 />
               )}
