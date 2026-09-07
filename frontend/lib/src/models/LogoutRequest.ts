@@ -16,7 +16,10 @@ import { mapValues } from '../runtime';
 /**
  * Optional logout body naming which account to sign out.
  * 
- * Defaults to the active account when omitted.
+ * Defaults to the active account when omitted. When `all` is true, every
+ * account signed in this browser is signed out (`accountId` is ignored);
+ * this only clears cookies in the current browser and does not revoke sessions
+ * on other devices.
  * @export
  * @interface LogoutRequest
  */
@@ -27,6 +30,12 @@ export interface LogoutRequest {
      * @memberof LogoutRequest
      */
     accountId?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof LogoutRequest
+     */
+    all?: boolean;
 }
 
 /**
@@ -47,6 +56,7 @@ export function LogoutRequestFromJSONTyped(json: any, ignoreDiscriminator: boole
     return {
         
         'accountId': json['account_id'] == null ? undefined : json['account_id'],
+        'all': json['all'] == null ? undefined : json['all'],
     };
 }
 
@@ -62,6 +72,7 @@ export function LogoutRequestToJSONTyped(value?: LogoutRequest | null, ignoreDis
     return {
         
         'account_id': value['accountId'],
+        'all': value['all'],
     };
 }
 

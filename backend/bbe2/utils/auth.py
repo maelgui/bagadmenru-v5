@@ -126,6 +126,17 @@ def clear_active_account_cookie(response: Response, settings: Settings) -> None:
     )
 
 
+def clear_legacy_access_token_cookie(response: Response, settings: Settings) -> None:
+    """Delete the legacy single-session ``access_token`` cookie."""
+    response.delete_cookie(
+        key=LEGACY_ACCESS_TOKEN_COOKIE,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite="lax",
+        path="/",
+    )
+
+
 def _migrate_legacy_cookie(response: Response, token: str, settings: Settings) -> None:
     """Rewrite a legacy ``access_token`` cookie as a multi-account session.
 
@@ -141,13 +152,7 @@ def _migrate_legacy_cookie(response: Response, token: str, settings: Settings) -
     # Establish the session through the one entry point, then drop the legacy
     # cookie. Reusing the same signed JWT keeps identity and expiry unchanged.
     set_session_cookies(response, payload.sub, token, settings)
-    response.delete_cookie(
-        key=LEGACY_ACCESS_TOKEN_COOKIE,
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        path="/",
-    )
+    clear_legacy_access_token_cookie(response, settings)
     logging.info("Migrated legacy access_token cookie to bmr_session_%s", payload.sub)
 
 

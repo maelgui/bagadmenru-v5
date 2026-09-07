@@ -144,6 +144,60 @@ def test_logout_removes_only_target_session(client: TestClient):
     assert c.get("/api/v1/profiles/me").json()["id"] == USER_A
 
 
+def test_logout_all_clears_every_session(client: TestClient):
+    """logout with all=true signs out every account in this browser."""
+    _seed_second_user()
+    c = _cookie_client(client)
+    _set_session(c, USER_A, _mint(USER_A, "john", "doe"))
+    _set_session(c, USER_B, _mint(USER_B, "Alice", "Bee"))
+    c.cookies.set("active_account", USER_B)
+
+    resp = c.post("/api/v1/auth/logout", json={"all": True})
+    assert resp.status_code == 200
+    # No sessions remain.
+    assert resp.json() == []
+
+    # Every per-account session cookie and the selector are expired.
+    set_cookie = resp.headers.get("set-cookie", "")
+    assert f"{SESSION_COOKIE_PREFIX}{USER_A}=" in set_cookie
+    assert f"{SESSION_COOKIE_PREFIX}{USER_B}=" in set_cookie
+    assert "active_account=" in set_cookie
+
+    # Simulate the browser dropping the expired cookies; nothing authenticates.
+    c.cookies.clear()
+    assert c.get("/api/v1/profiles/me").status_code == 401
+
+
+def test_logout_all_ignores_account_id(client: TestClient):
+    """all=true takes precedence: a stray account_id does not scope it down."""
+    _seed_second_user()
+    c = _cookie_client(client)
+    _set_session(c, USER_A, _mint(USER_A, "john", "doe"))
+    _set_session(c, USER_B, _mint(USER_B, "Alice", "Bee"))
+    c.cookies.set("active_account", USER_A)
+
+    resp = c.post("/api/v1/auth/logout", json={"all": True, "account_id": USER_A})
+    assert resp.status_code == 200
+    assert resp.json() == []
+    set_cookie = resp.headers.get("set-cookie", "")
+    # Both are cleared, not just the named one.
+    assert f"{SESSION_COOKIE_PREFIX}{USER_A}=" in set_cookie
+    assert f"{SESSION_COOKIE_PREFIX}{USER_B}=" in set_cookie
+
+
+def test_logout_all_clears_legacy_cookie(client: TestClient):
+    """all=true also expires the legacy access_token cookie."""
+    c = _cookie_client(client)
+    c.cookies.set("access_token", _mint(USER_A, "john", "doe"))
+
+    resp = c.post("/api/v1/auth/logout", json={"all": True})
+    assert resp.status_code == 200
+    assert resp.json() == []
+    set_cookie = resp.headers.get("set-cookie", "")
+    assert "access_token=" in set_cookie
+    assert "Max-Age=0" in set_cookie or "expires=" in set_cookie.lower()
+
+
 def test_sessions_lists_all_with_active_flag(client: TestClient):
     """GET /auth/sessions lists every signed-in account with the right active."""
     _seed_second_user()

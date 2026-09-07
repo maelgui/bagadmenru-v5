@@ -6,13 +6,14 @@ import {
 } from 'vitest';
 
 const switchAccount = vi.fn();
+const logoutAll = vi.fn();
 const sessions = [
   { id: 'a', firstName: 'Alice', lastName: 'Bee', active: false },
   { id: 'b', firstName: 'Bob', lastName: 'Cee', active: false },
 ];
 
 vi.mock('../../config/client', () => ({
-  useAuth: () => ({ switchAccount }),
+  useAuth: () => ({ switchAccount, logoutAll }),
   useSessions: () => ({ data: sessions, isPending: false }),
 }));
 
@@ -43,5 +44,11 @@ describe('ChooseAccountPage', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /Bob Cee/ }));
     expect(switchAccount).toHaveBeenCalledWith('b');
+  });
+
+  it('logs out of all accounts when the button is clicked', () => {
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /Se déconnecter de tous les comptes/ }));
+    expect(logoutAll).toHaveBeenCalled();
   });
 });
