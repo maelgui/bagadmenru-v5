@@ -23,11 +23,19 @@ export const E2E_ADMIN = {
 };
 
 /**
- * API base URL — defaults to the frontend BASE_URL because the API is now
- * served on the same origin under /api (no separate api subdomain).
- * Locally the API lives on localhost:8888 (docker-compose maps 8888→8000).
+ * Frontend origin under test. The API is served on the *same* origin under
+ * `/api` (no separate api subdomain), so there is a single source of truth for
+ * the host — no need to configure a frontend URL and an API URL separately.
+ * Keep this in sync with `baseURL` in playwright.config.ts.
  */
-export const API_URL = process.env.API_URL || process.env.BASE_URL || 'http://localhost:8888';
+export const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
+
+/**
+ * API base URL. Same-origin as the frontend by construction; kept as its own
+ * export so API request contexts read intent-revealingly (`baseURL: API_URL`).
+ * A `BASE_URL` override flows through automatically.
+ */
+export const API_URL = BASE_URL;
 
 /**
  * HTTP header used to correlate a request, its response, and any email it

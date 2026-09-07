@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "test": "playwright test",
-    "test:ci": "BASE_URL=https://beta.bagadmenru.bzh API_URL=https://beta.bagadmenru.bzh MAILPIT_URL=http://localhost:8025 playwright test",
+    "test:local": "BASE_URL=http://localhost:5173 MAILPIT_URL=http://localhost:5173/mailpit playwright test",
+    "test:ci": "BASE_URL=https://beta.bagadmenru.bzh MAILPIT_URL=http://localhost:8025 playwright test",
     "test:smoke": "playwright test --config=playwright.smoke.config.ts",
     "test:smoke:beta": "BASE_URL=https://beta.bagadmenru.bzh playwright test --config=playwright.smoke.config.ts",
     "test:ui": "playwright test --ui"
