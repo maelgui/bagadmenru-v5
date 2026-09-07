@@ -1,7 +1,7 @@
 """add helloasso memberships
 
-Revision ID: c9d0e1f2a3b4
-Revises: b8c9d0e1f2a3
+Revision ID: d0e1f2a3b4c5
+Revises: c9d0e1f2a3b4
 Create Date: 2026-09-06 13:20:00.000000
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "c9d0e1f2a3b4"
-down_revision = "b8c9d0e1f2a3"
+revision = "d0e1f2a3b4c5"
+down_revision = "c9d0e1f2a3b4"
 branch_labels = None
 depends_on = None
 
