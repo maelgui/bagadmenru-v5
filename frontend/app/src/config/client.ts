@@ -241,8 +241,24 @@ export function useAuth() {
     [authApi, account?.id],
   );
 
+  // Log out of *every* account signed in this browser at once. The backend
+  // clears all session cookies and the selector; we clear the cache and leave
+  // for the login page. This only affects this browser - sessions on other
+  // devices are not revoked.
+  const logoutAll = useCallback(
+    ({ redirectTo }: { redirectTo?: string } = {}) => {
+      void authApi
+        .logoutApiV1AuthLogoutPost({ logoutRequest: { all: true } })
+        .then(() => {
+          queryClient.clear();
+          window.location.href = redirectTo ?? '/auth/login';
+        });
+    },
+    [authApi],
+  );
+
   return {
-    status, account, login, logout, switchAccount,
+    status, account, login, logout, logoutAll, switchAccount,
   };
 }
 

@@ -62,10 +62,14 @@ class SessionInfo(BaseModel):
 class LogoutRequest(BaseModel):
     """Optional logout body naming which account to sign out.
 
-    Defaults to the active account when omitted.
+    Defaults to the active account when omitted. When ``all`` is true, every
+    account signed in this browser is signed out (``account_id`` is ignored);
+    this only clears cookies in the current browser and does not revoke sessions
+    on other devices.
     """
 
     account_id: Optional[str] = None
+    all: bool = False
 
 
 class JwtPayload(BaseModel):

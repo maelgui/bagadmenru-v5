@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';import { useAuth, useSessions } from '../../config/client';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,7 @@ function getInitials(firstName: string, lastName: string): string {
  */
 function ChooseAccountPage() {
   const { data: sessions, isPending } = useSessions();
-  const { switchAccount } = useAuth();
+  const { switchAccount, logoutAll } = useAuth();
 
   if (isPending) {
     return (
@@ -69,10 +69,18 @@ function ChooseAccountPage() {
           </li>
         ))}
       </ul>
-      <div className="mt-6">
+      <div className="mt-6 flex flex-col gap-2">
         <Link to="/auth/login" className={cn(buttonVariants({ variant: 'ghost' }))}>
           Utiliser un autre compte
         </Link>
+        <Button
+          type="button"
+          variant="ghost"
+          className="text-muted-foreground"
+          onClick={() => logoutAll()}
+        >
+          Se déconnecter de tous les comptes
+        </Button>
       </div>
     </div>
   );

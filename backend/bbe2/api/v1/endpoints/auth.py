@@ -47,6 +47,7 @@ from bbe2.utils.auth import (
     Authorization,
     Resource,
     clear_active_account_cookie,
+    clear_legacy_access_token_cookie,
     clear_session_cookie,
     create_access_token,
     get_current_profile,
@@ -252,8 +253,26 @@ def logout(
     no sessions remain the ``active_account`` selector is cleared too. The
     legacy single-session ``access_token`` cookie is also cleared when it is the
     thing being logged out, for backward compatibility.
+
+    When ``all`` is true, every account signed in this browser is signed out at
+    once (``account_id`` is ignored) and an empty list is returned. This only
+    clears cookies in the current browser; sessions on other devices are not
+    revoked (tokens are stateless and carry no server-side session record).
     """
     active_account = request.cookies.get(ACTIVE_ACCOUNT_COOKIE)
+
+    if body and body.all:
+        # Sign out of every account in this browser: delete each per-account
+        # session cookie, the legacy cookie, and the selector.
+        for name in request.cookies:
+            if name.startswith(SESSION_COOKIE_PREFIX):
+                user_id = name[len(SESSION_COOKIE_PREFIX) :]
+                clear_session_cookie(response, user_id, settings)
+        if request.cookies.get(LEGACY_ACCESS_TOKEN_COOKIE):
+            clear_legacy_access_token_cookie(response, settings)
+        clear_active_account_cookie(response, settings)
+        return []
+
     target = (body.account_id if body else None) or active_account
 
     if target:
@@ -264,13 +283,7 @@ def logout(
         name.startswith(SESSION_COOKIE_PREFIX) for name in request.cookies
     )
     if not has_session_cookies and request.cookies.get(LEGACY_ACCESS_TOKEN_COOKIE):
-        response.delete_cookie(
-            key=LEGACY_ACCESS_TOKEN_COOKIE,
-            httponly=True,
-            secure=settings.cookie_secure,
-            samesite="lax",
-            path="/",
-        )
+        clear_legacy_access_token_cookie(response, settings)
 
     # Compute the sessions that will remain (exclude the one we just deleted).
     remaining = [
