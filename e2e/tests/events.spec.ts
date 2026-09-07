@@ -1,6 +1,7 @@
 import { test, expect, request, type APIRequestContext } from '@playwright/test';
 import { E2E_USER, E2E_ADMIN, API_URL } from './helpers/constants';
 import { createAuthenticatedContext } from './helpers/auth';
+import { deleteE2EEvents } from './helpers/events';
 
 test.describe('Events', () => {
   let adminCtx: APIRequestContext;
@@ -12,6 +13,8 @@ test.describe('Events', () => {
   });
 
   test.afterAll(async () => {
+    // Delete the events these tests created so the shared list stays bounded.
+    await deleteE2EEvents();
     await adminCtx.dispose();
     await userCtx.dispose();
   });
