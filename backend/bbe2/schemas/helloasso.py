@@ -24,7 +24,10 @@ class MembershipHistoryItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
+    tier_name: Optional[str]
     tier_description: Optional[str]
+    adherent_first_name: Optional[str]
+    adherent_last_name: Optional[str]
     amount: int
     order_date: datetime
     state: str
@@ -57,6 +60,9 @@ class UnlinkedMembership(BaseModel):
     payer_email: Optional[str]
     payer_first_name: Optional[str]
     payer_last_name: Optional[str]
+    adherent_first_name: Optional[str]
+    adherent_last_name: Optional[str]
+    tier_name: Optional[str]
     tier_description: Optional[str]
     amount: int
     order_date: datetime
@@ -85,6 +91,24 @@ class HelloAssoPayer(BaseModel):
     last_name: Optional[str] = Field(default=None, alias="lastName")
 
 
+class HelloAssoUser(BaseModel):
+    """The adherent a membership item is for (``item.user``)."""
+
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    first_name: Optional[str] = Field(default=None, alias="firstName")
+    last_name: Optional[str] = Field(default=None, alias="lastName")
+
+
+class HelloAssoCustomField(BaseModel):
+    """A form custom field answer on a membership item."""
+
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    name: Optional[str] = None
+    answer: Optional[str] = None
+
+
 class HelloAssoItem(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
@@ -92,7 +116,30 @@ class HelloAssoItem(BaseModel):
     type: Optional[str] = None
     amount: Optional[int] = None
     state: Optional[str] = None
+    # Short tier label, e.g. "ADHESION OBLIGATOIRE".
+    name: Optional[str] = None
+    # Longer tier description.
     tier_description: Optional[str] = Field(default=None, alias="tierDescription")
+    # The adherent (who the membership is for), distinct from the payer.
+    user: Optional[HelloAssoUser] = None
+    # Custom form answers; we read the "Email" one to link the adherent.
+    custom_fields: List[HelloAssoCustomField] = Field(
+        default_factory=list, alias="customFields"
+    )
+
+    def custom_field_email(self) -> Optional[str]:
+        """Return the answer of the "Email" custom field, if present.
+
+        Matched case-insensitively on the field name; only values that look
+        like an email (contain "@") are returned, so free-text noise in a
+        mislabeled field is ignored.
+        """
+        for field in self.custom_fields:
+            if (field.name or "").strip().lower() == "email":
+                answer = (field.answer or "").strip()
+                if "@" in answer:
+                    return answer
+        return None
 
 
 class HelloAssoOrderData(BaseModel):

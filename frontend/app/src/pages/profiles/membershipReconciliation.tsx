@@ -94,6 +94,14 @@ function payerName(order: UnlinkedMembership): string {
   return name || order.payerEmail || 'Payeur inconnu';
 }
 
+function adherentName(order: UnlinkedMembership): string | null {
+  const name = [order.adherentFirstName, order.adherentLastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  return name || null;
+}
+
 /**
  * One unlinked order with a member picker and a link action. Kept as its own
  * component so each row owns its selection state independently.
@@ -139,10 +147,12 @@ function UnlinkedRow({
   return (
     <li className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="truncate text-sm font-medium">{payerName(order)}</span>
+        <span className="truncate text-sm font-medium">
+          {adherentName(order) ?? payerName(order)}
+        </span>
         <span className="truncate text-xs text-muted-foreground">
-          {[order.payerEmail, order.tierDescription ?? 'Adhésion']
-            .filter(Boolean)
+          {[order.tierName ?? order.tierDescription ?? 'Adhésion',
+            `payé par ${payerName(order)}`]
             .join(' · ')}
         </span>
         <span className="text-xs text-muted-foreground">

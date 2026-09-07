@@ -75,7 +75,10 @@ def compute_membership_info(
         history.append(
             MembershipHistoryItem(
                 id=row.id,
+                tier_name=row.tier_name,
                 tier_description=row.tier_description,
+                adherent_first_name=row.adherent_first_name,
+                adherent_last_name=row.adherent_last_name,
                 amount=row.amount,
                 order_date=row.order_date,
                 state=row.state,
@@ -147,20 +150,25 @@ def ingest_notification(
             "with helloasso_order_id=0"
         )
 
-    # Auto-link by payer email. Matched case-insensitively because HelloAsso
-    # payer emails are not normalized and may differ in case from the member's
-    # stored email (e.g. "Jean@x.fr" vs "jean@x.fr"). Unmatched -> user_id
-    # stays NULL and the row surfaces in the admin "unlinked" list.
-    user_id: Optional[str] = None
-    if payer and payer.email:
-        user_id = session.scalar(
-            select(UserDB.id).where(func.lower(UserDB.email) == payer.email.lower())
-        )
-
     processed = 0
     for item in data.items:
         if item.type != MEMBERSHIP_ITEM_TYPE or item.id is None:
             continue
+
+        # Resolve the linking email per item: the membership is for the
+        # adherent (``item.user``), whose email is the item's "Email" custom
+        # field. HelloAsso does not put an email on ``item.user`` itself, so we
+        # fall back to the payer email (always present) when the custom field
+        # is missing. Matched case-insensitively; unmatched -> user_id stays
+        # NULL and the row surfaces in the admin "unlinked" list.
+        link_email = item.custom_field_email() or (payer.email if payer else None)
+        user_id: Optional[str] = None
+        if link_email:
+            user_id = session.scalar(
+                select(UserDB.id).where(func.lower(UserDB.email) == link_email.lower())
+            )
+
+        adherent = item.user
 
         existing = session.scalar(
             select(HelloAssoMembershipDB).where(
@@ -186,6 +194,9 @@ def ingest_notification(
                     payer_email=payer.email if payer else None,
                     payer_first_name=payer.first_name if payer else None,
                     payer_last_name=payer.last_name if payer else None,
+                    adherent_first_name=adherent.first_name if adherent else None,
+                    adherent_last_name=adherent.last_name if adherent else None,
+                    tier_name=item.name,
                     tier_description=item.tier_description,
                     amount=item.amount or 0,
                     order_date=order_date,

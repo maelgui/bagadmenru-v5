@@ -30,7 +30,25 @@ export interface MembershipHistoryItem {
      * @type {string}
      * @memberof MembershipHistoryItem
      */
+    tierName: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof MembershipHistoryItem
+     */
     tierDescription: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof MembershipHistoryItem
+     */
+    adherentFirstName: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof MembershipHistoryItem
+     */
+    adherentLastName: string | null;
     /**
      * 
      * @type {number}
@@ -62,7 +80,10 @@ export interface MembershipHistoryItem {
  */
 export function instanceOfMembershipHistoryItem(value: object): value is MembershipHistoryItem {
     if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('tierName' in value) || value['tierName'] === undefined) return false;
     if (!('tierDescription' in value) || value['tierDescription'] === undefined) return false;
+    if (!('adherentFirstName' in value) || value['adherentFirstName'] === undefined) return false;
+    if (!('adherentLastName' in value) || value['adherentLastName'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('orderDate' in value) || value['orderDate'] === undefined) return false;
     if (!('state' in value) || value['state'] === undefined) return false;
@@ -81,7 +102,10 @@ export function MembershipHistoryItemFromJSONTyped(json: any, ignoreDiscriminato
     return {
         
         'id': json['id'],
+        'tierName': json['tier_name'],
         'tierDescription': json['tier_description'],
+        'adherentFirstName': json['adherent_first_name'],
+        'adherentLastName': json['adherent_last_name'],
         'amount': json['amount'],
         'orderDate': (new Date(json['order_date'])),
         'state': json['state'],
@@ -101,7 +125,10 @@ export function MembershipHistoryItemToJSONTyped(value?: MembershipHistoryItem |
     return {
         
         'id': value['id'],
+        'tier_name': value['tierName'],
         'tier_description': value['tierDescription'],
+        'adherent_first_name': value['adherentFirstName'],
+        'adherent_last_name': value['adherentLastName'],
         'amount': value['amount'],
         'order_date': ((value['orderDate']).toISOString()),
         'state': value['state'],

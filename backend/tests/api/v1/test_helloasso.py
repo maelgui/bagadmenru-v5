@@ -335,3 +335,140 @@ def test_notification_parses_camel_case():
     assert notif.event_type == "Order"
     assert notif.data.payer.first_name == "John"
     assert notif.data.items[0].tier_description == "Adhésion adulte"
+
+
+# --- Real HelloAsso payload (adherent, custom fields, multiple items) --------
+
+
+def _real_order(*, member_email: str = "mael@gui.bzh") -> dict:
+    """A realistic order: two membership items for the same adherent, paid by a
+    different payer, with the adherent email in the "Email" custom field.
+    """
+    return {
+        "eventType": "Order",
+        "data": {
+            "id": 97002,
+            "date": _current_season_date(),
+            "payer": {
+                "email": "payer.parent@example.com",
+                "firstName": "Maud",
+                "lastName": "Garcon",
+            },
+            "items": [
+                {
+                    "id": 105314,
+                    "type": "Membership",
+                    "amount": 4400,
+                    "state": "Processed",
+                    "name": "ADHESION OBLIGATOIRE",
+                    "tierDescription": "L'adhésion est obligatoire et distincte",
+                    "user": {"firstName": "Mael", "lastName": "Gui"},
+                    "customFields": [
+                        {"name": "Téléphone", "type": "Phone", "answer": "0695333590"},
+                        {"name": "Email", "type": "TextInput", "answer": member_email},
+                    ],
+                },
+                {
+                    "id": 105316,
+                    "type": "Membership",
+                    "amount": 4400,
+                    "state": "Processed",
+                    "name": "ADHESION OBLIGATOIRE",
+                    "tierDescription": "L'adhésion est obligatoire et distincte",
+                    "user": {"firstName": "Mael", "lastName": "Gui"},
+                    "customFields": [
+                        {"name": "Email", "type": "TextInput", "answer": "hugiy"},
+                    ],
+                },
+            ],
+        },
+    }
+
+
+def test_real_payload_stores_both_items_with_adherent_and_tier(
+    helloasso_client: TestClient,
+):
+    # Adherent email in the custom field matches the seeded member.
+    resp = helloasso_client.post(
+        "/api/v1/helloasso/webhook?token=" + WEBHOOK_TOKEN,
+        json=_real_order(member_email="john.doe@example.com"),
+    )
+    assert resp.status_code == 200
+    assert resp.json()["memberships_processed"] == 2
+
+    # Item 105314 has a valid Email custom field matching the member and links
+    # to them; item 105316's custom field is "hugiy" (not an email), so it
+    # falls back to the payer email (a stranger) and stays unlinked.
+    body = helloasso_client.get("/api/v1/profiles/me/membership").json()
+    assert body["status"] == MembershipStatus.ACTIVE.value
+    assert len(body["history"]) == 1
+    linked = body["history"][0]
+    assert linked["tier_name"] == "ADHESION OBLIGATOIRE"
+    assert linked["adherent_first_name"] == "Mael"
+    assert linked["adherent_last_name"] == "Gui"
+    assert linked["amount"] == 4400
+
+    # The other item surfaces for manual reconciliation, carrying adherent and
+    # tier metadata.
+    unlinked = helloasso_client.get("/api/v1/helloasso/orders/unlinked").json()
+    assert len(unlinked) == 1
+    assert unlinked[0]["adherent_first_name"] == "Mael"
+    assert unlinked[0]["tier_name"] == "ADHESION OBLIGATOIRE"
+
+
+def test_custom_field_email_links_adherent_not_payer(helloasso_client: TestClient):
+    # Payer email is a stranger; the adherent's Email custom field matches the
+    # member. The matching item must link to the member (adherent), not to the
+    # stranger payer.
+    helloasso_client.post(
+        "/api/v1/helloasso/webhook?token=" + WEBHOOK_TOKEN,
+        json=_real_order(member_email="john.doe@example.com"),
+    )
+    me = helloasso_client.get("/api/v1/profiles/me/membership").json()
+    assert me["status"] == MembershipStatus.ACTIVE.value
+    # The linked one belongs to the member; the payer stranger never owns it.
+    assert me["history"][0]["adherent_last_name"] == "Gui"
+
+
+def test_falls_back_to_payer_email_when_no_custom_field(helloasso_client: TestClient):
+    # An item with no usable Email custom field must fall back to the payer
+    # email for linking.
+    order = {
+        "eventType": "Order",
+        "data": {
+            "id": 97010,
+            "date": _current_season_date(),
+            "payer": {
+                "email": "john.doe@example.com",
+                "firstName": "John",
+                "lastName": "Doe",
+            },
+            "items": [
+                {
+                    "id": 105320,
+                    "type": "Membership",
+                    "amount": 4400,
+                    "state": "Processed",
+                    "name": "ADHESION",
+                    "user": {"firstName": "John", "lastName": "Doe"},
+                    "customFields": [],
+                },
+            ],
+        },
+    }
+    helloasso_client.post(
+        "/api/v1/helloasso/webhook?token=" + WEBHOOK_TOKEN, json=order
+    )
+    me = helloasso_client.get("/api/v1/profiles/me/membership").json()
+    assert me["status"] == MembershipStatus.ACTIVE.value
+
+
+def test_custom_field_email_parsing():
+    order = _real_order(member_email="adherent@example.com")
+    notif = HelloAssoNotification.model_validate(order)
+    item0, item1 = notif.data.items
+    assert item0.name == "ADHESION OBLIGATOIRE"
+    assert item0.user.first_name == "Mael"
+    assert item0.custom_field_email() == "adherent@example.com"
+    # The second item's Email answer "hugiy" is not an email -> ignored.
+    assert item1.custom_field_email() is None
