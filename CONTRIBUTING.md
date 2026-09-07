@@ -62,7 +62,7 @@ docker compose up
    ```
 3. If backend API changed, regenerate the client:
    ```bash
-   yarn generate-client   # Requires backend running on :8000
+   yarn generate-client   # Reads http://backend:8000/openapi.json (docker-compose host); from the host, Vite proxies it at http://localhost:5173/openapi.json
    yarn build:lib
    ```
 

@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { fromIsoDate, toIsoDate } from '../../../utils/date';
+import { fromIsoDate, toIsoDate, toUtcDate } from '../../../utils/date';
 
 interface EventFormProps {
   onSubmit: SubmitHandler<EventCreate>;
@@ -44,8 +44,13 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
     register, control, handleSubmit, formState: { errors, dirtyFields, isSubmitting }, setValue,
   } = useForm<EventCreate>({ defaultValues: data || { category: 'sortie', isInDoodle: true, costume: 'COSTUME' } });
 
+  // Pin the picked calendar date to UTC midnight before submitting: the
+  // generated client serializes dates in UTC, which would otherwise shift
+  // the date back a day in positive-offset timezones (e.g. Europe/Paris).
+  const handleFormSubmit: SubmitHandler<EventCreate> = (values) => onSubmit({ ...values, date: toUtcDate(values.date) });
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(handleFormSubmit)}>
       <FieldGroup>
         <Field data-invalid={!!errors.title}>
           <FieldLabel htmlFor="title">Titre</FieldLabel>

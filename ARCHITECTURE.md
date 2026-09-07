@@ -104,7 +104,7 @@ frontend/
 The frontend API client is generated from the backend's OpenAPI spec:
 ```bash
 cd frontend
-yarn generate-client   # Fetches /openapi.json from running backend
+yarn generate-client   # Fetches /openapi.json from the backend (http://backend:8000, the docker-compose host; via Vite proxy at http://localhost:5173/openapi.json from the host)
 yarn build:lib         # Compiles the generated TypeScript
 ```
 

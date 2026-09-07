@@ -10,7 +10,7 @@ fileMatchPattern: "frontend/**"
 ```bash
 cd frontend
 yarn install                    # Install all workspace dependencies
-yarn generate-client            # Regenerate API client (needs backend running on :8000)
+yarn generate-client            # Regenerate API client (resolves the backend at http://backend:8000, the docker-compose service host; from the host machine the schema is proxied by Vite at http://localhost:5173/openapi.json)
 yarn build:lib                  # Compile the generated TypeScript client
 yarn build:app                  # Build the React app for production
 yarn build                      # Build lib + app
@@ -47,10 +47,18 @@ This is a Yarn workspaces monorepo:
 ## API Client Regeneration
 
 When backend endpoints change:
-1. Ensure backend is running (`docker compose up backend` or local uvicorn)
+1. Ensure the backend is reachable. `yarn generate-client` reads the schema from
+   `http://backend:8000/openapi.json` (the docker-compose service host), so run it
+   with `docker compose up`. From the host machine outside Docker, the schema is
+   also proxied by the Vite dev server at `http://localhost:5173/openapi.json`.
 2. Run `yarn generate-client` from `frontend/`
 3. Run `yarn build:lib` to compile
 4. Update consuming code in `frontend/app/` as needed
+
+Note: an event's `date` is a `Date` object in the generated client, but the client
+serializes it in UTC on the wire. Building it at local midnight would shift it back a
+day in positive-offset timezones (e.g. Europe/Paris), so normalize the picked date
+with `toUtcDate` from `utils/date` before submitting (see `events/components/form.tsx`).
 
 ## Important Notes
 
