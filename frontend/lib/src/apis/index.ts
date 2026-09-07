@@ -4,6 +4,7 @@ export * from './AuthenticationApi';
 export * from './DefaultApi';
 export * from './EventsApi';
 export * from './FilesApi';
+export * from './HelloAssoApi';
 export * from './InstrumentsApi';
 export * from './InvitationsApi';
 export * from './ProfilesApi';

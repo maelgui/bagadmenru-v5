@@ -65,6 +65,23 @@ class Settings(BaseSettings):
     vapid_public_key: Optional[str] = None
     vapid_claims_email: Optional[str] = None
 
+    # HelloAsso webhook authentication.
+    #
+    # Two independent mechanisms, checked in the webhook handler:
+    #
+    # 1. ``helloasso_signature_key``: the partner "signatureKey". When set, the
+    #    incoming ``x-ha-signature`` header is verified as an HMAC-SHA256 of the
+    #    raw request body. Only partners get a signatureKey, so associations
+    #    leave this unset.
+    # 2. ``helloasso_webhook_token``: a shared secret embedded in the webhook
+    #    URL (``?token=...``). This is the fallback for associations, which
+    #    configure the notification URL themselves in their HelloAsso account.
+    #
+    # If neither is configured the webhook rejects every request (fail closed),
+    # so a misconfigured deployment cannot accept forged notifications.
+    helloasso_signature_key: Optional[str] = None
+    helloasso_webhook_token: Optional[str] = None
+
     @property
     def cookie_secure(self) -> bool:
         """Whether auth cookies must carry the Secure attribute.

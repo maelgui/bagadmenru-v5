@@ -30,6 +30,10 @@ class Resource(Enum):
     # (parrainage) since invited accounts are created with default groups only,
     # i.e. no privileged roles.
     INVITATION = "invitation"
+    # Membership status/history sourced from HelloAsso. Members can always see
+    # their own status (guarded by Resource.ME), so this resource governs
+    # seeing *other* members' status and reconciling unlinked HelloAsso orders.
+    MEMBERSHIP = "membership"
 
 
 # Role → set of (action, resource) tuples
@@ -80,6 +84,8 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.DELETE.value, Resource.GROUP.value),
         (Action.VIEW.value, Resource.EMAIL.value),
         (Action.CREATE.value, Resource.INVITATION.value),
+        (Action.VIEW.value, Resource.MEMBERSHIP.value),
+        (Action.EDIT.value, Resource.MEMBERSHIP.value),
     },
 }
 

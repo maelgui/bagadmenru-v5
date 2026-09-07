@@ -3,13 +3,16 @@ import * as Sentry from '@sentry/react';
 import {
   AuthenticationApi,
   Configuration, DefaultApi, EventsApi, FilesApi,
+  HelloAssoApi,
   InstrumentsApi,
   InvitationsApi,
+  type MembershipInfo,
   type Profile,
   ProfilesApi,
   PushNotificationsApi,
   ResponseError,
   type SessionInfo,
+  type UnlinkedMembership,
   UtilsApi,
 } from 'bagad-client';
 import { useCallback, useEffect } from 'react';
@@ -96,6 +99,7 @@ const apiClient = {
   pushApi: new PushNotificationsApi(apiConf),
   instrumentsApi: new InstrumentsApi(apiConf),
   invitationsApi: new InvitationsApi(apiConf),
+  helloAssoApi: new HelloAssoApi(apiConf),
 };
 
 export function useApiClient() {
@@ -116,6 +120,37 @@ export function useUserProfile() {
     queryFn: async () => await usersApi.getMyProfileApiV1ProfilesMeGet(),
   });
   return data;
+}
+
+/**
+ * Current user's HelloAsso membership status and history.
+ * When `profileId` is given, fetches that member's membership instead (admin);
+ * otherwise fetches the current user's own membership.
+ */
+export function useMembership(profileId?: string) {
+  const { usersApi } = useApiClient();
+
+  return useQuery<MembershipInfo>({
+    queryKey: profileId
+      ? ['profiles', profileId, 'membership']
+      : ['profiles', 'me', 'membership'],
+    queryFn: async () => (profileId
+      ? await usersApi.getProfileMembershipApiV1ProfilesProfileIdMembershipGet({ profileId })
+      : await usersApi.getMyMembershipApiV1ProfilesMeMembershipGet()),
+  });
+}
+
+/**
+ * HelloAsso membership orders that could not be auto-linked to a member
+ * (payer email did not match). Used by the admin reconciliation screen.
+ */
+export function useUnlinkedMemberships() {
+  const { helloAssoApi } = useApiClient();
+
+  return useQuery<UnlinkedMembership[]>({
+    queryKey: ['helloasso', 'unlinked'],
+    queryFn: async () => await helloAssoApi.listUnlinkedMembershipsApiV1HelloassoOrdersUnlinkedGet(),
+  });
 }
 
 export function usePermissions() {

@@ -30,7 +30,7 @@ const NAV_ITEMS: SettingsNavItem[] = [
   { to: 'profile', label: 'Profil', icon: UserIcon, enabled: true },
   { to: 'account', label: 'Compte', icon: UserRoundCogIcon, enabled: true },
   { to: 'appearance', label: 'Apparence', icon: PaletteIcon, enabled: true },
-  { to: 'membership', label: 'Adhésion', icon: WalletIcon, enabled: false },
+  { to: 'membership', label: 'Adhésion', icon: WalletIcon, enabled: true },
   { to: 'security', label: 'Sécurité', icon: ShieldIcon, enabled: true },
   { to: 'api', label: 'Accès API', icon: KeyIcon, enabled: false },
   { to: 'notifications', label: 'Notifications', icon: BellIcon, enabled: true },

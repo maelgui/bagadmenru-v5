@@ -20,6 +20,7 @@ import {
   queryClient, useApiClient, usePermissions, useUserProfile,
 } from '../../config/client';
 import ProfileView from './components/profile';
+import MembershipBadge from './components/membershipBadge';
 
 export default function ShowProfilePage() {
   const { usersApi } = useApiClient();
@@ -100,6 +101,11 @@ export default function ShowProfilePage() {
 
       <Container>
         <ProfileView profile={profile} />
+        {can('view', 'membership') && (
+          <div className="mt-6 flex justify-center">
+            <MembershipBadge profileId={profileId} />
+          </div>
+        )}
       </Container>
     </>
   );

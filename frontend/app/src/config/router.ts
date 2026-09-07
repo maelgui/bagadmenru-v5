@@ -87,6 +87,10 @@ export default createBrowserRouter([
                     lazy: lazyPage(async () => await import('../pages/profiles/settings/appearance')),
                   },
                   {
+                    path: 'membership',
+                    lazy: lazyPage(async () => await import('../pages/profiles/settings/membership')),
+                  },
+                  {
                     path: 'security',
                     lazy: lazyPage(async () => await import('../pages/profiles/settings/security')),
                   },
@@ -123,6 +127,10 @@ export default createBrowserRouter([
               {
                 path: '/profile/rankings',
                 lazy: lazyPage(async () => await import('../pages/profiles/rankings')),
+              },
+              {
+                path: '/profile/membership/reconciliation',
+                lazy: lazyPage(async () => await import('../pages/profiles/membershipReconciliation')),
               },
               {
                 path: '/groups',

@@ -14,6 +14,7 @@ from bbe2 import models, schemas
 from bbe2.crud import CRUDProfile
 from bbe2.dependencies import S3Dep, SenderDep, SessionDep, SettingsDep, get_s3_helper
 from bbe2.models.action_token import ActionTokenValue
+from bbe2.schemas.helloasso import MembershipInfo
 from bbe2.schemas.profile import MinimalGroup, Profile
 from bbe2.schemas.utils import (
     GlobalStats,
@@ -22,6 +23,7 @@ from bbe2.schemas.utils import (
     UserRankingItem,
     UserRankings,
 )
+from bbe2.services import membership as membership_service
 from bbe2.utils.action_token import create_action_token
 from bbe2.utils.auth import (
     Action,
@@ -96,6 +98,19 @@ async def get_my_permissions(
     return get_permissions_for_roles(roles)
 
 
+@profiles_router.get(
+    "/me/membership",
+    response_model=MembershipInfo,
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
+)
+async def get_my_membership(
+    session: SessionDep,
+    identifier: Annotated[str, Depends(get_current_user2)],
+):
+    """Return the current user's membership status and history."""
+    return membership_service.get_membership_info_for_user(session, identifier)
+
+
 @profiles_router.put(
     "/me",
     response_model=schemas.Profile,
@@ -163,6 +178,24 @@ async def get_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
     return db_profile
+
+
+@profiles_router.get(
+    "/{profile_id}/membership",
+    response_model=MembershipInfo,
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.MEMBERSHIP))],
+)
+async def get_profile_membership(
+    profile_id: str,
+    session: SessionDep,
+):
+    """Return a member's membership status and history (staff/admin only)."""
+    member = session.get(models.UserDB, profile_id)
+    if member is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
+    return membership_service.get_membership_info_for_user(session, profile_id)
 
 
 @profiles_router.put(

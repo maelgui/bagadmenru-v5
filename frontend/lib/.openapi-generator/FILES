@@ -6,6 +6,7 @@ src/apis/AuthenticationApi.ts
 src/apis/DefaultApi.ts
 src/apis/EventsApi.ts
 src/apis/FilesApi.ts
+src/apis/HelloAssoApi.ts
 src/apis/InstrumentsApi.ts
 src/apis/InvitationsApi.ts
 src/apis/ProfilesApi.ts
@@ -37,6 +38,10 @@ src/models/InvitationInfo.ts
 src/models/LoginData.ts
 src/models/LoginType.ts
 src/models/LogoutRequest.ts
+src/models/MembershipHistoryItem.ts
+src/models/MembershipInfo.ts
+src/models/MembershipLinkRequest.ts
+src/models/MembershipStatus.ts
 src/models/MinimalGroup.ts
 src/models/MyProfileUpdate.ts
 src/models/MyStats.ts
@@ -57,6 +62,7 @@ src/models/ResponseCreate.ts
 src/models/Role.ts
 src/models/SessionInfo.ts
 src/models/Token.ts
+src/models/UnlinkedMembership.ts
 src/models/UserRankingItem.ts
 src/models/UserRankings.ts
 src/models/ValidationError.ts

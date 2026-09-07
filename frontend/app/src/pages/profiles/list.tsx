@@ -1,4 +1,4 @@
-import { BellOff, CirclePlus, Medal, UserPlus } from 'lucide-react';
+import { BellOff, CirclePlus, Medal, UserPlus, WalletIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Container from '../../components/container';
@@ -53,6 +53,14 @@ export default function ProfilesPage() {
           >
             <UserPlus data-icon="inline-start" />
             Inviter
+          </Link>,
+          <Link
+            key="memberships"
+            className={cn(buttonVariants({ variant: 'outline' }), !can('view', 'membership') && 'hidden')}
+            to="/profile/membership/reconciliation"
+          >
+            <WalletIcon data-icon="inline-start" />
+            Adhésions
           </Link>,
           <Link
             key="add-profile"
