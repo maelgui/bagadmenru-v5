@@ -173,7 +173,19 @@ export default function PasskeysSection() {
                 );
               },
               onError: () => {
-                toast.add({ title: "Impossible d'ajouter la passkey.", type: 'error' });
+                // The browser deliberately collapses several causes into a single
+                // NotAllowedError (user cancelled, timed out, or — notably on
+                // Firefox — the device already has a passkey but the browser
+                // won't disclose it, unlike Chrome which raises InvalidStateError,
+                // surfaced above as `already-registered`). We therefore cannot
+                // name the cause without lying or leaking, per the WebAuthn spec's
+                // privacy design (W3C WebAuthn §6.3.2 / §14.5.1). Show a neutral,
+                // action-first, non-alarming message instead — as recommended by
+                // FIDO Alliance and NN/g error-message guidelines.
+                toast.add({
+                  title: "L'ajout de la passkey n'a pas abouti. Vous en avez peut-être déjà une sur cet appareil — réessayez, ou configurez-la plus tard.",
+                  type: 'info',
+                });
               },
             })}
             disabled={register.isPending}

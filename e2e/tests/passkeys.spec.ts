@@ -123,12 +123,15 @@ test.describe('Passkeys (WebAuthn)', () => {
       }
 
       // Primary oracle (authoritative, non-flaky): the backend still holds
-      // exactly one credential — the InvalidStateError path did NOT create a
-      // duplicate. Read the source of truth rather than a transient toast.
+      // exactly one credential — the duplicate-registration path did NOT create
+      // a duplicate. Read the source of truth rather than a transient toast.
       expect(await countPasskeys()).toBe(1);
 
-      // The InvalidStateError must be handled as benign, not surfaced as an
-      // error toast (which would also mean it reached the error path / Sentry).
+      // The duplicate attempt must never surface the old alarming error toast.
+      // On Chromium (this test's virtual authenticator) it is raised as an
+      // InvalidStateError and handled as the benign `already-registered`
+      // outcome; on Firefox it collapses to NotAllowedError and is shown as a
+      // neutral info message. Either way, no scary "error" toast.
       await expect(page.getByText("Impossible d'ajouter la passkey")).toHaveCount(0);
 
       // Local oracles: one credential on the authenticator and one row in the UI.
