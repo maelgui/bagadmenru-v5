@@ -375,10 +375,15 @@ async def get_my_stats(
     q = q.where(models.EventDB.is_in_doodle == True)
     n_positive_responses, avg_response_time, n_responses = session.execute(q).one()
 
+    # "Upcoming" is normalised to midnight today so this matches the PWA badge
+    # (see services.events.count_unanswered_events). Using datetime.now() here
+    # would drop events scheduled earlier today, making the home-page banner
+    # disagree with the app-icon badge.
+    today = date_now.replace(hour=0, minute=0, second=0, microsecond=0)
     q = select(
         sql_fn.count(models.ResponseDB.value).label("n_upcomming_responses"),
     ).join_from(models.EventDB, models.ResponseDB)
-    q = q.where(models.EventDB.date >= date_now)
+    q = q.where(models.EventDB.date >= today)
     q = q.where(models.ResponseDB.user_id == identifier)
     q = q.where(models.EventDB.is_in_doodle == True)
     n_upcomming_responses = session.scalars(q).one()
@@ -422,10 +427,14 @@ async def get_global_stats(
     q = q.where(models.EventDB.is_in_doodle == True)
     res3 = session.scalar(q)
 
+    # See get_my_stats: normalise "upcoming" to midnight today so n_upcoming_event
+    # matches the PWA badge and the home-page banner (n_upcoming_event -
+    # n_upcomming_responses) stays consistent throughout the day.
+    today = date_now.replace(hour=0, minute=0, second=0, microsecond=0)
     q = select(
         sql_fn.count(models.EventDB.id).label("n_upcoming_event"),
     ).select_from(models.EventDB)
-    q = q.where(models.EventDB.date >= date_now)
+    q = q.where(models.EventDB.date >= today)
     q = q.where(models.EventDB.is_in_doodle == True)
     res4 = session.scalar(q)
 
