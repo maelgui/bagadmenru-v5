@@ -42,7 +42,6 @@ def upgrade() -> None:
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("helloasso_item_id"),
     )
     op.create_index(
         op.f("ix_helloasso_memberships_id"),
