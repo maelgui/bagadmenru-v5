@@ -102,9 +102,9 @@ export default function MembershipSection({ profileId }: { profileId?: string } 
                         key={item.id}
                         className="flex items-center justify-between gap-4 py-2.5"
                       >
-                        <div className="flex flex-col gap-0.5">
+                        <div className="flex min-w-0 flex-col gap-0.5">
                           <span className="text-sm font-medium">
-                            {item.tierDescription ?? 'Adhésion'}
+                            {item.tierName ?? item.tierDescription ?? 'Adhésion'}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {`Saison ${item.season} · ${formatDate(item.orderDate)}`}

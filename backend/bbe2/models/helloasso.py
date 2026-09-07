@@ -46,11 +46,28 @@ class HelloAssoMembershipDB(Base):
     )
 
     # Raw payer info, kept verbatim to help an admin reconcile unlinked rows.
+    # The payer is who paid; it is NOT necessarily the member (e.g. a parent
+    # paying for their child), so it is used only as a reconciliation hint and
+    # as a fallback for auto-linking by email.
     payer_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     payer_first_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     payer_last_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
-    # The membership formula label (HelloAsso "tier"), e.g. "Adhésion adulte".
+    # The adherent: the person the membership is actually for (HelloAsso
+    # ``item.user``). This is who we link to a member. HelloAsso only gives a
+    # first/last name here (no email), so the linking email comes from the
+    # item's "Email" custom field, falling back to the payer email.
+    adherent_first_name: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    adherent_last_name: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+
+    # The membership formula. HelloAsso gives both a short tier ``name``
+    # (e.g. "ADHESION OBLIGATOIRE") and a longer ``tierDescription``; we keep
+    # both and display the name first.
+    tier_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     tier_description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     # Amount in cents, as HelloAsso reports it.

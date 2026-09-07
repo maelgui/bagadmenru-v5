@@ -60,6 +60,24 @@ export interface UnlinkedMembership {
      * @type {string}
      * @memberof UnlinkedMembership
      */
+    adherentFirstName: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UnlinkedMembership
+     */
+    adherentLastName: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UnlinkedMembership
+     */
+    tierName: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UnlinkedMembership
+     */
     tierDescription: string | null;
     /**
      * 
@@ -91,6 +109,9 @@ export function instanceOfUnlinkedMembership(value: object): value is UnlinkedMe
     if (!('payerEmail' in value) || value['payerEmail'] === undefined) return false;
     if (!('payerFirstName' in value) || value['payerFirstName'] === undefined) return false;
     if (!('payerLastName' in value) || value['payerLastName'] === undefined) return false;
+    if (!('adherentFirstName' in value) || value['adherentFirstName'] === undefined) return false;
+    if (!('adherentLastName' in value) || value['adherentLastName'] === undefined) return false;
+    if (!('tierName' in value) || value['tierName'] === undefined) return false;
     if (!('tierDescription' in value) || value['tierDescription'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('orderDate' in value) || value['orderDate'] === undefined) return false;
@@ -114,6 +135,9 @@ export function UnlinkedMembershipFromJSONTyped(json: any, ignoreDiscriminator: 
         'payerEmail': json['payer_email'],
         'payerFirstName': json['payer_first_name'],
         'payerLastName': json['payer_last_name'],
+        'adherentFirstName': json['adherent_first_name'],
+        'adherentLastName': json['adherent_last_name'],
+        'tierName': json['tier_name'],
         'tierDescription': json['tier_description'],
         'amount': json['amount'],
         'orderDate': (new Date(json['order_date'])),
@@ -138,6 +162,9 @@ export function UnlinkedMembershipToJSONTyped(value?: UnlinkedMembership | null,
         'payer_email': value['payerEmail'],
         'payer_first_name': value['payerFirstName'],
         'payer_last_name': value['payerLastName'],
+        'adherent_first_name': value['adherentFirstName'],
+        'adherent_last_name': value['adherentLastName'],
+        'tier_name': value['tierName'],
         'tier_description': value['tierDescription'],
         'amount': value['amount'],
         'order_date': ((value['orderDate']).toISOString()),
