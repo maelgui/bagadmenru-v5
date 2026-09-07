@@ -21,6 +21,7 @@ import type {
   GroupCreate,
   GroupUpdate,
   HTTPValidationError,
+  MembershipInfo,
   MyProfileUpdate,
   MyStats,
   Profile,
@@ -42,6 +43,8 @@ import {
     GroupUpdateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    MembershipInfoFromJSON,
+    MembershipInfoToJSON,
     MyProfileUpdateFromJSON,
     MyProfileUpdateToJSON,
     MyStatsFromJSON,
@@ -75,6 +78,10 @@ export interface GetGroupApiV1GroupsGroupIdGetRequest {
 }
 
 export interface GetProfileApiV1ProfilesProfileIdGetRequest {
+    profileId: string;
+}
+
+export interface GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest {
     profileId: string;
 }
 
@@ -306,6 +313,42 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Return the current user\'s membership status and history.
+     * Get My Membership
+     */
+    async getMyMembershipApiV1ProfilesMeMembershipGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MembershipInfo>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/profiles/me/membership`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MembershipInfoFromJSON(jsonValue));
+    }
+
+    /**
+     * Return the current user\'s membership status and history.
+     * Get My Membership
+     */
+    async getMyMembershipApiV1ProfilesMeMembershipGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MembershipInfo> {
+        const response = await this.getMyMembershipApiV1ProfilesMeMembershipGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Returns all \'action:resource\' permission strings for the current user.
      * Get My Permissions
      */
@@ -481,6 +524,49 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async getProfileApiV1ProfilesProfileIdGet(requestParameters: GetProfileApiV1ProfilesProfileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Profile> {
         const response = await this.getProfileApiV1ProfilesProfileIdGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Return a member\'s membership status and history (staff/admin only).
+     * Get Profile Membership
+     */
+    async getProfileMembershipApiV1ProfilesProfileIdMembershipGetRaw(requestParameters: GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MembershipInfo>> {
+        if (requestParameters['profileId'] == null) {
+            throw new runtime.RequiredError(
+                'profileId',
+                'Required parameter "profileId" was null or undefined when calling getProfileMembershipApiV1ProfilesProfileIdMembershipGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/profiles/{profile_id}/membership`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MembershipInfoFromJSON(jsonValue));
+    }
+
+    /**
+     * Return a member\'s membership status and history (staff/admin only).
+     * Get Profile Membership
+     */
+    async getProfileMembershipApiV1ProfilesProfileIdMembershipGet(requestParameters: GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MembershipInfo> {
+        const response = await this.getProfileMembershipApiV1ProfilesProfileIdMembershipGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

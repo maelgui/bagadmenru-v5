@@ -9,6 +9,17 @@ from .invitation import (
     InvitationInfo,
     OtpRequest,
 )
+from .helloasso import (
+    HelloAssoItem,
+    HelloAssoNotification,
+    HelloAssoOrderData,
+    HelloAssoPayer,
+    MembershipHistoryItem,
+    MembershipInfo,
+    MembershipLinkRequest,
+    MembershipStatus,
+    UnlinkedMembership,
+)
 from .passkey import Passkey
 from .profile import (
     Group,
