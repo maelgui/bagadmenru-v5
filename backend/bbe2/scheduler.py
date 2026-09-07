@@ -8,6 +8,7 @@ from sqlalchemy import select
 from bbe2.config import get_settings
 from bbe2.database import session_ctx
 from bbe2.models import GroupDB
+from bbe2.services import membership as membership_service
 from bbe2.utils import get_logger
 
 scheduler = AsyncIOScheduler()
@@ -169,3 +170,19 @@ async def sync_mailing_list(name, domain, email_list: set[str]):
             await helper.delete_subscriber(domain=domain, name=name, email=email)
 
     logger.info("sync successful")
+
+
+@scheduler.scheduled_job("cron", hour="4")
+async def purge_unlinked_memberships():
+    """Daily cleanup of stale unlinked HelloAsso memberships.
+
+    Deletes unlinked orders (``user_id IS NULL``) older than the configured
+    reconciliation window (``unlinked_membership_ttl_days``). Runs at 04:00,
+    after the 03:00 mailing-list sync.
+    """
+    settings = get_settings()
+    with session_ctx(settings.database_url) as ses:
+        deleted = membership_service.purge_unlinked_memberships(
+            ses, ttl_days=settings.unlinked_membership_ttl_days
+        )
+        logger.info("Unlinked membership purge complete: %d deleted", deleted)
