@@ -114,36 +114,32 @@ test.describe('Passkeys (WebAuthn)', () => {
       try {
         await page.getByRole('button', { name: 'Ajouter' }).click();
 
-        // The button returns to an enabled/idle state once the mutation settles
-        // (it neither stays stuck pending nor gets removed). This is a stable
-        // signal that the second attempt resolved.
-        await expect(page.getByRole('button', { name: 'Ajouter' })).toBeEnabled({ timeout: 10_000 });
+        // UX oracle: the user is told, via an info toast, that this device
+        // already has a passkey. This asserts the InvalidStateError →
+        // "already-registered" handling path end to end. `toBeVisible` polls,
+        // so it catches the toast even though it auto-dismisses.
+        await expect(
+          page.getByText('Cet appareil possède déjà une passkey', { exact: false })
+        ).toBeVisible({ timeout: 10_000 });
+
+        // It must be handled as benign, never surfaced as an error toast (which
+        // would also mean the failure reached the error path / Sentry).
+        await expect(page.getByText("Impossible d'ajouter la passkey")).toHaveCount(0);
       } finally {
         await authenticator.disarm();
       }
 
-      // Primary oracle (authoritative, non-flaky): the backend still holds
-      // exactly one credential — the InvalidStateError path did NOT create a
-      // duplicate. Read the source of truth rather than a transient toast.
+      // Authoritative oracle: the backend still holds exactly one credential —
+      // the InvalidStateError path did NOT create a duplicate. Read the source
+      // of truth in addition to the UI so a regression can't hide behind a
+      // transient toast.
       expect(await countPasskeys()).toBe(1);
 
-      // The InvalidStateError must be handled as benign, not surfaced as an
-      // error toast (which would also mean it reached the error path / Sentry).
-      await expect(page.getByText("Impossible d'ajouter la passkey")).toHaveCount(0);
-
-      // Local oracles: one credential on the authenticator and one row in the UI.
+      // Local oracles: one credential on the authenticator, one row in the UI,
+      // and the "Ajouter" button usable again (mutation settled, not stuck).
       expect((await authenticator.getCredentials()).length).toBe(1);
       await expect(page.locator('[data-credential-id]')).toHaveCount(1);
-
-      // Best-effort UX check: the app is expected to show an info toast telling
-      // the user the device already has a passkey. The toast is transient
-      // (auto-dismisses), so this is not used as the pass/fail oracle — it is
-      // asserted leniently and only when still visible, to avoid flakiness on
-      // slower environments (e.g. beta) where it may fade before assertion.
-      const alreadyToast = page.getByText('Cet appareil possède déjà une passkey', { exact: false });
-      if (await alreadyToast.count() > 0) {
-        await expect(alreadyToast.first()).toBeVisible();
-      }
+      await expect(page.getByRole('button', { name: 'Ajouter' })).toBeEnabled();
     });
   });
 

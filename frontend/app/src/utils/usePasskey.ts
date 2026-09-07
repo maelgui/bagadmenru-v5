@@ -1,10 +1,10 @@
 import {
   type PublicKeyCredentialCreationOptionsJSON,
   startRegistration,
-  WebAuthnError,
 } from '@simplewebauthn/browser';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient, useApiClient } from '../config/client';
+import { isAlreadyRegisteredError } from './webauthn-errors';
 
 /**
  * Reusable passkey enrollment.
@@ -42,7 +42,7 @@ export function useRegisterPasskey() {
         // benign "already registered" outcome instead of rejecting. Rejecting
         // would surface it as an error to react-query and, via the app's error
         // handling, to Sentry.
-        if (error instanceof WebAuthnError && error.name === 'InvalidStateError') {
+        if (isAlreadyRegisteredError(error)) {
           return { status: 'already-registered' };
         }
         // Any other failure (network, user cancelled/UV refused, etc.) is a real
