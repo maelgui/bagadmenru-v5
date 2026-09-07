@@ -1,6 +1,7 @@
-import { BellOff, CirclePlus, Medal, UserPlus, WalletIcon } from 'lucide-react';
+import { BadgeCheck, BellOff, CirclePlus, Medal, UserPlus, WalletIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { MembershipStatus } from 'bagad-client';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { buttonVariants } from '@/components/ui/button';
@@ -20,6 +21,33 @@ function GroupTag({ name, color }: { name: string, color: string | undefined }) 
       } : undefined}
     >
       {name}
+    </span>
+  );
+}
+
+// Membership recognition, shown only when the API populates `membershipStatus`
+// (i.e. the current user holds `view:membership`) *and* the member is up to
+// date for the season. We deliberately surface only the positive "à jour"
+// state — expired/none are not flagged, to keep the trombinoscope clean and
+// avoid singling members out negatively. A small check pill in the accent
+// green, echoing the group tags' pill style, labelled with the paid season.
+function MembershipBadge({
+  status,
+  season,
+}: {
+  status?: MembershipStatus | null;
+  season?: string | null;
+}) {
+  if (status !== MembershipStatus.Active) {
+    return null;
+  }
+  return (
+    <span
+      className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+      aria-label={season ? `Adhésion à jour, saison ${season}` : 'Adhésion à jour'}
+    >
+      <BadgeCheck className="size-3.5" aria-hidden="true" />
+      {season ?? 'À jour'}
     </span>
   );
 }
@@ -97,6 +125,10 @@ export default function ProfilesPage() {
                       <BellOff className="ml-1 inline size-3 text-destructive" aria-label="Ne reçoit pas les emails" />
                     )}
                   </h4>
+                  <MembershipBadge
+                    status={profile.membershipStatus}
+                    season={profile.membershipActiveSeason}
+                  />
                   <div className="flex flex-wrap">
                     {profile.groups.map((group) => (
                       <GroupTag key={group.id} name={group.name} color={group.color} />
