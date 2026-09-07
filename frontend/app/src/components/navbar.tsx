@@ -100,8 +100,9 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
           <DropdownMenuGroup>
             <DropdownMenuItem
               className="py-2.5"
+              onClick={onNavigate}
               render={(props) => (
-                <Link {...props} to="/profile/me" onClick={onNavigate} />
+                <Link {...props} to="/profile/me" />
               )}
             >
               <Avatar className="size-9">
@@ -118,8 +119,9 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={onNavigate}
               render={(props) => (
-                <Link {...props} to="/profile/settings" onClick={onNavigate} />
+                <Link {...props} to="/profile/settings" />
               )}
             >
               <SettingsIcon className="size-4" aria-hidden="true" />
