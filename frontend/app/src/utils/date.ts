@@ -20,3 +20,16 @@ export function fromIsoDate(value: string): Date {
   const [year, month, day] = value.split('-').map(Number);
   return new Date(year, month - 1, day);
 }
+
+/**
+ * Returns a Date pinned to UTC midnight of the given local calendar date.
+ *
+ * The generated API client serializes `date` fields with
+ * `value.toISOString().substring(0, 10)`, which uses UTC. A Date at local
+ * midnight in a positive-offset timezone (e.g. Europe/Paris) would then
+ * serialize to the previous calendar day. Pinning to UTC midnight keeps the
+ * calendar date the user picked intact through that serialization.
+ */
+export function toUtcDate(date: Date): Date {
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+}
