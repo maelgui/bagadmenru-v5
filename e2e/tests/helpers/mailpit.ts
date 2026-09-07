@@ -3,7 +3,20 @@ import { randomUUID } from 'node:crypto';
 
 import { CORRELATION_ID_HEADER } from './constants';
 
-const MAILPIT_URL = process.env.MAILPIT_URL || 'http://localhost:8025';
+// Base URL of the Mailpit HTTP API. Two shapes are supported:
+//  - a bare origin (CI port-forwards Mailpit to localhost:8025), and
+//  - an origin + path prefix, e.g. http://localhost:5173/mailpit, used by the
+//    local docker/finch compose stack where Mailpit has no published host port
+//    and is reached through the vite proxy (MP_WEBROOT=mailpit).
+// We therefore build request URLs by concatenating this base with the API path
+// rather than using Playwright's `baseURL` (which drops any path prefix when
+// the request path is absolute like `/api/...`).
+const MAILPIT_URL = (process.env.MAILPIT_URL || 'http://localhost:8025').replace(/\/$/, '');
+
+/** Build an absolute Mailpit API URL, preserving any base path prefix. */
+function mailpitUrl(path: string): string {
+  return `${MAILPIT_URL}${path}`;
+}
 
 export interface MailpitMessage {
   ID: string;
@@ -30,10 +43,10 @@ export async function waitForEmail(
   const timeout = options?.timeout || 10_000;
   const start = Date.now();
 
-  const ctx = await request.newContext({ baseURL: MAILPIT_URL });
+  const ctx = await request.newContext();
 
   while (Date.now() - start < timeout) {
-    const res = await ctx.get(`/api/v1/search?query=to:${to}`);
+    const res = await ctx.get(mailpitUrl(`/api/v1/search?query=to:${to}`));
     const data = await res.json();
 
     if (data.messages && data.messages.length > 0) {
@@ -46,7 +59,7 @@ export async function waitForEmail(
 
       if (match) {
         // Fetch full message with HTML/Text body
-        const detail = await ctx.get(`/api/v1/message/${match.ID}`);
+        const detail = await ctx.get(mailpitUrl(`/api/v1/message/${match.ID}`));
         const result = await detail.json();
         await ctx.dispose();
         return result;
@@ -81,7 +94,7 @@ async function getMessageHeaders(
   ctx: Awaited<ReturnType<typeof request.newContext>>,
   id: string
 ): Promise<Record<string, string[]>> {
-  const res = await ctx.get(`/api/v1/message/${id}/headers`);
+  const res = await ctx.get(mailpitUrl(`/api/v1/message/${id}/headers`));
   if (!res.ok()) return {};
   const raw = (await res.json()) as Record<string, string[]>;
   const lower: Record<string, string[]> = {};
@@ -111,23 +124,36 @@ export async function waitForEmailByCorrelationId(
   const target = correlationId.toLowerCase();
   const headerKey = CORRELATION_ID_HEADER.toLowerCase();
 
-  const ctx = await request.newContext({ baseURL: MAILPIT_URL });
+  const ctx = await request.newContext();
+
+  // Under full-parallel runs several specs share one Mailpit inbox and issue
+  // deletes concurrently, so a list/detail response can transiently be non-OK
+  // or non-JSON. Tolerate that and keep polling rather than throwing.
+  const safeJson = async (res: Awaited<ReturnType<typeof ctx.get>>): Promise<any | null> => {
+    if (!res.ok()) return null;
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  };
 
   try {
     while (Date.now() - start < timeout) {
       const query = options?.to ? `to:${options.to}` : '';
       const res = query
-        ? await ctx.get(`/api/v1/search?query=${encodeURIComponent(query)}`)
-        : await ctx.get('/api/v1/messages');
-      const data = await res.json();
-      const messages: MailpitMessage[] = data.messages || [];
+        ? await ctx.get(mailpitUrl(`/api/v1/search?query=${encodeURIComponent(query)}`))
+        : await ctx.get(mailpitUrl('/api/v1/messages'));
+      const data = await safeJson(res);
+      const messages: MailpitMessage[] = data?.messages || [];
 
       for (const msg of messages) {
         const headers = await getMessageHeaders(ctx, msg.ID);
         const values = headers[headerKey] || [];
         if (values.some((v) => v.toLowerCase() === target)) {
-          const detail = await ctx.get(`/api/v1/message/${msg.ID}`);
-          return (await detail.json()) as MailpitMessageDetail;
+          const detail = await ctx.get(mailpitUrl(`/api/v1/message/${msg.ID}`));
+          const body = await safeJson(detail);
+          if (body) return body as MailpitMessageDetail;
         }
       }
 
@@ -154,8 +180,8 @@ export function extractLinks(html: string): string[] {
  * Delete a specific email by ID.
  */
 export async function deleteEmail(id: string): Promise<void> {
-  const ctx = await request.newContext({ baseURL: MAILPIT_URL });
-  await ctx.delete('/api/v1/messages', {
+  const ctx = await request.newContext();
+  await ctx.delete(mailpitUrl('/api/v1/messages'), {
     data: { IDs: [id] },
   });
   await ctx.dispose();
@@ -165,7 +191,7 @@ export async function deleteEmail(id: string): Promise<void> {
  * Delete all emails in mailpit (useful for test cleanup).
  */
 export async function deleteAllEmails(): Promise<void> {
-  const ctx = await request.newContext({ baseURL: MAILPIT_URL });
-  await ctx.delete('/api/v1/messages');
+  const ctx = await request.newContext();
+  await ctx.delete(mailpitUrl('/api/v1/messages'));
   await ctx.dispose();
 }

@@ -12,6 +12,7 @@ cd e2e
 npm ci                                    # Install dependencies
 npx playwright install --with-deps chromium  # Install browser
 npm run test                              # Run all tests (local)
+npm run test:local                        # Local: Mailpit via the vite proxy
 npm run test:smoke                        # Smoke tests only
 npm run test:ui                           # Interactive UI mode
 ```
@@ -19,16 +20,20 @@ npm run test:ui                           # Interactive UI mode
 ## Environment Configuration
 
 Tests use environment variables for target URLs:
-- `BASE_URL` — Frontend URL (default: http://localhost:5173)
-- `API_URL` — Backend API URL (default: same as `BASE_URL`; API is same-origin under `/api`)
-- `MAILPIT_URL` — Mailpit API for email verification (default: http://localhost:8025)
+- `BASE_URL` — Frontend origin (default: http://localhost:5173). The API is
+  served on the **same origin** under `/api`, so there is no separate API URL to
+  configure — API request contexts derive their base from `BASE_URL`.
+- `MAILPIT_URL` — Mailpit API for email verification (default: http://localhost:8025).
+  In the local docker/finch compose stack Mailpit has **no published host port**;
+  it is reached through the vite proxy at `http://localhost:5173/mailpit`
+  (`MP_WEBROOT=mailpit`). Use `npm run test:local`, which sets this for you. The
+  Mailpit helper preserves the `/mailpit` path prefix when building API URLs.
 
 ## CI Configuration
 
 In CI, tests run against the beta environment:
 ```bash
 BASE_URL=https://beta.bagadmenru.bzh \
-API_URL=https://beta.bagadmenru.bzh \
 MAILPIT_URL=http://localhost:8025 \
 npm run test:ci
 ```
