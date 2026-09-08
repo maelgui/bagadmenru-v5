@@ -129,6 +129,7 @@ function UnlinkedRow({
 }) {
   const { helloAssoApi, invitationsApi } = useApiClient();
   const [selected, setSelected] = useState<MemberOption | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const { mutate: link, isPending } = useMutation({
     mutationFn: async (userId: string) => await helloAssoApi
@@ -171,6 +172,7 @@ function UnlinkedRow({
       }),
     onSuccess: () => {
       toast.add({ title: 'Invitation envoyée par email.', type: 'success' });
+      setInviteOpen(false);
     },
     onError: () => {
       toast.add({ title: 'Impossible d\'envoyer l\'invitation.', type: 'error' });
@@ -220,7 +222,7 @@ function UnlinkedRow({
           <LinkIcon data-icon="inline-start" />
           Rattacher
         </Button>
-        <AlertDialog>
+        <AlertDialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <AlertDialogTrigger
             render={<Button variant="outline" />}
             disabled={!email || isInviting}
