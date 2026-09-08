@@ -54,10 +54,15 @@ def _session_cookie_name(user_id: str) -> str:
     return f"{SESSION_COOKIE_PREFIX}{user_id}"
 
 
-def create_access_token(user: UserDB, settings: Settings) -> str:
-    """Build and sign a JWT access token for ``user`` (no cookie side effect)."""
+def build_jwt_payload(user: UserDB, settings: Settings) -> JwtPayload:
+    """Build the JWT payload (identity + roles) for ``user``.
+
+    Shared by ``create_access_token`` (which signs it into a cookie/bearer
+    token) and API-key authentication (which uses the payload directly, with no
+    token round-trip).
+    """
     now = datetime.now(timezone.utc)
-    payload = JwtPayload(
+    return JwtPayload(
         sub=user.id,
         roles=[r.id for g in user.groups for r in g.roles],
         first_name=user.first_name,
@@ -65,8 +70,16 @@ def create_access_token(user: UserDB, settings: Settings) -> str:
         email=user.email,
         iat=now,
         exp=now + timedelta(seconds=settings.access_token_max_age_seconds),
-    ).model_dump()
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm="HS256")
+    )
+
+
+def create_access_token(user: UserDB, settings: Settings) -> str:
+    """Build and sign a JWT access token for ``user`` (no cookie side effect)."""
+    return jwt.encode(
+        build_jwt_payload(user, settings).model_dump(),
+        settings.jwt_secret_key,
+        algorithm="HS256",
+    )
 
 
 def set_active_account_cookie(
@@ -420,15 +433,9 @@ def _api_key_context(
             detail="Invalid API key",
         )
 
-    token = create_access_token(api_key.user, settings)
-    payload = verify_token(token, settings)
-    # A token we just minted always verifies; guard for mypy/None-safety.
-    if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized",
-        )
+    # The key authenticates its owner: build the member's identity directly, no
+    # JWT round-trip. Narrowing to the key's permissions happens in Authorization.
     return AuthContext(
-        payload=payload,
+        payload=build_jwt_payload(api_key.user, settings),
         key_permissions=frozenset(api_key.authorized_permissions),
     )
