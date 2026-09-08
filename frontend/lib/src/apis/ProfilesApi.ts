@@ -670,42 +670,6 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Permissions (\"action:resource\") the member may delegate to an API key.  A key can only ever exercise a subset of its owner\'s permissions, so the choices offered are exactly the member\'s own permissions.
-     * List Available Api Key Permissions
-     */
-    async listAvailableApiKeyPermissionsApiV1ProfilesMeApiKeysAvailablePermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            const token = this.configuration.accessToken;
-            const tokenString = await token("HTTPBearer", []);
-
-            if (tokenString) {
-                headerParameters["Authorization"] = `Bearer ${tokenString}`;
-            }
-        }
-        const response = await this.request({
-            path: `/api/v1/profiles/me/api-keys/available-permissions`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse<any>(response);
-    }
-
-    /**
-     * Permissions (\"action:resource\") the member may delegate to an API key.  A key can only ever exercise a subset of its owner\'s permissions, so the choices offered are exactly the member\'s own permissions.
-     * List Available Api Key Permissions
-     */
-    async listAvailableApiKeyPermissionsApiV1ProfilesMeApiKeysAvailablePermissionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string | null>> {
-        const response = await this.listAvailableApiKeyPermissionsApiV1ProfilesMeApiKeysAvailablePermissionsGetRaw(initOverrides);
-        return await response.value();
-    }
-
-    /**
      * List Groups
      */
     async listGroupsApiV1GroupsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Group>>> {

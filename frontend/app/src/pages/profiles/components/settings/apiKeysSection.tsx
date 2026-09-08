@@ -310,9 +310,9 @@ export default function ApiKeysSection() {
   });
 
   const { data: permissions } = useQuery({
-    queryKey: ['api-keys', 'permissions'],
+    queryKey: ['me', 'permissions'],
     queryFn: async () =>
-      await usersApi.listAvailableApiKeyPermissionsApiV1ProfilesMeApiKeysAvailablePermissionsGet(),
+      await usersApi.getMyPermissionsApiV1ProfilesMePermissionsGet(),
   });
 
   const { mutate: createMutation, isPending: isCreating } = useMutation({
