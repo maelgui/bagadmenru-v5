@@ -127,12 +127,14 @@ def get_membership_info_for_user(
 def link_orphan_memberships_for_user(session: Session, user: UserDB) -> int:
     """Attach any unlinked memberships whose adherent email matches ``user``.
 
-    Called when a member account is created (e.g. via invitation): a HelloAsso
-    membership ingested earlier may be sitting unlinked because no matching
-    member existed yet. We match only on ``adherent_email`` (the HelloAsso
-    "Email" custom field), never ``payer_email``: the payer is often a parent
-    paying for a child, so matching the payer could wrongly attach the child's
-    adhesion to the parent's new account. Matching is case-insensitive.
+    Called when a member account is created (e.g. via invitation or manual
+    admin creation): a HelloAsso membership ingested earlier may be sitting
+    unlinked because no matching member existed yet. We match only on
+    ``adherent_email`` (the HelloAsso "Email" custom field), never
+    ``payer_email``: the payer is often a parent paying for a child, so matching
+    the payer could wrongly attach the child's adhesion to the parent's new
+    account. Matching is case-insensitive. This is the reverse direction of the
+    linking done at ingestion, and uses the same adherent-email-only rule.
 
     Does not commit; the caller commits as part of its own transaction. Returns
     the number of rows linked.
@@ -149,6 +151,20 @@ def link_orphan_memberships_for_user(session: Session, user: UserDB) -> int:
     for row in rows:
         row.user_id = user.id
     return len(rows)
+
+
+def _member_id_by_email(session: Session, email: Optional[str]) -> Optional[str]:
+    """Return the id of the member whose email matches ``email`` (or None).
+
+    Case-insensitive. Shared by ingestion (membership -> member) and by
+    ``link_orphan_memberships_for_user`` (member -> membership) so both
+    directions resolve a member the same way.
+    """
+    if not email:
+        return None
+    return session.scalar(
+        select(UserDB.id).where(func.lower(UserDB.email) == email.lower())
+    )
 
 
 def compute_info_by_user(
@@ -251,23 +267,15 @@ def ingest_notification(
         if item.type != MEMBERSHIP_ITEM_TYPE or item.id is None:
             continue
 
-        # Resolve the linking email per item: the membership is for the
-        # adherent (``item.user``), whose email is the item's "Email" custom
-        # field. HelloAsso does not put an email on ``item.user`` itself, so we
-        # fall back to the payer email (always present) when the custom field
-        # is missing. Matched case-insensitively; unmatched -> user_id stays
-        # NULL and the row surfaces in the admin "unlinked" list.
-        link_email = item.custom_field_email() or (payer.email if payer else None)
-        user_id: Optional[str] = None
-        if link_email:
-            user_id = session.scalar(
-                select(UserDB.id).where(func.lower(UserDB.email) == link_email.lower())
-            )
-
-        # The adherent's own email is specifically the custom-field one (not the
-        # payer fallback), persisted so the reconciliation UI can invite the
-        # adherent even when the row is unlinked.
+        # The adherent's own email is the item's "Email" custom field. The
+        # membership is *for the adherent*, so we link on that alone and never
+        # on the payer email (often a parent paying for a child) — matching the
+        # payer could attach a child's adhesion to the parent's account. Same
+        # rule as ``link_orphan_memberships_for_user`` for the reverse
+        # direction. Unmatched -> user_id stays NULL and the row surfaces in the
+        # admin "unlinked" list.
         adherent_email = item.custom_field_email()
+        user_id = _member_id_by_email(session, adherent_email)
 
         adherent = item.user
 

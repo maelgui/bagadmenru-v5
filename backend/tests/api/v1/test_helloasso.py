@@ -57,13 +57,17 @@ def _membership_order(
 ) -> dict:
     if order_date is None:
         order_date = _current_season_date()
+    # ``email`` is the *adherent's* linking address: it goes into the item's
+    # "Email" custom field, which is what auto-linking matches on. The payer is
+    # a separate person (we only ever link on the adherent email, never the
+    # payer), so give the payer a distinct address.
     return {
         "eventType": "Order",
         "data": {
             "id": order_id,
             "date": order_date,
             "payer": {
-                "email": email,
+                "email": "payer@example.com",
                 "firstName": "John",
                 "lastName": "Doe",
             },
@@ -74,6 +78,9 @@ def _membership_order(
                     "amount": amount,
                     "state": state,
                     "tierDescription": tier,
+                    "customFields": [
+                        {"name": "Email", "type": "TextInput", "answer": email},
+                    ],
                 }
             ],
         },
@@ -217,11 +224,12 @@ def test_webhook_unknown_email_stays_unlinked(helloasso_client: TestClient):
     # Member has no membership.
     resp = helloasso_client.get("/api/v1/profiles/me/membership")
     assert resp.json()["status"] == MembershipStatus.NONE.value
-    # The row surfaces as unlinked.
+    # The row surfaces as unlinked, carrying the adherent email (the linking
+    # field) that matched no member.
     unlinked = helloasso_client.get("/api/v1/helloasso/orders/unlinked")
     rows = unlinked.json()
     assert len(rows) == 1
-    assert rows[0]["payer_email"] == "stranger@example.com"
+    assert rows[0]["adherent_email"] == "stranger@example.com"
 
 
 # --- Status endpoint behaviour ----------------------------------------------
@@ -397,8 +405,9 @@ def test_real_payload_stores_both_items_with_adherent_and_tier(
     assert resp.json()["memberships_processed"] == 2
 
     # Item 105314 has a valid Email custom field matching the member and links
-    # to them; item 105316's custom field is "hugiy" (not an email), so it
-    # falls back to the payer email (a stranger) and stays unlinked.
+    # to them; item 105316's custom field is "hugiy" (not an email), so it has
+    # no adherent email to match and stays unlinked (we never fall back to the
+    # payer email).
     body = helloasso_client.get("/api/v1/profiles/me/membership").json()
     assert body["status"] == MembershipStatus.ACTIVE.value
     assert len(body["history"]) == 1
@@ -455,9 +464,10 @@ def test_custom_field_email_links_adherent_not_payer(helloasso_client: TestClien
     assert me["history"][0]["adherent_last_name"] == "Gui"
 
 
-def test_falls_back_to_payer_email_when_no_custom_field(helloasso_client: TestClient):
-    # An item with no usable Email custom field must fall back to the payer
-    # email for linking.
+def test_no_custom_field_email_stays_unlinked(helloasso_client: TestClient):
+    # An item with no usable Email custom field must NOT link on the payer
+    # email: linking is adherent-email-only, so the order stays unlinked even
+    # though the payer email matches a member.
     order = {
         "eventType": "Order",
         "data": {
@@ -484,8 +494,12 @@ def test_falls_back_to_payer_email_when_no_custom_field(helloasso_client: TestCl
     helloasso_client.post(
         "/api/v1/helloasso/webhook?token=" + WEBHOOK_TOKEN, json=order
     )
+    # The member (john.doe) is the payer but not matched by adherent email, so
+    # they have no membership and the row surfaces as unlinked.
     me = helloasso_client.get("/api/v1/profiles/me/membership").json()
-    assert me["status"] == MembershipStatus.ACTIVE.value
+    assert me["status"] == MembershipStatus.NONE.value
+    unlinked = helloasso_client.get("/api/v1/helloasso/orders/unlinked").json()
+    assert any(r["helloasso_item_id"] == 105320 for r in unlinked)
 
 
 def test_custom_field_email_parsing():

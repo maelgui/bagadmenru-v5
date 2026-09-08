@@ -299,6 +299,12 @@ async def create_profile(
     session.commit()
     session.refresh(profile_db)
 
+    # Attach any HelloAsso membership ingested earlier that was waiting for this
+    # adherent (matched on the adherent email), mirroring the invitation signup
+    # path so a manually-created member also sees their adhesion right away.
+    if membership_service.link_orphan_memberships_for_user(session, profile_db):
+        session.commit()
+
     reset_token = create_action_token(
         session,
         ActionTokenValue.ResetPassword,
