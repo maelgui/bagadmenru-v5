@@ -15,6 +15,33 @@ spec:
       containers:
         - name: mailpit
           image: axllent/mailpit:latest
+          # Every captured message is also forwarded to a single real mailbox
+          # (beta-sandbox@bagadmenru.bzh) via OVH SMTP, since the Mailpit web UI
+          # is not exposed on beta. Mailpit still captures everything as usual;
+          # forwarding is an additional copy. Configured entirely through
+          # MP_SMTP_FORWARD_* env vars. OVH port 465 is implicit SSL/TLS, so
+          # TLS=true and STARTTLS=false. The password comes from the
+          # mailpit-secrets sealed secret so it never lands in the manifest.
+          env:
+            - name: MP_SMTP_FORWARD_HOST
+              value: ssl0.ovh.net
+            - name: MP_SMTP_FORWARD_PORT
+              value: "465"
+            - name: MP_SMTP_FORWARD_TLS
+              value: "true"
+            - name: MP_SMTP_FORWARD_STARTTLS
+              value: "false"
+            - name: MP_SMTP_FORWARD_AUTH
+              value: login
+            - name: MP_SMTP_FORWARD_USERNAME
+              value: beta-sandbox@bagadmenru.bzh
+            - name: MP_SMTP_FORWARD_TO
+              value: beta-sandbox@bagadmenru.bzh
+            - name: MP_SMTP_FORWARD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mailpit-secrets
+                  key: SMTP_FORWARD_PASSWORD
           ports:
             - containerPort: 1025
               name: smtp
