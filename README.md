@@ -35,6 +35,64 @@ docker compose up
 # MinIO console: http://localhost:9090
 ```
 
+## Running Multiple Checkouts in Parallel (git worktrees + Finch)
+
+Several feature branches can run side by side using git worktrees, each with its
+own isolated stack.
+
+**Worktree layout.** All worktrees live in one dedicated sibling directory so the
+parent folder doesn't get cluttered:
+
+```
+bagadmenru-v5-worktrees/
+├── logout-all/
+├── multi-account/
+└── purge-unlinked/
+```
+
+Create one with:
+
+```bash
+git worktree add ../bagadmenru-v5-worktrees/<slug> -b feat/<slug>
+git worktree list   # see all worktrees at any time
+```
+
+**Conflict-free stacks.** The stack publishes a single host port (`FRONTEND_PORT`,
+default 5173); everything else (backend, db, minio, mailpit) is reached in-network
+through the vite proxy. To run several stacks at once, give each a unique compose
+project name and a free port:
+
+```bash
+# pick a free port (macOS)
+p=5173; while lsof -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1; do p=$((p+1)); done
+
+FRONTEND_PORT=$p finch compose -p bmr-<slug> up -d
+# → app at http://localhost:$p
+
+finch compose -p bmr-<slug> down        # stop this stack only
+finch compose ls                        # list running stacks
+```
+
+**Storybook** is not part of the compose stack. Run it locally on demand from
+`frontend/app`: `yarn storybook` (add `-- -p <port>` if 6006 is taken).
+
+### HMR under Finch on macOS
+
+On macOS the frontend runs inside a Finch/Docker Linux VM. Native filesystem
+events (fsevents) don't cross the bind-mount boundary, so Vite's event-based
+watcher never fires and HMR appears dead. The fix is chokidar **polling**, gated
+on an env var so native dev keeps the cheaper event-based watching:
+
+- `vite.config.ts` enables `server.watch.usePolling` (interval 1000ms) when
+  `VITE_USE_POLLING=true`.
+- `docker-compose.yml` sets `VITE_USE_POLLING=true` on the `frontend` service, so
+  HMR works out of the box when running via Finch.
+
+Tune the interval in `vite.config.ts` if reloads feel too slow (lower it) or the
+VM CPU runs hot (raise it). The Python backend (`uvicorn --reload`) has not shown
+this issue in practice; if it ever does, set `WATCHFILES_FORCE_POLLING=true` on
+the `backend` service.
+
 ## Component Development
 
 ### Backend
