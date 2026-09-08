@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.String(length=64), nullable=False),
         sa.Column("prefix", sa.String(length=16), nullable=False),
         sa.Column("label", sa.String(length=64), nullable=False),
-        sa.Column("authorized_operations", sa.JSON(), nullable=False),
+        sa.Column("authorized_permissions", sa.JSON(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),

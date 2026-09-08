@@ -26,7 +26,6 @@ from bbe2.schemas.utils import (
 from bbe2.services import membership as membership_service
 from bbe2.utils.action_token import create_action_token
 from bbe2.utils.api_key import create_api_key, revoke_api_key
-from bbe2.utils.api_operations import API_KEY_OPERATIONS, is_allowed_operation
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
@@ -114,17 +113,20 @@ async def get_my_membership(
 
 
 @profiles_router.get(
-    "/me/api-keys/available-operations",
-    response_model=dict[str, str],
-    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
+    "/me/api-keys/available-permissions",
+    response_model=list[str],
 )
-async def list_available_api_key_operations() -> dict[str, str]:
-    """Operations (id -> label) a member may authorize on an API key.
+async def list_available_api_key_permissions(
+    payload: Annotated[
+        schemas.JwtPayload, Depends(Authorization(Action.VIEW, Resource.ME))
+    ],
+) -> list[str]:
+    """Permissions ("action:resource") the member may delegate to an API key.
 
-    Deliberately an explicit allowlist, not every route, so the API-key surface
-    stays small. The UI renders these as checkboxes when creating a key.
+    A key can only ever exercise a subset of its owner's permissions, so the
+    choices offered are exactly the member's own permissions.
     """
-    return dict(API_KEY_OPERATIONS)
+    return get_permissions_for_roles(payload.roles)
 
 
 @profiles_router.get(
@@ -152,27 +154,29 @@ async def list_my_api_keys(
     "/me/api-keys",
     response_model=schemas.ApiKeyCreated,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
 )
 async def create_my_api_key(
     body: schemas.ApiKeyCreate,
     session: SessionDep,
-    identifier: Annotated[str, Depends(get_current_user2)],
+    payload: Annotated[
+        schemas.JwtPayload, Depends(Authorization(Action.VIEW, Resource.ME))
+    ],
 ):
     """Mint a new API key for the current member.
 
     The raw secret is returned exactly once, in this response; only its hash is
-    stored, so it can never be retrieved again. Every requested operation must
-    be in the server's allowlist, else the request is rejected.
+    stored, so it can never be retrieved again. Every requested permission must
+    be one the member actually holds -- a key can never widen its owner's rights.
     """
-    unknown = [op for op in body.authorized_operations if not is_allowed_operation(op)]
-    if unknown:
+    own_permissions = set(get_permissions_for_roles(payload.roles))
+    excess = [p for p in body.authorized_permissions if p not in own_permissions]
+    if excess:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Unknown operation(s): {', '.join(unknown)}",
+            detail=f"Permission(s) not held by the member: {', '.join(excess)}",
         )
     raw_key, row = create_api_key(
-        session, identifier, body.label, body.authorized_operations
+        session, payload.sub, body.label, body.authorized_permissions
     )
     session.commit()
     session.refresh(row)

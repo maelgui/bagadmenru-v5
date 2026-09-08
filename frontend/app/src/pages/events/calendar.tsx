@@ -19,10 +19,10 @@ import DisplaySelector from './components/selector';
 
 const EVENTS_FETCH_LIMIT = 100;
 
-// OpenAPI operation id of the authenticated per-member ICS feed
-// (GET /events/export/ics/me). Matches the backend allowlist
-// (bbe2.utils.api_operations.EXPORT_ICS_ME).
-const EXPORT_ICS_ME_OPERATION = 'ExportIcsMe';
+// RBAC permission the authenticated ICS feed requires (view:calendar). A
+// "Calendrier" key is scoped to exactly this, so it can subscribe to the feed
+// but do nothing else. Matches Resource.CALENDAR in the backend.
+const CALENDAR_PERMISSION = 'view:calendar';
 
 function getStartDate() {
   const startDate = new Date();
@@ -59,7 +59,7 @@ export default function CalendarPage() {
     reset: resetMint,
   } = useMutation({
     mutationFn: async () => await usersApi.createMyApiKeyApiV1ProfilesMeApiKeysPost({
-      apiKeyCreate: { label: 'Calendrier', authorizedOperations: [EXPORT_ICS_ME_OPERATION] },
+      apiKeyCreate: { label: 'Calendrier', authorizedPermissions: [CALENDAR_PERMISSION] },
     }),
   });
 

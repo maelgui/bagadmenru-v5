@@ -51,6 +51,23 @@ import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../../../../config/client';
 
 /**
+ * Human-friendly (fr) labels for the RBAC permissions a key can carry. Keys are
+ * "action:resource" strings as returned by the backend; unknown ones fall back
+ * to the raw string so a newly added permission still renders.
+ */
+const PERMISSION_LABELS: Record<string, string> = {
+  'view:calendar': 'Synchroniser le calendrier (ICS)',
+  'view:event': 'Voir les évènements',
+  'view:profile': 'Voir les profils des membres',
+  'view:file': 'Voir les fichiers',
+  'view:group': 'Voir les groupes',
+};
+
+function permissionLabel(permission: string): string {
+  return PERMISSION_LABELS[permission] ?? permission;
+}
+
+/**
  * Dialog shown once, right after a key is created, to reveal the raw secret.
  * The backend only stores a hash, so this is the single opportunity to copy
  * the key -- hence the explicit "you won't see it again" warning.
@@ -96,30 +113,30 @@ function RevealKeyDialog({
   );
 }
 
-/** Dialog to name a new key and pick which operations it may call. */
+/** Dialog to name a new key and pick which permissions it may exercise. */
 function CreateKeyDialog({
   open,
   onOpenChange,
-  operations,
+  permissions,
   isPending,
   onCreate,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  operations: Record<string, string | null>;
+  permissions: string[];
   isPending: boolean;
-  onCreate: (label: string, ops: string[]) => void;
+  onCreate: (label: string, perms: string[]) => void;
 }) {
   const [label, setLabel] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const toggle = (op: string) => {
+  const toggle = (perm: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(op)) {
-        next.delete(op);
+      if (next.has(perm)) {
+        next.delete(perm);
       } else {
-        next.add(op);
+        next.add(perm);
       }
       return next;
     });
@@ -145,7 +162,8 @@ function CreateKeyDialog({
           <DialogTitle>Nouvelle clé d&apos;API</DialogTitle>
           <DialogDescription>
             Une clé authentifie votre compte pour les applications externes. Elle ne peut
-            appeler que les opérations que vous cochez ci-dessous.
+            faire que ce que vous cochez ci-dessous, et jamais plus que ce que vous pouvez
+            faire vous-même.
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="flex flex-col gap-5 py-2">
@@ -160,14 +178,14 @@ function CreateKeyDialog({
             />
           </div>
           <fieldset className="flex flex-col gap-3">
-            <legend className="mb-1 text-sm font-medium">Opérations autorisées</legend>
-            {Object.entries(operations).map(([op, opLabel]) => (
-              <Label key={op} className="cursor-pointer items-start gap-3 font-normal">
+            <legend className="mb-1 text-sm font-medium">Autorisations</legend>
+            {permissions.map((perm) => (
+              <Label key={perm} className="cursor-pointer items-start gap-3 font-normal">
                 <Checkbox
-                  checked={selected.has(op)}
-                  onCheckedChange={() => toggle(op)}
+                  checked={selected.has(perm)}
+                  onCheckedChange={() => toggle(perm)}
                 />
-                <span>{opLabel ?? op}</span>
+                <span>{permissionLabel(perm)}</span>
               </Label>
             ))}
           </fieldset>
@@ -188,11 +206,9 @@ function CreateKeyDialog({
 
 function ApiKeyItem({
   apiKey,
-  operations,
   onRevoke,
 }: {
   apiKey: ApiKey;
-  operations: Record<string, string | null>;
   onRevoke: () => void;
 }) {
   const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false);
@@ -208,8 +224,8 @@ function ApiKeyItem({
           <Badge variant="secondary" className="font-mono">{apiKey.prefix}…</Badge>
         </ItemTitle>
         <ItemDescription className="flex flex-wrap gap-1">
-          {apiKey.authorizedOperations.map((op) => (
-            <Badge key={op} variant="outline">{operations[op] ?? op}</Badge>
+          {apiKey.authorizedPermissions.map((perm) => (
+            <Badge key={perm} variant="outline">{permissionLabel(perm)}</Badge>
           ))}
         </ItemDescription>
         <ItemDescription>
@@ -256,7 +272,8 @@ function ApiKeyItem({
 
 /**
  * "Clés d'API" section: list, create (revealing the secret once) and revoke the
- * current member's API keys. Each key carries the operations it may call.
+ * current member's API keys. Each key carries a subset of the member's own
+ * permissions.
  */
 export default function ApiKeysSection() {
   const { usersApi } = useApiClient();
@@ -268,16 +285,16 @@ export default function ApiKeysSection() {
     queryFn: async () => await usersApi.listMyApiKeysApiV1ProfilesMeApiKeysGet(),
   });
 
-  const { data: operations } = useQuery({
-    queryKey: ['api-keys', 'operations'],
+  const { data: permissions } = useQuery({
+    queryKey: ['api-keys', 'permissions'],
     queryFn: async () =>
-      await usersApi.listAvailableApiKeyOperationsApiV1ProfilesMeApiKeysAvailableOperationsGet(),
+      await usersApi.listAvailableApiKeyPermissionsApiV1ProfilesMeApiKeysAvailablePermissionsGet(),
   });
 
   const { mutate: createMutation, isPending: isCreating } = useMutation({
-    mutationFn: async ({ label, ops }: { label: string; ops: string[] }) =>
+    mutationFn: async ({ label, perms }: { label: string; perms: string[] }) =>
       await usersApi.createMyApiKeyApiV1ProfilesMeApiKeysPost({
-        apiKeyCreate: { label, authorizedOperations: ops },
+        apiKeyCreate: { label, authorizedPermissions: perms },
       }),
     onSuccess: async (created) => {
       setIsCreateOpen(false);
@@ -306,7 +323,7 @@ export default function ApiKeysSection() {
           nom, sans partager votre mot de passe.
         </CardDescription>
         <CardAction>
-          <Button size="sm" onClick={() => setIsCreateOpen(true)} disabled={!operations}>
+          <Button size="sm" onClick={() => setIsCreateOpen(true)} disabled={!permissions}>
             <Plus data-icon="inline-start" />
             Créer une clé
           </Button>
@@ -318,7 +335,6 @@ export default function ApiKeysSection() {
             <ApiKeyItem
               key={k.keyHash}
               apiKey={k}
-              operations={operations ?? {}}
               onRevoke={() => revokeMutation(k.keyHash)}
             />
           ))
@@ -339,9 +355,9 @@ export default function ApiKeysSection() {
       <CreateKeyDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
-        operations={operations ?? {}}
+        permissions={(permissions ?? []).filter((p): p is string => p !== null)}
         isPending={isCreating}
-        onCreate={(label, ops) => createMutation({ label, ops })}
+        onCreate={(label, perms) => createMutation({ label, perms })}
       />
       <RevealKeyDialog created={createdKey} onClose={() => setCreatedKey(null)} />
     </Card>

@@ -84,8 +84,7 @@ async def export_ics(
 
 @events_router.get(
     "/export/ics/me",
-    operation_id="ExportIcsMe",
-    dependencies=[Depends(Authorization(Action.VIEW, Resource.EVENT))],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.CALENDAR))],
 )
 async def export_ics_me(
     session: SessionDep,
@@ -93,13 +92,13 @@ async def export_ics_me(
     """Authenticated ICS feed for the current member.
 
     Reached either from a browser session (cookie/JWT) or from an API key whose
-    ``authorized_operations`` includes this endpoint's operation id -- the key
-    is read from the ``X-API-Key`` header or the ``api_key`` query parameter so
-    a calendar app can subscribe by URL. Authentication is handled upstream in
-    ``credentials``; this endpoint just requires the usual ``view:event``
-    permission, so an API key still only works for a member allowed to see
-    events. Content mirrors the public feed today; authenticating it per member
-    is the groundwork for future personalisation.
+    ``authorized_permissions`` include ``view:calendar`` -- the key is read from
+    the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar
+    app can subscribe by URL. Authentication is handled upstream in
+    ``credentials``; this endpoint requires the fine-grained ``view:calendar``
+    permission (distinct from ``view:event``) so a calendar key is scoped to the
+    feed alone and cannot list events. Content mirrors the public feed today;
+    authenticating it per member is the groundwork for future personalisation.
     """
     return Response(content=_build_calendar(session), media_type="text/calendar")
 

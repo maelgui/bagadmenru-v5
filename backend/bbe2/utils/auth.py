@@ -1,6 +1,7 @@
 """Authentication fastapi dependencies."""
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
@@ -19,7 +20,7 @@ from bbe2.models.user import UserDB
 from bbe2.schemas import JwtPayload
 from bbe2.utils.action_token import consume_action_token
 from bbe2.utils.api_key import resolve_api_key
-from bbe2.utils.permissions import Action, Resource, is_allowed
+from bbe2.utils.permissions import Action, Resource, is_allowed, permission_string
 
 # Header carrying a per-member API key for machine clients. A query parameter
 # (``api_key``) is also accepted for clients that cannot set headers -- notably
@@ -162,6 +163,22 @@ def _migrate_legacy_cookie(response: Response, token: str, settings: Settings) -
     logging.info("Migrated legacy access_token cookie to bmr_session_%s", payload.sub)
 
 
+@dataclass
+class AuthContext:
+    """The authenticated identity for a request, and any per-key narrowing.
+
+    ``payload`` is the member's decoded JWT (their roles drive RBAC). When the
+    request authenticated via an API key, ``key_permissions`` is the subset of
+    permissions ("action:resource") that key is allowed to exercise -- the key
+    can only ever narrow, never widen, the member's rights. For a normal
+    cookie/JWT session ``key_permissions`` is ``None`` (no narrowing: the member
+    exercises all their permissions).
+    """
+
+    payload: JwtPayload
+    key_permissions: frozenset[str] | None
+
+
 def credentials(
     request: Request,
     response: Response,
@@ -170,35 +187,51 @@ def credentials(
     bearer: Annotated[
         HTTPAuthorizationCredentials | None, Depends(bearer_scheme)
     ] = None,
-):
-    """Resolve the raw JWT for the current request (multi-account aware).
+) -> AuthContext:
+    """Resolve the authenticated identity for the current request.
 
-    Selection order:
+    Returns an :class:`AuthContext`: the member's decoded JWT plus, for API-key
+    requests, the permissions that key may exercise (``None`` for cookie/JWT
+    sessions). Raises 401 if no valid credential is present.
+
+    Credential selection order:
 
     0. A per-member API key (``X-API-Key`` header or ``api_key`` query param).
-       The key only *authenticates*: it is validated, its ``authorized_operations``
-       must include the current route's operation id (otherwise 403), and the
-       owning member's identity is turned into a freshly-minted JWT so the rest
-       of the pipeline (RBAC authorization) runs unchanged. Cookie/JWT sessions
-       carry no such operation list and are never restricted this way.
-    1. ``Authorization: Bearer`` header (documented via the HTTPBearer security
-       scheme) - used by API clients.
+       The key authenticates the owning member and carries a narrowing set of
+       permissions (see :class:`AuthContext`).
+    1. ``Authorization: Bearer`` header - used by API clients.
     2. The session named by the ``active_account`` selector cookie, if its
        ``bmr_session_<active_account>`` cookie is present.
     3. If exactly one ``bmr_session_*`` cookie exists, use it.
-    4. Backward-compat: the legacy ``access_token`` cookie. When it is used, it
-       is migrated in place to a ``bmr_session_<id>`` session so this is the one
-       and only spot that has to know about the legacy cookie.
-    5. Otherwise 401.
+    4. Backward-compat: the legacy ``access_token`` cookie, migrated in place to
+       a ``bmr_session_<id>`` session.
 
     A stale selector (naming a missing/removed session) must not lock the user
     out, so step 2 falls through to steps 3/4 rather than raising.
     """
-    api_key_token = _api_key_token(request, session, settings)
-    if api_key_token is not None:
-        logging.info("Token minted from API key")
-        return api_key_token
+    api_context = _api_key_context(request, session, settings)
+    if api_context is not None:
+        logging.info("Authenticated from API key")
+        return api_context
 
+    token = _session_token(request, response, bearer, settings)
+    payload = verify_token(token, settings)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+        )
+    # A cookie/JWT session is not narrowed: the member exercises all their rights.
+    return AuthContext(payload=payload, key_permissions=None)
+
+
+def _session_token(
+    request: Request,
+    response: Response,
+    bearer: HTTPAuthorizationCredentials | None,
+    settings: Settings,
+) -> str:
+    """Return the raw JWT from the bearer header or a session cookie (or 401)."""
     if bearer is not None:
         logging.info("Token from authorization header")
         return bearer.credentials
@@ -255,25 +288,18 @@ class Authorization:
 
     async def __call__(
         self,
-        settings: Annotated[Settings, Depends(get_settings)],
-        access_token: Annotated[str, Depends(credentials)],
+        auth: Annotated[AuthContext, Depends(credentials)],
     ) -> JwtPayload:
-        """Checks oauth access token and permissions, returns token content.
+        """Authorize the current request, returning the member's token payload.
 
-        Raises:
-            HTTPException: 401 when token invalid, 403 when permission denied
+        Two checks, read top to bottom:
+        1. the member's roles must grant ``action`` on ``resource`` (RBAC);
+        2. if the request authenticated via an API key, that key must also list
+           the permission (a key only narrows the member's rights).
 
-        Returns:
-            JwtPayload: decoded access token content
+        Raises 403 if either check fails.
         """
-
-        # Check user has a valid token
-        decoded_token = verify_token(access_token, settings)
-        if not decoded_token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Unauthorized",
-            )
+        payload = auth.payload
 
         # Attach the authenticated user to the Sentry scope so errors and traces
         # are grouped per member. We deliberately send only the pseudonymous id
@@ -282,19 +308,30 @@ class Authorization:
         # who hit a bug without shipping contact details to Sentry.
         sentry_sdk.set_user(
             {
-                "id": decoded_token.sub,
-                "username": f"{decoded_token.first_name} {decoded_token.last_name}",
+                "id": payload.sub,
+                "username": f"{payload.first_name} {payload.last_name}",
             }
         )
 
-        # Check user is authorized to perform action on resource
-        if not is_allowed(decoded_token.roles, self.action, self.resource):
+        # 1. The member's roles must allow this action on this resource.
+        if not is_allowed(payload.roles, self.action, self.resource):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",
             )
 
-        return decoded_token
+        # 2. An API key only ever narrows: the permission must also be one the
+        #    key was granted. Cookie/JWT sessions (key_permissions is None) skip
+        #    this and exercise the member's full rights.
+        if auth.key_permissions is not None:
+            required = permission_string(self.action, self.resource)
+            if required not in auth.key_permissions:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="API key not authorized for this operation",
+                )
+
+        return payload
 
 
 def get_current_user2(
@@ -357,37 +394,20 @@ def _extract_api_key(request: Request) -> str | None:
     return request.query_params.get("api_key")
 
 
-def _current_operation_id(request: Request) -> str | None:
-    """Return the OpenAPI operation id of the matched route, if any.
-
-    FastAPI exposes the matched route on ``request.scope["route"]``; its
-    ``unique_id`` is the same operation id used to generate the OpenAPI schema
-    (and therefore the frontend client). This is what an API key's
-    ``authorized_operations`` entries are compared against.
-    """
-    route = request.scope.get("route")
-    if route is None:
-        return None
-    # Explicit operation_id wins if a route sets one; otherwise fall back to the
-    # auto-generated unique_id (the default in this project).
-    return getattr(route, "operation_id", None) or getattr(route, "unique_id", None)
-
-
-def _api_key_token(
+def _api_key_context(
     request: Request,
     session: DbSession,
     settings: Settings,
-) -> str | None:
-    """Authenticate via a per-member API key and mint a JWT for its owner.
+) -> AuthContext | None:
+    """Build an :class:`AuthContext` from a per-member API key, or ``None``.
 
     Returns ``None`` when no API key is presented, so the caller falls through
-    to cookie/bearer resolution. When a key *is* presented it must be valid and
-    its ``authorized_operations`` must include the current route's operation id;
-    otherwise this raises 401/403 rather than silently falling through, so a
-    bad key never quietly downgrades to an anonymous request.
+    to cookie/bearer resolution. When a key *is* presented it must be valid;
+    otherwise this raises 401 rather than silently falling through, so a bad key
+    never quietly downgrades to an anonymous request.
 
-    The key only authenticates: the returned token is an ordinary member JWT, so
-    the downstream RBAC authorization runs exactly as for a browser session.
+    The key authenticates its owner; the returned context carries the key's
+    ``authorized_permissions`` so :class:`Authorization` can narrow accordingly.
     """
     raw_key = _extract_api_key(request)
     if not raw_key:
@@ -400,11 +420,15 @@ def _api_key_token(
             detail="Invalid API key",
         )
 
-    operation_id = _current_operation_id(request)
-    if operation_id is None or operation_id not in api_key.authorized_operations:
+    token = create_access_token(api_key.user, settings)
+    payload = verify_token(token, settings)
+    # A token we just minted always verifies; guard for mypy/None-safety.
+    if payload is None:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="API key not authorized for this operation",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
         )
-
-    return create_access_token(api_key.user, settings)
+    return AuthContext(
+        payload=payload,
+        key_permissions=frozenset(api_key.authorized_permissions),
+    )
