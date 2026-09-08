@@ -1,13 +1,10 @@
-import { CalendarDays, CalendarPlus, Info, Link2 } from 'lucide-react';
+import { CalendarDays, CalendarPlus, Info } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CopyButton } from '@/components/ui/copy-button';
-import { Spinner } from '@/components/ui/spinner';
-import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -16,6 +13,7 @@ import env from '../../env';
 import { toIsoDate } from '../../utils/date';
 import groupBy from '../../utils/groupby';
 import Calendar from './components/calendar';
+import CalendarSyncDialog from './components/calendarSyncDialog';
 import EventListItem from './components/event';
 import DisplaySelector from './components/selector';
 
@@ -46,28 +44,41 @@ export default function CalendarPage() {
   });
 
   const [monthOffset, setMonthOffset] = useState(0);
+  const [isSyncOpen, setIsSyncOpen] = useState(false);
   const currentMonth = new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset).toLocaleString('fr', { month: 'long', year: 'numeric' });
 
-  // The personalised ICS link is only known after a key is generated: the raw
-  // secret is returned once at creation and never again. Requesting the link
-  // therefore creates a dedicated "Calendrier" API key on demand.
-  const [icsUrl, setIcsUrl] = useState<string | null>(null);
-
-  const { mutate: generateLink, isPending: isGenerating } = useMutation({
+  // The personal ICS link is only known after a key is minted (its raw secret
+  // is returned once, at creation). Opening the sync dialog mints a dedicated
+  // "Calendrier" API key on demand; closing it clears the link so re-opening
+  // always issues a fresh one.
+  const {
+    mutate: mintLink,
+    data: minted,
+    isPending: isMinting,
+    isError: mintFailed,
+    reset: resetMint,
+  } = useMutation({
     mutationFn: async () => await usersApi.createMyApiKeyApiV1ProfilesMeApiKeysPost({
       apiKeyCreate: { label: 'Calendrier', authorizedOperations: [EXPORT_ICS_ME_OPERATION] },
     }),
-    onSuccess: (created) => {
-      setIcsUrl(`${env.VITE_BBE2_API_URL}/api/v1/events/export/ics/me?api_key=${created.key}`);
-    },
-    onError: () => {
-      toast.add({ title: 'La génération du lien a échoué.', type: 'error' });
-    },
   });
 
-  const googleCalendarUrl = icsUrl
-    ? `https://www.google.com/calendar/render?cid=${icsUrl.replace('https://', 'webcal://')}`
+  const icsUrl = minted
+    ? `${env.VITE_BBE2_API_URL}/api/v1/events/export/ics/me?api_key=${minted.key}`
     : null;
+
+  const openSync = () => {
+    resetMint();
+    mintLink();
+    setIsSyncOpen(true);
+  };
+
+  const onSyncOpenChange = (open: boolean) => {
+    setIsSyncOpen(open);
+    if (!open) {
+      resetMint();
+    }
+  };
 
   return (
     <>
@@ -89,36 +100,12 @@ export default function CalendarPage() {
           <AlertDescription>
             <p className="pb-4 font-semibold">Synchronisation du calendrier</p>
             <p className="pb-4">
-              Vous pouvez synchroniser le calendrier du site avec votre propre application de calendrier. Les dates de sorties et de répétitions affichées ici peuvent ainsi s&apos;ajouter automatiquement dans votre calendrier !
+              Ajoutez les sorties et répétitions à l&apos;application de calendrier de votre téléphone ou de votre ordinateur.
             </p>
-            {icsUrl ? (
-              <>
-                <p className="pb-4">
-                  Voici votre lien personnel de synchronisation. Il contient une clé d&apos;accès à votre nom (visible et révocable dans
-                  {' '}
-                  <Link to="/profile/settings/api" className="underline underline-offset-2">Paramètres › Accès API</Link>
-                  {' '}
-                  sous le nom « Calendrier ») : ne le partagez pas.
-                </p>
-                <code className="mb-4 block w-full overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs break-all">
-                  {icsUrl}
-                </code>
-                <div className="flex flex-wrap gap-2">
-                  {googleCalendarUrl ? (
-                    <Link className={buttonVariants({ variant: 'ghost' })} to={googleCalendarUrl}>
-                      <CalendarDays data-icon="inline-start" />
-                      Google Agenda
-                    </Link>
-                  ) : null}
-                  <CopyButton value={icsUrl} label="Copier le lien ICS" icon={CalendarDays} variant="ghost" />
-                </div>
-              </>
-            ) : (
-              <Button variant="ghost" onClick={() => generateLink()} disabled={isGenerating}>
-                {isGenerating ? <Spinner data-icon="inline-start" /> : <Link2 data-icon="inline-start" />}
-                Générer mon lien de synchronisation
-              </Button>
-            )}
+            <Button variant="ghost" onClick={openSync}>
+              <CalendarDays data-icon="inline-start" />
+              Ajouter à mon agenda
+            </Button>
           </AlertDescription>
         </Alert>
         <Card>
@@ -159,6 +146,13 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
       </Container>
+      <CalendarSyncDialog
+        open={isSyncOpen}
+        onOpenChange={onSyncOpenChange}
+        icsUrl={icsUrl}
+        isPending={isMinting}
+        isError={mintFailed}
+      />
     </>
   );
 }
