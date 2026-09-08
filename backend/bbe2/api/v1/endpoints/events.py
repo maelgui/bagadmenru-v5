@@ -56,12 +56,8 @@ async def list_events(
     return q.all()
 
 
-@events_router.get(
-    "/export/ics",
-)
-async def export_ics(
-    session: SessionDep,
-):
+def _build_calendar(session) -> str:
+    """Serialize all events as an ICS calendar document."""
     events = session.query(models.EventDB).order_by(models.EventDB.date).all()
     c = Calendar()
     for event in events:
@@ -71,8 +67,41 @@ async def export_ics(
         e.begin = event.date
         e.make_all_day()
         c.events.add(e)
+    return c.serialize()
 
-    return Response(content=c.serialize(), media_type="text/calendar")
+
+@events_router.get(
+    "/export/ics",
+)
+async def export_ics(
+    session: SessionDep,
+):
+    # Public, unauthenticated feed kept as-is so calendar subscriptions created
+    # before API keys existed keep working. The API-key-authenticated feed lives
+    # at "/export/ics/me"; existing links are deliberately not migrated yet.
+    return Response(content=_build_calendar(session), media_type="text/calendar")
+
+
+@events_router.get(
+    "/export/ics/me",
+    operation_id="ExportIcsMe",
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.EVENT))],
+)
+async def export_ics_me(
+    session: SessionDep,
+):
+    """Authenticated ICS feed for the current member.
+
+    Reached either from a browser session (cookie/JWT) or from an API key whose
+    ``authorized_operations`` includes this endpoint's operation id -- the key
+    is read from the ``X-API-Key`` header or the ``api_key`` query parameter so
+    a calendar app can subscribe by URL. Authentication is handled upstream in
+    ``credentials``; this endpoint just requires the usual ``view:event``
+    permission, so an API key still only works for a member allowed to see
+    events. Content mirrors the public feed today; authenticating it per member
+    is the groundwork for future personalisation.
+    """
+    return Response(content=_build_calendar(session), media_type="text/calendar")
 
 
 @events_router.get(
