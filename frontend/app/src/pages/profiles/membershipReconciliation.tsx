@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { UnlinkedMembership } from 'bagad-client';
-import { LinkIcon, Trash2, WalletIcon } from 'lucide-react';
+import { LinkIcon, MailPlus, Trash2, WalletIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -103,6 +103,20 @@ function adherentName(order: UnlinkedMembership): string | null {
 }
 
 /**
+ * The address to invite the adherent on. The adherent's own email (from the
+ * HelloAsso "Email" custom field) is what we want; the payer email is only a
+ * fallback since the payer is often someone else (e.g. a parent).
+ */
+function inviteEmail(order: UnlinkedMembership): string | null {
+  return order.adherentEmail || order.payerEmail || null;
+}
+
+/** First name to personalise the invitation email: adherent, else payer. */
+function inviteFirstName(order: UnlinkedMembership): string | undefined {
+  return order.adherentFirstName || order.payerFirstName || undefined;
+}
+
+/**
  * One unlinked order with a member picker and a link action. Kept as its own
  * component so each row owns its selection state independently.
  */
@@ -113,7 +127,7 @@ function UnlinkedRow({
   order: UnlinkedMembership;
   members: MemberOption[];
 }) {
-  const { helloAssoApi } = useApiClient();
+  const { helloAssoApi, invitationsApi } = useApiClient();
   const [selected, setSelected] = useState<MemberOption | null>(null);
 
   const { mutate: link, isPending } = useMutation({
@@ -141,6 +155,25 @@ function UnlinkedRow({
     },
     onError: () => {
       toast.add({ title: 'Une erreur est survenue.', type: 'error' });
+    },
+  });
+
+  const email = inviteEmail(order);
+
+  const { mutate: invite, isPending: isInviting } = useMutation({
+    mutationFn: async () => await invitationsApi
+      .createInvitationApiV1InvitationsPost({
+        invitationCreate: {
+          channel: 'email',
+          email,
+          firstName: inviteFirstName(order),
+        },
+      }),
+    onSuccess: () => {
+      toast.add({ title: 'Invitation envoyée par email.', type: 'success' });
+    },
+    onError: () => {
+      toast.add({ title: 'Impossible d\'envoyer l\'invitation.', type: 'error' });
     },
   });
 
@@ -186,6 +219,17 @@ function UnlinkedRow({
         >
           <LinkIcon data-icon="inline-start" />
           Rattacher
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!email || isInviting}
+          title={email
+            ? `Inviter ${email} à créer son compte`
+            : 'Aucune adresse email disponible pour cette adhésion'}
+          onClick={() => invite()}
+        >
+          <MailPlus data-icon="inline-start" />
+          Inviter
         </Button>
         <AlertDialog>
           <AlertDialogTrigger

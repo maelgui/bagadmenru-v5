@@ -16,8 +16,8 @@ import { mapValues } from '../runtime';
 /**
  * Optional logout body naming which account to sign out.
  * 
- * Defaults to the active account when omitted. When `all` is true, every
- * account signed in this browser is signed out (`accountId` is ignored);
+ * Defaults to the active account when omitted. When ``all`` is true, every
+ * account signed in this browser is signed out (``account_id`` is ignored);
  * this only clears cookies in the current browser and does not revoke sessions
  * on other devices.
  * @export

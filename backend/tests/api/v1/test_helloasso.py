@@ -414,6 +414,31 @@ def test_real_payload_stores_both_items_with_adherent_and_tier(
     assert len(unlinked) == 1
     assert unlinked[0]["adherent_first_name"] == "Mael"
     assert unlinked[0]["tier_name"] == "ADHESION OBLIGATOIRE"
+    # Item 105316's Email custom field is "hugiy" (not an email), so no
+    # adherent email is stored for the unlinked row.
+    assert unlinked[0]["adherent_email"] is None
+
+
+def test_adherent_email_persisted_and_exposed_when_unlinked(
+    helloasso_client: TestClient,
+):
+    # A stranger adherent (custom-field email matches no member) surfaces as
+    # unlinked, and its adherent email is persisted and exposed so the
+    # reconciliation UI can prefill an invitation to the adherent.
+    order = _real_order(member_email="new.adherent@example.com")
+    # Drop the second (invalid-email) item so only the unlinked one remains.
+    order["data"]["items"] = order["data"]["items"][:1]
+    resp = helloasso_client.post(
+        "/api/v1/helloasso/webhook?token=" + WEBHOOK_TOKEN, json=order
+    )
+    assert resp.status_code == 200
+
+    unlinked = helloasso_client.get("/api/v1/helloasso/orders/unlinked").json()
+    assert len(unlinked) == 1
+    row = unlinked[0]
+    # The adherent email is the custom-field one, not the payer's.
+    assert row["adherent_email"] == "new.adherent@example.com"
+    assert row["payer_email"] == "payer.parent@example.com"
 
 
 def test_custom_field_email_links_adherent_not_payer(helloasso_client: TestClient):
