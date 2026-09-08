@@ -207,6 +207,106 @@ def test_accept_email_proven_same_address_skips_otp(client: TestClient, sender):
     assert sender.templates_used() == ["email_invitation"]
 
 
+def test_accept_links_orphan_membership_by_adherent_email(client: TestClient, sender):
+    from datetime import datetime, timezone
+
+    from bbe2.models.helloasso import HelloAssoMembershipDB
+
+    adherent_email = "carol.adherent@example.com"
+    payer_email = "parent.payer@example.com"
+
+    # An orphan membership ingested earlier: the adherent email is Carol's, but
+    # it was paid by a parent (different payer email). No member matched at
+    # ingestion, so it sits unlinked.
+    with _session() as s:
+        s.add(
+            HelloAssoMembershipDB(
+                helloasso_order_id=555,
+                helloasso_item_id=5551,
+                user_id=None,
+                payer_email=payer_email,
+                adherent_email=adherent_email,
+                adherent_first_name="Carol",
+                adherent_last_name="Adherent",
+                amount=4400,
+                order_date=datetime.now(tz=timezone.utc),
+                state="Processed",
+                raw_payload={},
+            )
+        )
+        s.commit()
+
+    # Carol accepts an email-proven invitation with her own address.
+    token = client.post(
+        "/api/v1/invitations",
+        json={"channel": "email", "email": adherent_email, "instrument_id": 1},
+    ).json()["token"]
+    resp = client.post(
+        f"/api/v1/invitations/{token}/accept",
+        json={
+            "first_name": "Carol",
+            "last_name": "Adherent",
+            "email": adherent_email,
+            "instrument_id": 1,
+        },
+    )
+    assert resp.status_code == 201, resp.text
+
+    # The orphan membership is now linked, so it no longer appears in the
+    # admin "unlinked" list (checked through the API, i.e. the same DB session
+    # path the endpoint used, avoiding a stale concurrent read).
+    unlinked = client.get("/api/v1/helloasso/orders/unlinked").json()
+    assert all(r["helloasso_item_id"] != 5551 for r in unlinked)
+
+
+def test_accept_does_not_link_by_payer_email(client: TestClient, sender):
+    from datetime import datetime, timezone
+
+    from bbe2.models.helloasso import HelloAssoMembershipDB
+
+    # The new account's email matches only the PAYER email, not the adherent
+    # email. We must NOT link it: the payer is often a parent, and linking would
+    # wrongly attach a child's adhesion to the parent's account.
+    parent_email = "parent.only@example.com"
+    with _session() as s:
+        s.add(
+            HelloAssoMembershipDB(
+                helloasso_order_id=666,
+                helloasso_item_id=6661,
+                user_id=None,
+                payer_email=parent_email,
+                adherent_email="child.adherent@example.com",
+                adherent_first_name="Child",
+                adherent_last_name="Adherent",
+                amount=4400,
+                order_date=datetime.now(tz=timezone.utc),
+                state="Processed",
+                raw_payload={},
+            )
+        )
+        s.commit()
+
+    token = client.post(
+        "/api/v1/invitations",
+        json={"channel": "email", "email": parent_email, "instrument_id": 1},
+    ).json()["token"]
+    resp = client.post(
+        f"/api/v1/invitations/{token}/accept",
+        json={
+            "first_name": "Parent",
+            "last_name": "Only",
+            "email": parent_email,
+            "instrument_id": 1,
+        },
+    )
+    assert resp.status_code == 201, resp.text
+
+    # The membership stays unlinked (payer email must not trigger a link): it is
+    # still present in the admin "unlinked" list.
+    unlinked = client.get("/api/v1/helloasso/orders/unlinked").json()
+    assert any(r["helloasso_item_id"] == 6661 for r in unlinked)
+
+
 def test_accept_email_proven_changed_address_requires_otp(client: TestClient, sender):
     created = client.post(
         "/api/v1/invitations",

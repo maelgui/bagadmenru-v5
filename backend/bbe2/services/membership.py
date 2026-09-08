@@ -124,6 +124,33 @@ def get_membership_info_for_user(
     return compute_membership_info(rows, now=now)
 
 
+def link_orphan_memberships_for_user(session: Session, user: UserDB) -> int:
+    """Attach any unlinked memberships whose adherent email matches ``user``.
+
+    Called when a member account is created (e.g. via invitation): a HelloAsso
+    membership ingested earlier may be sitting unlinked because no matching
+    member existed yet. We match only on ``adherent_email`` (the HelloAsso
+    "Email" custom field), never ``payer_email``: the payer is often a parent
+    paying for a child, so matching the payer could wrongly attach the child's
+    adhesion to the parent's new account. Matching is case-insensitive.
+
+    Does not commit; the caller commits as part of its own transaction. Returns
+    the number of rows linked.
+    """
+    if not user.email:
+        return 0
+
+    rows = session.scalars(
+        select(HelloAssoMembershipDB).where(
+            HelloAssoMembershipDB.user_id.is_(None),
+            func.lower(HelloAssoMembershipDB.adherent_email) == user.email.lower(),
+        )
+    ).all()
+    for row in rows:
+        row.user_id = user.id
+    return len(rows)
+
+
 def compute_info_by_user(
     session: Session, *, now: Optional[datetime] = None
 ) -> dict[str, MembershipInfo]:

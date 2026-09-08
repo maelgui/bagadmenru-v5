@@ -38,6 +38,7 @@ from bbe2.schemas.invitation import (
     InvitationPayload,
     OtpRequest,
 )
+from bbe2.services import membership as membership_service
 from bbe2.utils.auth import (
     Action,
     Authorization,
@@ -206,6 +207,15 @@ async def accept_invitation(
         g for g in resolved_groups if all(r.id != "admin" for r in g.roles)
     ]
     session.add(profile_db)
+    # Flush so the new user's primary key is populated (it is a Python-side
+    # ``default`` applied at INSERT, so ``profile_db.id`` is None until flush);
+    # the auto-link below sets it as the membership's foreign key.
+    session.flush()
+
+    # Attach any HelloAsso membership ingested earlier that was waiting for this
+    # adherent (matched on the adherent email), so the new member sees their
+    # adhesion without an admin having to link it manually.
+    membership_service.link_orphan_memberships_for_user(session, profile_db)
 
     # Consume the invitation (single-use) now that the account exists.
     invitation.used_at = datetime.now(timezone.utc)

@@ -220,17 +220,35 @@ function UnlinkedRow({
           <LinkIcon data-icon="inline-start" />
           Rattacher
         </Button>
-        <Button
-          variant="outline"
-          disabled={!email || isInviting}
-          title={email
-            ? `Inviter ${email} à créer son compte`
-            : 'Aucune adresse email disponible pour cette adhésion'}
-          onClick={() => invite()}
-        >
-          <MailPlus data-icon="inline-start" />
-          Inviter
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={<Button variant="outline" />}
+            disabled={!email || isInviting}
+            title={email
+              ? `Inviter ${email} à créer son compte`
+              : 'Aucune adresse email disponible pour cette adhésion'}
+          >
+            <MailPlus data-icon="inline-start" />
+            Inviter
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Envoyer une invitation ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {`Une invitation à créer son compte sera envoyée par email à `}
+                <span className="font-medium text-foreground">{email}</span>
+                {`. Une fois le compte créé avec cette adresse, l'adhésion `}
+                {'lui sera rattachée automatiquement.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={() => invite()}>
+                Envoyer l&apos;invitation
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <AlertDialog>
           <AlertDialogTrigger
             render={<Button variant="outline" size="icon" aria-label="Supprimer" />}
