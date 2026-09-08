@@ -10,6 +10,11 @@ export default defineConfig(({ mode }) => {
   // several checkouts can run side by side without clashing.
   const env = loadEnv(mode, process.cwd(), '');
   const port = Number(env.VITE_PORT ?? 5173);
+  // On macOS the frontend runs inside a Finch/Docker Linux VM, and native
+  // filesystem events (fsevents) don't cross the bind-mount boundary, so Vite's
+  // HMR never fires. Enable chokidar polling in that case. Gated on an env var
+  // so native (non-container) dev keeps event-based watching (cheaper on CPU).
+  const usePolling = env.VITE_USE_POLLING === 'true';
 
   return {
     plugins: [tailwindcss(), react(), sentryVitePlugin({
@@ -25,6 +30,11 @@ export default defineConfig(({ mode }) => {
 
     server: {
       port,
+      // See usePolling note above: required for HMR when running under Finch on
+      // macOS. interval raised to 1000ms to bound CPU cost of polling.
+      watch: usePolling
+        ? { usePolling: true, interval: 1000 }
+        : undefined,
       proxy: {
         // In the compose network these resolve to the service names; the stack
         // publishes only the frontend, so dev-tool UIs are reached here too.
