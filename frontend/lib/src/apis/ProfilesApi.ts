@@ -15,6 +15,9 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApiKey,
+  ApiKeyCreate,
+  ApiKeyCreated,
   GetUploadUrlResponse,
   GlobalStats,
   Group,
@@ -31,6 +34,12 @@ import type {
   UserRankings,
 } from '../models/index';
 import {
+    ApiKeyFromJSON,
+    ApiKeyToJSON,
+    ApiKeyCreateFromJSON,
+    ApiKeyCreateToJSON,
+    ApiKeyCreatedFromJSON,
+    ApiKeyCreatedToJSON,
     GetUploadUrlResponseFromJSON,
     GetUploadUrlResponseToJSON,
     GlobalStatsFromJSON,
@@ -65,6 +74,10 @@ export interface CreateGroupApiV1GroupsPostRequest {
     groupCreate: GroupCreate;
 }
 
+export interface CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest {
+    apiKeyCreate: ApiKeyCreate;
+}
+
 export interface CreateProfileApiV1ProfilesPostRequest {
     profileCreate: ProfileCreate;
 }
@@ -83,6 +96,10 @@ export interface GetProfileApiV1ProfilesProfileIdGetRequest {
 
 export interface GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest {
     profileId: string;
+}
+
+export interface RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest {
+    keyHash: string;
 }
 
 export interface UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest {
@@ -150,6 +167,52 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async createGroupApiV1GroupsPost(requestParameters: CreateGroupApiV1GroupsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Group> {
         const response = await this.createGroupApiV1GroupsPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Mint a new API key for the current member.  The raw secret is returned exactly once, in this response; only its hash is stored, so it can never be retrieved again. Every requested operation must be in the server\'s allowlist, else the request is rejected.
+     * Create My Api Key
+     */
+    async createMyApiKeyApiV1ProfilesMeApiKeysPostRaw(requestParameters: CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiKeyCreated>> {
+        if (requestParameters['apiKeyCreate'] == null) {
+            throw new runtime.RequiredError(
+                'apiKeyCreate',
+                'Required parameter "apiKeyCreate" was null or undefined when calling createMyApiKeyApiV1ProfilesMeApiKeysPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/profiles/me/api-keys`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiKeyCreateToJSON(requestParameters['apiKeyCreate']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiKeyCreatedFromJSON(jsonValue));
+    }
+
+    /**
+     * Mint a new API key for the current member.  The raw secret is returned exactly once, in this response; only its hash is stored, so it can never be retrieved again. Every requested operation must be in the server\'s allowlist, else the request is rejected.
+     * Create My Api Key
+     */
+    async createMyApiKeyApiV1ProfilesMeApiKeysPost(requestParameters: CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiKeyCreated> {
+        const response = await this.createMyApiKeyApiV1ProfilesMeApiKeysPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -607,6 +670,42 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Operations (id -> label) a member may authorize on an API key.  Deliberately an explicit allowlist, not every route, so the API-key surface stays small. The UI renders these as checkboxes when creating a key.
+     * List Available Api Key Operations
+     */
+    async listAvailableApiKeyOperationsApiV1ProfilesMeApiKeysAvailableOperationsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: string | null; }>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/profiles/me/api-keys/available-operations`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     * Operations (id -> label) a member may authorize on an API key.  Deliberately an explicit allowlist, not every route, so the API-key surface stays small. The UI renders these as checkboxes when creating a key.
+     * List Available Api Key Operations
+     */
+    async listAvailableApiKeyOperationsApiV1ProfilesMeApiKeysAvailableOperationsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: string | null; }> {
+        const response = await this.listAvailableApiKeyOperationsApiV1ProfilesMeApiKeysAvailableOperationsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * List Groups
      */
     async listGroupsApiV1GroupsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Group>>> {
@@ -637,6 +736,42 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async listGroupsApiV1GroupsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Group>> {
         const response = await this.listGroupsApiV1GroupsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * List the current member\'s API keys (never exposes the raw secret).
+     * List My Api Keys
+     */
+    async listMyApiKeysApiV1ProfilesMeApiKeysGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ApiKey>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/profiles/me/api-keys`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ApiKeyFromJSON));
+    }
+
+    /**
+     * List the current member\'s API keys (never exposes the raw secret).
+     * List My Api Keys
+     */
+    async listMyApiKeysApiV1ProfilesMeApiKeysGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ApiKey>> {
+        const response = await this.listMyApiKeysApiV1ProfilesMeApiKeysGetRaw(initOverrides);
         return await response.value();
     }
 
@@ -706,6 +841,48 @@ export class ProfilesApi extends runtime.BaseAPI {
     async listRolesApiV1RolesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Role>> {
         const response = await this.listRolesApiV1RolesGetRaw(initOverrides);
         return await response.value();
+    }
+
+    /**
+     * Revoke one of the current member\'s API keys.
+     * Revoke My Api Key
+     */
+    async revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRaw(requestParameters: RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['keyHash'] == null) {
+            throw new runtime.RequiredError(
+                'keyHash',
+                'Required parameter "keyHash" was null or undefined when calling revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDelete().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/profiles/me/api-keys/{key_hash}`.replace(`{${"key_hash"}}`, encodeURIComponent(String(requestParameters['keyHash']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Revoke one of the current member\'s API keys.
+     * Revoke My Api Key
+     */
+    async revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDelete(requestParameters: RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRaw(requestParameters, initOverrides);
     }
 
     /**
