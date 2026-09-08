@@ -14,6 +14,9 @@ src/apis/PushNotificationsApi.ts
 src/apis/UtilsApi.ts
 src/apis/index.ts
 src/index.ts
+src/models/ApiKey.ts
+src/models/ApiKeyCreate.ts
+src/models/ApiKeyCreated.ts
 src/models/Costume.ts
 src/models/CredentialDeviceType.ts
 src/models/Event.ts

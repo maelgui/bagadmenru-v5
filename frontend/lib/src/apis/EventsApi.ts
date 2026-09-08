@@ -300,6 +300,46 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Authenticated ICS feed for the current member.  Reached either from a browser session (cookie/JWT) or from an API key whose ``authorized_operations`` includes this endpoint\'s operation id -- the key is read from the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar app can subscribe by URL. Authentication is handled upstream in ``credentials``; this endpoint just requires the usual ``view:event`` permission, so an API key still only works for a member allowed to see events. Content mirrors the public feed today; authenticating it per member is the groundwork for future personalisation.
+     * Export Ics Me
+     */
+    async exportIcsMeRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/events/export/ics/me`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Authenticated ICS feed for the current member.  Reached either from a browser session (cookie/JWT) or from an API key whose ``authorized_operations`` includes this endpoint\'s operation id -- the key is read from the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar app can subscribe by URL. Authentication is handled upstream in ``credentials``; this endpoint just requires the usual ``view:event`` permission, so an API key still only works for a member allowed to see events. Content mirrors the public feed today; authenticating it per member is the groundwork for future personalisation.
+     * Export Ics Me
+     */
+    async exportIcsMe(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.exportIcsMeRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Get Event
      */
     async getEventApiV1EventsEventIdGetRaw(requestParameters: GetEventApiV1EventsEventIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {

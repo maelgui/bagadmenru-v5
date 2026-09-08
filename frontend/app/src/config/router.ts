@@ -95,6 +95,10 @@ export default createBrowserRouter([
                     lazy: lazyPage(async () => await import('../pages/profiles/settings/security')),
                   },
                   {
+                    path: 'api',
+                    lazy: lazyPage(async () => await import('../pages/profiles/settings/api')),
+                  },
+                  {
                     path: 'notifications',
                     lazy: lazyPage(async () => await import('../pages/profiles/settings/notifications')),
                   },

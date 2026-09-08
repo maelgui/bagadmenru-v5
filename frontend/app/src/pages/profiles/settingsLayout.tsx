@@ -32,7 +32,7 @@ const NAV_ITEMS: SettingsNavItem[] = [
   { to: 'appearance', label: 'Apparence', icon: PaletteIcon, enabled: true },
   { to: 'membership', label: 'Adhésion', icon: WalletIcon, enabled: true },
   { to: 'security', label: 'Sécurité', icon: ShieldIcon, enabled: true },
-  { to: 'api', label: 'Accès API', icon: KeyIcon, enabled: false },
+  { to: 'api', label: 'Accès API', icon: KeyIcon, enabled: true },
   { to: 'notifications', label: 'Notifications', icon: BellIcon, enabled: true },
 ];
 
