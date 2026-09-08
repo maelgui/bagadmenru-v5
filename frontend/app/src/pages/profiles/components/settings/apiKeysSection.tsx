@@ -25,7 +25,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from '@/components/ui/combobox';
 import {
   Dialog,
   DialogBody,
@@ -128,26 +139,15 @@ function CreateKeyDialog({
   onCreate: (label: string, perms: string[]) => void;
 }) {
   const [label, setLabel] = useState('');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-
-  const toggle = (perm: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(perm)) {
-        next.delete(perm);
-      } else {
-        next.add(perm);
-      }
-      return next;
-    });
-  };
+  const [selected, setSelected] = useState<string[]>([]);
+  const permsAnchor = useComboboxAnchor();
 
   const reset = () => {
     setLabel('');
-    setSelected(new Set());
+    setSelected([]);
   };
 
-  const canSubmit = label.trim().length > 0 && selected.size > 0 && !isPending;
+  const canSubmit = label.trim().length > 0 && selected.length > 0 && !isPending;
 
   return (
     <Dialog
@@ -162,8 +162,8 @@ function CreateKeyDialog({
           <DialogTitle>Nouvelle clé d&apos;API</DialogTitle>
           <DialogDescription>
             Une clé authentifie votre compte pour les applications externes. Elle ne peut
-            faire que ce que vous cochez ci-dessous, et jamais plus que ce que vous pouvez
-            faire vous-même.
+            faire que ce que vous choisissez ci-dessous, et jamais plus que ce que vous
+            pouvez faire vous-même.
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="flex flex-col gap-5 py-2">
@@ -177,24 +177,48 @@ function CreateKeyDialog({
               onChange={(e) => setLabel(e.target.value)}
             />
           </div>
-          <fieldset className="flex flex-col gap-3">
-            <legend className="mb-1 text-sm font-medium">Autorisations</legend>
-            {permissions.map((perm) => (
-              <Label key={perm} className="cursor-pointer items-start gap-3 font-normal">
-                <Checkbox
-                  checked={selected.has(perm)}
-                  onCheckedChange={() => toggle(perm)}
-                />
-                <span>{permissionLabel(perm)}</span>
-              </Label>
-            ))}
-          </fieldset>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="api-key-perms">Autorisations</Label>
+            <Combobox
+              multiple
+              value={selected}
+              onValueChange={(next) => setSelected(Array.isArray(next) ? next : [])}
+            >
+              <ComboboxChips ref={permsAnchor}>
+                <ComboboxValue>
+                  {(values: string[]) => (
+                    <>
+                      {values.map((perm) => (
+                        <ComboboxChip key={perm} aria-label={permissionLabel(perm)}>
+                          {permissionLabel(perm)}
+                        </ComboboxChip>
+                      ))}
+                      <ComboboxChipsInput
+                        id="api-key-perms"
+                        placeholder={values.length ? '' : 'Choisissez ce que la clé peut faire'}
+                      />
+                    </>
+                  )}
+                </ComboboxValue>
+              </ComboboxChips>
+              <ComboboxContent anchor={permsAnchor}>
+                <ComboboxList>
+                  {permissions.map((perm) => (
+                    <ComboboxItem key={perm} value={perm}>
+                      {permissionLabel(perm)}
+                    </ComboboxItem>
+                  ))}
+                </ComboboxList>
+                <ComboboxEmpty>Aucune autorisation disponible.</ComboboxEmpty>
+              </ComboboxContent>
+            </Combobox>
+          </div>
         </DialogBody>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
           <Button
             disabled={!canSubmit}
-            onClick={() => onCreate(label.trim(), Array.from(selected))}
+            onClick={() => onCreate(label.trim(), selected)}
           >
             Créer la clé
           </Button>
