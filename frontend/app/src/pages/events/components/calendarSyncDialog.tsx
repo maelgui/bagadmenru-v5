@@ -1,7 +1,7 @@
-import { CalendarPlus, Copy } from 'lucide-react';
+import { CalendarPlus, Check, Copy } from 'lucide-react';
+import { useState } from 'react';
 import { UAParser } from 'ua-parser-js';
 import { Button } from '@/components/ui/button';
-import { CopyButton } from '@/components/ui/copy-button';
 import {
   Dialog,
   DialogBody,
@@ -11,7 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
+
+const COPY_FEEDBACK_MS = 2000;
 
 /**
  * Whether the current device is an Apple device (iOS, iPadOS or macOS).
@@ -28,13 +36,45 @@ function isAppleDevice(): boolean {
   return name === 'iOS' || name === 'macOS' || name === 'Mac OS';
 }
 
+/** Read-only field showing the ICS link with an inline copy button. */
+function IcsLinkField({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = () => {
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
+    });
+  };
+
+  return (
+    <InputGroup>
+      <InputGroupInput
+        readOnly
+        value={url}
+        aria-label="Lien du calendrier"
+        onFocus={(e) => e.currentTarget.select()}
+        className="font-mono text-xs"
+      />
+      <InputGroupAddon align="inline-end">
+        <InputGroupButton size="icon-sm" onClick={onCopy} aria-label="Copier le lien">
+          {copied ? <Check /> : <Copy />}
+        </InputGroupButton>
+      </InputGroupAddon>
+      <span aria-live="polite" className="sr-only">
+        {copied ? 'Copié dans le presse-papiers.' : ''}
+      </span>
+    </InputGroup>
+  );
+}
+
 /**
  * Calendar sync dialog (presentational). The parent mints a dedicated
  * "Calendrier" API key when the dialog opens and passes the resulting personal
- * ICS URL in. Apple devices get a one-tap "Ajouter à mon agenda" (opens
- * webcal://); everywhere else the link is shown with a copy button
- * (Android/desktop clients subscribe by pasting the URL). No API-key jargon is
- * exposed here -- key management lives in the settings.
+ * ICS URL in. The link is always shown in a read-only field with a copy
+ * button; Apple devices additionally get a one-tap "Ajouter à mon agenda"
+ * button that opens the webcal:// subscribe flow. No API-key jargon is exposed
+ * here -- key management lives in the settings.
  */
 export default function CalendarSyncDialog({
   open,
@@ -76,15 +116,14 @@ export default function CalendarSyncDialog({
             </p>
           ) : null}
 
-          {icsUrl && !apple ? (
+          {icsUrl ? (
             <>
               <p className="text-sm">
-                Copiez ce lien et ajoutez-le dans votre application de calendrier (sur Google
-                Agenda : « Ajouter un agenda » › « À partir d&apos;une URL »).
+                {apple
+                  ? 'Touchez « Ajouter à mon agenda », ou copiez ce lien pour l\u2019ajouter manuellement.'
+                  : 'Copiez ce lien et ajoutez-le dans votre application de calendrier (sur Google Agenda : « Ajouter un agenda » › « À partir d\u2019une URL »).'}
               </p>
-              <code className="block w-full overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs break-all">
-                {icsUrl}
-              </code>
+              <IcsLinkField url={icsUrl} />
             </>
           ) : null}
         </DialogBody>
@@ -95,9 +134,6 @@ export default function CalendarSyncDialog({
               <CalendarPlus data-icon="inline-start" />
               Ajouter à mon agenda
             </Button>
-          ) : null}
-          {icsUrl && !apple ? (
-            <CopyButton value={icsUrl} label="Copier le lien" icon={Copy} />
           ) : null}
         </DialogFooter>
       </DialogContent>
