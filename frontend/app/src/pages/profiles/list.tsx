@@ -1,4 +1,4 @@
-import { BadgeAlert, BadgeCheck, BellOff, CircleDashed, CirclePlus, Medal, Plus, RotateCcw, UserPlus, WalletIcon, X } from 'lucide-react';
+import { BadgeAlert, BadgeCheck, BellOff, ChevronDown, CircleDashed, CirclePlus, Medal, Plus, RotateCcw, UserPlus, WalletIcon, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -6,6 +6,12 @@ import { MembershipStatus, type Profile } from 'bagad-client';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { Button, buttonVariants } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Combobox,
   ComboboxCollection,
@@ -332,6 +338,69 @@ function ProfileCard({ profile }: { profile: Profile }) {
   );
 }
 
+// The members list exposes one primary action — "Inviter" — with "Ajouter un
+// membre" (create) tucked into a split-button dropdown so the header stays
+// uncluttered. Each entry is gated on its own permission: the dropdown is
+// omitted when the caller can't add a profile, and the invite button is hidden
+// without `create:invitation`.
+function MemberActions() {
+  const { can } = usePermissions();
+
+  const canInvite = can('create', 'invitation');
+  const canAddProfile = can('create', 'profile');
+
+  const menuItems = [
+    canAddProfile && (
+      <DropdownMenuItem key="add-profile" render={<Link to="/profile/add" />}>
+        <CirclePlus data-icon="inline-start" />
+        Ajouter un membre
+      </DropdownMenuItem>
+    ),
+  ].filter(Boolean);
+
+  // Without the invite permission the primary slot falls away; the secondary
+  // menu (if any) then stands on its own as a plain "Actions" button.
+  if (!canInvite) {
+    if (menuItems.length === 0) {
+      return null;
+    }
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="outline" />}>
+          Actions
+          <ChevronDown data-icon="inline-end" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">{menuItems}</DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
+  return (
+    <div className="inline-flex items-center">
+      <Link
+        className={cn(
+          buttonVariants(),
+          menuItems.length > 0 && 'rounded-r-none border-r border-r-primary-foreground/20',
+        )}
+        to="/profile/invite"
+      >
+        <UserPlus data-icon="inline-start" />
+        Inviter
+      </Link>
+      {menuItems.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={<Button size="icon" className="rounded-l-none" aria-label="Plus d’actions" />}
+          >
+            <ChevronDown />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">{menuItems}</DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
+  );
+}
+
 export default function ProfilesPage() {
   const { usersApi } = useApiClient();
   const { can } = usePermissions();
@@ -367,20 +436,9 @@ export default function ProfilesPage() {
         title="Liste des membres"
         subtitle="Pensez à ajouter votre photo"
         actions={[
-          <Link key="edit-profile" className={buttonVariants({ variant: 'outline' })} to="/profile/settings/profile">
-            Mes paramètres
-          </Link>,
           <Link key="rankings" className={buttonVariants({ variant: 'outline' })} to="/profile/rankings">
             <Medal data-icon="inline-start" />
             Classements
-          </Link>,
-          <Link
-            key="invite"
-            className={cn(buttonVariants({ variant: 'outline' }), !can('create', 'invitation') && 'hidden')}
-            to="/profile/invite"
-          >
-            <UserPlus data-icon="inline-start" />
-            Inviter
           </Link>,
           <Link
             key="memberships"
@@ -390,14 +448,7 @@ export default function ProfilesPage() {
             <WalletIcon data-icon="inline-start" />
             Adhésions
           </Link>,
-          <Link
-            key="add-profile"
-            className={cn(buttonVariants(), !can('create', 'profile') && 'hidden')}
-            to="/profile/add"
-          >
-            <CirclePlus data-icon="inline-start" />
-            Ajouter
-          </Link>,
+          <MemberActions key="member-actions" />,
         ]}
         breadcrumb={[
           { title: 'Liste des membres' },
