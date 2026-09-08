@@ -18,6 +18,11 @@ class Resource(Enum):
     ME = "me"
 
     EVENT = "event"
+    # Calendar subscription feed (ICS). Deliberately a separate, finer resource
+    # than EVENT so an API key can be scoped to *only* the calendar feed without
+    # also granting the broader event-listing endpoints. Granted to the same
+    # roles as viewing events (every member who can see events can subscribe).
+    CALENDAR = "calendar"
     RESPONSE = "response"
 
     FILE = "file"
@@ -42,6 +47,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.ME.value),
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.EVENT.value),
+        (Action.VIEW.value, Resource.CALENDAR.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
         (Action.VIEW.value, Resource.GROUP.value),
@@ -55,6 +61,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.ME.value),
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.EVENT.value),
+        (Action.VIEW.value, Resource.CALENDAR.value),
         (Action.VIEW.value, Resource.RESPONSE.value),
         (Action.CREATE.value, Resource.RESPONSE.value),
         (Action.VIEW.value, Resource.PROFILE.value),
@@ -66,6 +73,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.ME.value),
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.EVENT.value),
+        (Action.VIEW.value, Resource.CALENDAR.value),
         (Action.CREATE.value, Resource.EVENT.value),
         (Action.EDIT.value, Resource.EVENT.value),
         (Action.DELETE.value, Resource.EVENT.value),
@@ -88,6 +96,16 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.EDIT.value, Resource.MEMBERSHIP.value),
     },
 }
+
+
+def permission_string(action: Action, resource: Resource) -> str:
+    """Format an (action, resource) pair as the 'action:resource' string.
+
+    Single source of truth for the permission wire format, matching the strings
+    produced by :func:`get_permissions_for_roles` and stored in an API key's
+    ``authorized_permissions``.
+    """
+    return f"{action.value}:{resource.value}"
 
 
 def is_allowed(roles: list[str], action: Action, resource: Resource) -> bool:

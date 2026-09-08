@@ -42,7 +42,7 @@ export interface ApiKey {
      * @type {Array<string>}
      * @memberof ApiKey
      */
-    authorizedOperations: Array<string>;
+    authorizedPermissions: Array<string>;
     /**
      * 
      * @type {Date}
@@ -70,7 +70,7 @@ export function instanceOfApiKey(value: object): value is ApiKey {
     if (!('keyHash' in value) || value['keyHash'] === undefined) return false;
     if (!('prefix' in value) || value['prefix'] === undefined) return false;
     if (!('label' in value) || value['label'] === undefined) return false;
-    if (!('authorizedOperations' in value) || value['authorizedOperations'] === undefined) return false;
+    if (!('authorizedPermissions' in value) || value['authorizedPermissions'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     return true;
 }
@@ -88,7 +88,7 @@ export function ApiKeyFromJSONTyped(json: any, ignoreDiscriminator: boolean): Ap
         'keyHash': json['key_hash'],
         'prefix': json['prefix'],
         'label': json['label'],
-        'authorizedOperations': json['authorized_operations'],
+        'authorizedPermissions': json['authorized_permissions'],
         'createdAt': (new Date(json['created_at'])),
         'lastUsedAt': json['last_used_at'] == null ? undefined : (new Date(json['last_used_at'])),
         'revokedAt': json['revoked_at'] == null ? undefined : (new Date(json['revoked_at'])),
@@ -109,7 +109,7 @@ export function ApiKeyToJSONTyped(value?: ApiKey | null, ignoreDiscriminator: bo
         'key_hash': value['keyHash'],
         'prefix': value['prefix'],
         'label': value['label'],
-        'authorized_operations': value['authorizedOperations'],
+        'authorized_permissions': value['authorizedPermissions'],
         'created_at': ((value['createdAt']).toISOString()),
         'last_used_at': value['lastUsedAt'] == null ? undefined : ((value['lastUsedAt'] as any).toISOString()),
         'revoked_at': value['revokedAt'] == null ? undefined : ((value['revokedAt'] as any).toISOString()),

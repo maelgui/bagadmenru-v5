@@ -30,7 +30,7 @@ export interface ApiKeyCreate {
      * @type {Array<string>}
      * @memberof ApiKeyCreate
      */
-    authorizedOperations: Array<string>;
+    authorizedPermissions: Array<string>;
 }
 
 /**
@@ -38,7 +38,7 @@ export interface ApiKeyCreate {
  */
 export function instanceOfApiKeyCreate(value: object): value is ApiKeyCreate {
     if (!('label' in value) || value['label'] === undefined) return false;
-    if (!('authorizedOperations' in value) || value['authorizedOperations'] === undefined) return false;
+    if (!('authorizedPermissions' in value) || value['authorizedPermissions'] === undefined) return false;
     return true;
 }
 
@@ -53,7 +53,7 @@ export function ApiKeyCreateFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return {
         
         'label': json['label'],
-        'authorizedOperations': json['authorized_operations'],
+        'authorizedPermissions': json['authorized_permissions'],
     };
 }
 
@@ -69,7 +69,7 @@ export function ApiKeyCreateToJSONTyped(value?: ApiKeyCreate | null, ignoreDiscr
     return {
         
         'label': value['label'],
-        'authorized_operations': value['authorizedOperations'],
+        'authorized_permissions': value['authorizedPermissions'],
     };
 }
 

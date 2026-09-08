@@ -45,13 +45,13 @@ class ApiKeyDB(Base):
     # Human-friendly label chosen by the member (e.g. "iPhone calendar").
     label: Mapped[str] = mapped_column(String(64), nullable=False)
 
-    # Surface restriction carried *by the key* (not the member): the list of
-    # OpenAPI operation ids (FastAPI ``APIRoute.unique_id``) this key may call.
-    # Authentication via this key only reaches an endpoint whose operation id is
-    # in this list; the usual RBAC authorization then still applies on top,
-    # unchanged. Cookie/JWT sessions have no such list and are never restricted
-    # this way -- the restriction lives on the key alone.
-    authorized_operations: Mapped[list[str]] = mapped_column(
+    # Subset of the owner's RBAC permissions this key is allowed to exercise,
+    # as "action:resource" strings (e.g. "view:calendar"). A key can never do
+    # more than its owner: on each request the operation must be permitted both
+    # by the member's roles AND be present in this list. Cookie/JWT sessions
+    # have no such list and exercise the member's full permissions -- the
+    # narrowing lives on the key alone.
+    authorized_permissions: Mapped[list[str]] = mapped_column(
         JSON, nullable=False, default=list
     )
 

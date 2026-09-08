@@ -171,7 +171,7 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Mint a new API key for the current member.  The raw secret is returned exactly once, in this response; only its hash is stored, so it can never be retrieved again. Every requested operation must be in the server\'s allowlist, else the request is rejected.
+     * Mint a new API key for the current member.  The raw secret is returned exactly once, in this response; only its hash is stored, so it can never be retrieved again. Every requested permission must be one the member actually holds -- a key can never widen its owner\'s rights.
      * Create My Api Key
      */
     async createMyApiKeyApiV1ProfilesMeApiKeysPostRaw(requestParameters: CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiKeyCreated>> {
@@ -208,7 +208,7 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Mint a new API key for the current member.  The raw secret is returned exactly once, in this response; only its hash is stored, so it can never be retrieved again. Every requested operation must be in the server\'s allowlist, else the request is rejected.
+     * Mint a new API key for the current member.  The raw secret is returned exactly once, in this response; only its hash is stored, so it can never be retrieved again. Every requested permission must be one the member actually holds -- a key can never widen its owner\'s rights.
      * Create My Api Key
      */
     async createMyApiKeyApiV1ProfilesMeApiKeysPost(requestParameters: CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiKeyCreated> {
@@ -670,10 +670,10 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Operations (id -> label) a member may authorize on an API key.  Deliberately an explicit allowlist, not every route, so the API-key surface stays small. The UI renders these as checkboxes when creating a key.
-     * List Available Api Key Operations
+     * Permissions (\"action:resource\") the member may delegate to an API key.  A key can only ever exercise a subset of its owner\'s permissions, so the choices offered are exactly the member\'s own permissions.
+     * List Available Api Key Permissions
      */
-    async listAvailableApiKeyOperationsApiV1ProfilesMeApiKeysAvailableOperationsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: string | null; }>> {
+    async listAvailableApiKeyPermissionsApiV1ProfilesMeApiKeysAvailablePermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -687,7 +687,7 @@ export class ProfilesApi extends runtime.BaseAPI {
             }
         }
         const response = await this.request({
-            path: `/api/v1/profiles/me/api-keys/available-operations`,
+            path: `/api/v1/profiles/me/api-keys/available-permissions`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -697,11 +697,11 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Operations (id -> label) a member may authorize on an API key.  Deliberately an explicit allowlist, not every route, so the API-key surface stays small. The UI renders these as checkboxes when creating a key.
-     * List Available Api Key Operations
+     * Permissions (\"action:resource\") the member may delegate to an API key.  A key can only ever exercise a subset of its owner\'s permissions, so the choices offered are exactly the member\'s own permissions.
+     * List Available Api Key Permissions
      */
-    async listAvailableApiKeyOperationsApiV1ProfilesMeApiKeysAvailableOperationsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: string | null; }> {
-        const response = await this.listAvailableApiKeyOperationsApiV1ProfilesMeApiKeysAvailableOperationsGetRaw(initOverrides);
+    async listAvailableApiKeyPermissionsApiV1ProfilesMeApiKeysAvailablePermissionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string | null>> {
+        const response = await this.listAvailableApiKeyPermissionsApiV1ProfilesMeApiKeysAvailablePermissionsGetRaw(initOverrides);
         return await response.value();
     }
 

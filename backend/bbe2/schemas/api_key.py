@@ -10,9 +10,9 @@ class ApiKeyCreate(BaseModel):
     """Request body to mint a new API key for the current member."""
 
     label: str = Field(min_length=1, max_length=64)
-    # OpenAPI operation ids this key is allowed to call. Must be non-empty: a
-    # key that authorizes nothing is useless and likely a mistake.
-    authorized_operations: list[str] = Field(min_length=1)
+    # Subset of the member's own RBAC permissions ("action:resource") the key
+    # may exercise. Must be non-empty: a key that authorizes nothing is useless.
+    authorized_permissions: list[str] = Field(min_length=1)
 
 
 class ApiKey(BaseModel):
@@ -23,7 +23,7 @@ class ApiKey(BaseModel):
     key_hash: str
     prefix: str
     label: str
-    authorized_operations: list[str]
+    authorized_permissions: list[str]
     created_at: datetime
     last_used_at: Optional[datetime] = None
     revoked_at: Optional[datetime] = None

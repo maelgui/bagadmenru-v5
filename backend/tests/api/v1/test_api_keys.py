@@ -2,29 +2,47 @@
 
 Covers key lifecycle (create/list/revoke) and the two-layer model: an API key
 authenticates a member (via ``X-API-Key`` header or ``api_key`` query param) and
-may only reach operations listed in its ``authorized_operations``; the usual
-RBAC authorization still runs on top. The public ICS feed stays unauthenticated.
+carries a subset of that member's RBAC permissions; a request is authorized only
+if the member's roles allow it AND the key lists the permission. The public ICS
+feed stays unauthenticated.
 """
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
+import bbe2.api.v1.endpoints.profiles as profiles_module
 from bbe2.database import get_engine
-from bbe2.utils.api_operations import EXPORT_ICS_ME
 
 # Must match DATABASE_URL / seeded user in tests/conftest.py
 DATABASE_URL = "sqlite:///tests.sqlite?check_same_thread=false"
 SEEDED_USER_ID = "a8e2d3249e9d997e"
 
+# Permission the ICS feed requires (view:calendar). conftest patches is_allowed
+# to always return True, so the member "holds" any permission; the key's own
+# authorized_permissions are what these tests exercise.
+CALENDAR_PERMISSION = "view:calendar"
+EVENT_PERMISSION = "view:event"
 
-def _make_api_key(operations, user_id: str = SEEDED_USER_ID) -> str:
+# The subset validation on key creation compares against the member's own
+# permissions (get_permissions_for_roles). The test JWT has empty roles, so we
+# patch it to a realistic member permission set for the creation tests.
+MEMBER_PERMISSIONS = [CALENDAR_PERMISSION, EVENT_PERMISSION, "view:profile"]
+
+
+def _grant_member_permissions(monkeypatch, permissions=MEMBER_PERMISSIONS) -> None:
+    monkeypatch.setattr(
+        profiles_module, "get_permissions_for_roles", lambda _roles: list(permissions)
+    )
+
+
+def _make_api_key(permissions, user_id: str = SEEDED_USER_ID) -> str:
     """Create a real API key row in the test DB and return the raw secret."""
     from bbe2.utils.api_key import create_api_key
 
     engine = get_engine(DATABASE_URL)
     session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     with session_local() as session:
-        raw, _ = create_api_key(session, user_id, "test key", operations)
+        raw, _ = create_api_key(session, user_id, "test key", permissions)
         session.commit()
     return raw
 
@@ -38,24 +56,24 @@ def _anon(client: TestClient) -> TestClient:
 # --- Key management -------------------------------------------------------
 
 
-def test_list_available_operations(client: TestClient):
-    response = client.get("/api/v1/profiles/me/api-keys/available-operations")
+def test_list_available_permissions(client: TestClient):
+    response = client.get("/api/v1/profiles/me/api-keys/available-permissions")
     assert response.status_code == 200
-    body = response.json()
-    assert EXPORT_ICS_ME in body
+    assert isinstance(response.json(), list)
 
 
-def test_create_api_key_returns_secret_once(client: TestClient):
+def test_create_api_key_returns_secret_once(client: TestClient, monkeypatch):
+    _grant_member_permissions(monkeypatch)
     response = client.post(
         "/api/v1/profiles/me/api-keys",
-        json={"label": "iPhone", "authorized_operations": [EXPORT_ICS_ME]},
+        json={"label": "iPhone", "authorized_permissions": [CALENDAR_PERMISSION]},
     )
     assert response.status_code == 201
     body = response.json()
     # The raw secret is returned exactly once, and looks like a bmr_ key.
     assert body["key"].startswith("bmr_")
     assert body["label"] == "iPhone"
-    assert body["authorized_operations"] == [EXPORT_ICS_ME]
+    assert body["authorized_permissions"] == [CALENDAR_PERMISSION]
     # The prefix is a non-secret display fragment of the key.
     assert body["key"].startswith(body["prefix"])
 
@@ -66,26 +84,33 @@ def test_create_api_key_returns_secret_once(client: TestClient):
     assert listed[0]["prefix"] == body["prefix"]
 
 
-def test_create_api_key_rejects_unknown_operation(client: TestClient):
+def test_create_api_key_rejects_permission_not_held(client: TestClient, monkeypatch):
+    # The member holds MEMBER_PERMISSIONS; "delete:profile" is not among them,
+    # so a key requesting it must be rejected (a key cannot widen rights).
+    _grant_member_permissions(monkeypatch)
     response = client.post(
         "/api/v1/profiles/me/api-keys",
-        json={"label": "bad", "authorized_operations": ["not_a_real_operation"]},
+        json={"label": "bad", "authorized_permissions": ["delete:profile"]},
     )
     assert response.status_code == 422
 
 
-def test_create_api_key_requires_at_least_one_operation(client: TestClient):
+def test_create_api_key_requires_at_least_one_permission(
+    client: TestClient, monkeypatch
+):
+    _grant_member_permissions(monkeypatch)
     response = client.post(
         "/api/v1/profiles/me/api-keys",
-        json={"label": "empty", "authorized_operations": []},
+        json={"label": "empty", "authorized_permissions": []},
     )
     assert response.status_code == 422
 
 
-def test_revoke_api_key(client: TestClient):
+def test_revoke_api_key(client: TestClient, monkeypatch):
+    _grant_member_permissions(monkeypatch)
     created = client.post(
         "/api/v1/profiles/me/api-keys",
-        json={"label": "temp", "authorized_operations": [EXPORT_ICS_ME]},
+        json={"label": "temp", "authorized_permissions": [CALENDAR_PERMISSION]},
     ).json()
     key_hash = created["key_hash"]
 
@@ -102,7 +127,7 @@ def test_revoke_api_key(client: TestClient):
 
 
 def test_ics_me_with_api_key_query_param(client: TestClient):
-    raw = _make_api_key([EXPORT_ICS_ME])
+    raw = _make_api_key([CALENDAR_PERMISSION])
     anon = _anon(client)
     response = anon.get(f"/api/v1/events/export/ics/me?api_key={raw}")
     assert response.status_code == 200
@@ -110,17 +135,17 @@ def test_ics_me_with_api_key_query_param(client: TestClient):
 
 
 def test_ics_me_with_api_key_header(client: TestClient):
-    raw = _make_api_key([EXPORT_ICS_ME])
+    raw = _make_api_key([CALENDAR_PERMISSION])
     anon = _anon(client)
     response = anon.get("/api/v1/events/export/ics/me", headers={"X-API-Key": raw})
     assert response.status_code == 200
 
 
-def test_api_key_rejected_for_operation_not_authorized(client: TestClient):
-    # Key authorizes ICS export only, but is used on another operation.
-    raw = _make_api_key([EXPORT_ICS_ME])
+def test_api_key_rejected_for_permission_not_granted(client: TestClient):
+    # Key grants only view:event, but the ICS feed requires view:calendar.
+    raw = _make_api_key([EVENT_PERMISSION])
     anon = _anon(client)
-    response = anon.get(f"/api/v1/events/?api_key={raw}")
+    response = anon.get(f"/api/v1/events/export/ics/me?api_key={raw}")
     assert response.status_code == 403
 
 
