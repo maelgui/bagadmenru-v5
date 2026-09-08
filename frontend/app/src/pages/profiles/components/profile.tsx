@@ -2,7 +2,7 @@ import { BellOff } from 'lucide-react';
 import type { Profile } from 'bagad-client';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { GroupTag } from './groupTag';
 import { usePermissions } from '../../../config/client';
 
 export default function ProfileView({ profile }: { profile: Profile }) {
@@ -22,15 +22,19 @@ export default function ProfileView({ profile }: { profile: Profile }) {
           <BellOff className="ml-3 inline size-5 text-destructive" aria-label="Ne reçoit pas les emails" />
         )}
       </h1>
-      <div className="mt-8 flex flex-wrap justify-center gap-2">
+      <div className="mt-8 -m-1 flex flex-wrap justify-center">
         {profile.groups.map((group) => (
           can('view', 'group')
             ? (
-              <Link key={group.id} to={`/groups/${group.id}`}>
-                <Badge className="text-primary-foreground" style={{ backgroundColor: group.color }}>{group.name}</Badge>
+              <Link
+                key={group.id}
+                to={`/groups/${group.id}`}
+                className="rounded-md focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+              >
+                <GroupTag name={group.name} color={group.color} />
               </Link>
             )
-            : <Badge key={group.id} className="text-primary-foreground" style={{ backgroundColor: group.color }}>{group.name}</Badge>
+            : <GroupTag key={group.id} name={group.name} color={group.color} />
         ))}
       </div>
     </div>
