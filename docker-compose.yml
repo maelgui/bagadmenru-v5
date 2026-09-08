@@ -104,6 +104,9 @@ services:
       # FRONTEND_PORT). Proxy targets are fixed to the compose service names in
       # vite.config.ts.
       - VITE_PORT=5173
+      # Running inside the Finch/Docker Linux VM on macOS: fsevents don't cross
+      # the bind-mount, so enable Vite's polling watcher for HMR to work.
+      - VITE_USE_POLLING=true
 
 volumes:
   s3data:
