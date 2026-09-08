@@ -25,6 +25,8 @@ from bbe2.schemas.utils import (
 )
 from bbe2.services import membership as membership_service
 from bbe2.utils.action_token import create_action_token
+from bbe2.utils.api_key import create_api_key, revoke_api_key
+from bbe2.utils.api_operations import API_KEY_OPERATIONS, is_allowed_operation
 from bbe2.utils.auth import (
     Action,
     ActionTokenAuthorization,
@@ -109,6 +111,90 @@ async def get_my_membership(
 ):
     """Return the current user's membership status and history."""
     return membership_service.get_membership_info_for_user(session, identifier)
+
+
+@profiles_router.get(
+    "/me/api-keys/available-operations",
+    response_model=dict[str, str],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
+)
+async def list_available_api_key_operations() -> dict[str, str]:
+    """Operations (id -> label) a member may authorize on an API key.
+
+    Deliberately an explicit allowlist, not every route, so the API-key surface
+    stays small. The UI renders these as checkboxes when creating a key.
+    """
+    return dict(API_KEY_OPERATIONS)
+
+
+@profiles_router.get(
+    "/me/api-keys",
+    response_model=list[schemas.ApiKey],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
+)
+async def list_my_api_keys(
+    session: SessionDep,
+    identifier: Annotated[str, Depends(get_current_user2)],
+):
+    """List the current member's API keys (never exposes the raw secret)."""
+    q = (
+        select(models.ApiKeyDB)
+        .where(
+            models.ApiKeyDB.user_id == identifier,
+            models.ApiKeyDB.revoked_at.is_(None),
+        )
+        .order_by(models.ApiKeyDB.created_at.desc())
+    )
+    return list(session.scalars(q).all())
+
+
+@profiles_router.post(
+    "/me/api-keys",
+    response_model=schemas.ApiKeyCreated,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
+)
+async def create_my_api_key(
+    body: schemas.ApiKeyCreate,
+    session: SessionDep,
+    identifier: Annotated[str, Depends(get_current_user2)],
+):
+    """Mint a new API key for the current member.
+
+    The raw secret is returned exactly once, in this response; only its hash is
+    stored, so it can never be retrieved again. Every requested operation must
+    be in the server's allowlist, else the request is rejected.
+    """
+    unknown = [op for op in body.authorized_operations if not is_allowed_operation(op)]
+    if unknown:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Unknown operation(s): {', '.join(unknown)}",
+        )
+    raw_key, row = create_api_key(
+        session, identifier, body.label, body.authorized_operations
+    )
+    session.commit()
+    session.refresh(row)
+    return schemas.ApiKeyCreated.model_validate({**row.__dict__, "key": raw_key})
+
+
+@profiles_router.delete(
+    "/me/api-keys/{key_hash}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
+)
+async def revoke_my_api_key(
+    key_hash: str,
+    session: SessionDep,
+    identifier: Annotated[str, Depends(get_current_user2)],
+):
+    """Revoke one of the current member's API keys."""
+    if not revoke_api_key(session, identifier, key_hash):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="API key not found"
+        )
+    session.commit()
 
 
 @profiles_router.put(

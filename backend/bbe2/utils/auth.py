@@ -18,7 +18,13 @@ from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.user import UserDB
 from bbe2.schemas import JwtPayload
 from bbe2.utils.action_token import consume_action_token
+from bbe2.utils.api_key import resolve_api_key
 from bbe2.utils.permissions import Action, Resource, is_allowed
+
+# Header carrying a per-member API key for machine clients. A query parameter
+# (``api_key``) is also accepted for clients that cannot set headers -- notably
+# calendar apps subscribing to an ICS feed by URL.
+API_KEY_HEADER = "X-API-Key"
 
 # Multi-account cookies. Each signed-in account keeps its own httpOnly session
 # cookie ``bmr_session_<userId>`` holding that account's JWT, so adding or
@@ -160,6 +166,7 @@ def credentials(
     request: Request,
     response: Response,
     settings: Annotated[Settings, Depends(get_settings)],
+    session: Annotated[DbSession, Depends(get_session)],
     bearer: Annotated[
         HTTPAuthorizationCredentials | None, Depends(bearer_scheme)
     ] = None,
@@ -168,6 +175,12 @@ def credentials(
 
     Selection order:
 
+    0. A per-member API key (``X-API-Key`` header or ``api_key`` query param).
+       The key only *authenticates*: it is validated, its ``authorized_operations``
+       must include the current route's operation id (otherwise 403), and the
+       owning member's identity is turned into a freshly-minted JWT so the rest
+       of the pipeline (RBAC authorization) runs unchanged. Cookie/JWT sessions
+       carry no such operation list and are never restricted this way.
     1. ``Authorization: Bearer`` header (documented via the HTTPBearer security
        scheme) - used by API clients.
     2. The session named by the ``active_account`` selector cookie, if its
@@ -181,6 +194,11 @@ def credentials(
     A stale selector (naming a missing/removed session) must not lock the user
     out, so step 2 falls through to steps 3/4 rather than raising.
     """
+    api_key_token = _api_key_token(request, session, settings)
+    if api_key_token is not None:
+        logging.info("Token minted from API key")
+        return api_key_token
+
     if bearer is not None:
         logging.info("Token from authorization header")
         return bearer.credentials
@@ -324,3 +342,69 @@ class ActionTokenAuthorization:
         # succeeds. If the handler fails and rolls back, the token stays valid
         # for a retry.
         return payload
+
+
+def _extract_api_key(request: Request) -> str | None:
+    """Read the raw API key from the ``X-API-Key`` header or ``api_key`` query.
+
+    The header is preferred for programmatic clients; the query parameter exists
+    for clients that cannot set headers (calendar apps subscribing to an ICS
+    URL). Returns ``None`` if neither is present.
+    """
+    header_key = request.headers.get(API_KEY_HEADER)
+    if header_key:
+        return header_key
+    return request.query_params.get("api_key")
+
+
+def _current_operation_id(request: Request) -> str | None:
+    """Return the OpenAPI operation id of the matched route, if any.
+
+    FastAPI exposes the matched route on ``request.scope["route"]``; its
+    ``unique_id`` is the same operation id used to generate the OpenAPI schema
+    (and therefore the frontend client). This is what an API key's
+    ``authorized_operations`` entries are compared against.
+    """
+    route = request.scope.get("route")
+    if route is None:
+        return None
+    # Explicit operation_id wins if a route sets one; otherwise fall back to the
+    # auto-generated unique_id (the default in this project).
+    return getattr(route, "operation_id", None) or getattr(route, "unique_id", None)
+
+
+def _api_key_token(
+    request: Request,
+    session: DbSession,
+    settings: Settings,
+) -> str | None:
+    """Authenticate via a per-member API key and mint a JWT for its owner.
+
+    Returns ``None`` when no API key is presented, so the caller falls through
+    to cookie/bearer resolution. When a key *is* presented it must be valid and
+    its ``authorized_operations`` must include the current route's operation id;
+    otherwise this raises 401/403 rather than silently falling through, so a
+    bad key never quietly downgrades to an anonymous request.
+
+    The key only authenticates: the returned token is an ordinary member JWT, so
+    the downstream RBAC authorization runs exactly as for a browser session.
+    """
+    raw_key = _extract_api_key(request)
+    if not raw_key:
+        return None
+
+    api_key = resolve_api_key(session, raw_key)
+    if api_key is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key",
+        )
+
+    operation_id = _current_operation_id(request)
+    if operation_id is None or operation_id not in api_key.authorized_operations:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API key not authorized for this operation",
+        )
+
+    return create_access_token(api_key.user, settings)

@@ -1,6 +1,7 @@
 """ORM models."""
 
 from .action_token import ActionTokenDB
+from .api_key import ApiKeyDB
 from .base import Base
 from .event import EventDB, ResponseDB
 from .file import FileOrFolderDB
