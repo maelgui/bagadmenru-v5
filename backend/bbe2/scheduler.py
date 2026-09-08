@@ -10,6 +10,7 @@ from bbe2.database import session_ctx
 from bbe2.models import GroupDB
 from bbe2.services import membership as membership_service
 from bbe2.utils import get_logger
+from bbe2.utils.action_token import purge_expired_action_tokens
 
 scheduler = AsyncIOScheduler()
 
@@ -173,16 +174,22 @@ async def sync_mailing_list(name, domain, email_list: set[str]):
 
 
 @scheduler.scheduled_job("cron", hour="4")
-async def purge_unlinked_memberships():
-    """Daily cleanup of stale unlinked HelloAsso memberships.
+async def daily_cleanup():
+    """Daily database cleanup, run at 04:00 (after the 03:00 mailing sync).
 
-    Deletes unlinked orders (``user_id IS NULL``) older than the configured
-    reconciliation window (``unlinked_membership_ttl_days``). Runs at 04:00,
-    after the 03:00 mailing-list sync.
+    - Deletes stale unlinked HelloAsso memberships (orders we could not attach
+      to a member) older than ``unlinked_membership_ttl_days``.
+    - Deletes dead action tokens (expired / consumed / revoked) past the
+      ``action_token_ttl_days`` grace period.
     """
     settings = get_settings()
     with session_ctx(settings.database_url) as ses:
-        deleted = membership_service.purge_unlinked_memberships(
+        memberships = membership_service.purge_unlinked_memberships(
             ses, ttl_days=settings.unlinked_membership_ttl_days
         )
-        logger.info("Unlinked membership purge complete: %d deleted", deleted)
+        logger.info("Unlinked membership purge complete: %d deleted", memberships)
+
+        tokens = purge_expired_action_tokens(
+            ses, grace_days=settings.action_token_ttl_days
+        )
+        logger.info("Action token purge complete: %d deleted", tokens)
