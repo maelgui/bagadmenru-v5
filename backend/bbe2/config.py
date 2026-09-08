@@ -91,6 +91,13 @@ class Settings(BaseSettings):
     # disable the purge entirely.
     unlinked_membership_ttl_days: int = 30
 
+    # Dead action tokens (expired, consumed, or revoked email-link tokens:
+    # password reset, RSVP, unsubscribe, invitation, OTP) are pruned daily. This
+    # is a grace period, in days, kept after a token becomes unusable before it
+    # is deleted (0 removes it as soon as it is dead). They carry no value once
+    # dead; the delay only leaves a short window for debugging/audit.
+    action_token_ttl_days: int = 7
+
     @property
     def cookie_secure(self) -> bool:
         """Whether auth cookies must carry the Secure attribute.

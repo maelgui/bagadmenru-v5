@@ -14,7 +14,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
-from sqlalchemy import select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session as DbSession
 
 from bbe2.models.action_token import ActionTokenDB, ActionTokenValue
@@ -150,3 +150,36 @@ def consume_action_token(
         db.flush()
 
     return dict(row.payload)
+
+
+def purge_expired_action_tokens(
+    db: DbSession, *, grace_days: int = 0, now: Optional[datetime] = None
+) -> int:
+    """Delete action tokens that can no longer be used.
+
+    A token is dead once any of the following holds:
+      * it has expired (``expires_at`` in the past),
+      * it was consumed (``used_at`` set), or
+      * it was explicitly revoked (``revoked_at`` set).
+
+    ``grace_days`` keeps dead tokens around a little longer (measured from the
+    relevant timestamp) so they remain available for debugging/audit; with the
+    default of 0 a token is removed as soon as it becomes unusable. Returns the
+    number of rows deleted.
+    """
+    now = now or datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=grace_days)
+
+    result = db.execute(
+        delete(ActionTokenDB).where(
+            or_(
+                ActionTokenDB.expires_at < cutoff,
+                ActionTokenDB.used_at < cutoff,
+                ActionTokenDB.revoked_at < cutoff,
+            )
+        )
+    )
+    db.commit()
+    # session.execute of a Core DELETE returns a CursorResult exposing rowcount;
+    # mypy only sees the base Result, so read it defensively.
+    return getattr(result, "rowcount", 0) or 0
