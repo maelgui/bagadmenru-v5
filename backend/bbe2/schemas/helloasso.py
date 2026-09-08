@@ -62,6 +62,7 @@ class UnlinkedMembership(BaseModel):
     payer_last_name: Optional[str]
     adherent_first_name: Optional[str]
     adherent_last_name: Optional[str]
+    adherent_email: Optional[str]
     tier_name: Optional[str]
     tier_description: Optional[str]
     amount: int

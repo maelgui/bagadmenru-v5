@@ -72,6 +72,12 @@ export interface UnlinkedMembership {
      * @type {string}
      * @memberof UnlinkedMembership
      */
+    adherentEmail: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UnlinkedMembership
+     */
     tierName: string | null;
     /**
      * 
@@ -111,6 +117,7 @@ export function instanceOfUnlinkedMembership(value: object): value is UnlinkedMe
     if (!('payerLastName' in value) || value['payerLastName'] === undefined) return false;
     if (!('adherentFirstName' in value) || value['adherentFirstName'] === undefined) return false;
     if (!('adherentLastName' in value) || value['adherentLastName'] === undefined) return false;
+    if (!('adherentEmail' in value) || value['adherentEmail'] === undefined) return false;
     if (!('tierName' in value) || value['tierName'] === undefined) return false;
     if (!('tierDescription' in value) || value['tierDescription'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
@@ -137,6 +144,7 @@ export function UnlinkedMembershipFromJSONTyped(json: any, ignoreDiscriminator: 
         'payerLastName': json['payer_last_name'],
         'adherentFirstName': json['adherent_first_name'],
         'adherentLastName': json['adherent_last_name'],
+        'adherentEmail': json['adherent_email'],
         'tierName': json['tier_name'],
         'tierDescription': json['tier_description'],
         'amount': json['amount'],
@@ -164,6 +172,7 @@ export function UnlinkedMembershipToJSONTyped(value?: UnlinkedMembership | null,
         'payer_last_name': value['payerLastName'],
         'adherent_first_name': value['adherentFirstName'],
         'adherent_last_name': value['adherentLastName'],
+        'adherent_email': value['adherentEmail'],
         'tier_name': value['tierName'],
         'tier_description': value['tierDescription'],
         'amount': value['amount'],

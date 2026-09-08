@@ -27,7 +27,7 @@ import {
  * ``channel`` selects delivery: ``LINK`` returns the signup link/QR to the
  * caller; ``EMAIL`` sends the invitation to ``email`` (which then must be
  * provided). ``first_name`` is optional and only used to personalise the
- * emailed invitation — it is not persisted on the token nor used to prefill
+ * emailed invitation - it is not persisted on the token nor used to prefill
  * the signup form (the invitee fills in their own profile).
  * @export
  * @interface InvitationCreate

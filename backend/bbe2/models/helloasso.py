@@ -64,6 +64,13 @@ class HelloAssoMembershipDB(Base):
         String(255), nullable=True
     )
 
+    # The adherent's email, taken from the item's "Email" custom field (see
+    # ``HelloAssoItem.custom_field_email``). This is the address we want to
+    # contact the adherent on — unlike ``payer_email``, which is whoever paid
+    # (often a parent). Nullable because the custom field may be missing or not
+    # look like an email. Used to prefill an invitation for an unlinked order.
+    adherent_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
     # The membership formula. HelloAsso gives both a short tier ``name``
     # (e.g. "ADHESION OBLIGATOIRE") and a longer ``tierDescription``; we keep
     # both and display the name first.

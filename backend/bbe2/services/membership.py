@@ -196,6 +196,11 @@ def ingest_notification(
                 select(UserDB.id).where(func.lower(UserDB.email) == link_email.lower())
             )
 
+        # The adherent's own email is specifically the custom-field one (not the
+        # payer fallback), persisted so the reconciliation UI can invite the
+        # adherent even when the row is unlinked.
+        adherent_email = item.custom_field_email()
+
         adherent = item.user
 
         existing = session.scalar(
@@ -210,6 +215,10 @@ def ingest_notification(
                 item.amount if item.amount is not None else existing.amount
             )
             existing.raw_payload = raw_payload
+            # Backfill the adherent email if it's newly available and we don't
+            # have one yet (e.g. row ingested before this column existed).
+            if existing.adherent_email is None and adherent_email is not None:
+                existing.adherent_email = adherent_email
             # Keep an existing manual link; only fill it if still empty.
             if existing.user_id is None and user_id is not None:
                 existing.user_id = user_id
@@ -224,6 +233,7 @@ def ingest_notification(
                     payer_last_name=payer.last_name if payer else None,
                     adherent_first_name=adherent.first_name if adherent else None,
                     adherent_last_name=adherent.last_name if adherent else None,
+                    adherent_email=adherent_email,
                     tier_name=item.name,
                     tier_description=item.tier_description,
                     amount=item.amount or 0,

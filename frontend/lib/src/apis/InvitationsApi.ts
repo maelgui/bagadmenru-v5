@@ -64,7 +64,7 @@ export interface RequestOtpApiV1InvitationsTokenOtpPostRequest {
 export class InvitationsApi extends runtime.BaseAPI {
 
     /**
-     * Public: create the member account from the invitation and sign them in.  OTP is required unless the invitation email was backend-proven and the submitted email is unchanged. The account is created with default groups only (no privileged roles). On success the new member is signed in as an *additive* browser session (multi-account): their session cookie is set and they become the active account, without logging out anyone already signed in (e.g. a parent inviting a child on the same device). No password is set and no email is sent — the account is passkey-first.
+     * Public: create the member account from the invitation and sign them in.  OTP is required unless the invitation email was backend-proven and the submitted email is unchanged. The account gets its instrument plus the default groups only (never a privileged role). On success the new member is signed in as an *additive* multi-account session (no other account is logged out) and becomes the active account - no password is set and no email is sent, the account is passkey-first.
      * Accept Invitation
      */
     async acceptInvitationApiV1InvitationsTokenAcceptPostRaw(requestParameters: AcceptInvitationApiV1InvitationsTokenAcceptPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
@@ -100,7 +100,7 @@ export class InvitationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Public: create the member account from the invitation and sign them in.  OTP is required unless the invitation email was backend-proven and the submitted email is unchanged. The account is created with default groups only (no privileged roles). On success the new member is signed in as an *additive* browser session (multi-account): their session cookie is set and they become the active account, without logging out anyone already signed in (e.g. a parent inviting a child on the same device). No password is set and no email is sent — the account is passkey-first.
+     * Public: create the member account from the invitation and sign them in.  OTP is required unless the invitation email was backend-proven and the submitted email is unchanged. The account gets its instrument plus the default groups only (never a privileged role). On success the new member is signed in as an *additive* multi-account session (no other account is logged out) and becomes the active account - no password is set and no email is sent, the account is passkey-first.
      * Accept Invitation
      */
     async acceptInvitationApiV1InvitationsTokenAcceptPost(requestParameters: AcceptInvitationApiV1InvitationsTokenAcceptPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Token> {
@@ -190,7 +190,7 @@ export class InvitationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Public: send a one-time code to the address the invitee entered.  A fresh OTP token supersedes any previous one for this invitation, so only the latest code is valid.
+     * Public: send a one-time code to the address the invitee entered.  A fresh code supersedes any previous one for this invitation, so only the latest is valid.
      * Request Otp
      */
     async requestOtpApiV1InvitationsTokenOtpPostRaw(requestParameters: RequestOtpApiV1InvitationsTokenOtpPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
@@ -226,7 +226,7 @@ export class InvitationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Public: send a one-time code to the address the invitee entered.  A fresh OTP token supersedes any previous one for this invitation, so only the latest code is valid.
+     * Public: send a one-time code to the address the invitee entered.  A fresh code supersedes any previous one for this invitation, so only the latest is valid.
      * Request Otp
      */
     async requestOtpApiV1InvitationsTokenOtpPost(requestParameters: RequestOtpApiV1InvitationsTokenOtpPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {

@@ -181,7 +181,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Sign out of a single account and return the remaining sessions.  Deletes only the targeted account\'s session cookie (``account_id`` in the body, defaulting to the active account). Other accounts stay signed in. When no sessions remain the ``active_account`` selector is cleared too. The legacy single-session ``access_token`` cookie is also cleared when it is the thing being logged out, for backward compatibility.
+     * Sign out of a single account and return the remaining sessions.  Deletes only the targeted account\'s session cookie (``account_id`` in the body, defaulting to the active account). Other accounts stay signed in. When no sessions remain the ``active_account`` selector is cleared too. The legacy single-session ``access_token`` cookie is also cleared when it is the thing being logged out, for backward compatibility.  When ``all`` is true, every account signed in this browser is signed out at once (``account_id`` is ignored) and an empty list is returned. This only clears cookies in the current browser; sessions on other devices are not revoked (tokens are stateless and carry no server-side session record).
      * Logout
      */
     async logoutApiV1AuthLogoutPostRaw(requestParameters: LogoutApiV1AuthLogoutPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SessionInfo>>> {
@@ -203,7 +203,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Sign out of a single account and return the remaining sessions.  Deletes only the targeted account\'s session cookie (``account_id`` in the body, defaulting to the active account). Other accounts stay signed in. When no sessions remain the ``active_account`` selector is cleared too. The legacy single-session ``access_token`` cookie is also cleared when it is the thing being logged out, for backward compatibility.
+     * Sign out of a single account and return the remaining sessions.  Deletes only the targeted account\'s session cookie (``account_id`` in the body, defaulting to the active account). Other accounts stay signed in. When no sessions remain the ``active_account`` selector is cleared too. The legacy single-session ``access_token`` cookie is also cleared when it is the thing being logged out, for backward compatibility.  When ``all`` is true, every account signed in this browser is signed out at once (``account_id`` is ignored) and an empty list is returned. This only clears cookies in the current browser; sessions on other devices are not revoked (tokens are stateless and carry no server-side session record).
      * Logout
      */
     async logoutApiV1AuthLogoutPost(requestParameters: LogoutApiV1AuthLogoutPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<SessionInfo>> {
