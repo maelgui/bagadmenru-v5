@@ -56,12 +56,6 @@ def _anon(client: TestClient) -> TestClient:
 # --- Key management -------------------------------------------------------
 
 
-def test_list_available_permissions(client: TestClient):
-    response = client.get("/api/v1/profiles/me/api-keys/available-permissions")
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
-
-
 def test_create_api_key_returns_secret_once(client: TestClient, monkeypatch):
     _grant_member_permissions(monkeypatch)
     response = client.post(

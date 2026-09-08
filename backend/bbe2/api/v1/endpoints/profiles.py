@@ -113,23 +113,6 @@ async def get_my_membership(
 
 
 @profiles_router.get(
-    "/me/api-keys/available-permissions",
-    response_model=list[str],
-)
-async def list_available_api_key_permissions(
-    payload: Annotated[
-        schemas.JwtPayload, Depends(Authorization(Action.VIEW, Resource.ME))
-    ],
-) -> list[str]:
-    """Permissions ("action:resource") the member may delegate to an API key.
-
-    A key can only ever exercise a subset of its owner's permissions, so the
-    choices offered are exactly the member's own permissions.
-    """
-    return get_permissions_for_roles(payload.roles)
-
-
-@profiles_router.get(
     "/me/api-keys",
     response_model=list[schemas.ApiKey],
     dependencies=[Depends(Authorization(Action.VIEW, Resource.ME))],
