@@ -160,3 +160,69 @@ def test_list_profiles_membership_status_shown_with_permission(client: TestClien
 
     expected_season = membership_service.season_label(datetime.now(tz=timezone.utc))
     assert response.json()[0]["membership_active_season"] == expected_season
+
+
+def test_create_profile_links_orphan_membership_by_adherent_email(
+    client: TestClient,
+):
+    """Creating a member manually attaches a matching orphan membership too.
+
+    Mirrors the invitation signup path: an admin-created member whose email
+    matches an unlinked membership's adherent email gets that adhesion linked.
+    """
+    from datetime import datetime, timezone
+
+    from sqlalchemy.orm import Session
+
+    from bbe2 import models
+    from bbe2.database import get_engine
+    from bbe2.main import app
+    from bbe2.utils.templates import EmailSender
+
+    # A no-op email sender so create_profile's welcome email is not actually
+    # sent (no SMTP in tests).
+    class _NoopSender:
+        async def batch_send_emails(self, subject, template_name, template_data):
+            return None
+
+    app.dependency_overrides[EmailSender] = lambda: _NoopSender()
+    try:
+        engine = get_engine("sqlite:///tests.sqlite?check_same_thread=false")
+        with Session(engine) as session:
+            session.add(
+                models.HelloAssoMembershipDB(
+                    helloasso_order_id=777,
+                    helloasso_item_id=7771,
+                    user_id=None,
+                    payer_email="parent@example.com",
+                    adherent_email="new.member@example.com",
+                    adherent_first_name="New",
+                    adherent_last_name="Member",
+                    amount=4400,
+                    order_date=datetime.now(tz=timezone.utc),
+                    state="Processed",
+                    raw_payload={},
+                )
+            )
+            session.commit()
+
+        resp = client.post(
+            "/api/v1/profiles/",
+            json={
+                "first_name": "New",
+                "last_name": "Member",
+                "email": "new.member@example.com",
+                "instrument_id": 1,
+                "group_ids": [],
+                "receives_emails": True,
+            },
+        )
+        assert resp.status_code == 200, resp.text
+
+        # The orphan membership is now linked, so it no longer appears in the
+        # admin "unlinked" list (checked through the API to use the endpoint's
+        # own DB session path).
+        unlinked = client.get("/api/v1/helloasso/orders/unlinked").json()
+        assert all(r["helloasso_item_id"] != 7771 for r in unlinked)
+    finally:
+        app.dependency_overrides.pop(EmailSender, None)
