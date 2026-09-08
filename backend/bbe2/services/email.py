@@ -1,7 +1,4 @@
-"""Email service: direct SMTP sending and IMAP inbox reading.
-
-Replaces the external Rust email-api microservice.
-"""
+"""Email service: direct SMTP sending and IMAP inbox reading."""
 
 import logging
 from datetime import datetime

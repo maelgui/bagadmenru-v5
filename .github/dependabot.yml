@@ -5,37 +5,76 @@
 
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/frontend" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/frontend"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 10
+    assignees:
+      - maelgui
+    groups:
+      # Regroupe tous les minor/patch de dev en une seule PR
+      dev-deps:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      # Regroupe tous les minor/patch de prod en une seule PR
+      prod-deps:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+    # Les majeurs sortent en PR individuelles pour revue manuelle
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "npm"
+    directory: "/e2e"
+    schedule:
+      interval: "weekly"
     open-pull-requests-limit: 5
     assignees:
       - maelgui
     groups:
-      dev-deps:
-        dependency-type: "development"
-      prod-deps:
-        dependency-type: "production"
+      e2e-deps:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/backend" # Location of package manifests
+  - package-ecosystem: "pip"
+    directory: "/backend"
     schedule:
       interval: "daily"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     versioning-strategy: increase-if-necessary
     assignees:
       - maelgui
     groups:
       dev-deps:
         dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
       prod-deps:
         dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
     groups:
       actions-deps:
         patterns:
