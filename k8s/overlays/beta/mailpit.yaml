@@ -16,13 +16,19 @@ spec:
         - name: mailpit
           image: axllent/mailpit:latest
           # Every captured message is also forwarded to a single real mailbox
-          # (beta-sandbox@bagadmenru.bzh) via OVH SMTP, since the Mailpit web UI
-          # is not exposed on beta. Mailpit still captures everything as usual;
+          # (beta-sandbox@bagadmenru.bzh) via OVH SMTP, in addition to being
+          # readable in the web UI (exposed at /_mail behind the site session,
+          # see mailpit-ingress.yaml). Mailpit captures everything as usual;
           # forwarding is an additional copy. Configured entirely through
-          # MP_SMTP_FORWARD_* env vars. OVH port 465 is implicit SSL/TLS, so
+          # MP_* env vars. OVH port 465 is implicit SSL/TLS, so
           # TLS=true and STARTTLS=false. The password comes from the
           # mailpit-secrets sealed secret so it never lands in the manifest.
           env:
+            # Serve the UI under /_mail so Mailpit emits its own asset, API and
+            # WebSocket URLs with that prefix. This matches the Ingress path and
+            # avoids rewriting responses (no stripPrefix needed).
+            - name: MP_WEBROOT
+              value: /_mail
             - name: MP_SMTP_FORWARD_HOST
               value: ssl0.ovh.net
             - name: MP_SMTP_FORWARD_PORT
