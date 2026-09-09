@@ -41,9 +41,9 @@ export default defineConfig(({ mode }) => {
         '/api': 'http://backend:8000',
         '/docs': 'http://backend:8000',
         '/openapi.json': 'http://backend:8000',
-        // Mailpit runs with MP_WEBROOT=mailpit, so it serves under /mailpit and
+        // Mailpit runs with MP_WEBROOT=_mail, so it serves under /_mail and
         // emits prefix-aware URLs — no rewrite needed.
-        '/mailpit': { target: 'http://mailpit:8025', changeOrigin: true },
+        '/_mail': { target: 'http://mailpit:8025', changeOrigin: true },
         '/minio': {
           target: 'http://storage:9090',
           changeOrigin: true,

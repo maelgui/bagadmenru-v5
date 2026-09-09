@@ -4,10 +4,10 @@ import { randomUUID } from 'node:crypto';
 import { CORRELATION_ID_HEADER } from './constants';
 
 // Base URL of the Mailpit HTTP API. Two shapes are supported:
-//  - a bare origin (CI port-forwards Mailpit to localhost:8025), and
-//  - an origin + path prefix, e.g. http://localhost:5173/mailpit, used by the
-//    local docker/finch compose stack where Mailpit has no published host port
-//    and is reached through the vite proxy (MP_WEBROOT=mailpit).
+//  - an origin + path prefix, e.g. http://localhost:5173/_mail (local compose,
+//    reached through the vite proxy) or http://localhost:8025/_mail (CI, which
+//    port-forwards the pod). Mailpit runs with MP_WEBROOT=_mail everywhere, so
+//    its API lives under /_mail in every environment.
 // We therefore build request URLs by concatenating this base with the API path
 // rather than using Playwright's `baseURL` (which drops any path prefix when
 // the request path is absolute like `/api/...`).
