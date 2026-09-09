@@ -5,6 +5,10 @@
 # /api/v1/auth/verify endpoint, which returns 204 only for a session holding
 # VIEW:EMAIL (staff/admin) and 401/403 otherwise.
 #
+# Mailpit itself runs with MP_WEBROOT=/_mail (see mailpit.yaml), so it emits
+# its own asset/API/WebSocket URLs under /_mail and no path rewriting is
+# needed on the Traefik side.
+#
 # Middlewares live in the bagadmenru-beta namespace (same as the Ingress) and
 # are referenced with the `<namespace>-<name>@kubernetescrd` provider syntax.
 ---
@@ -21,25 +25,13 @@ spec:
     authRequestHeaders:
       - Cookie
 ---
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: mailpit-stripprefix
-spec:
-  stripPrefix:
-    # Mailpit's UI is not mounted under a sub-path, so strip /_mail before
-    # proxying. (If asset URLs break, switch to running Mailpit with
-    # `--webroot=/_mail` and drop this middleware.)
-    prefixes:
-      - /_mail
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: mailpit-ingress
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    traefik.ingress.kubernetes.io/router.middlewares: "bagadmenru-beta-mailpit-auth@kubernetescrd,bagadmenru-beta-mailpit-stripprefix@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "bagadmenru-beta-mailpit-auth@kubernetescrd"
 spec:
   tls:
     - hosts:
