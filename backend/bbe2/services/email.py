@@ -16,6 +16,21 @@ from bbe2.utils.correlation import CORRELATION_ID_HEADER, get_correlation_id
 logger = logging.getLogger(__name__)
 
 
+class EmailAttachment(BaseModel):
+    """A single email attachment.
+
+    ``content`` is the raw text payload; ``maintype``/``subtype`` set the MIME
+    type (e.g. ``text/calendar``); ``params`` holds extra Content-Type
+    parameters such as ``method=REQUEST`` for an iTIP invitation.
+    """
+
+    filename: str
+    content: str
+    maintype: str = "text"
+    subtype: str = "plain"
+    params: dict[str, str] = Field(default_factory=dict)
+
+
 class OutgoingEmail(BaseModel):
     """A single outgoing email with rendered content."""
 
@@ -23,6 +38,7 @@ class OutgoingEmail(BaseModel):
     subject: str
     body_html: str
     body_text: str
+    attachments: list[EmailAttachment] = Field(default_factory=list)
 
 
 class EmailSendError(RuntimeError):
@@ -72,6 +88,18 @@ async def send_emails(
         # Set plain text body and HTML alternative
         msg.set_content(email_data.body_text)
         msg.add_alternative(email_data.body_html, subtype="html")
+
+        # Attach any files (e.g. a text/calendar iTIP invitation). Extra
+        # Content-Type parameters (like method=REQUEST) are passed through so
+        # calendar clients treat the payload correctly.
+        for attachment in email_data.attachments:
+            msg.add_attachment(
+                attachment.content.encode("utf-8"),
+                maintype=attachment.maintype,
+                subtype=attachment.subtype,
+                filename=attachment.filename,
+                params=attachment.params or None,
+            )
 
         messages.append(msg)
 

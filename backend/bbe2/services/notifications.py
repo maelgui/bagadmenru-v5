@@ -5,6 +5,7 @@ They only receive plain/serializable data (no ORM objects).
 """
 
 import logging
+from email.utils import parseaddr
 from typing import Optional
 
 import aiosmtplib
@@ -15,14 +16,44 @@ from bbe2.database import session_ctx
 from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.user import UserDB
 from bbe2.schemas.event import EventCreate
+from bbe2.services.email import EmailAttachment
 from bbe2.services.push_service import send_push_to_users
 from bbe2.utils.action_token import create_action_token
 from bbe2.utils.auth import Action
 from bbe2.utils.correlation import set_correlation_id
+from bbe2.utils.ics import build_event_invite_ics
 from bbe2.utils.permissions import Resource, is_allowed
 from bbe2.utils.templates import EmailData, EmailSender
 
 logger = logging.getLogger(__name__)
+
+
+def _invite_attachment(
+    settings: Settings, event: EventCreate, event_id: int, user: UserDB
+) -> EmailAttachment:
+    """Build the per-recipient iTIP (METHOD:REQUEST) calendar attachment.
+
+    email_from is a formatted "Name <address>" string; parseaddr splits it
+    into (name, address) for the ICS ORGANIZER.
+    """
+    organizer_name, organizer_email = parseaddr(settings.email_from)
+    return EmailAttachment(
+        filename="invitation.ics",
+        maintype="text",
+        subtype="calendar",
+        params={"method": "REQUEST", "charset": "UTF-8"},
+        content=build_event_invite_ics(
+            event_id=event_id,
+            title=event.title,
+            description=event.description,
+            begin=event.date,
+            organizer_email=organizer_email,
+            organizer_name=organizer_name,
+            attendee_email=user.email,
+            attendee_name=f"{user.first_name} {user.last_name}",
+            domain=settings.relying_party_id,
+        ),
+    )
 
 
 async def notify_new_event(
@@ -99,6 +130,9 @@ async def notify_new_event(
                             "token": tokens_by_user[user.id][0],
                             "unsubscribe_token": tokens_by_user[user.id][1],
                         },
+                        attachments=[
+                            _invite_attachment(settings, event, event_id, user)
+                        ],
                     )
                     for user in users
                 ],
