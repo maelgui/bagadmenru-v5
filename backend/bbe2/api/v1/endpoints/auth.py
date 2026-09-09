@@ -176,6 +176,23 @@ def process_login(
     return Token(access_token=access_token, token_type="bearer")
 
 
+@router.get(
+    "/auth/verify",
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.EMAIL))],
+    status_code=204,
+)
+def verify_email_access() -> Response:
+    """Forward-auth gate for the Mailpit UI (beta).
+
+    Reachable through Traefik's ``forwardAuth`` middleware, which replays the
+    caller's cookies here before serving the internal Mailpit service. A 204
+    means the browser holds a valid session whose role grants ``VIEW:EMAIL``
+    (staff/admin); the ``Authorization`` dependency raises 401/403 otherwise.
+    The body is empty on purpose: only the status code matters to Traefik.
+    """
+    return Response(status_code=204)
+
+
 @router.post("/auth/reset")
 def reset_password(
     body: ResetPassword,
