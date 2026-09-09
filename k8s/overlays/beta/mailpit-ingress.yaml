@@ -1,0 +1,58 @@
+# Expose the Mailpit UI to testers under https://beta.bagadmenru.bzh/_mail,
+# gated by the site's own session. Mailpit is served on the SAME host as the
+# app so the httpOnly `bmr_session_*` cookie (path=/) is sent with the request;
+# a Traefik forwardAuth middleware then replays those cookies to the backend's
+# /api/v1/auth/verify endpoint, which returns 204 only for a session holding
+# VIEW:EMAIL (staff/admin) and 401/403 otherwise.
+#
+# Middlewares live in the bagadmenru-beta namespace (same as the Ingress) and
+# are referenced with the `<namespace>-<name>@kubernetescrd` provider syntax.
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: mailpit-auth
+spec:
+  forwardAuth:
+    # Cluster-internal call to the backend Service. The auth endpoint only
+    # reads the replayed Cookie header, so no TLS/host rewriting is needed.
+    address: http://backend:8000/api/v1/auth/verify
+    # Forward the browser's cookies so the backend can resolve the session.
+    authRequestHeaders:
+      - Cookie
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: mailpit-stripprefix
+spec:
+  stripPrefix:
+    # Mailpit's UI is not mounted under a sub-path, so strip /_mail before
+    # proxying. (If asset URLs break, switch to running Mailpit with
+    # `--webroot=/_mail` and drop this middleware.)
+    prefixes:
+      - /_mail
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mailpit-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: "bagadmenru-beta-mailpit-auth@kubernetescrd,bagadmenru-beta-mailpit-stripprefix@kubernetescrd"
+spec:
+  tls:
+    - hosts:
+        - beta.bagadmenru.bzh
+      secretName: bagadmenru-beta-tls
+  rules:
+    - host: beta.bagadmenru.bzh
+      http:
+        paths:
+          - path: /_mail
+            pathType: Prefix
+            backend:
+              service:
+                name: mailpit
+                port:
+                  number: 8025

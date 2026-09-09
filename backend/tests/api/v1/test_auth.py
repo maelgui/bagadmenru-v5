@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import update
 
+import bbe2.utils.auth
 from bbe2.models.user import UserDB
 from bbe2.utils.auth import myctx
 
@@ -165,3 +166,27 @@ def _legacy_token() -> str:
         iat=datetime.now(tz=timezone.utc),
     ).model_dump()
     return jwt.encode(payload, get_fake_settings().jwt_secret_key, algorithm="HS256")
+
+
+def test_verify_returns_204_when_allowed(client: TestClient):
+    # The `client` fixture patches is_allowed to always grant, so an
+    # authenticated caller with VIEW:EMAIL passes the forward-auth gate.
+    response = client.get("/api/v1/auth/verify")
+    assert response.status_code == 204
+    assert response.content == b""
+
+
+def test_verify_returns_403_when_role_lacks_email_access(
+    client: TestClient, monkeypatch
+):
+    # A valid session whose roles do NOT grant VIEW:EMAIL must be rejected so
+    # ordinary members cannot read the Mailpit inbox.
+    monkeypatch.setattr(bbe2.utils.auth, "is_allowed", lambda *a, **k: False)
+    response = client.get("/api/v1/auth/verify")
+    assert response.status_code == 403
+
+
+def test_verify_returns_401_when_unauthenticated(client: TestClient):
+    # No session cookie and no bearer header -> forward-auth denies access.
+    response = client.get("/api/v1/auth/verify", headers={"Authorization": ""})
+    assert response.status_code == 401

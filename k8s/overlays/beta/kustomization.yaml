@@ -7,6 +7,7 @@ resources:
   - ../../base
   - sealed-secrets.yaml
   - mailpit.yaml
+  - mailpit-ingress.yaml
 
 # Namespace is created separately (not subject to namespace transformation)
 generatorOptions:
