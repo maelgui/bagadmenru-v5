@@ -24,10 +24,12 @@ Tests use environment variables for target URLs:
   served on the **same origin** under `/api`, so there is no separate API URL to
   configure — API request contexts derive their base from `BASE_URL`.
 - `MAILPIT_URL` — Mailpit API for email verification (default: http://localhost:8025).
-  In the local docker/finch compose stack Mailpit has **no published host port**;
-  it is reached through the vite proxy at `http://localhost:5173/mailpit`
-  (`MP_WEBROOT=mailpit`). Use `npm run test:local`, which sets this for you. The
-  Mailpit helper preserves the `/mailpit` path prefix when building API URLs.
+  Mailpit runs with `MP_WEBROOT=_mail` in every environment, so its API lives
+  under `/_mail`. In the local docker/finch compose stack Mailpit has **no
+  published host port**; it is reached through the vite proxy at
+  `http://localhost:5173/_mail`. Use `npm run test:local`, which sets this for
+  you. In CI the pod is port-forwarded, so the URL is `http://localhost:8025/_mail`.
+  The Mailpit helper preserves the `/_mail` path prefix when building API URLs.
 
 ## CI Configuration
 

@@ -25,10 +25,12 @@ spec:
           # mailpit-secrets sealed secret so it never lands in the manifest.
           env:
             # Serve the UI under /_mail so Mailpit emits its own asset, API and
-            # WebSocket URLs with that prefix. This matches the Ingress path and
+            # WebSocket URLs with that prefix. Same webroot as the local compose
+            # stack (docker-compose.yml) and the vite proxy, so the E2E Mailpit
+            # URL shape is identical everywhere. Matches the Ingress path and
             # avoids rewriting responses (no stripPrefix needed).
             - name: MP_WEBROOT
-              value: /_mail
+              value: _mail
             - name: MP_SMTP_FORWARD_HOST
               value: ssl0.ovh.net
             - name: MP_SMTP_FORWARD_PORT

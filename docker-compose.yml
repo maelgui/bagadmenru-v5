@@ -17,12 +17,13 @@ services:
   mailpit:
     image: axllent/mailpit
     # No published host ports: the Mailpit web UI is reached through the vite
-    # proxy (/mailpit) on the frontend origin; SMTP is in-network only.
-    # MP_WEBROOT makes Mailpit serve under /mailpit and emit prefix-aware asset
+    # proxy (/_mail) on the frontend origin; SMTP is in-network only.
+    # MP_WEBROOT makes Mailpit serve under /_mail and emit prefix-aware asset
     # and API URLs, so the proxy needs no path rewrite (its own /css, /js, /api
-    # requests already carry the /mailpit prefix).
+    # requests already carry the /_mail prefix). The same webroot is used on
+    # beta (see k8s/overlays/beta) so the E2E Mailpit URL is identical there.
     environment:
-      - MP_WEBROOT=mailpit
+      - MP_WEBROOT=_mail
 
   backend-init:
     build: backend
