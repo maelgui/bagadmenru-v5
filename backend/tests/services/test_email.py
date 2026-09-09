@@ -5,7 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from bbe2.services.email import OutgoingEmail, _decode_mime_header, send_emails
+from bbe2.services.email import (
+    EmailAttachment,
+    OutgoingEmail,
+    _decode_mime_header,
+    send_emails,
+)
 from bbe2.utils.correlation import CORRELATION_ID_HEADER, set_correlation_id
 
 
@@ -116,3 +121,47 @@ def test_send_emails_without_correlation_id_omits_header():
 
     assert len(sent) == 1
     assert CORRELATION_ID_HEADER not in sent[0]
+
+
+def test_send_emails_attaches_calendar_invitation():
+    """An attachment is added as a text/calendar part carrying method=REQUEST."""
+    sent = []
+
+    async def _fake_send(msg, **_kwargs):
+        sent.append(msg)
+
+    with patch(
+        "bbe2.services.email.aiosmtplib.send", new=AsyncMock(side_effect=_fake_send)
+    ):
+        asyncio.run(
+            send_emails(
+                _FakeSettings(),
+                [
+                    OutgoingEmail(
+                        to="a@b.test",
+                        subject="Hi",
+                        body_html="<p>x</p>",
+                        body_text="x",
+                        attachments=[
+                            EmailAttachment(
+                                filename="invitation.ics",
+                                content="BEGIN:VCALENDAR\nEND:VCALENDAR\n",
+                                maintype="text",
+                                subtype="calendar",
+                                params={"method": "REQUEST", "charset": "UTF-8"},
+                            )
+                        ],
+                    )
+                ],
+            )
+        )
+
+    assert len(sent) == 1
+    calendar_parts = [
+        p for p in sent[0].walk() if p.get_content_type() == "text/calendar"
+    ]
+    assert len(calendar_parts) == 1
+    part = calendar_parts[0]
+    assert part.get_param("method") == "REQUEST"
+    assert part.get_filename() == "invitation.ics"
+    assert b"BEGIN:VCALENDAR" in part.get_payload(decode=True)

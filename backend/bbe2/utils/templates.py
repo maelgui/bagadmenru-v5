@@ -2,10 +2,10 @@ from typing import Annotated
 
 from fastapi import Depends
 from jinja2 import Environment, PackageLoader, select_autoescape
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from bbe2.config import Settings, get_settings
-from bbe2.services.email import OutgoingEmail, send_emails
+from bbe2.services.email import EmailAttachment, OutgoingEmail, send_emails
 
 
 def get_templating() -> Environment:
@@ -15,6 +15,7 @@ def get_templating() -> Environment:
 class EmailData(BaseModel):
     to: str
     template_data: dict
+    attachments: list[EmailAttachment] = Field(default_factory=list)
 
 
 class EmailSender:
@@ -42,6 +43,7 @@ class EmailSender:
                 to=d.to,
                 body_text=txt_template.render(d.template_data),
                 body_html=html_template.render(d.template_data),
+                attachments=d.attachments,
             )
             for d in template_data
         ]
