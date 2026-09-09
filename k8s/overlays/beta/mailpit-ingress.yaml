@@ -18,9 +18,13 @@ metadata:
   name: mailpit-auth
 spec:
   forwardAuth:
-    # Cluster-internal call to the backend Service. The auth endpoint only
+    # Cluster-internal call to the backend Service. Traefik runs in the
+    # kube-system namespace, so the Service must be addressed by its fully
+    # qualified name (<svc>.<namespace>.svc.cluster.local); a bare `backend`
+    # only resolves within Traefik's own namespace and fails with a DNS
+    # "no such host", which Traefik surfaces as a 500. The auth endpoint only
     # reads the replayed Cookie header, so no TLS/host rewriting is needed.
-    address: http://backend:8000/api/v1/auth/verify
+    address: http://backend.bagadmenru-beta.svc.cluster.local:8000/api/v1/auth/verify
     # Forward the browser's cookies so the backend can resolve the session.
     authRequestHeaders:
       - Cookie
