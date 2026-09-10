@@ -3,7 +3,15 @@ import secrets
 from datetime import datetime, timezone
 from typing import Annotated, Iterable
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+)
 from sqlalchemy import select, update
 from webauthn import (
     generate_authentication_options,
@@ -37,6 +45,7 @@ from bbe2.schemas.auth import (
     SessionInfo,
     Token,
 )
+from bbe2.services.notifications import send_password_reset_email
 from bbe2.utils.action_token import create_action_token
 from bbe2.utils.auth import (
     ACTIVE_ACCOUNT_COOKIE,
@@ -56,7 +65,7 @@ from bbe2.utils.auth import (
     set_session_cookies,
     verify_token,
 )
-from bbe2.utils.templates import EmailData
+from bbe2.utils.correlation import get_correlation_id
 
 router = APIRouter()
 
@@ -331,6 +340,7 @@ async def reset_password_request(
     settings: SettingsDep,
     session: SessionDep,
     sender: SenderDep,
+    background_tasks: BackgroundTasks,
 ) -> str:
     user = session.scalars(select(UserDB).where(UserDB.email == body.email)).first()
     if not user or not user.is_active:
@@ -343,19 +353,17 @@ async def reset_password_request(
     )
     session.commit()
 
-    await sender.batch_send_emails(
-        "Reinitialisation de votre mot de passe.",
-        "reset_password",
-        [
-            EmailData(
-                to=user.email,
-                template_data={
-                    "token": token,
-                    "user": user,
-                    "frontend_url": str(settings.frontend_base_url).rstrip("/"),
-                },
-            ),
-        ],
+    # Send off the request's critical path: a slow/unreachable SMTP server must
+    # not stall (or fail) this response. The token is already persisted, so the
+    # link is valid immediately. Capture the correlation ID now and re-set it in
+    # the task, which runs outside this request's context.
+    background_tasks.add_task(
+        send_password_reset_email,
+        sender,
+        user.email,
+        token,
+        str(settings.frontend_base_url).rstrip("/"),
+        get_correlation_id(),
     )
 
     return "OK"

@@ -15,7 +15,7 @@ from bbe2.database import session_ctx
 from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.user import UserDB
 from bbe2.schemas.event import EventCreate
-from bbe2.services.email import EmailAttachment
+from bbe2.services.email import EmailAttachment, EmailSendError
 from bbe2.services.push_service import send_push_to_users
 from bbe2.utils.action_token import create_action_token
 from bbe2.utils.auth import Action
@@ -146,3 +146,46 @@ async def notify_new_event(
             )
         except (OSError, ValueError) as exc:
             logger.error("Unable to send push notifications: %s", exc)
+
+
+async def send_password_reset_email(
+    sender: EmailSender,
+    email: str,
+    token: str,
+    frontend_url: str,
+    correlation_id: Optional[str] = None,
+) -> None:
+    """Background task: send the password-reset email.
+
+    The reset token is created and committed inside the request (so the link is
+    valid immediately); only the actual SMTP send runs here, off the request's
+    critical path. Sending is deliberately fire-and-forget: the endpoint always
+    returns ``OK`` regardless of delivery to avoid revealing whether an account
+    exists, so a transport failure is logged rather than surfaced.
+
+    Args:
+        email: Recipient address.
+        token: The already-persisted reset action token.
+        frontend_url: Base URL used to build the reset link in the template.
+        correlation_id: Correlation ID captured from the originating request.
+            Re-set here because background tasks run outside the request's
+            context, so the email service can stamp it on outgoing mail.
+    """
+    if correlation_id:
+        set_correlation_id(correlation_id)
+    try:
+        await sender.batch_send_emails(
+            "Reinitialisation de votre mot de passe.",
+            "reset_password",
+            [
+                EmailData(
+                    to=email,
+                    template_data={
+                        "token": token,
+                        "frontend_url": frontend_url,
+                    },
+                ),
+            ],
+        )
+    except EmailSendError as exc:
+        logger.error("Unable to send password-reset email: %s", exc)

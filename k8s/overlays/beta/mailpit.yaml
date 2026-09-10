@@ -15,14 +15,13 @@ spec:
       containers:
         - name: mailpit
           image: axllent/mailpit:latest
-          # Every captured message is also forwarded to a single real mailbox
-          # (beta-sandbox@bagadmenru.bzh) via OVH SMTP, in addition to being
+          # Mailpit is a test mail trap: it captures every message and makes it
           # readable in the web UI (exposed at /_mail behind the site session,
-          # see mailpit-ingress.yaml). Mailpit captures everything as usual;
-          # forwarding is an additional copy. Configured entirely through
-          # MP_* env vars. OVH port 465 is implicit SSL/TLS, so
-          # TLS=true and STARTTLS=false. The password comes from the
-          # mailpit-secrets sealed secret so it never lands in the manifest.
+          # see mailpit-ingress.yaml). It does NOT forward mail to any real
+          # SMTP server. Forwarding to OVH was removed because the relay added a
+          # ~7s per-message delay (Mailpit only ACKs the sending backend after
+          # the forward attempt finished), which pushed E2E email assertions
+          # past their timeouts and turned every send synchronous-slow.
           env:
             # Serve the UI under /_mail so Mailpit emits its own asset, API and
             # WebSocket URLs with that prefix. Same webroot as the local compose
@@ -31,25 +30,6 @@ spec:
             # avoids rewriting responses (no stripPrefix needed).
             - name: MP_WEBROOT
               value: _mail
-            - name: MP_SMTP_FORWARD_HOST
-              value: ssl0.ovh.net
-            - name: MP_SMTP_FORWARD_PORT
-              value: "465"
-            - name: MP_SMTP_FORWARD_TLS
-              value: "true"
-            - name: MP_SMTP_FORWARD_STARTTLS
-              value: "false"
-            - name: MP_SMTP_FORWARD_AUTH
-              value: login
-            - name: MP_SMTP_FORWARD_USERNAME
-              value: beta-sandbox@bagadmenru.bzh
-            - name: MP_SMTP_FORWARD_TO
-              value: beta-sandbox@bagadmenru.bzh
-            - name: MP_SMTP_FORWARD_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mailpit-secrets
-                  key: SMTP_FORWARD_PASSWORD
           ports:
             - containerPort: 1025
               name: smtp
