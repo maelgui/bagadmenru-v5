@@ -67,7 +67,8 @@ services:
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - SMTP_USE_TLS=false
-      - EMAIL_FROM=Bagad Men Ru <contact@bagadmenru.bzh>
+      - EMAIL_FROM_NAME=Bagad Men Ru
+      - EMAIL_FROM_ADDRESS=contact@bagadmenru.bzh
       - EMAIL_DRY_RUN=false
       - IMAP_HOST=ssl0.ovh.net
       - IMAP_PORT=993
