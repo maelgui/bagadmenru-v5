@@ -56,13 +56,45 @@ async def list_events(
     return q.all()
 
 
-def _build_calendar(session) -> str:
-    """Serialize all events as an ICS calendar document."""
+def _presence_prefix(value: Optional[bool]) -> str:
+    """Emoji marker for a member's participation status on an event.
+
+    Maps the ResponseDB value to a visible prefix: present, absent, or (for a
+    missing response or an explicit ``None``) not-yet-answered. Calendar clients
+    reliably render the SUMMARY, so this is what a member actually sees.
+    """
+    if value is True:
+        return "✅ "
+    if value is False:
+        return "❌ "
+    return "❔ "
+
+
+def _build_calendar(session, user_id: Optional[str] = None) -> str:
+    """Serialize all events as an ICS calendar document.
+
+    When ``user_id`` is given, each event title is prefixed with that member's
+    participation status (present/absent/unanswered). Without it, titles are
+    left untouched -- the public feed stays neutral.
+    """
     events = session.query(models.EventDB).order_by(models.EventDB.date).all()
+
+    responses_by_event: dict[int, Optional[bool]] = {}
+    if user_id is not None:
+        rows = session.scalars(
+            select(models.ResponseDB).where(models.ResponseDB.user_id == user_id)
+        ).all()
+        responses_by_event = {r.event_id: r.value for r in rows}
+
     c = Calendar()
     for event in events:
         e = Event()
-        e.name = event.title
+        if user_id is not None:
+            e.name = (
+                f"{_presence_prefix(responses_by_event.get(event.id))}{event.title}"
+            )
+        else:
+            e.name = event.title
         e.description = event.description
         e.begin = event.date
         e.make_all_day()
@@ -84,10 +116,13 @@ async def export_ics(
 
 @events_router.get(
     "/export/ics/me",
-    dependencies=[Depends(Authorization(Action.VIEW, Resource.CALENDAR))],
 )
 async def export_ics_me(
     session: SessionDep,
+    payload: Annotated[
+        schemas.JwtPayload,
+        Depends(Authorization(Action.VIEW, Resource.CALENDAR)),
+    ],
 ):
     """Authenticated ICS feed for the current member.
 
@@ -97,10 +132,16 @@ async def export_ics_me(
     app can subscribe by URL. Authentication is handled upstream in
     ``credentials``; this endpoint requires the fine-grained ``view:calendar``
     permission (distinct from ``view:event``) so a calendar key is scoped to the
-    feed alone and cannot list events. Content mirrors the public feed today;
-    authenticating it per member is the groundwork for future personalisation.
+    feed alone and cannot list events.
+
+    Each event title is prefixed with the member's participation status
+    (present/absent/unanswered) so their responses are visible directly in the
+    subscribed calendar; the public feed stays neutral.
     """
-    return Response(content=_build_calendar(session), media_type="text/calendar")
+    return Response(
+        content=_build_calendar(session, user_id=payload.sub),
+        media_type="text/calendar",
+    )
 
 
 @events_router.get(
