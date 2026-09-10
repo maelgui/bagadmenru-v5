@@ -32,6 +32,7 @@ import {
 import groupBy from '../../utils/groupby';
 import sum from '../../utils/sum';
 import DisplaySelector from './components/selector';
+import IcsExportMenu from './components/ics-export';
 import { upcomingDoodleEventsQuery, upcomingResponsesQuery } from './queries';
 
 type EnrichedResponse = Response & { user?: Profile };
@@ -310,6 +311,7 @@ export default function PlanningPage() {
             <CalendarPlus data-icon="inline-start" />
             Gérer
           </Link>,
+          <IcsExportMenu key="ics-export" />,
           <DisplaySelector key="doodle-nav" />,
         ]}
         breadcrumb={[{ title: 'Évènements', link: '/events' }, { title: 'Planning' }]}

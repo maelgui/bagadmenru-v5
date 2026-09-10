@@ -19,6 +19,7 @@ import {
 import EventCategories from '../../utils/event-category';
 import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
+import IcsExportMenu from './components/ics-export';
 import DisplaySelector from './components/selector';
 import { upcomingDoodleEventsQuery, upcomingResponsesQuery } from './queries';
 
@@ -85,6 +86,7 @@ export default function DoodlePage() {
             <CalendarPlus data-icon="inline-start" />
             Gérer
           </Link>,
+          <IcsExportMenu key="ics-export" />,
           <DisplaySelector key="doodle-nav" />,
         ]}
         breadcrumb={[{ link: '/events', title: 'Évènements' }, { title: 'Doodle' }]}

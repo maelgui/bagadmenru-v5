@@ -39,6 +39,7 @@ import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
 import EventCategories from '../../utils/event-category';
+import IcsExportMenu from './components/ics-export';
 
 function EventRow({ event, onDelete }: { event: Event; onDelete: (id: number) => void }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -143,6 +144,7 @@ export default function EventsManagePage() {
         title="Gestion des évènements"
         subtitle="Ajouter, modifier, supprimer..."
         actions={[
+          <IcsExportMenu key="ics-export" />,
           <Link key="add-event" to="/events/add" className={cn(buttonVariants())}>
             <PlusCircle data-icon="inline-start" />
             Ajouter
