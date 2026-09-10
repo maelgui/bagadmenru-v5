@@ -5,7 +5,6 @@ They only receive plain/serializable data (no ORM objects).
 """
 
 import logging
-from email.utils import parseaddr
 from typing import Optional
 
 import aiosmtplib
@@ -31,12 +30,7 @@ logger = logging.getLogger(__name__)
 def _invite_attachment(
     settings: Settings, event: EventCreate, event_id: int, user: UserDB
 ) -> EmailAttachment:
-    """Build the per-recipient iTIP (METHOD:REQUEST) calendar attachment.
-
-    email_from is a formatted "Name <address>" string; parseaddr splits it
-    into (name, address) for the ICS ORGANIZER.
-    """
-    organizer_name, organizer_email = parseaddr(settings.email_from)
+    """Build the per-recipient iTIP (METHOD:REQUEST) calendar attachment."""
     return EmailAttachment(
         filename="invitation.ics",
         maintype="text",
@@ -47,8 +41,8 @@ def _invite_attachment(
             title=event.title,
             description=event.description,
             begin=event.date,
-            organizer_email=organizer_email,
-            organizer_name=organizer_name,
+            organizer_email=settings.email_from_address,
+            organizer_name=settings.email_from_name,
             attendee_email=user.email,
             attendee_name=f"{user.first_name} {user.last_name}",
             domain=settings.relying_party_id,

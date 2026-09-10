@@ -1,4 +1,5 @@
 import os
+from email.utils import formataddr
 from enum import Enum
 from functools import lru_cache
 from typing import Optional
@@ -44,7 +45,8 @@ class Settings(BaseSettings):
     smtp_username: Optional[str] = None
     smtp_password: Optional[str] = None
     smtp_use_tls: bool = True
-    email_from: str = "Bagad Men Ru <contact@bagadmenru.bzh>"
+    email_from_name: str = "Bagad Men Ru"
+    email_from_address: str = "contact@bagadmenru.bzh"
     email_dry_run: bool = False
 
     imap_host: str = "ssl0.ovh.net"
@@ -97,6 +99,16 @@ class Settings(BaseSettings):
     # is deleted (0 removes it as soon as it is dead). They carry no value once
     # dead; the delay only leaves a short window for debugging/audit.
     action_token_ttl_days: int = 7
+
+    @property
+    def email_from(self) -> str:
+        """The RFC 5322 ``From:`` header line, e.g. ``Name <addr@host>``.
+
+        Assembled from the separate name/address settings via formataddr, which
+        quotes the display name when needed. Callers that need the bare address
+        (e.g. the iCalendar ORGANIZER) read ``email_from_address`` directly.
+        """
+        return formataddr((self.email_from_name, self.email_from_address))
 
     @property
     def cookie_secure(self) -> bool:
