@@ -1,9 +1,12 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import update
 
 import bbe2.utils.auth
 from bbe2.models.user import UserDB
 from bbe2.utils.auth import myctx
+from bbe2.utils.correlation import CORRELATION_ID_HEADER
+from bbe2.utils.templates import EmailSender
 
 
 def test_login_sets_cookie_with_root_path(client: TestClient):
@@ -190,3 +193,89 @@ def test_verify_returns_401_when_unauthenticated(client: TestClient):
     # No session cookie and no bearer header -> forward-auth denies access.
     response = client.get("/api/v1/auth/verify", headers={"Authorization": ""})
     assert response.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Password reset request: the SMTP send now runs in a BackgroundTask so a slow
+# or unreachable mail server can't stall (or fail) the response. TestClient
+# executes background tasks synchronously after the response returns, so the
+# captured FakeSender still records the send.
+# ---------------------------------------------------------------------------
+
+
+class _CapturingSender:
+    """Stand-in for EmailSender: records batch_send_emails calls, sends nothing."""
+
+    def __init__(self) -> None:
+        self.sent: list[dict] = []
+        self.correlation_ids: list = []
+
+    async def batch_send_emails(self, subject, template_name, template_data):
+        from bbe2.utils.correlation import get_correlation_id
+
+        self.correlation_ids.append(get_correlation_id())
+        for d in template_data:
+            self.sent.append(
+                {
+                    "subject": subject,
+                    "template_name": template_name,
+                    "to": d.to,
+                    "template_data": d.template_data,
+                }
+            )
+
+
+@pytest.fixture()
+def reset_sender(client):
+    from bbe2.main import app
+
+    fake = _CapturingSender()
+    app.dependency_overrides[EmailSender] = lambda: fake
+    yield fake
+    app.dependency_overrides.pop(EmailSender, None)
+
+
+def test_reset_password_request_sends_email_for_known_user(
+    client: TestClient, reset_sender
+):
+    response = client.post(
+        "/api/v1/auth/reset_password_request",
+        json={"email": "john.doe@example.com"},
+    )
+    assert response.status_code == 200
+    # The background task ran and produced exactly one reset email.
+    assert len(reset_sender.sent) == 1
+    sent = reset_sender.sent[0]
+    assert sent["template_name"] == "reset_password"
+    assert sent["to"] == "john.doe@example.com"
+    # The template gets the token and the frontend URL to build the link.
+    assert sent["template_data"]["token"]
+    assert "frontend_url" in sent["template_data"]
+
+
+def test_reset_password_request_unknown_email_sends_nothing(
+    client: TestClient, reset_sender
+):
+    # Must still return OK (no user enumeration) but emit no email.
+    response = client.post(
+        "/api/v1/auth/reset_password_request",
+        json={"email": "does-not-exist@example.com"},
+    )
+    assert response.status_code == 200
+    assert reset_sender.sent == []
+
+
+def test_reset_password_request_propagates_correlation_id(
+    client: TestClient, reset_sender
+):
+    # The correlation ID captured during the request must be re-set inside the
+    # background task so the outgoing email can be stamped with it (E2E relies
+    # on this to locate the exact message).
+    correlation_id = "e2e-abc123def456"
+    response = client.post(
+        "/api/v1/auth/reset_password_request",
+        json={"email": "john.doe@example.com"},
+        headers={CORRELATION_ID_HEADER: correlation_id},
+    )
+    assert response.status_code == 200
+    assert reset_sender.correlation_ids == [correlation_id]
