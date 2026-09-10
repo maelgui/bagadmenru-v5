@@ -7,7 +7,6 @@ import {
 } from './helpers/invitations';
 import {
   waitForEmail,
-  deleteAllEmails,
   deleteEmail,
 } from './helpers/mailpit';
 import { VirtualAuthenticator } from './helpers/webauthn';
@@ -26,10 +25,6 @@ import { VirtualAuthenticator } from './helpers/webauthn';
  * proceeding to passkey enrolment.
  */
 test.describe('Invitation signup', () => {
-  test.beforeEach(async () => {
-    await deleteAllEmails();
-  });
-
   /** Read the 6-digit OTP out of the verification email body. */
   function extractOtp(text: string): string {
     const match = text.match(/\b(\d{6})\b/);
