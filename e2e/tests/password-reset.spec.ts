@@ -3,18 +3,12 @@ import {
   waitForEmail,
   waitForEmailByCorrelationId,
   extractLinks,
-  deleteAllEmails,
   deleteEmail,
   newCorrelationId,
 } from './helpers/mailpit';
 import { E2E_USER, API_URL, CORRELATION_ID_HEADER } from './helpers/constants';
 
 test.describe('Password Reset Flow', () => {
-  test.beforeEach(async () => {
-    // Clear mailpit inbox before each test
-    await deleteAllEmails();
-  });
-
   test('should send password reset email and allow reset', async ({ page }) => {
     // 1. Navigate to login page
     await page.goto('/auth/login');

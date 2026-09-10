@@ -35,6 +35,12 @@ export interface MailpitMessageDetail extends MailpitMessage {
 /**
  * Wait for an email matching the given criteria.
  * Polls mailpit every 500ms until found or timeout.
+ *
+ * Mailpit is a shared mailbox: when several emails match (e.g. two tests use
+ * the same recipient), we deliberately return the *most recent* one — sorted
+ * by `Created` descending — so a test picks up the email it just triggered
+ * rather than a stale one left by another spec. Callers that need exact
+ * request→email correlation should prefer `waitForEmailByCorrelationId`.
  */
 export async function waitForEmail(
   to: string,
@@ -50,9 +56,11 @@ export async function waitForEmail(
     const data = await res.json();
 
     if (data.messages && data.messages.length > 0) {
-      const messages: MailpitMessage[] = data.messages;
+      const messages: MailpitMessage[] = [...data.messages].sort(
+        (a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime()
+      );
 
-      // Filter by subject if specified
+      // Filter by subject if specified, taking the most recent match.
       const match = options?.subject
         ? messages.find((m) => m.Subject.includes(options.subject!))
         : messages[0];
@@ -178,20 +186,17 @@ export function extractLinks(html: string): string[] {
 
 /**
  * Delete a specific email by ID.
+ *
+ * Deletion is always scoped to a single message: tests must never clear the
+ * whole inbox, because Mailpit is a shared mailbox and, under parallel runs,
+ * a global purge would delete emails other specs are still waiting for. Each
+ * test locates the exact email it produced (by correlation ID, unique
+ * recipient, or — as a last resort — the latest match) and removes only that.
  */
 export async function deleteEmail(id: string): Promise<void> {
   const ctx = await request.newContext();
   await ctx.delete(mailpitUrl('/api/v1/messages'), {
     data: { IDs: [id] },
   });
-  await ctx.dispose();
-}
-
-/**
- * Delete all emails in mailpit (useful for test cleanup).
- */
-export async function deleteAllEmails(): Promise<void> {
-  const ctx = await request.newContext();
-  await ctx.delete(mailpitUrl('/api/v1/messages'));
   await ctx.dispose();
 }
