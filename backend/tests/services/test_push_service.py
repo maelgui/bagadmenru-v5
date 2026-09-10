@@ -1,0 +1,135 @@
+"""Tests for bbe2.services.push_service."""
+
+import json
+from datetime import datetime, timedelta
+from unittest.mock import patch
+
+from sqlalchemy.orm import sessionmaker
+
+from bbe2 import models
+from bbe2.database import get_engine
+from bbe2.models.base import Base
+from bbe2.schemas import Costume
+from bbe2.services.push_service import send_push_to_users_with_data
+from tests.conftest import get_fake_settings
+
+DATABASE_URL = "sqlite:///tests_services_push.sqlite?check_same_thread=false"
+
+
+def _settings():
+    # Fake settings with VAPID keys set so _send_push proceeds to call webpush
+    # (which the tests mock).
+    settings = get_fake_settings()
+    settings.vapid_private_key = "priv"
+    settings.vapid_public_key = "pub"
+    settings.vapid_claims_email = "mailto:test@example.com"
+    return settings
+
+
+def _session():
+    engine = get_engine(DATABASE_URL)
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    session = session_local()
+    session.add(models.GroupDB(id=1, name="Piccolo", color="#fff"))
+    session.commit()
+    return session
+
+
+def _user(user_id: str):
+    return models.UserDB(
+        id=user_id,
+        email=f"{user_id}@example.com",
+        first_name=user_id,
+        last_name=user_id,
+        instrument_id=1,
+    )
+
+
+def _subscription(user_id: str):
+    return models.PushSubscriptionDB(
+        user_id=user_id,
+        endpoint=f"https://push.example.com/{user_id}",
+        p256dh="p256dh",
+        auth="auth",
+    )
+
+
+def _event(event_id: int):
+    return models.EventDB(
+        id=event_id,
+        title=f"Event {event_id}",
+        description="desc",
+        date=datetime.now() + timedelta(days=5),
+        costume=Costume.NONE,
+        category="TEST",
+        is_in_doodle=True,
+    )
+
+
+def test_per_user_extras_merged_into_payload():
+    with _session() as session:
+        session.add(_user("alice"))
+        session.add(_user("bob"))
+        session.add(_subscription("alice"))
+        session.add(_subscription("bob"))
+        session.add(_event(42))
+        session.commit()
+
+        with patch("bbe2.services.push_service.webpush") as mock_webpush:
+            send_push_to_users_with_data(
+                session=session,
+                settings=_settings(),
+                title="Nouvelle sortie",
+                body="desc",
+                url="https://app.example.com/events",
+                extra_by_user={
+                    "alice": {"eventId": 42, "rsvpToken": "tok-alice"},
+                    "bob": {"eventId": 42, "rsvpToken": "tok-bob"},
+                },
+            )
+
+        # One push per subscription (one per user here).
+        assert mock_webpush.call_count == 2
+
+        payloads_by_endpoint = {
+            call.kwargs["subscription_info"]["endpoint"]: json.loads(
+                call.kwargs["data"]
+            )
+            for call in mock_webpush.call_args_list
+        }
+
+        alice = payloads_by_endpoint["https://push.example.com/alice"]
+        bob = payloads_by_endpoint["https://push.example.com/bob"]
+
+        # Each user gets their own RSVP token, plus the shared fields.
+        assert alice["rsvpToken"] == "tok-alice"
+        assert bob["rsvpToken"] == "tok-bob"
+        assert alice["eventId"] == 42
+        assert alice["title"] == "Nouvelle sortie"
+        assert "badgeCount" in alice
+
+
+def test_only_users_in_mapping_are_notified():
+    with _session() as session:
+        session.add(_user("alice"))
+        session.add(_user("bob"))
+        session.add(_subscription("alice"))
+        session.add(_subscription("bob"))
+        session.commit()
+
+        with patch("bbe2.services.push_service.webpush") as mock_webpush:
+            send_push_to_users_with_data(
+                session=session,
+                settings=_settings(),
+                title="t",
+                body="b",
+                extra_by_user={"alice": {"eventId": 1, "rsvpToken": "x"}},
+            )
+
+        assert mock_webpush.call_count == 1
+        endpoint = mock_webpush.call_args_list[0].kwargs["subscription_info"][
+            "endpoint"
+        ]
+        assert endpoint == "https://push.example.com/alice"

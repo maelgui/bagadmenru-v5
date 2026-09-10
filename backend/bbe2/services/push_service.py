@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from pywebpush import WebPushException, webpush  # type: ignore
 from sqlalchemy import select
@@ -49,6 +49,39 @@ def send_push_to_users(
         _send_push(session, settings, sub, title, body, url)
 
 
+def send_push_to_users_with_data(
+    session: Session,
+    settings: Settings,
+    title: str,
+    body: str,
+    extra_by_user: dict[str, dict[str, Any]],
+    url: Optional[str] = None,
+) -> None:
+    """Send a push to multiple users, with per-user extra payload data.
+
+    ``extra_by_user`` maps a user id to a dict of additional fields merged into
+    that user's push payload (e.g. an RSVP quick-answer ``token`` and
+    ``eventId`` so the service worker can answer directly from a notification
+    action). Only users present in the mapping are notified.
+    """
+    subscriptions = session.scalars(
+        select(PushSubscriptionDB).where(
+            PushSubscriptionDB.user_id.in_(extra_by_user.keys())
+        )
+    ).all()
+
+    for sub in subscriptions:
+        _send_push(
+            session,
+            settings,
+            sub,
+            title,
+            body,
+            url,
+            extra=extra_by_user.get(sub.user_id),
+        )
+
+
 def _send_push(
     session: Session,
     settings: Settings,
@@ -56,6 +89,7 @@ def _send_push(
     title: str,
     body: str,
     url: Optional[str] = None,
+    extra: Optional[dict[str, Any]] = None,
 ) -> None:
     """Send a single push notification."""
     if not settings.vapid_private_key or not settings.vapid_public_key:
@@ -66,14 +100,19 @@ def _send_push(
     # PWA icon badge even while the app is closed.
     badge_count = count_unanswered_events(session, subscription.user_id)
 
-    payload = json.dumps(
-        {
-            "title": title,
-            "body": body,
-            "url": url,
-            "badgeCount": badge_count,
-        }
-    )
+    data = {
+        "title": title,
+        "body": body,
+        "url": url,
+        "badgeCount": badge_count,
+    }
+    # Per-user extras (e.g. RSVP quick-answer token + eventId) so the service
+    # worker can answer directly from a notification action button. Kept out of
+    # the shared fields so callers without per-user data are unaffected.
+    if extra:
+        data.update(extra)
+
+    payload = json.dumps(data)
 
     subscription_info = {
         "endpoint": subscription.endpoint,

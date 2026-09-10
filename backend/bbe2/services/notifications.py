@@ -16,7 +16,7 @@ from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.user import UserDB
 from bbe2.schemas.event import EventCreate
 from bbe2.services.email import EmailAttachment, EmailSendError
-from bbe2.services.push_service import send_push_to_users
+from bbe2.services.push_service import send_push_to_users_with_data
 from bbe2.utils.action_token import create_action_token
 from bbe2.utils.auth import Action
 from bbe2.utils.correlation import set_correlation_id
@@ -134,15 +134,24 @@ async def notify_new_event(
         except (OSError, aiosmtplib.SMTPException) as exc:
             logger.error("Unable to send batch email: %s", exc)
 
-        # Send push notifications
+        # Send push notifications. Include, per user, the RSVP quick-answer
+        # token and event id so the service worker can record a response
+        # straight from a notification action button (Présent / Absent) without
+        # the app being open or a session being present.
         try:
-            send_push_to_users(
+            send_push_to_users_with_data(
                 session=session,
                 settings=settings,
-                user_ids=[user.id for user in users],
                 title=f"Nouvelle sortie : {event.title}",
                 body=event.description,
                 url=f"{frontend_url}/events",
+                extra_by_user={
+                    user.id: {
+                        "eventId": event_id,
+                        "rsvpToken": tokens_by_user[user.id][0],
+                    }
+                    for user in users
+                },
             )
         except (OSError, ValueError) as exc:
             logger.error("Unable to send push notifications: %s", exc)
