@@ -278,3 +278,57 @@ def test_create_response_by_token_rejects_invalid_token(client: TestClient):
         json={"value": True},
     )
     assert save.status_code == 403
+
+
+def _set_seeded_response(value):
+    """Set (or clear) the seeded user's response on the seeded event.
+
+    ``value`` is True (present), False (absent), or None (delete the row so the
+    event is unanswered).
+    """
+    from bbe2 import models  # local import to mirror other helpers
+
+    engine = get_engine(DATABASE_URL)
+    session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    with session_local() as session:
+        row = session.get(models.ResponseDB, (SEEDED_EVENT_ID, SEEDED_USER_ID))
+        if value is None:
+            if row is not None:
+                session.delete(row)
+        elif row is not None:
+            row.value = value
+        session.commit()
+
+
+def test_export_ics_public_feed_is_neutral(client: TestClient):
+    """The public feed exposes the raw title, with no presence prefix."""
+    response = client.get("/api/v1/events/export/ics")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/calendar")
+    body = response.text
+    assert "SUMMARY:Saint Nicolas" in body
+    for marker in ("✅", "❌", "❔"):
+        assert marker not in body
+
+
+def test_export_ics_me_prefixes_present(client: TestClient):
+    """Seeded response is present (value=True) -> title prefixed with a check."""
+    _set_seeded_response(True)
+    response = client.get("/api/v1/events/export/ics/me")
+    assert response.status_code == 200
+    assert "SUMMARY:✅ Saint Nicolas" in response.text
+
+
+def test_export_ics_me_prefixes_absent(client: TestClient):
+    _set_seeded_response(False)
+    response = client.get("/api/v1/events/export/ics/me")
+    assert response.status_code == 200
+    assert "SUMMARY:❌ Saint Nicolas" in response.text
+
+
+def test_export_ics_me_prefixes_unanswered(client: TestClient):
+    """No response row -> title prefixed with the not-yet-answered marker."""
+    _set_seeded_response(None)
+    response = client.get("/api/v1/events/export/ics/me")
+    assert response.status_code == 200
+    assert "SUMMARY:❔ Saint Nicolas" in response.text
