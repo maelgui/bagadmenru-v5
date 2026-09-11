@@ -12,6 +12,7 @@ function makeProfile(overrides: Partial<Profile>): Profile {
     lastName: 'Last',
     email: 'x@example.com',
     receivesEmails: true,
+    receivesPush: true,
     isActive: true,
     pictureUrl: null,
     groups: [],

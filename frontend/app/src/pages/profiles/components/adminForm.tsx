@@ -54,7 +54,13 @@ export default function AdminEditProfileForm(
       groupIds: profile.groups.map((group) => group.id),
       instrumentId: profile.instrument?.id,
       receivesEmails: profile.receivesEmails,
-    } : {},
+      // Push is user- and device-controlled; admins don't manage it here, so
+      // just carry the member's existing preference through unchanged.
+      receivesPush: profile.receivesPush,
+    } : {
+      // New members default to receiving push (matches the DB default).
+      receivesPush: true,
+    },
   });
 
   const {

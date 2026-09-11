@@ -45,6 +45,12 @@ export interface ProfileUpdate {
     receivesEmails: boolean;
     /**
      * 
+     * @type {boolean}
+     * @memberof ProfileUpdate
+     */
+    receivesPush: boolean;
+    /**
+     * 
      * @type {number}
      * @memberof ProfileUpdate
      */
@@ -64,6 +70,7 @@ export function instanceOfProfileUpdate(value: object): value is ProfileUpdate {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
     if (!('receivesEmails' in value) || value['receivesEmails'] === undefined) return false;
+    if (!('receivesPush' in value) || value['receivesPush'] === undefined) return false;
     if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
     if (!('groupIds' in value) || value['groupIds'] === undefined) return false;
     return true;
@@ -83,6 +90,7 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
         'lastName': json['last_name'],
         'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
         'receivesEmails': json['receives_emails'],
+        'receivesPush': json['receives_push'],
         'instrumentId': json['instrument_id'],
         'groupIds': json['group_ids'],
     };
@@ -103,6 +111,7 @@ export function ProfileUpdateToJSONTyped(value?: ProfileUpdate | null, ignoreDis
         'last_name': value['lastName'],
         'picture_key': value['pictureKey'],
         'receives_emails': value['receivesEmails'],
+        'receives_push': value['receivesPush'],
         'instrument_id': value['instrumentId'],
         'group_ids': value['groupIds'],
     };

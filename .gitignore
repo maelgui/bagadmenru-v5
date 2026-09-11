@@ -1,5 +1,9 @@
 .env
 
+# Local-only Compose overrides (dev secrets, port tweaks, etc.)
+docker-compose.override.yml
+docker-compose.override.yaml
+
 # Test artifacts
 .coverage
 htmlcov/
