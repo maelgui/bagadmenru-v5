@@ -1,0 +1,96 @@
+# Reusable image build: builds and pushes the backend + frontend images to
+# GHCR. Called by release.yml (main deploys: sha + latest tags, cache
+# read/write, untagged pruning) and review-app.yml (pr-<n>-<sha> tag, cache
+# read-only, no pruning).
+name: Build images
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Primary image tag (e.g. the commit SHA or pr-<n>-<sha>)"
+        required: true
+        type: string
+      extra_tag:
+        description: "Optional additional tag (e.g. latest)"
+        required: false
+        type: string
+        default: ""
+      app_version:
+        description: "APP_VERSION build-arg value"
+        required: true
+        type: string
+      write_cache:
+        description: "Write the registry build cache (main builds only — PR builds must not churn the cache the main pipeline relies on)"
+        required: false
+        type: boolean
+        default: false
+      prune_untagged:
+        description: "Prune untagged package versions after the push"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      REPO: ghcr.io/${{ github.repository }}
+    strategy:
+      matrix:
+        include:
+          - image_name: backend
+          - image_name: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Compute tags
+        id: tags
+        run: |
+          TAGS="${REPO}/${{ matrix.image_name }}:${{ inputs.tag }}"
+          if [ -n "${{ inputs.extra_tag }}" ]; then
+            TAGS="${TAGS}
+          ${REPO}/${{ matrix.image_name }}:${{ inputs.extra_tag }}"
+          fi
+          {
+            echo "tags<<EOF"
+            echo "$TAGS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push ${{ matrix.image_name }}
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.image_name }}
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          build-args: |
+            APP_VERSION=${{ inputs.app_version }}
+          cache-from: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache
+          cache-to: ${{ inputs.write_cache && format('type=registry,ref={0}/{1}:buildcache,mode=max', env.REPO, matrix.image_name) || '' }}
+          sbom: false
+          provenance: false
+
+      - name: Clear old packages
+        if: ${{ inputs.prune_untagged }}
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ github.event.repository.name }}/${{ matrix.image_name }}
+          package-type: "container"
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: "true"

@@ -1,9 +1,9 @@
 # Review app reaper: the cleanup backstop.
 #
-# Runs nightly (and on demand) and deletes any review namespace that is
+# Runs hourly (and on demand) and deletes any review namespace that is
 #   1. attached to a closed/merged PR (missed teardown), or
 #   2. attached to a PR that no longer carries the review-app label, or
-#   3. older than TTL_HOURS since its last deploy — even if the PR is open.
+#   3. older than its TTL since its last deploy — even if the PR is open.
 #      Pushing again (or re-applying the label) redeploys and resets the TTL.
 #
 # Runs from the main branch on a schedule, so PR code never influences it.
@@ -12,14 +12,15 @@ name: Review App Reaper
 
 on:
   schedule:
-    - cron: "17 3 * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 env:
-  # Fallback only: the authoritative TTL is the bagadmenru.bzh/ttl-hours
-  # annotation each deploy stamps on its namespace (single source of truth
-  # in review-app.yml). This default covers namespaces from older deploys.
-  DEFAULT_TTL_HOURS: 72
+  # Fallback only, for a namespace missing the bagadmenru.bzh/ttl-hours
+  # annotation (every deploy stamps it — it can only be absent if someone
+  # hand-created the namespace or stripped the annotation). The authoritative
+  # TTL lives in review-app.yml, which is the single source of truth.
+  DEFAULT_TTL_HOURS: 4
   REVIEW_LABEL: review-app
 
 permissions:
@@ -103,7 +104,7 @@ jobs:
                 update_comment "$PR" "${MARKER}
           ## :hourglass: Review app expired
 
-          The \`${NS}\` namespace was reclaimed by the nightly reaper (${REASON}). Push a new commit or re-apply the \`${REVIEW_LABEL}\` label to deploy a fresh one."
+          The \`${NS}\` namespace was reclaimed by the reaper (${REASON}). Push a new commit or re-apply the \`${REVIEW_LABEL}\` label to deploy a fresh one."
               fi
             else
               echo "Keeping $NS"

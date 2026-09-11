@@ -3,8 +3,8 @@
 Ephemeral per-PR deployments (GitLab "Review Apps" style). Label a PR with
 `review-app` and CI deploys the branch to `https://pr-<n>.review.bagadmenru.bzh`
 in its own namespace (`bagadmenru-pr-<n>`) with its own PostgreSQL, MinIO and
-Mailpit. Closing the PR or removing the label tears it down; the nightly
-reaper additionally expires any review app not redeployed within 72h
+Mailpit. Closing the PR or removing the label tears it down; the hourly
+reaper additionally expires any review app not redeployed within 4h
 (`TTL_HOURS` in the workflows), even on open PRs.
 
 ## Architecture
@@ -18,7 +18,7 @@ reaper additionally expires any review app not redeployed within 72h
 | Storage | In-namespace MinIO (emptyDir) — never touches Scaleway |
 | Secrets | Random throwaway values, generated on first deploy, stable across redeploys |
 | CI credential | `review-deployer` ServiceAccount, confined to `bagadmenru-pr-*` by a ValidatingAdmissionPolicy |
-| Cleanup | Teardown on close/unlabel + nightly reaper (TTL, orphans, missed teardowns) |
+| Cleanup | Teardown on close/unlabel + hourly reaper (TTL, orphans, missed teardowns) |
 
 ## Setup steps
 
@@ -78,7 +78,7 @@ triage/write permission, which is what gates who can trigger a deploy.
   `e2e-credentials` secret of the PR namespace.
 - **Mail**: `https://pr-<n>.review.bagadmenru.bzh/_mail` (staff/admin session).
 - **Teardown**: close the PR or remove the label. The reaper catches anything
-  missed and expires idle apps after 72h (push or re-label to revive).
+  missed and expires idle apps after 4h (push or re-label to revive).
 
 ## Known limitations
 

@@ -27,7 +27,7 @@ env:
   REPO: ghcr.io/${{ github.repository }}
   REVIEW_LABEL: review-app
   REVIEW_DOMAIN: review.bagadmenru.bzh
-  TTL_HOURS: 72
+  TTL_HOURS: 4
 
 permissions:
   contents: read
@@ -42,40 +42,18 @@ jobs:
       github.event.action != 'unlabeled' &&
       contains(github.event.pull_request.labels.*.name, 'review-app') &&
       (github.event.action != 'labeled' || github.event.label.name == 'review-app')
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - image_name: backend
-          - image_name: frontend
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build and push ${{ matrix.image_name }}
-        uses: docker/build-push-action@v7
-        with:
-          context: ${{ matrix.image_name }}
-          push: true
-          # Unique tag per push: a stable `pr-N` tag would leave `kubectl
-          # apply` seeing an unchanged image ref and skipping the rollout.
-          tags: ${{ env.REPO }}/${{ matrix.image_name }}:pr-${{ github.event.number }}-${{ github.sha }}
-          build-args: |
-            APP_VERSION=pr-${{ github.event.number }}
-          # Read main's build cache but do not write: PR builds must not churn
-          # the cache the main pipeline relies on.
-          cache-from: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache
-          sbom: false
-          provenance: false
+    uses: ./.github/workflows/build-images.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      # Unique tag per push: a stable `pr-N` tag would leave `kubectl apply`
+      # seeing an unchanged image ref and skipping the rollout.
+      tag: pr-${{ github.event.number }}-${{ github.sha }}
+      app_version: pr-${{ github.event.number }}
+      # Read main's build cache but do not write; no pruning from PR builds.
+      write_cache: false
+      prune_untagged: false
 
   deploy:
     name: Deploy review app
@@ -98,11 +76,16 @@ jobs:
 
       - name: Assert the admission policy is installed (fail closed)
         run: |
-          # The review-deployer credential is only safe to use while the
-          # ValidatingAdmissionPolicy confines it to bagadmenru-pr-*
-          # namespaces. If the policy is missing (never applied, or dropped
-          # by a cluster upgrade), refuse to deploy rather than silently
-          # degrading to trust-the-workflow.
+          # Why a ValidatingAdmissionPolicy and not just RBAC? RBAC cannot
+          # pattern-match namespace NAMES — there is no way to express "admin
+          # in every namespace matching bagadmenru-pr-*" (RoleBindings need a
+          # namespace that exists; resourceNames don't support wildcards). So
+          # rbac.yaml grants writes broadly and this policy is the layer that
+          # confines every write by the review-deployer SA to bagadmenru-pr-*
+          # namespaces — including manifests a PR branch crafts to target
+          # beta/prod. If the policy is missing (never applied, dropped by a
+          # cluster upgrade), refuse to deploy rather than silently degrading
+          # to trust-the-workflow.
           kubectl get validatingadmissionpolicy review-deployer-scope >/dev/null || {
             echo "::error::ValidatingAdmissionPolicy 'review-deployer-scope' not found — apply k8s/review-infra/admission-policy.yaml before deploying review apps"
             exit 1
