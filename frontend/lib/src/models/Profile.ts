@@ -60,6 +60,12 @@ export interface Profile {
     receivesEmails: boolean;
     /**
      * 
+     * @type {boolean}
+     * @memberof Profile
+     */
+    receivesPush: boolean;
+    /**
+     * 
      * @type {string}
      * @memberof Profile
      */
@@ -117,6 +123,7 @@ export function instanceOfProfile(value: object): value is Profile {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
     if (!('receivesEmails' in value) || value['receivesEmails'] === undefined) return false;
+    if (!('receivesPush' in value) || value['receivesPush'] === undefined) return false;
     if (!('email' in value) || value['email'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('groups' in value) || value['groups'] === undefined) return false;
@@ -139,6 +146,7 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'lastName': json['last_name'],
         'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
         'receivesEmails': json['receives_emails'],
+        'receivesPush': json['receives_push'],
         'email': json['email'],
         'id': json['id'],
         'groups': ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
@@ -165,6 +173,7 @@ export function ProfileToJSONTyped(value?: Profile | null, ignoreDiscriminator: 
         'last_name': value['lastName'],
         'picture_key': value['pictureKey'],
         'receives_emails': value['receivesEmails'],
+        'receives_push': value['receivesPush'],
         'email': value['email'],
         'id': value['id'],
         'groups': ((value['groups'] as Array<any>).map(MinimalGroupToJSON)),

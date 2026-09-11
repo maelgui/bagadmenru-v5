@@ -33,8 +33,9 @@ export default function ProfileSection({ profile }: { profile: Profile }) {
       pictureKey: profile.pictureKey,
       firstName: profile.firstName,
       lastName: profile.lastName,
-      // Preserve the existing preference; this section does not edit it.
+      // Preserve the existing preferences; this section does not edit them.
       receivesEmails: profile.receivesEmails,
+      receivesPush: profile.receivesPush,
     },
   });
 
@@ -50,8 +51,9 @@ export default function ProfileSection({ profile }: { profile: Profile }) {
 
   const onSubmit: SubmitHandler<MyProfileUpdate> = (data) => mutate({
     ...data,
-    // Keep the email preference untouched by this section.
+    // Keep the notification preferences untouched by this section.
     receivesEmails: profile.receivesEmails,
+    receivesPush: profile.receivesPush,
   });
 
   return (

@@ -54,6 +54,7 @@ src/models/Profile.ts
 src/models/ProfileCreate.ts
 src/models/ProfileUpdate.ts
 src/models/PublicInstrument.ts
+src/models/PushDevice.ts
 src/models/PushSubscriptionCreate.ts
 src/models/PushSubscriptionResponse.ts
 src/models/RankingInfo.ts

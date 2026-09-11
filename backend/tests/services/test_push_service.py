@@ -1,8 +1,15 @@
-"""Tests for bbe2.services.push_service."""
+"""Tests for bbe2.services.push_service.
+
+Covers per-user payload extras (RSVP tokens) and the ``receives_push`` master
+switch: a user can hold device subscriptions but still turn off push globally
+(``receives_push=False``), mirroring the ``receives_emails`` preference. When
+off, no device of that user should be sent to, even though the subscription
+rows still exist.
+"""
 
 import json
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from sqlalchemy.orm import sessionmaker
 
@@ -10,7 +17,11 @@ from bbe2 import models
 from bbe2.database import get_engine
 from bbe2.models.base import Base
 from bbe2.schemas import Costume
-from bbe2.services.push_service import send_push_to_users_with_data
+from bbe2.services.push_service import (
+    send_push_to_user,
+    send_push_to_users,
+    send_push_to_users_with_data,
+)
 from tests.conftest import get_fake_settings
 
 DATABASE_URL = "sqlite:///tests_services_push.sqlite?check_same_thread=false"
@@ -66,6 +77,28 @@ def _event(event_id: int):
         category="TEST",
         is_in_doodle=True,
     )
+
+
+def _user_with_device(session, user_id: str, receives_push: bool):
+    session.add(
+        models.UserDB(
+            id=user_id,
+            email=f"{user_id}@example.com",
+            first_name=user_id,
+            last_name=user_id,
+            instrument_id=1,
+            receives_push=receives_push,
+        )
+    )
+    session.add(
+        models.PushSubscriptionDB(
+            user_id=user_id,
+            endpoint=f"https://push.example/{user_id}",
+            p256dh="k",
+            auth="a",
+        )
+    )
+    session.commit()
 
 
 def test_per_user_extras_merged_into_payload():
@@ -133,3 +166,35 @@ def test_only_users_in_mapping_are_notified():
             "endpoint"
         ]
         assert endpoint == "https://push.example.com/alice"
+
+
+def test_master_switch_off_suppresses_send_to_user():
+    session = _session()
+    _user_with_device(session, "off-user", receives_push=False)
+
+    with patch("bbe2.services.push_service._send_push") as mock_send:
+        send_push_to_user(session, MagicMock(), "off-user", "t", "b")
+
+    mock_send.assert_not_called()
+
+
+def test_master_switch_on_allows_send_to_user():
+    session = _session()
+    _user_with_device(session, "on-user", receives_push=True)
+
+    with patch("bbe2.services.push_service._send_push") as mock_send:
+        send_push_to_user(session, MagicMock(), "on-user", "t", "b")
+
+    mock_send.assert_called_once()
+
+
+def test_send_to_users_skips_opted_out_users():
+    session = _session()
+    _user_with_device(session, "on-user", receives_push=True)
+    _user_with_device(session, "off-user", receives_push=False)
+
+    with patch("bbe2.services.push_service._send_push") as mock_send:
+        send_push_to_users(session, MagicMock(), ["on-user", "off-user"], "t", "b")
+
+    # Only the opted-in user's single device is sent to.
+    assert mock_send.call_count == 1

@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import type { Profile } from 'bagad-client';
-import { MailIcon, MailXIcon } from 'lucide-react';
+import { BellIcon, BellOffIcon, MailIcon, MailXIcon } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -17,55 +17,52 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/toast';
-import PushNotificationField from '../../../../components/PushNotificationField';
 import { queryClient, useApiClient } from '../../../../config/client';
-import { usePushNotifications } from '../../../../utils/usePushNotifications';
+import PushDevicesList from './pushDevicesList';
 
 /**
- * "Notifications" section: email preference and per-device push notifications.
- * Each control saves immediately and independently.
+ * "Notifications" section: email and push preferences.
+ *
+ * Push has two independent layers: a per-user master switch (`receivesPush`,
+ * mirrors `receivesEmails`) that suppresses delivery to every device when off,
+ * and the per-device list below it (the source of truth for which devices are
+ * subscribed). Both mutations send the full profile so neither preference
+ * clobbers the other.
  */
 export default function NotificationsSection({ profile }: { profile: Profile }) {
   const { usersApi } = useApiClient();
-  const push = usePushNotifications();
 
-  const { mutate: setReceivesEmails, isPending: isEmailPending } = useMutation({
-    mutationFn: async (receivesEmails: boolean) => await usersApi.updateMyProfileApiV1ProfilesMePut({
-      myProfileUpdate: {
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        pictureKey: profile.pictureKey,
-        receivesEmails,
-      },
-    }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] });
-      toast.add({ title: 'Préférence enregistrée.', type: 'success' });
-    },
-    onError: () => {
-      toast.add({ title: 'Une erreur est survenue.', type: 'error' });
+  const savePreference = async (
+    overrides: { receivesEmails?: boolean; receivesPush?: boolean },
+  ) => await usersApi.updateMyProfileApiV1ProfilesMePut({
+    myProfileUpdate: {
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      pictureKey: profile.pictureKey,
+      receivesEmails: overrides.receivesEmails ?? profile.receivesEmails,
+      receivesPush: overrides.receivesPush ?? profile.receivesPush,
     },
   });
 
-  const handlePushChange = async (checked: boolean) => {
-    try {
-      if (checked) {
-        const prepared = await push.prepare();
-        if (prepared) {
-          await push.enable();
-          toast.add({ title: 'Notifications push activées.', type: 'success' });
-        }
-      } else {
-        await push.disable();
-        toast.add({ title: 'Notifications push désactivées.', type: 'success' });
-      }
-    } catch {
-      toast.add({
-        title: 'Erreur lors de la mise à jour des notifications push.',
-        type: 'error',
-      });
-    }
+  const onSaved = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['profiles', 'me'] });
+    toast.add({ title: 'Préférence enregistrée.', type: 'success' });
   };
+  const onSaveError = () => {
+    toast.add({ title: 'Une erreur est survenue.', type: 'error' });
+  };
+
+  const { mutate: setReceivesEmails, isPending: isEmailPending } = useMutation({
+    mutationFn: async (receivesEmails: boolean) => await savePreference({ receivesEmails }),
+    onSuccess: onSaved,
+    onError: onSaveError,
+  });
+
+  const { mutate: setReceivesPush, isPending: isPushPending } = useMutation({
+    mutationFn: async (receivesPush: boolean) => await savePreference({ receivesPush }),
+    onSuccess: onSaved,
+    onError: onSaveError,
+  });
 
   return (
     <Card>
@@ -96,15 +93,26 @@ export default function NotificationsSection({ profile }: { profile: Profile }) 
 
         <Separator />
 
-        <PushNotificationField
-          checked={push.isSubscribed}
-          onCheckedChange={(checked) => { void handlePushChange(checked); }}
-          isLoading={push.isLoading}
-          status={push.status}
-          isSupported={push.isSupported}
-          staged={false}
-          showTest={push.isSubscribed}
-        />
+        <Field orientation="horizontal" data-disabled={isPushPending || undefined}>
+          <Switch
+            id="receivesPush"
+            checked={profile.receivesPush}
+            disabled={isPushPending}
+            onCheckedChange={(checked) => setReceivesPush(checked)}
+          />
+          <FieldContent>
+            <FieldLabel htmlFor="receivesPush">
+              {profile.receivesPush ? <BellIcon aria-hidden="true" /> : <BellOffIcon aria-hidden="true" />}
+              Notifications push
+            </FieldLabel>
+            <FieldDescription>
+              Recevoir les notifications push (nouveaux événements...). Désactivé,
+              aucun de vos appareils ne recevra de notification.
+            </FieldDescription>
+          </FieldContent>
+        </Field>
+
+        <PushDevicesList pushEnabled={profile.receivesPush} />
       </CardContent>
     </Card>
   );

@@ -15,6 +15,7 @@ class _ProfileBase(BaseModel):
     last_name: str
     picture_key: str | None = None
     receives_emails: bool
+    receives_push: bool
 
 
 class MyProfileUpdate(_ProfileBase):

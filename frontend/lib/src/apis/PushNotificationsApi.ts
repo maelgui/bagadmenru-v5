@@ -16,6 +16,7 @@
 import * as runtime from '../runtime';
 import type {
   HTTPValidationError,
+  PushDevice,
   PushSubscriptionCreate,
   PushSubscriptionResponse,
   VapidPublicKeyResponse,
@@ -23,6 +24,8 @@ import type {
 import {
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    PushDeviceFromJSON,
+    PushDeviceToJSON,
     PushSubscriptionCreateFromJSON,
     PushSubscriptionCreateToJSON,
     PushSubscriptionResponseFromJSON,
@@ -31,8 +34,13 @@ import {
     VapidPublicKeyResponseToJSON,
 } from '../models/index';
 
+export interface DeleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequest {
+    subscriptionId: string;
+}
+
 export interface SubscribeApiV1PushSubscribePostRequest {
     pushSubscriptionCreate: PushSubscriptionCreate;
+    userAgent?: string | null;
 }
 
 export interface UnsubscribeApiV1PushUnsubscribeDeleteRequest {
@@ -43,6 +51,48 @@ export interface UnsubscribeApiV1PushUnsubscribeDeleteRequest {
  * 
  */
 export class PushNotificationsApi extends runtime.BaseAPI {
+
+    /**
+     * Revoke one of the current user\'s devices by id.  Used from the device list to remove a device other than the current browser (which uses /unsubscribe with its own endpoint).
+     * Delete Subscription
+     */
+    async deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRaw(requestParameters: DeleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['subscriptionId'] == null) {
+            throw new runtime.RequiredError(
+                'subscriptionId',
+                'Required parameter "subscriptionId" was null or undefined when calling deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDelete().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/push/subscriptions/{subscription_id}`.replace(`{${"subscription_id"}}`, encodeURIComponent(String(requestParameters['subscriptionId']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Revoke one of the current user\'s devices by id.  Used from the device list to remove a device other than the current browser (which uses /unsubscribe with its own endpoint).
+     * Delete Subscription
+     */
+    async deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDelete(requestParameters: DeleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRaw(requestParameters, initOverrides);
+    }
 
     /**
      * Return the VAPID public key for the frontend to subscribe.
@@ -73,6 +123,42 @@ export class PushNotificationsApi extends runtime.BaseAPI {
     }
 
     /**
+     * List the current user\'s push-subscribed devices.  Encryption keys are never returned. Ordered most recently used first, falling back to creation time for devices that never received a push.
+     * List Subscriptions
+     */
+    async listSubscriptionsApiV1PushSubscriptionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PushDevice>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/push/subscriptions`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PushDeviceFromJSON));
+    }
+
+    /**
+     * List the current user\'s push-subscribed devices.  Encryption keys are never returned. Ordered most recently used first, falling back to creation time for devices that never received a push.
+     * List Subscriptions
+     */
+    async listSubscriptionsApiV1PushSubscriptionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PushDevice>> {
+        const response = await this.listSubscriptionsApiV1PushSubscriptionsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Register a push subscription for the current user.  A user can have multiple subscriptions (one per device/browser). Each device/browser generates a unique push endpoint URL. If the same endpoint already exists (same browser re-subscribing), we update the keys instead of creating a duplicate.
      * Subscribe
      */
@@ -89,6 +175,10 @@ export class PushNotificationsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['userAgent'] != null) {
+            headerParameters['user-agent'] = String(requestParameters['userAgent']);
+        }
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;

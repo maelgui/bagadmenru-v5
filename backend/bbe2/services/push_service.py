@@ -2,6 +2,7 @@
 
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from pywebpush import WebPushException, webpush  # type: ignore
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from bbe2.config import Settings
 from bbe2.models.push_subscription import PushSubscriptionDB
+from bbe2.models.user import UserDB
 from bbe2.services.events import count_unanswered_events
 
 logger = logging.getLogger(__name__)
@@ -23,9 +25,17 @@ def send_push_to_user(
     body: str,
     url: Optional[str] = None,
 ) -> None:
-    """Send push notification to all devices of a specific user."""
+    """Send push notification to all devices of a specific user.
+
+    Respects the user's ``receives_push`` master switch: if it is off, nothing
+    is sent even though device subscriptions may still exist (mirrors the
+    ``receives_emails`` preference).
+    """
     subscriptions = session.scalars(
-        select(PushSubscriptionDB).where(PushSubscriptionDB.user_id == user_id)
+        select(PushSubscriptionDB)
+        .join(UserDB, UserDB.id == PushSubscriptionDB.user_id)
+        .where(PushSubscriptionDB.user_id == user_id)
+        .where(UserDB.receives_push.is_(True))
     ).all()
 
     for sub in subscriptions:
@@ -40,9 +50,15 @@ def send_push_to_users(
     body: str,
     url: Optional[str] = None,
 ) -> None:
-    """Send push notification to all devices of multiple users."""
+    """Send push notification to all devices of multiple users.
+
+    Users who turned off their ``receives_push`` master switch are skipped.
+    """
     subscriptions = session.scalars(
-        select(PushSubscriptionDB).where(PushSubscriptionDB.user_id.in_(user_ids))
+        select(PushSubscriptionDB)
+        .join(UserDB, UserDB.id == PushSubscriptionDB.user_id)
+        .where(PushSubscriptionDB.user_id.in_(user_ids))
+        .where(UserDB.receives_push.is_(True))
     ).all()
 
     for sub in subscriptions:
@@ -129,6 +145,11 @@ def _send_push(
             vapid_private_key=settings.vapid_private_key,
             vapid_claims={"sub": settings.vapid_claims_email},
         )
+        # Record last successful delivery so the device list can show
+        # "last notification sent ...". This is the only durable health
+        # signal we keep; dead subscriptions are pruned below instead.
+        subscription.last_used_at = datetime.now(timezone.utc)
+        session.commit()
     except WebPushException as ex:
         logger.error("Push notification failed: %s", ex)
         # If subscription is expired or invalid (410 Gone or 404), remove it

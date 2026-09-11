@@ -33,6 +33,7 @@ from .profile import (
     Role,
 )
 from .push import (
+    PushDevice,
     PushSubscriptionCreate,
     PushSubscriptionResponse,
     VapidPublicKeyResponse,

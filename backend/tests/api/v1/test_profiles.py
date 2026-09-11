@@ -21,6 +21,7 @@ def test_read_my_profile(client: TestClient):
         },
         "groups": [],
         "receives_emails": True,
+        "receives_push": True,
         "is_active": True,
         "membership_status": None,
         "membership_active_season": None,
@@ -45,6 +46,7 @@ def test_read_profile(client: TestClient):
         },
         "groups": [],
         "receives_emails": True,
+        "receives_push": True,
         "is_active": True,
         "membership_status": None,
         "membership_active_season": None,
@@ -61,6 +63,7 @@ def test_update_my_profile(mock_set_tags: MagicMock, client: TestClient):
             "picture_key": "blbabla.jpg",
             "instrument_id": 1,
             "receives_emails": True,
+            "receives_push": True,
         },
     )
     mock_set_tags.assert_called_once_with(
@@ -83,6 +86,7 @@ def test_update_my_profile(mock_set_tags: MagicMock, client: TestClient):
         },
         "groups": [],
         "receives_emails": True,
+        "receives_push": True,
         "is_active": True,
         "membership_status": None,
         "membership_active_season": None,
@@ -108,6 +112,7 @@ def test_list_profiles(client: TestClient):
             },
             "groups": [],
             "receives_emails": True,
+            "receives_push": True,
             "is_active": True,
             "membership_status": None,
             "membership_active_season": None,
@@ -215,6 +220,7 @@ def test_create_profile_links_orphan_membership_by_adherent_email(
                 "instrument_id": 1,
                 "group_ids": [],
                 "receives_emails": True,
+                "receives_push": True,
             },
         )
         assert resp.status_code == 200, resp.text

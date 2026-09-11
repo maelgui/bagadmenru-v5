@@ -645,6 +645,7 @@ async def get_user_rankings(
             last_name=user_db.last_name,
             picture_key=user_db.picture_key,
             receives_emails=user_db.receives_emails,
+            receives_push=user_db.receives_push,
             is_active=user_db.is_active,
             groups=[
                 MinimalGroup(id=g.id, name=g.name, color=g.color)

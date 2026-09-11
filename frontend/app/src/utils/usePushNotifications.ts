@@ -15,58 +15,107 @@ async function getBrowserSubscription(): Promise<PushSubscription | null> {
   return await registration.pushManager.getSubscription();
 }
 
+// Matches the backend fingerprint (`_device_hash`): SHA-256 hex truncated to
+// this many chars. 64 bits is ample to distinguish one user's devices.
+const DEVICE_HASH_LEN = 16;
+const HEX_RADIX = 16;
+const HEX_PAD = 2;
+
+/**
+ * Non-reversible fingerprint of a push endpoint, matching the backend
+ * (`_device_hash`). Lets the UI recognise which listed device is "this device"
+ * without the endpoint being exposed.
+ */
+async function hashEndpoint(endpoint: string): Promise<string> {
+  const data = new TextEncoder().encode(endpoint);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(HEX_RADIX).padStart(HEX_PAD, '0'))
+    .join('')
+    .slice(0, DEVICE_HASH_LEN);
+}
+
+/**
+ * Device-centric push notifications. The source of truth for "is this device
+ * subscribed?" is the backend device list (matched by endpoint hash), not a
+ * fragile local flag. This hook only exposes the browser-side primitives:
+ * capability/permission status, the current device's endpoint hash, and the
+ * register/unregister actions. The device list owns the server state.
+ */
 export function usePushNotifications() {
   const [status, setStatus] = useState<PushNotificationStatus>(getInitialStatus);
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [thisDeviceHash, setThisDeviceHash] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { pushApi } = useApiClient();
 
-  useEffect(() => {
+  /** Compute this browser's device hash, or null if not subscribed. */
+  const computeThisDeviceHash = useCallback(async (): Promise<string | null> => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      return;
+      return null;
     }
-
-    // Check if the browser already holds a push subscription
-    void getBrowserSubscription().then((subscription) => {
-      setIsSubscribed(subscription !== null);
-    });
+    const subscription = await getBrowserSubscription();
+    return subscription ? await hashEndpoint(subscription.endpoint) : null;
   }, []);
 
+  const refreshThisDeviceHash = useCallback(async () => {
+    const hash = await computeThisDeviceHash();
+    setThisDeviceHash(hash);
+  }, [computeThisDeviceHash]);
+
+  useEffect(() => {
+    let cancelled = false;
+    computeThisDeviceHash().then((hash) => {
+      if (!cancelled) {
+        setThisDeviceHash(hash);
+      }
+    }).catch(() => { /* capability check only; ignore */ });
+    return () => {
+      cancelled = true;
+    };
+  }, [computeThisDeviceHash]);
+
   /**
-   * Local preparation only: asks for permission (requires a user gesture) and
-   * creates the browser push subscription. Nothing is sent to the backend, so
-   * no notification can be delivered yet. Returns whether preparation succeeded.
+   * Enable push on this device: request permission (needs a user gesture),
+   * create the browser subscription if missing, then register it with the
+   * backend so notifications can be delivered. Returns whether it succeeded.
    */
-  const prepare = useCallback(async (): Promise<boolean> => {
+  const enableThisDevice = useCallback(async (): Promise<boolean> => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       return false;
     }
 
     setIsLoading(true);
-
     try {
       const permission = await Notification.requestPermission();
       setStatus(permission);
-
       if (permission !== 'granted') {
         return false;
       }
 
       const registration = await navigator.serviceWorker.ready;
-      const existing = await registration.pushManager.getSubscription();
-      if (!existing) {
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
         const { publicKey } = await pushApi.getVapidPublicKeyApiV1PushVapidPublicKeyGet();
-        await registration.pushManager.subscribe({
+        subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: publicKey,
         });
       }
 
-      setIsSubscribed(true);
+      const { keys } = subscription.toJSON();
+      await pushApi.subscribeApiV1PushSubscribePost({
+        pushSubscriptionCreate: {
+          endpoint: subscription.endpoint,
+          p256dh: keys?.p256dh ?? '',
+          auth: keys?.auth ?? '',
+        },
+      });
+
+      setThisDeviceHash(await hashEndpoint(subscription.endpoint));
       return true;
     } catch (error) {
-      console.error('Failed to prepare push notifications:', error);
+      console.error('Failed to enable push notifications:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -74,55 +123,26 @@ export function usePushNotifications() {
   }, [pushApi]);
 
   /**
-   * Registers the prepared browser subscription with the backend.
-   * This is the step that actually enables notification delivery.
+   * Tear down the browser subscription for this device. Idempotent: safe to
+   * call even if the backend row is already gone (e.g. the device was removed
+   * from the list). The backend row, if any, is removed by the caller via the
+   * device id; here we only clean up the browser side.
    */
-  const enable = useCallback(async () => {
+  const unsubscribeBrowser = useCallback(async () => {
     const subscription = await getBrowserSubscription();
-    if (!subscription) {
-      throw new Error('No browser push subscription to register');
+    if (subscription) {
+      await subscription.unsubscribe();
     }
-
-    const { keys } = subscription.toJSON();
-    await pushApi.subscribeApiV1PushSubscribePost({
-      pushSubscriptionCreate: {
-        endpoint: subscription.endpoint,
-        p256dh: keys?.p256dh ?? '',
-        auth: keys?.auth ?? '',
-      },
-    });
-  }, [pushApi]);
-
-  /**
-   * Removes the subscription from the backend and the browser.
-   */
-  const disable = useCallback(async () => {
-    const subscription = await getBrowserSubscription();
-    if (!subscription) {
-      setIsSubscribed(false);
-      return;
-    }
-
-    const { keys } = subscription.toJSON();
-    await pushApi.unsubscribeApiV1PushUnsubscribeDelete({
-      pushSubscriptionCreate: {
-        endpoint: subscription.endpoint,
-        p256dh: keys?.p256dh ?? '',
-        auth: keys?.auth ?? '',
-      },
-    });
-
-    await subscription.unsubscribe();
-    setIsSubscribed(false);
-  }, [pushApi]);
+    setThisDeviceHash(null);
+  }, []);
 
   return {
     status,
-    isSubscribed,
     isLoading,
     isSupported: status !== 'unsupported',
-    prepare,
-    enable,
-    disable,
+    thisDeviceHash,
+    enableThisDevice,
+    unsubscribeBrowser,
+    refreshThisDeviceHash,
   };
 }

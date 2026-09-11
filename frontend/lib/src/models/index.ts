@@ -40,6 +40,7 @@ export * from './Profile';
 export * from './ProfileCreate';
 export * from './ProfileUpdate';
 export * from './PublicInstrument';
+export * from './PushDevice';
 export * from './PushSubscriptionCreate';
 export * from './PushSubscriptionResponse';
 export * from './RankingInfo';
