@@ -96,6 +96,22 @@ jobs:
           echo "${{ secrets.KUBECONFIG_REVIEW }}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
+      - name: Assert the admission policy is installed (fail closed)
+        run: |
+          # The review-deployer credential is only safe to use while the
+          # ValidatingAdmissionPolicy confines it to bagadmenru-pr-*
+          # namespaces. If the policy is missing (never applied, or dropped
+          # by a cluster upgrade), refuse to deploy rather than silently
+          # degrading to trust-the-workflow.
+          kubectl get validatingadmissionpolicy review-deployer-scope >/dev/null || {
+            echo "::error::ValidatingAdmissionPolicy 'review-deployer-scope' not found — apply k8s/review-infra/admission-policy.yaml before deploying review apps"
+            exit 1
+          }
+          kubectl get validatingadmissionpolicybinding review-deployer-scope >/dev/null || {
+            echo "::error::ValidatingAdmissionPolicyBinding 'review-deployer-scope' not found — apply k8s/review-infra/admission-policy.yaml before deploying review apps"
+            exit 1
+          }
+
       - name: Compute review app coordinates
         id: vars
         run: |
@@ -107,14 +123,29 @@ jobs:
       - name: Create namespace and stamp deploy metadata
         run: |
           NS=${{ steps.vars.outputs.NS }}
+          # A quick unlabel→relabel (or reaper race) can leave the namespace
+          # in Terminating; creating into it fails. Wait out finalization.
+          for _ in $(seq 1 36); do
+            PHASE=$(kubectl get namespace "$NS" -o jsonpath='{.status.phase}' 2>/dev/null || true)
+            [ "$PHASE" != "Terminating" ] && break
+            echo "namespace $NS is terminating, waiting..."
+            sleep 5
+          done
+          if [ "$PHASE" = "Terminating" ]; then
+            echo "::error::namespace $NS stuck in Terminating after 3m"
+            exit 1
+          fi
           kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
           kubectl label namespace "$NS" --overwrite \
             app.kubernetes.io/managed-by=bagadmenru-review \
             bagadmenru.bzh/pr-number=${{ github.event.number }}
-          # The reaper keys its TTL off this annotation; every deploy
-          # refreshes it, so activity keeps a review app alive.
+          # The reaper keys its TTL off these annotations; every deploy
+          # refreshes last-deployed, so activity keeps a review app alive.
+          # ttl-hours makes this workflow the single source of truth for the
+          # TTL (the reaper reads it per-namespace instead of hardcoding it).
           kubectl annotate namespace "$NS" --overwrite \
-            bagadmenru.bzh/last-deployed="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            bagadmenru.bzh/last-deployed="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            bagadmenru.bzh/ttl-hours="${TTL_HOURS}"
 
       - name: Create per-namespace secrets (first deploy only)
         run: |
@@ -123,7 +154,12 @@ jobs:
           # would invalidate sessions, break postgres auth against the
           # existing PGDATA volume, and desync backend S3 creds from the
           # running MinIO root credentials.
-          if ! kubectl get secret backend-secrets -n "$NS" >/dev/null 2>&1; then
+          #
+          # The review-deployer credential deliberately has NO read access to
+          # secrets (in any namespace — see review-infra/rbac.yaml), so the
+          # "already initialized?" check uses a sentinel ConfigMap and the
+          # secrets are created with pure CREATEs, never GET/apply.
+          if ! kubectl get configmap review-bootstrap -n "$NS" >/dev/null 2>&1; then
             S3_KEY=$(openssl rand -hex 16)
             S3_SECRET=$(openssl rand -hex 24)
             kubectl create secret generic minio-secrets -n "$NS" \
@@ -142,24 +178,30 @@ jobs:
               --from-literal=E2E_USER_PASSWORD="$(openssl rand -base64 24)" \
               --from-literal=E2E_ADMIN_EMAIL=e2e-admin@bagadmenru.bzh \
               --from-literal=E2E_ADMIN_PASSWORD="$(openssl rand -base64 24)"
+            # Sentinel last: if any create above fails, the next run retries.
+            kubectl create configmap review-bootstrap -n "$NS" \
+              --from-literal=initialized="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           fi
 
       - name: Create image pull secret
         run: |
           # GITHUB_TOKEN expires with the job, so pods restarting later could
-          # not pull with it. GHCR_PULL_TOKEN is a fine-grained PAT with
-          # read:packages only (see k8s/review-infra/README.md). Applied every
-          # deploy so PAT rotation propagates.
+          # not pull with it. GHCR_PULL_TOKEN is a classic PAT with
+          # read:packages only (GitHub Packages does not accept fine-grained
+          # PATs — see k8s/review-infra/README.md). Recreated every deploy so
+          # PAT rotation propagates; delete+create instead of apply because
+          # the deploy credential has no secret read access.
           if [ -z "${{ secrets.GHCR_PULL_TOKEN }}" ]; then
-            echo "::error::GHCR_PULL_TOKEN secret is not configured (read:packages PAT needed for image pulls)"
+            echo "::error::GHCR_PULL_TOKEN secret is not configured (classic PAT with read:packages needed for image pulls)"
             exit 1
           fi
+          NS=${{ steps.vars.outputs.NS }}
+          kubectl delete secret ghcr-credentials -n "$NS" --ignore-not-found
           kubectl create secret docker-registry ghcr-credentials \
-            -n ${{ steps.vars.outputs.NS }} \
+            -n "$NS" \
             --docker-server=ghcr.io \
             --docker-username=${{ github.repository_owner }} \
-            --docker-password='${{ secrets.GHCR_PULL_TOKEN }}' \
-            --dry-run=client -o yaml | kubectl apply -f -
+            --docker-password='${{ secrets.GHCR_PULL_TOKEN }}'
 
       - name: Render overlay (substitute placeholders, set image tags)
         working-directory: k8s/overlays/review
@@ -168,6 +210,7 @@ jobs:
             -e "s/REVIEW_NS_PLACEHOLDER/${{ steps.vars.outputs.NS }}/g" \
             -e "s/REVIEW_HOST_PLACEHOLDER/${{ steps.vars.outputs.HOST }}/g" \
             -e "s/REVIEW_S3_HOST_PLACEHOLDER/${{ steps.vars.outputs.S3_HOST }}/g" \
+            -e "s/REVIEW_SHA_PLACEHOLDER/$(echo '${{ github.sha }}' | cut -c1-12)/g" \
             ./*.yaml
           TAG=pr-${{ github.event.number }}-${{ github.sha }}
           kustomize edit set image \

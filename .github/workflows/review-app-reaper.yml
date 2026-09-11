@@ -16,7 +16,10 @@ on:
   workflow_dispatch:
 
 env:
-  TTL_HOURS: 72
+  # Fallback only: the authoritative TTL is the bagadmenru.bzh/ttl-hours
+  # annotation each deploy stamps on its namespace (single source of truth
+  # in review-app.yml). This default covers namespaces from older deploys.
+  DEFAULT_TTL_HOURS: 72
   REVIEW_LABEL: review-app
 
 permissions:
@@ -42,8 +45,10 @@ jobs:
         run: |
           set -euo pipefail
           NOW=$(date -u +%s)
-          TTL_SECONDS=$(( TTL_HOURS * 3600 ))
           MARKER="<!-- review-app-status -->"
+          # Race note: a deploy stamps last-deployed as one of its FIRST
+          # steps, so a namespace being deployed right now already carries a
+          # fresh timestamp and is never reaped mid-deploy.
 
           update_comment() {
             local pr="$1" body="$2"
@@ -61,10 +66,13 @@ jobs:
             -o json | jq -r '.items[] |
               [.metadata.name,
                (.metadata.labels["bagadmenru.bzh/pr-number"] // ""),
-               (.metadata.annotations["bagadmenru.bzh/last-deployed"] // "")]
+               (.metadata.annotations["bagadmenru.bzh/last-deployed"] // ""),
+               (.metadata.annotations["bagadmenru.bzh/ttl-hours"] // "")]
               | @tsv' |
-          while IFS=$'\t' read -r NS PR LAST; do
-            echo "--- $NS (PR #$PR, last deployed: ${LAST:-unknown})"
+          while IFS=$'\t' read -r NS PR LAST TTL_HOURS; do
+            TTL_HOURS=${TTL_HOURS:-$DEFAULT_TTL_HOURS}
+            TTL_SECONDS=$(( TTL_HOURS * 3600 ))
+            echo "--- $NS (PR #$PR, last deployed: ${LAST:-unknown}, TTL ${TTL_HOURS}h)"
             REASON=""
 
             if [ -z "$PR" ]; then

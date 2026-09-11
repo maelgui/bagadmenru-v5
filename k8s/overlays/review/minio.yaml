@@ -67,15 +67,18 @@ spec:
     - port: 9000
       targetPort: 9000
 ---
-# One-shot bucket creation: nothing in the backend creates the bucket (on real
-# environments it is provisioned by Terraform). Idempotent via --ignore-existing;
-# the Job spec is stable so repeated `kubectl apply -k` is a no-op.
+# Bucket creation, re-run on EVERY deploy: MinIO data is an emptyDir, so a
+# pod restart wipes the bucket — a run-once job would leave the app 500ing on
+# uploads until the namespace dies. The job name carries the deploy SHA
+# (substituted by CI) so each deploy creates a fresh Job; `--ignore-existing`
+# makes it idempotent and ttlSecondsAfterFinished garbage-collects old ones.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: minio-bucket-init
+  name: minio-bucket-init-REVIEW_SHA_PLACEHOLDER
 spec:
   backoffLimit: 6
+  ttlSecondsAfterFinished: 3600
   template:
     spec:
       restartPolicy: OnFailure
