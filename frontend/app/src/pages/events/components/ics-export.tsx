@@ -43,9 +43,9 @@ export default function IcsExportMenu() {
         <ChevronDown data-icon="inline-end" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Ajouter à mon calendrier</DropdownMenuLabel>
-        <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          <DropdownMenuLabel>Ajouter à mon calendrier</DropdownMenuLabel>
+          <DropdownMenuSeparator />
           <DropdownMenuItem render={<Link to={googleUrl} />}>
             <CalendarDays aria-hidden="true" />
             Google Agenda
