@@ -1,0 +1,264 @@
+# Review apps: ephemeral per-PR deployments, GitLab-style.
+#
+# Opt-in via the `review-app` label (applying labels requires triage/write on
+# the repo, so outside contributors cannot trigger a deploy). While the label
+# is present, every push redeploys. Removing the label or closing the PR tears
+# the namespace down; a scheduled reaper (review-app-reaper.yml) additionally
+# expires deployments that have not been redeployed within the TTL, even on
+# open PRs.
+#
+# Credentials: deploys authenticate as the review-deployer ServiceAccount
+# (KUBECONFIG_REVIEW secret), which a ValidatingAdmissionPolicy confines to
+# bagadmenru-pr-* namespaces — the admin KUBECONFIG secret is never exposed to
+# PR-triggered jobs. See k8s/review-infra/README.md for the one-time setup.
+name: Review App
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, closed, unlabeled]
+
+# Serialize deploys/teardowns per PR; never cancel (a killed teardown would
+# leak a namespace, a killed deploy would leave a half-applied overlay).
+concurrency:
+  group: review-app-${{ github.event.number }}
+  cancel-in-progress: false
+
+env:
+  REPO: ghcr.io/${{ github.repository }}
+  REVIEW_LABEL: review-app
+  REVIEW_DOMAIN: review.bagadmenru.bzh
+  TTL_HOURS: 72
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
+jobs:
+  build:
+    name: Build & push images
+    if: >-
+      github.event.action != 'closed' &&
+      github.event.action != 'unlabeled' &&
+      contains(github.event.pull_request.labels.*.name, 'review-app') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'review-app')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image_name: backend
+          - image_name: frontend
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push ${{ matrix.image_name }}
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.image_name }}
+          push: true
+          # Unique tag per push: a stable `pr-N` tag would leave `kubectl
+          # apply` seeing an unchanged image ref and skipping the rollout.
+          tags: ${{ env.REPO }}/${{ matrix.image_name }}:pr-${{ github.event.number }}-${{ github.sha }}
+          build-args: |
+            APP_VERSION=pr-${{ github.event.number }}
+          # Read main's build cache but do not write: PR builds must not churn
+          # the cache the main pipeline relies on.
+          cache-from: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache
+          sbom: false
+          provenance: false
+
+  deploy:
+    name: Deploy review app
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: review/pr-${{ github.event.number }}
+      url: https://pr-${{ github.event.number }}.review.bagadmenru.bzh
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v5
+
+      - name: Configure kubeconfig (review-deployer, namespace-scoped)
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_REVIEW }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Compute review app coordinates
+        id: vars
+        run: |
+          PR=${{ github.event.number }}
+          echo "NS=bagadmenru-pr-${PR}" >> $GITHUB_OUTPUT
+          echo "HOST=pr-${PR}.${REVIEW_DOMAIN}" >> $GITHUB_OUTPUT
+          echo "S3_HOST=s3-pr-${PR}.${REVIEW_DOMAIN}" >> $GITHUB_OUTPUT
+
+      - name: Create namespace and stamp deploy metadata
+        run: |
+          NS=${{ steps.vars.outputs.NS }}
+          kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl label namespace "$NS" --overwrite \
+            app.kubernetes.io/managed-by=bagadmenru-review \
+            bagadmenru.bzh/pr-number=${{ github.event.number }}
+          # The reaper keys its TTL off this annotation; every deploy
+          # refreshes it, so activity keeps a review app alive.
+          kubectl annotate namespace "$NS" --overwrite \
+            bagadmenru.bzh/last-deployed="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Create per-namespace secrets (first deploy only)
+        run: |
+          NS=${{ steps.vars.outputs.NS }}
+          # Generated once and kept stable across redeploys: regenerating
+          # would invalidate sessions, break postgres auth against the
+          # existing PGDATA volume, and desync backend S3 creds from the
+          # running MinIO root credentials.
+          if ! kubectl get secret backend-secrets -n "$NS" >/dev/null 2>&1; then
+            S3_KEY=$(openssl rand -hex 16)
+            S3_SECRET=$(openssl rand -hex 24)
+            kubectl create secret generic minio-secrets -n "$NS" \
+              --from-literal=MINIO_ROOT_USER="$S3_KEY" \
+              --from-literal=MINIO_ROOT_PASSWORD="$S3_SECRET"
+            kubectl create secret generic backend-secrets -n "$NS" \
+              --from-literal=JWT_SECRET_KEY="$(openssl rand -hex 32)" \
+              --from-literal=TOKEN_SECRET_KEY="$(openssl rand -hex 32)" \
+              --from-literal=SECRET_KEY="$(openssl rand -hex 32)" \
+              --from-literal=S3_ACCESS_KEY_ID="$S3_KEY" \
+              --from-literal=S3_SECRET_ACCESS_KEY="$S3_SECRET"
+            kubectl create secret generic postgres-secrets -n "$NS" \
+              --from-literal=POSTGRES_PASSWORD="$(openssl rand -hex 24)"
+            kubectl create secret generic e2e-credentials -n "$NS" \
+              --from-literal=E2E_USER_EMAIL=e2e@bagadmenru.bzh \
+              --from-literal=E2E_USER_PASSWORD="$(openssl rand -base64 24)" \
+              --from-literal=E2E_ADMIN_EMAIL=e2e-admin@bagadmenru.bzh \
+              --from-literal=E2E_ADMIN_PASSWORD="$(openssl rand -base64 24)"
+          fi
+
+      - name: Create image pull secret
+        run: |
+          # GITHUB_TOKEN expires with the job, so pods restarting later could
+          # not pull with it. GHCR_PULL_TOKEN is a fine-grained PAT with
+          # read:packages only (see k8s/review-infra/README.md). Applied every
+          # deploy so PAT rotation propagates.
+          if [ -z "${{ secrets.GHCR_PULL_TOKEN }}" ]; then
+            echo "::error::GHCR_PULL_TOKEN secret is not configured (read:packages PAT needed for image pulls)"
+            exit 1
+          fi
+          kubectl create secret docker-registry ghcr-credentials \
+            -n ${{ steps.vars.outputs.NS }} \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.repository_owner }} \
+            --docker-password='${{ secrets.GHCR_PULL_TOKEN }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Render overlay (substitute placeholders, set image tags)
+        working-directory: k8s/overlays/review
+        run: |
+          sed -i \
+            -e "s/REVIEW_NS_PLACEHOLDER/${{ steps.vars.outputs.NS }}/g" \
+            -e "s/REVIEW_HOST_PLACEHOLDER/${{ steps.vars.outputs.HOST }}/g" \
+            -e "s/REVIEW_S3_HOST_PLACEHOLDER/${{ steps.vars.outputs.S3_HOST }}/g" \
+            ./*.yaml
+          TAG=pr-${{ github.event.number }}-${{ github.sha }}
+          kustomize edit set image \
+            ghcr.io/maelgui/bagadmenru-v5/backend=${{ env.REPO }}/backend:${TAG} \
+            ghcr.io/maelgui/bagadmenru-v5/frontend=${{ env.REPO }}/frontend:${TAG}
+
+      - name: Deploy
+        run: kubectl apply -k k8s/overlays/review
+
+      - name: Wait for rollout
+        run: |
+          NS=${{ steps.vars.outputs.NS }}
+          kubectl rollout status deployment/backend -n "$NS" --timeout=180s
+          kubectl rollout status deployment/frontend -n "$NS" --timeout=120s
+
+      - name: Verify migrations applied
+        run: |
+          # Same assertion as beta/prod: surface a failed migration as an
+          # actionable error instead of an obscure rollout timeout.
+          NS=${{ steps.vars.outputs.NS }}
+          HEAD=$(kubectl exec deploy/backend -n "$NS" -- \
+            sh -c "alembic heads 2>/dev/null | awk '{print \$1}'")
+          CURRENT=$(kubectl exec deploy/backend -n "$NS" -- \
+            sh -c "alembic current 2>/dev/null | awk '{print \$1}'")
+          echo "Image head: $HEAD"
+          echo "DB current: $CURRENT"
+          if [ -z "$HEAD" ] || [ "$HEAD" != "$CURRENT" ]; then
+            echo "::error::Migration mismatch — DB is at '$CURRENT' but image head is '$HEAD'"
+            exit 1
+          fi
+
+      - name: Post/update PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          HOST=${{ steps.vars.outputs.HOST }}
+          MARKER="<!-- review-app-status -->"
+          BODY="${MARKER}
+          ## :rocket: Review app deployed
+
+          | | |
+          |---|---|
+          | **App** | https://${HOST} |
+          | **Mailpit** | https://${HOST}/_mail (staff/admin session required) |
+          | **Deployed** | \`${{ github.sha }}\` at $(date -u +%Y-%m-%dT%H:%M:%SZ) |
+
+          Seeded with fresh E2E accounts (\`e2e@bagadmenru.bzh\` / \`e2e-admin@bagadmenru.bzh\`, passwords in the \`e2e-credentials\` secret of namespace \`${{ steps.vars.outputs.NS }}\`).
+
+          Expires **${TTL_HOURS}h after the last deploy** (push or re-apply the \`${REVIEW_LABEL}\` label to revive). Removing the label or closing the PR tears it down immediately."
+          CID=$(gh api --paginate "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" | head -n1)
+          if [ -n "$CID" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${CID}" -f body="$BODY"
+          else
+            gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" -f body="$BODY"
+          fi
+
+  teardown:
+    name: Tear down review app
+    if: >-
+      github.event.action == 'closed' ||
+      (github.event.action == 'unlabeled' && github.event.label.name == 'review-app')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v5
+
+      - name: Configure kubeconfig (review-deployer, namespace-scoped)
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_REVIEW }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Delete namespace
+        run: |
+          # --wait=false: namespace finalization (PVC teardown) can take a
+          # while; no need to hold a runner for it.
+          kubectl delete namespace "bagadmenru-pr-${{ github.event.number }}" \
+            --ignore-not-found --wait=false
+
+      - name: Update PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MARKER="<!-- review-app-status -->"
+          BODY="${MARKER}
+          ## :broom: Review app torn down
+
+          The \`bagadmenru-pr-${{ github.event.number }}\` namespace was deleted ($(date -u +%Y-%m-%dT%H:%M:%SZ)). Re-apply the \`${REVIEW_LABEL}\` label to deploy a fresh one."
+          CID=$(gh api --paginate "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" | head -n1)
+          if [ -n "$CID" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${CID}" -f body="$BODY"
+          fi

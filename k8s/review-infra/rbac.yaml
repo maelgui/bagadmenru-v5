@@ -1,0 +1,61 @@
+# Scoped deploy credential for review apps — applied ONCE by an admin
+# (see README.md in this directory). PR-triggered CI never sees the admin
+# kubeconfig: it authenticates as this ServiceAccount, whose every write is
+# confined to bagadmenru-pr-* namespaces by the ValidatingAdmissionPolicy in
+# admission-policy.yaml.
+#
+# The RBAC grants below are deliberately broad (RBAC cannot pattern-match
+# namespace names); the admission policy is the enforcement layer. Apply BOTH
+# files — RBAC without the policy would let a leaked token touch beta/prod.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bagadmenru-ci
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: review-deployer
+  namespace: bagadmenru-ci
+---
+# Long-lived token for the ServiceAccount (used to build the CI kubeconfig,
+# see make-kubeconfig.sh).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: review-deployer-token
+  namespace: bagadmenru-ci
+  annotations:
+    kubernetes.io/service-account.name: review-deployer
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: review-deployer
+rules:
+  # Namespace lifecycle: create/annotate/delete review namespaces. Reads are
+  # not admission-controlled, writes are name-restricted by the policy.
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["create", "get", "list", "watch", "patch", "update", "delete"]
+  # Everything a review app is made of. "*" includes subresources (pods/log,
+  # pods/exec for the migration check). Writes are namespace-restricted by
+  # the admission policy.
+  - apiGroups: ["", "apps", "batch", "networking.k8s.io", "traefik.io"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: review-deployer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: review-deployer
+subjects:
+  - kind: ServiceAccount
+    name: review-deployer
+    namespace: bagadmenru-ci

@@ -1,0 +1,45 @@
+# Enforcement layer for the review-deployer ServiceAccount (see rbac.yaml):
+# every WRITE by that SA must target a bagadmenru-pr-* namespace, or be the
+# create/delete of such a namespace itself. Anything else — beta, prod,
+# cluster-scoped resources — is denied by the API server regardless of what
+# RBAC allows and regardless of what manifests a PR branch contains.
+#
+# Requires Kubernetes >= 1.30 (ValidatingAdmissionPolicy GA). Check with:
+#   kubectl api-resources | grep validatingadmissionpolicies
+# If your K3s is older, upgrade before wiring up review apps — without this
+# policy the review-deployer token must be treated as cluster-admin.
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: review-deployer-scope
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["*"]
+        apiVersions: ["*"]
+        operations: ["*"]
+        resources: ["*"]
+        scope: "*"
+  matchConditions:
+    # Only requests made by the review-deployer SA are evaluated; all other
+    # users bypass this policy entirely.
+    - name: is-review-deployer
+      expression: >-
+        request.userInfo.username == 'system:serviceaccount:bagadmenru-ci:review-deployer'
+  validations:
+    - expression: >-
+        (request.resource.group == '' && request.resource.resource == 'namespaces')
+        ? request.name.matches('^bagadmenru-pr-[0-9]+$')
+        : (request.namespace != '' && request.namespace.matches('^bagadmenru-pr-[0-9]+$'))
+      message: >-
+        review-deployer may only operate inside bagadmenru-pr-* namespaces
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: review-deployer-scope
+spec:
+  policyName: review-deployer-scope
+  validationActions: ["Deny"]

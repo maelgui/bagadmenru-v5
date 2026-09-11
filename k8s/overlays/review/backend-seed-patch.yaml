@@ -1,0 +1,27 @@
+# Append the E2E seed initContainer *after* the base `migrate` container so
+# seeding runs against the migrated schema (same JSON6902 append rationale as
+# beta/backend-seed-patch.yaml). Gives every review app known logins from the
+# `e2e-credentials` secret created by the review-app workflow.
+- op: add
+  path: /spec/template/spec/initContainers/-
+  value:
+    name: seed-e2e
+    image: ghcr.io/maelgui/bagadmenru-v5/backend:MUST_BE_SET
+    command: ["bbe2", "seed-e2e"]
+    envFrom:
+      - secretRef:
+          name: backend-secrets
+      - secretRef:
+          name: e2e-credentials
+      - configMapRef:
+          name: backend-config
+    env:
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: postgres-secrets
+            key: POSTGRES_PASSWORD
+      - name: DATABASE_URL
+        value: "postgresql+psycopg://bagadmenru:$(POSTGRES_PASSWORD)@postgres:5432/bagadmenru"
+      - name: ENVIRONMENT
+        value: "beta"

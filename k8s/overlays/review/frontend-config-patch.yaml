@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  VITE_BBE2_API_URL: "https://REVIEW_HOST_PLACEHOLDER"
+  # Free-form Sentry environment tag (see frontend/app/src/main.tsx): keeps
+  # review-app errors out of the beta/production buckets.
+  VITE_ENVIRONMENT: "review"
