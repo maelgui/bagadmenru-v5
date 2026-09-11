@@ -1,0 +1,8 @@
+<script>
+  // The DebugBar (and anything else reading src/env.ts) gates on the
+  // runtime-injected environment. Storybook serves no app-config.js, so
+  // declare the preview iframe as 'beta': the bar renders in static
+  // production builds of Storybook too, and the pill label matches what
+  // testers actually see on beta.
+  window.env = { VITE_ENVIRONMENT: 'beta' };
+</script>

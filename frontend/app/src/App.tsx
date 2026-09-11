@@ -3,6 +3,7 @@ import { Configuration, DefaultConfig } from 'bagad-client';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toast';
 import './App.css';
+import DebugBar from './components/debug-bar';
 import { queryClient } from './config/client';
 import router from './config/router';
 import { ThemeProvider } from './config/theme';
@@ -29,6 +30,7 @@ function App() {
         <Toaster>
           <RouterProvider router={router} />
         </Toaster>
+        <DebugBar />
       </QueryClientProvider>
     </ThemeProvider>
   );
