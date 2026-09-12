@@ -1,6 +1,8 @@
+import * as Sentry from '@sentry/react';
 import {
   browserSupportsWebAuthn,
   type PublicKeyCredentialCreationOptionsJSON,
+  type RegistrationResponseJSON,
   startRegistration,
   WebAuthnError,
 } from '@simplewebauthn/browser';
@@ -8,6 +10,7 @@ import { useMutation } from '@tanstack/react-query';
 import type { AuthenticationApi } from 'bagad-client';
 import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../config/client';
+import env from '../env';
 import { isPasskeySnoozed } from './passkeySnooze';
 
 /**
@@ -76,11 +79,14 @@ export interface RegisterPasskeyResult {
  *
  * With `useAutoRegister` the browser creates a passkey WITHOUT showing any
  * prompt, and only when its own conditions are met (recent password autofill
- * use, supporting browser — Chrome 128+/Safari 18+). There is deliberately no
- * user-visible failure path: a decline simply throws and we swallow it, so an
- * unsupported browser or unmet conditions cost nothing. FIDO guidance says
- * explicit prompts during sign-in perform poorly; this transparent path is the
- * recommended alternative.
+ * use, supporting browser — Chrome 128+/Safari 18+). A browser decline is
+ * silent by design: an unsupported browser or unmet conditions cost nothing.
+ * FIDO guidance says explicit prompts during sign-in perform poorly; this
+ * transparent path is the recommended alternative.
+ *
+ * Rollout is gated to beta (and local dev) via the runtime-injected
+ * VITE_ENVIRONMENT, failing closed when it is absent — same pattern as the
+ * debug bar. Production keeps the explicit enrolment surfaces only.
  *
  * Respects the per-account snooze (an explicit « Plus tard » elsewhere also
  * silences this path). On success a small "handshake" toast tells the member
@@ -91,26 +97,47 @@ export async function attemptSilentPasskeyUpgrade(
   authApi: AuthenticationApi,
   accountId: string,
 ): Promise<void> {
+  const environment = env.VITE_ENVIRONMENT ?? (import.meta.env.DEV ? 'development' : 'production');
+  if (environment !== 'beta' && environment !== 'development') return;
   if (!browserSupportsWebAuthn() || isPasskeySnoozed(accountId)) return;
 
+  const createCredential = async (): Promise<RegistrationResponseJSON | null> => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- API response type is not narrowed to the WebAuthn options shape
+      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet() as PublicKeyCredentialCreationOptionsJSON;
+      return await startRegistration({
+        optionsJSON: registrationOpt,
+        useAutoRegister: true,
+      });
+    } catch {
+      // Expected whenever the browser declines the automatic upgrade
+      // (NotAllowedError: unsupported or conditions not met;
+      // InvalidStateError: this device already has a passkey). No credential
+      // was created, so there is nothing to report, and the next password
+      // sign-in may satisfy the conditions.
+      return null;
+    }
+  };
+  const attResp = await createCredential();
+  if (attResp === null) return;
+
+  // Past this point the OS HAS created a passkey. Failing to persist it
+  // server-side leaves an orphan credential in the user's keychain that will
+  // 401 at the next passkey login — that must never be swallowed silently.
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- API response type is not narrowed to the WebAuthn options shape
-    const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet() as PublicKeyCredentialCreationOptionsJSON;
-    const attResp = await startRegistration({
-      optionsJSON: registrationOpt,
-      useAutoRegister: true,
-    });
     await authApi.registerPasskeyApiV1WebauthnRegisterPost({ requestBody: attResp });
     await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
     toast.add({
       title: 'Une clé d\'accès a été créée pour votre compte sur cet appareil. Vous pourrez vous connecter sans mot de passe.',
       type: 'success',
     });
-  } catch {
-    // Expected whenever the browser declines the automatic upgrade
-    // (NotAllowedError: unsupported or conditions not met; InvalidStateError:
-    // this device already has a passkey). Silent by design — the member never
-    // saw anything, so there is nothing to report, and the next password
-    // sign-in may satisfy the conditions.
+  } catch (error) {
+    console.error(
+      'Silent passkey upgrade: the device created a credential but server registration failed (orphan passkey)',
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { feature: 'silent-passkey-upgrade' },
+    });
   }
 }

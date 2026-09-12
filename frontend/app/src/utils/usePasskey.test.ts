@@ -7,10 +7,19 @@ const startRegistration = vi.fn();
 let webauthnSupported = true;
 // Hoisted: these are read while the mock factories execute, before the test
 // file body runs.
-const { toastAdd, invalidateQueries } = vi.hoisted(() => ({
-  toastAdd: vi.fn(),
-  invalidateQueries: vi.fn(),
-}));
+const {
+  toastAdd, invalidateQueries, sentryCapture, mockEnv,
+} = vi.hoisted(() => {
+  // Mutable so each test can pick the runtime environment; the silent
+  // upgrade is gated to beta (and local dev).
+  const hoistedEnv: { VITE_ENVIRONMENT?: string } = { VITE_ENVIRONMENT: 'beta' };
+  return {
+    toastAdd: vi.fn(),
+    invalidateQueries: vi.fn(),
+    sentryCapture: vi.fn(),
+    mockEnv: hoistedEnv,
+  };
+});
 
 vi.mock('@simplewebauthn/browser', () => ({
   browserSupportsWebAuthn: () => webauthnSupported,
@@ -24,6 +33,10 @@ vi.mock('../config/client', () => ({
 }));
 
 vi.mock('@/components/ui/toast', () => ({ toast: { add: toastAdd } }));
+
+vi.mock('@sentry/react', () => ({ captureException: sentryCapture }));
+
+vi.mock('../env', () => ({ default: mockEnv }));
 
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
 import { attemptSilentPasskeyUpgrade } from './usePasskey';
@@ -43,10 +56,42 @@ const asAuthApi = (api: FakeAuthApi) => api as unknown as Parameters<typeof atte
 afterEach(() => {
   window.localStorage.clear();
   webauthnSupported = true;
+  mockEnv.VITE_ENVIRONMENT = 'beta';
   vi.clearAllMocks();
 });
 
 describe('attemptSilentPasskeyUpgrade', () => {
+  it('does nothing on production (beta-only rollout)', async () => {
+    mockEnv.VITE_ENVIRONMENT = 'production';
+    const authApi = makeAuthApi();
+    await attemptSilentPasskeyUpgrade(asAuthApi(authApi), 'u1');
+    expect(authApi.preregisterPasskeyApiV1WebauthnPreregisterGet).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when the environment variable is absent', async () => {
+    // vitest runs with import.meta.env.DEV=true, so the local-dev fallback
+    // applies; an absent variable in a production build must disable the
+    // upgrade. Here we can only assert the dev fallback keeps it enabled.
+    mockEnv.VITE_ENVIRONMENT = undefined;
+    startRegistration.mockResolvedValue({ id: 'cred' });
+    const authApi = makeAuthApi();
+    await attemptSilentPasskeyUpgrade(asAuthApi(authApi), 'u1');
+    expect(authApi.preregisterPasskeyApiV1WebauthnPreregisterGet).toHaveBeenCalled();
+  });
+
+  it('reports (but does not throw) when registration fails after the device created the credential', async () => {
+    // Past a successful ceremony the OS holds a passkey the server does not
+    // know about (orphan). This is the exact failure mode of the cookie race:
+    // it must be reported, never swallowed.
+    startRegistration.mockResolvedValue({ id: 'cred' });
+    const authApi = makeAuthApi();
+    authApi.registerPasskeyApiV1WebauthnRegisterPost.mockRejectedValue(new Error('400'));
+    await expect(attemptSilentPasskeyUpgrade(asAuthApi(authApi), 'u1')).resolves.toBeUndefined();
+    expect(sentryCapture).toHaveBeenCalled();
+    expect(toastAdd).not.toHaveBeenCalled();
+    expect(invalidateQueries).not.toHaveBeenCalled();
+  });
+
   it('registers silently and confirms with a toast on success', async () => {
     startRegistration.mockResolvedValue({ id: 'cred' });
     const authApi = makeAuthApi();
