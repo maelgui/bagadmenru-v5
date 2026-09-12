@@ -4,6 +4,9 @@ interface EnvInterface {
   // via window.env (app-config.js) from the per-overlay ConfigMap, mirroring
   // the backend's ENVIRONMENT. Absent in local dev (window.env = {}).
   readonly VITE_ENVIRONMENT?: string
+  // Feature flags (see utils/features.ts). Only the literal 'true' enables a
+  // flag; absent fails closed.
+  readonly VITE_FEATURE_SILENT_PASSKEY_UPGRADE?: string
 }
 
 declare global {

@@ -5,3 +5,5 @@ metadata:
 data:
   VITE_BBE2_API_URL: "https://beta.bagadmenru.bzh"
   VITE_ENVIRONMENT: "beta"
+  # Beta rollout of the silent post-login passkey upgrade.
+  VITE_FEATURE_SILENT_PASSKEY_UPGRADE: "true"

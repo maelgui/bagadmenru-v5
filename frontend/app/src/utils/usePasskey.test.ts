@@ -10,9 +10,11 @@ let webauthnSupported = true;
 const {
   toastAdd, invalidateQueries, sentryCapture, mockEnv,
 } = vi.hoisted(() => {
-  // Mutable so each test can pick the runtime environment; the silent
-  // upgrade is gated to beta (and local dev).
-  const hoistedEnv: { VITE_ENVIRONMENT?: string } = { VITE_ENVIRONMENT: 'beta' };
+  // Mutable so each test can flip the feature flag; the silent upgrade is
+  // gated on VITE_FEATURE_SILENT_PASSKEY_UPGRADE (fail closed).
+  const hoistedEnv: { VITE_FEATURE_SILENT_PASSKEY_UPGRADE?: string } = {
+    VITE_FEATURE_SILENT_PASSKEY_UPGRADE: 'true',
+  };
   return {
     toastAdd: vi.fn(),
     invalidateQueries: vi.fn(),
@@ -56,27 +58,23 @@ const asAuthApi = (api: FakeAuthApi) => api as unknown as Parameters<typeof atte
 afterEach(() => {
   window.localStorage.clear();
   webauthnSupported = true;
-  mockEnv.VITE_ENVIRONMENT = 'beta';
+  mockEnv.VITE_FEATURE_SILENT_PASSKEY_UPGRADE = 'true';
   vi.clearAllMocks();
 });
 
 describe('attemptSilentPasskeyUpgrade', () => {
-  it('does nothing on production (beta-only rollout)', async () => {
-    mockEnv.VITE_ENVIRONMENT = 'production';
+  it('does nothing when the feature flag is off', async () => {
+    mockEnv.VITE_FEATURE_SILENT_PASSKEY_UPGRADE = 'false';
     const authApi = makeAuthApi();
     await attemptSilentPasskeyUpgrade(asAuthApi(authApi), 'u1');
     expect(authApi.preregisterPasskeyApiV1WebauthnPreregisterGet).not.toHaveBeenCalled();
   });
 
-  it('fails closed when the environment variable is absent', async () => {
-    // vitest runs with import.meta.env.DEV=true, so the local-dev fallback
-    // applies; an absent variable in a production build must disable the
-    // upgrade. Here we can only assert the dev fallback keeps it enabled.
-    mockEnv.VITE_ENVIRONMENT = undefined;
-    startRegistration.mockResolvedValue({ id: 'cred' });
+  it('fails closed when the flag is absent', async () => {
+    mockEnv.VITE_FEATURE_SILENT_PASSKEY_UPGRADE = undefined;
     const authApi = makeAuthApi();
     await attemptSilentPasskeyUpgrade(asAuthApi(authApi), 'u1');
-    expect(authApi.preregisterPasskeyApiV1WebauthnPreregisterGet).toHaveBeenCalled();
+    expect(authApi.preregisterPasskeyApiV1WebauthnPreregisterGet).not.toHaveBeenCalled();
   });
 
   it('reports (but does not throw) when registration fails after the device created the credential', async () => {
