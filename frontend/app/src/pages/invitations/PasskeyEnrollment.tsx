@@ -1,7 +1,7 @@
-import { KeyRound } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import PasskeyIcon from '../../components/PasskeyIcon';
 import { useRegisterPasskey } from '../../utils/usePasskey';
 
 /**
@@ -23,7 +23,7 @@ export default function PasskeyEnrollment({
   onEnrolled,
   onSkip,
   title = 'Sécurisez votre compte',
-  description = 'Créez une passkey pour vous connecter sans mot de passe, avec votre empreinte, votre visage ou le code de votre appareil.',
+  description = 'Créez une clé d\'accès pour vous connecter sans mot de passe, avec votre empreinte, votre visage ou le code de votre appareil.',
 }: {
   onEnrolled: () => void;
   onSkip?: () => void;
@@ -39,26 +39,26 @@ export default function PasskeyEnrollment({
   return (
     <div className="flex flex-col items-center text-center">
       <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <KeyRound aria-hidden="true" />
+        <PasskeyIcon className="size-9" />
       </div>
       <h1 className="mb-2 text-2xl">{title}</h1>
       <p className="mb-8 text-muted-foreground">{description}</p>
 
       {register.isError ? (
         <Alert variant="destructive" className="mb-6 text-left">
-          <AlertTitle>La création de la passkey a échoué</AlertTitle>
+          <AlertTitle>La création de la clé d&apos;accès a échoué</AlertTitle>
           <AlertDescription>
             Votre appareil a peut-être annulé ou refusé l&apos;opération. Vous
             pouvez réessayer
-            {onSkip ? ' ou continuer sans passkey' : ''}
+            {onSkip ? ' ou continuer sans clé d\'accès' : ''}
             .
           </AlertDescription>
         </Alert>
       ) : null}
 
       <Button className="w-full" onClick={onCreate} disabled={register.isPending}>
-        {register.isPending ? <Spinner data-icon="inline-start" /> : <KeyRound data-icon="inline-start" aria-hidden="true" />}
-        {register.isError ? 'Réessayer' : 'Créer une passkey'}
+        {register.isPending ? <Spinner data-icon="inline-start" /> : <PasskeyIcon data-icon="inline-start" />}
+        {register.isError ? 'Réessayer' : 'Créer une clé d\'accès'}
       </Button>
 
       {onSkip ? (
@@ -73,7 +73,7 @@ export default function PasskeyEnrollment({
             Plus tard
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
-            Vous pourrez créer une passkey à tout moment depuis vos réglages.
+            Vous pourrez créer une clé d&apos;accès à tout moment depuis vos réglages.
           </p>
         </>
       ) : null}
