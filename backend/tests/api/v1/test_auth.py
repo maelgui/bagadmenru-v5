@@ -279,3 +279,33 @@ def test_reset_password_request_propagates_correlation_id(
     )
     assert response.status_code == 200
     assert reset_sender.correlation_ids == [correlation_id]
+
+
+def test_reset_password_signs_the_member_in(client: TestClient, reset_sender):
+    """A successful reset also signs the member in (auto-login).
+
+    Mirrors the invitation-accept flow: proving control of the email plus
+    setting the password is a full authentication, so the response must set the
+    session cookies (additive session, active account) — the client then offers
+    passkey enrolment right away instead of bouncing to the login form.
+    """
+    client.post(
+        "/api/v1/auth/reset_password_request",
+        json={"email": "john.doe@example.com"},
+    )
+    token = reset_sender.sent[0]["template_data"]["token"]
+
+    # Reset to the seed value so the shared test database keeps working for
+    # other tests that password-login as this user.
+    response = client.post(
+        "/api/v1/auth/reset",
+        json={
+            "email": "john.doe@example.com",
+            "password": "s3cret-password",
+            "password_confirm": "s3cret-password",
+        },
+        headers={"token": token},
+    )
+    assert response.status_code == 200
+    assert response.cookies.get("bmr_session_a8e2d3249e9d997e")
+    assert response.cookies.get("active_account") == "a8e2d3249e9d997e"
