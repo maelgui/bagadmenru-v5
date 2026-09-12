@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+data:
+  # "review" is not a valid Environment enum value (pydantic would reject it),
+  # so review apps run as "beta": Secure cookies on (HTTPS + WebAuthn need
+  # them), beta-grade behaviour everywhere else.
+  ENVIRONMENT: "beta"
+  DOMAIN: "REVIEW_HOST_PLACEHOLDER"
+  FRONTEND_BASE_URL: "https://REVIEW_HOST_PLACEHOLDER"
+  # WebAuthn RP ID is the review host itself: passkeys registered on a review
+  # app are isolated to it and die with the namespace.
+  RELYING_PARTY_ID: "REVIEW_HOST_PLACEHOLDER"
+  # Object storage: in-namespace MinIO, exposed publicly on its own host
+  # because presigned GET/PUT URLs are consumed directly by the browser.
+  # SigV4 signs the Host header, so the backend must sign against the same
+  # public endpoint the browser will hit.
+  S3_ENDPOINT: "https://REVIEW_S3_HOST_PLACEHOLDER"
+  S3_BUCKET_NAME: "bagadmenru-review"
+  # Email trapped in Mailpit (same as beta).
+  EMAIL_DRY_RUN: "false"
+  SMTP_HOST: "mailpit"
+  SMTP_PORT: "1025"
+  SMTP_USE_TLS: "false"

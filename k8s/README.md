@@ -30,6 +30,12 @@ k8s/
     └── ingress-patch.yaml
 ```
 
+Two more directories support **review apps** (ephemeral per-PR environments):
+`overlays/review/` (CI-rendered overlay with `REVIEW_*_PLACEHOLDER` tokens,
+plus in-namespace MinIO and Mailpit) and `review-infra/` (one-time cluster
+setup: namespace-scoped deploy credential + admission policy, and the setup
+guide — see [review-infra/README.md](review-infra/README.md)).
+
 ## Prerequisites (cluster setup)
 
 ```bash

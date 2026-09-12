@@ -1,0 +1,112 @@
+# Review app reaper: the cleanup backstop.
+#
+# Runs hourly (and on demand) and deletes any review namespace that is
+#   1. attached to a closed/merged PR (missed teardown), or
+#   2. attached to a PR that no longer carries the review-app label, or
+#   3. older than its TTL since its last deploy — even if the PR is open.
+#      Pushing again (or re-applying the label) redeploys and resets the TTL.
+#
+# Runs from the main branch on a schedule, so PR code never influences it.
+# Uses the same namespace-scoped review-deployer credential as deploys.
+name: Review App Reaper
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+env:
+  # Fallback only, for a namespace missing the bagadmenru.bzh/ttl-hours
+  # annotation (every deploy stamps it — it can only be absent if someone
+  # hand-created the namespace or stripped the annotation). The authoritative
+  # TTL lives in review-app.yml, which is the single source of truth.
+  DEFAULT_TTL_HOURS: 4
+  REVIEW_LABEL: review-app
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  reap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v5
+
+      - name: Configure kubeconfig (review-deployer, namespace-scoped)
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_REVIEW }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Reap stale review namespaces
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          NOW=$(date -u +%s)
+          MARKER="<!-- review-app-status -->"
+          # Race note: a deploy stamps last-deployed as one of its FIRST
+          # steps, so a namespace being deployed right now already carries a
+          # fresh timestamp and is never reaped mid-deploy.
+
+          update_comment() {
+            local pr="$1" body="$2"
+            local cid
+            cid=$(gh api --paginate "repos/${{ github.repository }}/issues/${pr}/comments" \
+              --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" | head -n1) || true
+            if [ -n "$cid" ]; then
+              gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${cid}" \
+                -f body="$body" >/dev/null || true
+            fi
+          }
+
+          kubectl get namespaces \
+            -l app.kubernetes.io/managed-by=bagadmenru-review \
+            -o json | jq -r '.items[] |
+              [.metadata.name,
+               (.metadata.labels["bagadmenru.bzh/pr-number"] // ""),
+               (.metadata.annotations["bagadmenru.bzh/last-deployed"] // ""),
+               (.metadata.annotations["bagadmenru.bzh/ttl-hours"] // "")]
+              | @tsv' |
+          while IFS=$'\t' read -r NS PR LAST TTL_HOURS; do
+            TTL_HOURS=${TTL_HOURS:-$DEFAULT_TTL_HOURS}
+            TTL_SECONDS=$(( TTL_HOURS * 3600 ))
+            echo "--- $NS (PR #$PR, last deployed: ${LAST:-unknown}, TTL ${TTL_HOURS}h)"
+            REASON=""
+
+            if [ -z "$PR" ]; then
+              REASON="missing pr-number label (orphan)"
+            else
+              STATE=$(gh pr view "$PR" --repo "${{ github.repository }}" \
+                --json state --jq .state 2>/dev/null || echo "UNKNOWN")
+              HAS_LABEL=$(gh pr view "$PR" --repo "${{ github.repository }}" \
+                --json labels --jq "[.labels[].name] | index(\"${REVIEW_LABEL}\") != null" \
+                2>/dev/null || echo "false")
+              if [ "$STATE" != "OPEN" ]; then
+                REASON="PR is ${STATE}"
+              elif [ "$HAS_LABEL" != "true" ]; then
+                REASON="${REVIEW_LABEL} label removed"
+              elif [ -n "$LAST" ]; then
+                LAST_TS=$(date -u -d "$LAST" +%s 2>/dev/null || echo 0)
+                AGE=$(( NOW - LAST_TS ))
+                if [ "$AGE" -gt "$TTL_SECONDS" ]; then
+                  REASON="TTL expired ($(( AGE / 3600 ))h since last deploy, TTL ${TTL_HOURS}h)"
+                fi
+              fi
+            fi
+
+            if [ -n "$REASON" ]; then
+              echo "Deleting $NS: $REASON"
+              kubectl delete namespace "$NS" --ignore-not-found --wait=false
+              if [ -n "$PR" ]; then
+                update_comment "$PR" "${MARKER}
+          ## :hourglass: Review app expired
+
+          The \`${NS}\` namespace was reclaimed by the reaper (${REASON}). Push a new commit or re-apply the \`${REVIEW_LABEL}\` label to deploy a fresh one."
+              fi
+            else
+              echo "Keeping $NS"
+            fi
+          done

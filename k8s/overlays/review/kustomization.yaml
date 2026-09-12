@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Review apps: one ephemeral namespace per pull request, deployed by
+# .github/workflows/review-app.yml when the PR carries the `review-app` label.
+#
+# The REVIEW_*_PLACEHOLDER tokens are substituted by CI (sed) before
+# `kubectl apply -k`, following the same convention as DOMAIN_PLACEHOLDER in
+# the base. They are:
+#   REVIEW_NS_PLACEHOLDER       -> bagadmenru-pr-<n>
+#   REVIEW_HOST_PLACEHOLDER     -> pr-<n>.review.bagadmenru.bzh
+#   REVIEW_S3_HOST_PLACEHOLDER  -> s3-pr-<n>.review.bagadmenru.bzh
+namespace: REVIEW_NS_PLACEHOLDER
+
+resources:
+  - ../../base
+  # Mail is trapped in an in-namespace Mailpit (same as beta): a review app
+  # must never send real email.
+  - mailpit.yaml
+  - mailpit-ingress.yaml
+  # Object storage is an in-namespace MinIO (same as local dev): a review app
+  # must never touch the real Scaleway buckets. Exposed on its own host
+  # because presigned GET/PUT URLs are used directly by the browser.
+  - minio.yaml
+
+# Namespace is created by CI (not subject to namespace transformation),
+# same as beta/prod.
+generatorOptions:
+  disableNameSuffixHash: true
+
+patches:
+  - path: ingress-patch.yaml
+  - path: backend-config-patch.yaml
+  - path: frontend-config-patch.yaml
+  # Append the E2E seed initContainer after the base `migrate` container so
+  # every review app comes up with known logins (same rationale as beta,
+  # see beta/backend-seed-patch.yaml).
+  - path: backend-seed-patch.yaml
+    target:
+      kind: Deployment
+      name: backend
+
+# images: tags are set by CI via `kustomize edit set image` (pr-<n>-<sha>)

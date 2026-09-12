@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bagadmenru-ingress
+spec:
+  tls:
+    - hosts:
+        - REVIEW_HOST_PLACEHOLDER
+      secretName: bagadmenru-review-tls
+  rules:
+    - host: REVIEW_HOST_PLACEHOLDER
+      http:
+        paths:
+          # Backend API (same origin — no CORS needed).
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          # OpenAPI schema reachable for client generation (as on beta).
+          - path: /openapi.json
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          # Frontend catch-all.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

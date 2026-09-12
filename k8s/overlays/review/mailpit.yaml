@@ -1,0 +1,53 @@
+# Mail trap for review apps — identical to beta/mailpit.yaml: captures every
+# message, readable at /_mail behind the site session, never forwards to a
+# real SMTP server.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mailpit
+  template:
+    metadata:
+      labels:
+        app: mailpit
+    spec:
+      containers:
+        - name: mailpit
+          image: axllent/mailpit:latest
+          env:
+            # Serve the UI under /_mail (same webroot as local compose and
+            # beta) so Mailpit emits prefix-aware asset/API/WebSocket URLs and
+            # the Ingress needs no path rewrite.
+            - name: MP_WEBROOT
+              value: _mail
+          ports:
+            - containerPort: 1025
+              name: smtp
+            - containerPort: 8025
+              name: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit
+spec:
+  selector:
+    app: mailpit
+  ports:
+    - name: smtp
+      port: 1025
+      targetPort: 1025
+    - name: http
+      port: 8025
+      targetPort: 8025

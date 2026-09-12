@@ -1,0 +1,107 @@
+# Scoped deploy credential for review apps — applied ONCE by an admin
+# (see README.md in this directory). PR-triggered CI never sees the admin
+# kubeconfig: it authenticates as this ServiceAccount.
+#
+# Two enforcement layers, because they cover different verbs:
+#
+#   * WRITES (create/update/patch/delete, and CONNECT e.g. pods/exec) are
+#     granted broadly here and confined to bagadmenru-pr-* namespaces by the
+#     ValidatingAdmissionPolicy in admission-policy.yaml. RBAC cannot
+#     pattern-match namespace names; the policy can.
+#
+#   * READS (get/list/watch) are NOT admission-controlled, so the policy
+#     cannot confine them. They are therefore enumerated narrowly below:
+#     no `secrets` read and no `pods/log` read, in ANY namespace — a leaked
+#     token (or a malicious PR using it) must not be able to exfiltrate
+#     beta/prod secrets or production logs. The workflows are written to
+#     never GET a secret (create-or-keep, delete+create instead of apply).
+#
+# Apply BOTH files. The deploy workflow asserts the admission policy exists
+# before touching the cluster and refuses to proceed without it.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bagadmenru-ci
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: review-deployer
+  namespace: bagadmenru-ci
+---
+# Long-lived token for the ServiceAccount (used to build the CI kubeconfig,
+# see make-kubeconfig.sh).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: review-deployer-token
+  namespace: bagadmenru-ci
+  annotations:
+    kubernetes.io/service-account.name: review-deployer
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: review-deployer
+rules:
+  # Namespace lifecycle. Reads expose only namespace metadata; writes are
+  # name-restricted by the admission policy.
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["create", "get", "list", "watch", "patch", "update", "delete"]
+
+  # --- Reads (NOT admission-controlled — keep this list tight) ---
+  # Everything `kubectl apply -k` / `rollout status` / `exec` need to read,
+  # deliberately excluding `secrets` and `pods/log`.
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/status
+      - services
+      - configmaps
+      - persistentvolumeclaims
+      - events
+      - endpoints
+      - resourcequotas
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "controllerrevisions"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["traefik.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  # Lets the deploy workflow assert the admission policy is actually
+  # installed before doing anything else (fail closed if the security
+  # layer is missing).
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingadmissionpolicies", "validatingadmissionpolicybindings"]
+    verbs: ["get"]
+
+  # --- Writes (admission-controlled: confined to bagadmenru-pr-*) ---
+  # Broad by design; the ValidatingAdmissionPolicy is the enforcement layer.
+  # Includes secrets (create-only usage in the workflow) and pods/exec
+  # (CONNECT is admission-controlled too).
+  - apiGroups: ["", "apps", "batch", "networking.k8s.io", "traefik.io"]
+    resources: ["*"]
+    verbs: ["create", "update", "patch", "delete", "deletecollection"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: review-deployer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: review-deployer
+subjects:
+  - kind: ServiceAccount
+    name: review-deployer
+    namespace: bagadmenru-ci
