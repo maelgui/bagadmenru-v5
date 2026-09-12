@@ -10,7 +10,7 @@ import InvalidInvitationAlert from './components/InvalidInvitationAlert';
 import OtpScreen from './components/OtpScreen';
 import PasskeyEnrollment from './PasskeyEnrollment';
 import SignupForm from './components/SignupForm';
-import { extractErrorMessage } from './errors';
+import { extractErrorMessage } from '../../utils/errors';
 import type { SignupFormValues } from './types';
 import { cn } from '@/lib/utils';
 
@@ -138,7 +138,13 @@ export default function InvitePage() {
   }
 
   if (step === 'passkey') {
-    return <PasskeyEnrollment onEnrolled={() => setStep('done')} />;
+    return (
+      <PasskeyEnrollment
+        onEnrolled={() => setStep('done')}
+        // The member is already signed in: never dead-end on passkey failure.
+        onSkip={() => setStep('done')}
+      />
+    );
   }
 
   if (step === 'otp') {
