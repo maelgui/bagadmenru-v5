@@ -209,20 +209,36 @@ def reset_password(
         dict, Depends(ActionTokenAuthorization(ActionTokenValue.ResetPassword))
     ],
     session: SessionDep,
+    settings: SettingsDep,
+    response: Response,
 ):
+    """Set the new password and sign the member in.
+
+    Mirrors the invitation-accept flow: proving control of the email (the
+    reset link) plus setting the password is a full authentication, so the
+    member lands signed in (additive session cookies, becomes the active
+    account) instead of being bounced to the login form. The client can then
+    offer passkey enrolment right away (FIDO account-recovery pattern).
+
+    The response body stays "OK" so the generated client is unchanged; the
+    session travels in the cookies.
+    """
     if body.password != body.password_confirm:
         raise HTTPException(status_code=400, detail="password mismatch")
 
-    hashed_password = myctx.hash(body.password)
-    stmt = (
-        update(UserDB)
-        .where(UserDB.id == token_payload["user_id"])
-        .values(password=hashed_password)
-    )
+    user = session.scalars(
+        select(UserDB).where(UserDB.id == token_payload["user_id"])
+    ).first()
+    # The token was only issued for an existing, active account, but the
+    # account may have been deactivated since: do not resurrect its access.
+    if not user or not user.is_active:
+        raise HTTPException(status_code=403, detail="Invalid token")
 
-    session.execute(stmt)
+    user.password = myctx.hash(body.password)
     session.commit()
 
+    access_token = create_access_token(user, settings)
+    set_session_cookies(response, user.id, access_token, settings)
     return "OK"
 
 
