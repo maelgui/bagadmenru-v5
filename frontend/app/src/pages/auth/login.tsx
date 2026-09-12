@@ -7,7 +7,7 @@ import { LoginType, ResponseError } from 'bagad-client';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import iconPasskeyWhite from '../../assets/passkeys/FIDO_Passkey_mark_A_white.svg';
+import PasskeyIcon from '../../components/PasskeyIcon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -61,7 +61,7 @@ function AuthPage() {
       // Conditional (autofill) login runs silently on mount; only surface an
       // error when the user explicitly clicked the Passkey button.
       if (!conditional) {
-        setErrorMsg('La connexion par passkey a échoué. Veuillez réessayer ou utiliser votre mot de passe.');
+        setErrorMsg('La connexion par clé d\'accès a échoué. Veuillez réessayer ou utiliser votre mot de passe.');
       }
     }
   }, [authApi, postLogin]);
@@ -141,8 +141,8 @@ function AuthPage() {
         <>
           <div className="my-12 flex items-center text-muted-foreground before:mr-3 before:block before:h-px before:grow before:bg-border after:ml-3 after:block after:h-px after:grow after:bg-border">Ou</div>
           <Button type="button" onClick={async () => await startPasskeyLogin(false)} className="w-full">
-            <img src={iconPasskeyWhite} alt="passkey logo" className="size-6" />
-            Passkey
+            <PasskeyIcon className="size-6" />
+            Clé d&apos;accès
           </Button>
         </>
       ) : null}

@@ -93,7 +93,7 @@ test.describe('Passkeys (WebAuthn)', () => {
       await page.goto(PASSKEYS_ROUTE);
 
       // UX oracle: a first-time user sees the empty state, not a passkey row.
-      await expect(page.getByText('Aucune passkey')).toBeVisible();
+      await expect(page.getByText('Aucune clé d\'accès')).toBeVisible();
       await expect(page.locator('[data-credential-id]')).toHaveCount(0);
     });
 
@@ -132,7 +132,7 @@ test.describe('Passkeys (WebAuthn)', () => {
       // InvalidStateError and handled as the benign `already-registered`
       // outcome; on Firefox it collapses to NotAllowedError and is shown as a
       // neutral info message. Either way, no scary "error" toast.
-      await expect(page.getByText("Impossible d'ajouter la passkey")).toHaveCount(0);
+      await expect(page.getByText("L'ajout de la clé d'accès n'a pas abouti")).toHaveCount(0);
 
       // Local oracles: one credential on the authenticator and one row in the UI.
       expect((await authenticator.getCredentials()).length).toBe(1);
@@ -143,7 +143,7 @@ test.describe('Passkeys (WebAuthn)', () => {
       // (auto-dismisses), so this is not used as the pass/fail oracle — it is
       // asserted leniently and only when still visible, to avoid flakiness on
       // slower environments (e.g. beta) where it may fade before assertion.
-      const alreadyToast = page.getByText('Cet appareil possède déjà une passkey', { exact: false });
+      const alreadyToast = page.getByText('Cet appareil possède déjà une clé d\'accès', { exact: false });
       if (await alreadyToast.count() > 0) {
         await expect(alreadyToast.first()).toBeVisible();
       }
@@ -165,7 +165,7 @@ test.describe('Passkeys (WebAuthn)', () => {
       // tying success to a single ceremony event, which would be racy.
       await authenticator.arm();
       try {
-        await page.getByRole('button', { name: 'Passkey' }).click();
+        await page.getByRole('button', { name: 'Clé d\'accès' }).click();
 
         // UX oracle: the user ends up authenticated (left login page AND an
         // authenticated affordance is visible), not merely redirected.
@@ -218,11 +218,11 @@ test.describe('Passkeys (WebAuthn)', () => {
       // Explicit Passkey-button login with UV refused → the app surfaces its error.
       await authenticator.withFailedCeremony(
         async () => {
-          await page.getByRole('button', { name: 'Passkey' }).click();
+          await page.getByRole('button', { name: 'Clé d\'accès' }).click();
         },
         async () => {
           await expect(
-            page.getByText('La connexion par passkey a échoué', { exact: false })
+            page.getByText('La connexion par clé d\'accès a échoué', { exact: false })
           ).toBeVisible();
         }
       );
@@ -245,7 +245,7 @@ test.describe('Passkeys (WebAuthn)', () => {
       const item = await passkeyRow(page, credentialId);
       await item.getByRole('button', { name: 'Supprimer' }).click();
       const dialog = page.getByRole('alertdialog');
-      await expect(dialog.getByText('Supprimer cette passkey ?')).toBeVisible();
+      await expect(dialog.getByText('Supprimer cette clé d\'accès ?')).toBeVisible();
       await dialog.getByRole('button', { name: 'Supprimer' }).click();
 
       // UX oracle: the exact row disappears from the list.
@@ -267,7 +267,7 @@ test.describe('Passkeys (WebAuthn)', () => {
       // Open the confirmation dialog, then cancel.
       await item.getByRole('button', { name: 'Supprimer' }).click();
       const dialog = page.getByRole('alertdialog');
-      await expect(dialog.getByText('Supprimer cette passkey ?')).toBeVisible();
+      await expect(dialog.getByText('Supprimer cette clé d\'accès ?')).toBeVisible();
       await dialog.getByRole('button', { name: 'Annuler' }).click();
 
       // UX oracle: dialog closed and the passkey is still listed.
