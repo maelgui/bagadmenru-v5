@@ -1,12 +1,29 @@
 {
   "name": "bagadmenru",
   "description": "Agent workspace Bagad Men Ru — écritures et commandes courantes auto-approuvées",
-  "prompt": "Tu travailles sur le projet Bagad Men Ru v5.\n\nGESTION DES WORKTREES (git worktree) :\nPour chaque nouvelle feature ou fix conséquent, travaille dans un worktree dédié plutôt que de changer de branche dans le repo principal.\n\nConvention d'organisation (à respecter strictement pour éviter l'éparpillement) :\n- TOUS les worktrees vont dans un seul dossier dédié : ../bagadmenru-v5-worktrees/<slug>/\n- <slug> est un nom court en kebab-case décrivant la feature (ex: logout-all, multi-account).\n- La branche associée suit le format feat/<slug> pour une feature, fix/<slug> pour un correctif.\n\nProcédure avant de créer un worktree :\n1. Lance toujours `git worktree list` d'abord pour voir ce qui existe et éviter les doublons.\n2. Si un worktree pour cette feature existe déjà, utilise-le au lieu d'en créer un nouveau.\n3. Crée le worktree ainsi :\n   git worktree add ../bagadmenru-v5-worktrees/<slug> -b feat/<slug>\n   (ou fix/<slug> pour un correctif ; retire -b si la branche existe déjà).\n\nNettoyage :\n- Quand une feature est mergée et n'est plus utile, propose de supprimer son worktree avec :\n  git worktree remove ../bagadmenru-v5-worktrees/<slug>\n  puis `git worktree prune` si nécessaire.\n- Ne supprime jamais un worktree contenant du travail non commité sans confirmation explicite.\n\nPour lister proprement l'état de tous les worktrees, utilise `git worktree list`.\n\nCRÉATION DE LA PR EN FIN DE FEATURE :\nQuand le travail d'une feature est terminé et commité, propose de créer une Pull Request sur GitHub.\n1. Vérifie que tout est commité avec `git status` — ne pousse jamais de changements non commités.\n2. Pousse la branche avec le suivi distant : git push -u origin feat/<slug> (ou fix/<slug>).\n3. Crée la PR avec le GitHub CLI : gh pr create --fill (ou gh pr create --title \"<titre concis>\" --body \"<résumé des changements, tests effectués, points en attente>\").\n4. Ne pousse jamais directement sur main/master ; la PR cible la branche par défaut du dépôt.\n5. Après création, affiche l'URL de la PR retournée par gh.\nDemande confirmation avant de pousser et d'ouvrir la PR.\n\nTESTER LA STACK COMPLÈTE SANS CONFLIT (finch compose) :\nPlusieurs worktrees peuvent tourner en parallèle. Pour éviter les conflits de conteneurs, de volumes et de ports, respecte ces règles quand tu lances la stack.\n1. Isole chaque worktree avec un nom de projet compose unique : -p bmr-<slug>. Cela donne des conteneurs et volumes distincts par worktree.\n2. La stack ne publie qu'un seul port hôte, FRONTEND_PORT (défaut 5173) ; tout le reste (backend, db, minio, mailpit) passe par le proxy vite en interne. Storybook n'est PAS géré par la stack compose (voir section dédiée plus bas).\n3. Choisis un FRONTEND_PORT libre AVANT de lancer. Détecte un port libre ainsi (macOS) : p=5173; while lsof -iTCP:\\\"$p\\\" -sTCP:LISTEN >/dev/null 2>&1; do p=$((p+1)); done; echo $p\n4. Lance la stack avec le port choisi et le nom de projet : FRONTEND_PORT=<port_libre> finch compose -p bmr-<slug> up -d\n5. Indique à l'utilisateur l'URL réelle : http://localhost:<port_libre>\n6. Pour arrêter et nettoyer ce worktree sans toucher aux autres : finch compose -p bmr-<slug> down (ajoute -v seulement si l'utilisateur veut aussi supprimer les volumes db/s3 de ce projet).\n7. Pour voir les stacks en cours : finch compose ls (ou finch ps).\nUtilise finch compose (pas docker compose) sur cette machine.\n\nSTORYBOOK :\nStorybook n'est pas intégré à la stack compose (c'est un serveur de dev séparé). Ne le lance pas via finch. Pour le démarrer localement à la demande, depuis frontend/app : yarn storybook (équivaut à storybook dev -p 6006 --no-open). Si le port 6006 est déjà pris par un autre worktree, choisis un port libre et lance : yarn storybook -- -p <port_libre>. Ne lance Storybook que si l'utilisateur le demande explicitement.\n\nHMR / RECHARGEMENT AUTOMATIQUE SOUS FINCH (macOS) :\nSous Finch (VM Linux sur macOS), les événements fsevents ne traversent pas le bind-mount, donc le HMR de Vite ne se déclenche pas avec le watcher par défaut. Le projet gère déjà ça : vite.config.ts active le polling chokidar (server.watch.usePolling, intervalle 1000ms) quand la variable d'env VITE_USE_POLLING vaut 'true', et docker-compose.yml met VITE_USE_POLLING=true sur le service frontend. Donc le HMR fonctionne d'office via finch compose, sans action de ta part. Si le rechargement paraît trop lent, baisse l'intervalle dans vite.config.ts ; s'il consomme trop de CPU, monte-le. Ne désactive pas ce polling pour le dev conteneurisé. Le backend (uvicorn --reload) n'a pas montré ce problème ; si un jour c'est le cas, mets WATCHFILES_FORCE_POLLING=true sur le service backend.",
-  "tools": ["read", "write", "shell", "grep", "glob", "code", "use_aws"],
-  "allowedTools": ["read", "grep", "glob", "code", "write"],
+  "prompt": "Tu travailles sur le projet Bagad Men Ru v5.\n\nLes conventions du projet vivent dans .kiro/steering/ et sont injectées automatiquement — respecte-les strictement :\n- git-workflow.md : branches (toujours depuis origin/main à jour), PRs (toujours vers main, jamais empilées), commits (un commit = une feature, squash des itérations), worktrees, procédure d'ouverture de PR.\n- dev-environment.md : stack compose par worktree (finch, pas docker), Storybook, HMR sous Finch.\n\nDemande confirmation avant de pousser et d'ouvrir une PR.",
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "grep",
+    "glob",
+    "code",
+    "use_aws"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code",
+    "write"
+  ],
   "toolsSettings": {
     "write": {
-      "allowedPaths": ["./**", "../bagadmenru-v5-worktrees/**"]
+      "allowedPaths": [
+        "./**",
+        "../bagadmenru-v5-worktrees/**"
+      ]
     },
     "shell": {
       "autoAllowReadonly": true,
