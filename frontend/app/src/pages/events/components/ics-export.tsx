@@ -1,72 +1,29 @@
-import {
-  CalendarDays, Check, ChevronDown, Copy,
-} from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import env from '../../../env';
-
-const COPY_FEEDBACK_MS = 2000;
+import CalendarSyncDialog, { useCalendarSync } from './calendarSyncDialog';
 
 /**
- * Calendar subscription actions (Google Agenda link + copy the ICS URL),
- * shared by the event pages (Doodle, Planning, Gestion). Mirrors the export
- * offered on the calendar page, but packaged as a header dropdown so it fits
- * next to the other header actions without cluttering the layout.
+ * "Synchroniser" header button shared by the event pages (Doodle, Planning,
+ * Gestion). Opens the same calendar sync dialog as the calendar page: it
+ * mints a personal "Calendrier" API key and hands out the resulting ICS
+ * link, with one-tap Google Agenda / Apple Calendar shortcuts.
  */
-export default function IcsExportMenu() {
-  const [copied, setCopied] = useState(false);
-  const icsUrl = `${env.VITE_BBE2_API_URL}/api/v1/events/export/ics`;
-  const googleUrl = `https://www.google.com/calendar/render?cid=${env.VITE_BBE2_API_URL.replace('https://', 'webcal://')}/api/v1/events/export/ics`;
-
-  const onCopy = () => {
-    void navigator.clipboard.writeText(icsUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-    });
-  };
+export default function IcsExportButton() {
+  const { openSync, dialogProps } = useCalendarSync();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" />}>
+    <>
+      <Button variant="outline" onClick={openSync}>
         <CalendarDays data-icon="inline-start" aria-hidden="true" />
         Synchroniser
-        <ChevronDown data-icon="inline-end" aria-hidden="true" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Ajouter à mon calendrier</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem render={<Link to={googleUrl} />}>
-            <CalendarDays aria-hidden="true" />
-            Google Agenda
-          </DropdownMenuItem>
-          {/* Keep the menu open so the "Copié !" feedback is visible. */}
-          <DropdownMenuItem
-            onClick={(event) => {
-              event.preventDefault();
-              onCopy();
-            }}
-          >
-            {copied
-              ? <Check aria-hidden="true" />
-              : <Copy aria-hidden="true" />}
-            {copied ? 'Copié !' : "Copier l'URL ICS"}
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-      <span aria-live="polite" className="sr-only">
-        {copied ? 'Copié dans le presse-papiers.' : ''}
-      </span>
-    </DropdownMenu>
+      </Button>
+      <CalendarSyncDialog
+        open={dialogProps.open}
+        onOpenChange={dialogProps.onOpenChange}
+        icsUrl={dialogProps.icsUrl}
+        isPending={dialogProps.isPending}
+        isError={dialogProps.isError}
+      />
+    </>
   );
 }

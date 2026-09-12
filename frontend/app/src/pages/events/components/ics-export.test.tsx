@@ -1,27 +1,58 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
-import IcsExportMenu from './ics-export';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  cleanup, fireEvent, render, screen,
+} from '@testing-library/react';
+import {
+  afterEach, describe, expect, it, vi,
+} from 'vitest';
 
-function renderMenu() {
+const createMyApiKey = vi.fn().mockResolvedValue({ key: 'secret-key-123' });
+
+vi.mock('../../../config/client', () => ({
+  useApiClient: () => ({
+    usersApi: { createMyApiKeyApiV1ProfilesMeApiKeysPost: createMyApiKey },
+  }),
+}));
+
+// eslint-disable-next-line import/first -- import must follow vi.mock hoisting
+import IcsExportButton from './ics-export';
+
+function renderButton() {
+  const queryClient = new QueryClient({
+    defaultOptions: { mutations: { retry: false } },
+  });
   return render(
-    <MemoryRouter>
-      <IcsExportMenu />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <IcsExportButton />
+    </QueryClientProvider>,
   );
 }
 
-describe('IcsExportMenu', () => {
-  // Regression test for production error #31 (Base UI: MenuGroupContext is
-  // missing): DropdownMenuLabel wraps Menu.GroupLabel which must live inside
-  // a Menu.Group. Opening the menu crashed until the label was moved into
-  // the group.
-  it('opens without crashing and shows the label and actions', () => {
-    renderMenu();
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
+describe('IcsExportButton', () => {
+  it('opens the calendar sync dialog and mints a personal link', async () => {
+    renderButton();
     fireEvent.click(screen.getByRole('button', { name: /Synchroniser/ }));
-    expect(screen.getByText('Ajouter à mon calendrier')).toBeDefined();
-    expect(screen.getByRole('menuitem', { name: /Google Agenda/ })).toBeDefined();
-    expect(screen.getByRole('menuitem', { name: /Copier l'URL ICS/ })).toBeDefined();
+
+    expect(screen.getByRole('heading', { name: 'Ajouter à mon agenda' })).toBeDefined();
+
+    // Once minted, the personal ICS link shows up in the read-only field...
+    const field = await screen.findByRole<HTMLInputElement>('textbox', { name: 'Lien du calendrier' });
+    expect(field.value).toContain('/api/v1/events/export/ics/me?api_key=secret-key-123');
+    expect(createMyApiKey).toHaveBeenCalledWith({
+      apiKeyCreate: { label: 'Calendrier', authorizedPermissions: ['view:calendar'] },
+    });
+
+    // ...and the Google Agenda shortcut points at the encoded webcal feed.
+    const google = screen.getByRole('link', { name: /Google Agenda/ });
+    const href = google.getAttribute('href') ?? '';
+    expect(href).toContain('https://calendar.google.com/calendar/render?cid=');
+    expect(href).toContain(encodeURIComponent('webcal://'));
+    expect(href).toContain(encodeURIComponent('api_key=secret-key-123'));
   });
 });

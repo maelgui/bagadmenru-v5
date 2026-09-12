@@ -1,4 +1,5 @@
-import { CalendarPlus, Check, Copy } from 'lucide-react';
+import { CalendarDays, CalendarPlus, Check, Copy } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { UAParser } from 'ua-parser-js';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,65 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
+import { useApiClient } from '../../../config/client';
+import env from '../../../env';
 
 const COPY_FEEDBACK_MS = 2000;
+
+// RBAC permission the authenticated ICS feed requires (view:calendar). A
+// "Calendrier" key is scoped to exactly this, so it can subscribe to the feed
+// but do nothing else. Matches Resource.CALENDAR in the backend.
+const CALENDAR_PERMISSION = 'view:calendar';
+
+/**
+ * State and actions behind the calendar sync dialog, shared by every page
+ * that offers it (calendar page, event pages header button).
+ *
+ * The personal ICS link is only known after a key is minted (its raw secret
+ * is returned once, at creation). Calling ``openSync`` mints a dedicated
+ * "Calendrier" API key on demand; closing the dialog clears the link so
+ * re-opening always issues a fresh one.
+ */
+export function useCalendarSync() {
+  const { usersApi } = useApiClient();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const {
+    mutate: mintLink,
+    data: minted,
+    isPending,
+    isError,
+    reset,
+  } = useMutation({
+    mutationFn: async () => await usersApi.createMyApiKeyApiV1ProfilesMeApiKeysPost({
+      apiKeyCreate: { label: 'Calendrier', authorizedPermissions: [CALENDAR_PERMISSION] },
+    }),
+  });
+
+  const icsUrl = minted
+    ? `${env.VITE_BBE2_API_URL}/api/v1/events/export/ics/me?api_key=${minted.key}`
+    : null;
+
+  const openSync = () => {
+    reset();
+    mintLink();
+    setIsOpen(true);
+  };
+
+  const onOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      reset();
+    }
+  };
+
+  return {
+    openSync,
+    dialogProps: {
+      open: isOpen, onOpenChange, icsUrl, isPending, isError,
+    },
+  };
+}
 
 /**
  * Whether the current device is an Apple device (iOS, iPadOS or macOS).
@@ -69,11 +127,41 @@ function IcsLinkField({ url }: { url: string }) {
 }
 
 /**
- * Calendar sync dialog (presentational). The parent mints a dedicated
- * "Calendrier" API key when the dialog opens and passes the resulting personal
- * ICS URL in. The link is always shown in a read-only field with a copy
- * button; Apple devices additionally get a one-tap "Ajouter à mon agenda"
- * button that opens the webcal:// subscribe flow. No API-key jargon is exposed
+ * One-click "add to calendar" footer shortcuts: Google Agenda for everyone,
+ * plus the native webcal:// subscribe flow on Apple devices (where it is the
+ * primary action, demoting Google to an outline button).
+ */
+function SubscribeActions({ apple, googleUrl, webcalUrl }: {
+  apple: boolean;
+  googleUrl: string;
+  webcalUrl: string;
+}) {
+  return (
+    <>
+      <Button
+        variant={apple ? 'outline' : 'default'}
+        render={<a href={googleUrl} target="_blank" rel="noopener noreferrer" />}
+      >
+        <CalendarDays data-icon="inline-start" />
+        Google Agenda
+      </Button>
+      {apple ? (
+        <Button render={<a href={webcalUrl} />}>
+          <CalendarPlus data-icon="inline-start" />
+          Ajouter à mon agenda
+        </Button>
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * Calendar sync dialog (presentational). The parent (via ``useCalendarSync``)
+ * mints a dedicated "Calendrier" API key when the dialog opens and passes the
+ * resulting personal ICS URL in. The link is always shown in a read-only
+ * field with a copy button, next to a one-click Google Agenda shortcut;
+ * Apple devices additionally get a one-tap "Ajouter à mon agenda" button
+ * that opens the webcal:// subscribe flow. No API-key jargon is exposed
  * here -- key management lives in the settings.
  */
 export default function CalendarSyncDialog({
@@ -91,6 +179,12 @@ export default function CalendarSyncDialog({
 }) {
   const apple = isAppleDevice();
   const webcalUrl = icsUrl ? icsUrl.replace(/^https?:\/\//, 'webcal://') : null;
+  // Google Agenda's "add by URL" flow, pre-filled with the personal feed. The
+  // cid value must be URL-encoded: the personal link carries an ?api_key=
+  // query string that would otherwise be swallowed by the render URL itself.
+  const googleUrl = webcalUrl
+    ? `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcalUrl)}`
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -120,8 +214,8 @@ export default function CalendarSyncDialog({
             <>
               <p className="text-sm">
                 {apple
-                  ? 'Touchez « Ajouter à mon agenda », ou copiez ce lien pour l\u2019ajouter manuellement.'
-                  : 'Copiez ce lien et ajoutez-le dans votre application de calendrier (sur Google Agenda : « Ajouter un agenda » › « À partir d\u2019une URL »).'}
+                  ? 'Touchez « Ajouter à mon agenda », utilisez Google Agenda, ou copiez ce lien pour l\u2019ajouter manuellement.'
+                  : 'Ajoutez le calendrier en un clic avec Google Agenda, ou copiez ce lien et ajoutez-le manuellement dans votre application de calendrier.'}
               </p>
               <IcsLinkField url={icsUrl} />
             </>
@@ -129,11 +223,8 @@ export default function CalendarSyncDialog({
         </DialogBody>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fermer</Button>
-          {icsUrl && apple && webcalUrl ? (
-            <Button render={<a href={webcalUrl} />}>
-              <CalendarPlus data-icon="inline-start" />
-              Ajouter à mon agenda
-            </Button>
+          {googleUrl && webcalUrl ? (
+            <SubscribeActions apple={apple} googleUrl={googleUrl} webcalUrl={webcalUrl} />
           ) : null}
         </DialogFooter>
       </DialogContent>
