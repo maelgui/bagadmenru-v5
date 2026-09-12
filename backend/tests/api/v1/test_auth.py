@@ -309,3 +309,115 @@ def test_reset_password_signs_the_member_in(client: TestClient, reset_sender):
     assert response.status_code == 200
     assert response.cookies.get("bmr_session_a8e2d3249e9d997e")
     assert response.cookies.get("active_account") == "a8e2d3249e9d997e"
+
+
+# --- WebAuthn registration challenge vs. concurrent responses ---------------
+#
+# The challenge lives in the cookie session. Before Starlette 1.0,
+# SessionMiddleware re-issued the Set-Cookie on EVERY response whose session
+# was non-empty, so during the post-login request burst a slow read-only
+# response carrying a stale cookie could clobber the challenge between
+# /preregister and /register — after the browser had already created the
+# credential (orphan passkey in the user's keychain, never registered
+# server-side). Starlette >= 1.0 only re-issues the cookie when the session
+# was actually MODIFIED (Kludex/starlette#3166). These tests pin that
+# behaviour so a dependency downgrade cannot silently reintroduce the race.
+
+
+def _https_client(client: TestClient) -> TestClient:
+    """A client that talks https so the Secure session cookie round-trips.
+
+    Reuses the fixture's DB seeding, dependency overrides and Bearer token;
+    the fixture client itself is plain http, over which httpx never sends
+    Secure cookies.
+    """
+    from bbe2.main import app
+
+    https_client = TestClient(app, base_url="https://testserver")
+    https_client.headers = dict(client.headers)
+    return https_client
+
+
+_BOGUS_CREDENTIAL = {
+    "id": "bogus",
+    "rawId": "bogus",
+    "response": {},
+    "type": "public-key",
+}
+
+
+def test_readonly_responses_do_not_reissue_the_session_cookie(client: TestClient):
+    """The core of the race: a response that did not modify the session must
+    not carry a session Set-Cookie, otherwise its (possibly stale) snapshot
+    would overwrite a challenge written by a concurrent request."""
+    https_client = _https_client(client)
+
+    # Write the challenge: this response legitimately sets the session cookie.
+    pre = https_client.get("/api/v1/webauthn/preregister")
+    assert pre.status_code == 200
+    assert "session=" in (pre.headers.get("set-cookie") or "")
+
+    # A read-only request (passkey list; never touches request.session): its
+    # response must NOT re-issue the session cookie.
+    readonly = https_client.get("/api/v1/webauthn")
+    assert readonly.status_code == 200
+    assert "session=" not in (readonly.headers.get("set-cookie") or "")
+
+
+def test_register_finds_the_challenge_after_an_interleaved_request(
+    client: TestClient,
+):
+    """End-to-end shape of the reported bug: preregister, another request in
+    between, then register. The challenge must still be there — the 400 is
+    about the bogus credential, NOT a missing challenge."""
+    https_client = _https_client(client)
+
+    https_client.get("/api/v1/webauthn/preregister")
+    https_client.get("/api/v1/webauthn")  # post-login page-load style request
+
+    response = https_client.post("/api/v1/webauthn/register", json=_BOGUS_CREDENTIAL)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid registration response"
+
+
+def test_register_without_pending_challenge_is_rejected(client: TestClient):
+    https_client = _https_client(client)
+    response = https_client.post("/api/v1/webauthn/register", json=_BOGUS_CREDENTIAL)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "No registration challenge in session"
+
+
+def test_password_login_empties_the_challenge_session(client: TestClient):
+    """A password login clears the leftover conditional-login auth challenge.
+
+    The login page prepares a conditional (autofill) passkey login on mount,
+    which stores an auth_challenge in the cookie session. A password login
+    never consumes it; popping it empties the session so Starlette stops
+    re-issuing the stale cookie on every subsequent response (the amplifier of
+    the registration-challenge race).
+    """
+    from bbe2.main import app
+
+    _seed_password("john.doe@example.com", "s3cret-password")
+
+    # The session cookie is Secure (https_only=True), so it only round-trips
+    # over https; the shared fixture client is plain http. The fixture still
+    # provides the DB seeding and dependency overrides.
+    https_client = TestClient(app, base_url="https://testserver")
+
+    # Mount-time conditional login preparation: session now holds a challenge.
+    prepare = https_client.get("/api/v1/auth/login")
+    assert prepare.status_code == 200
+    assert "session=" in (prepare.headers.get("set-cookie") or "")
+
+    response = https_client.post(
+        "/api/v1/auth/login",
+        json={
+            "type": "password",
+            "email": "john.doe@example.com",
+            "password": "s3cret-password",
+        },
+    )
+    assert response.status_code == 200
+    # Session emptied -> Starlette expires the cookie on this response.
+    assert "session=null" in (response.headers.get("set-cookie") or "")

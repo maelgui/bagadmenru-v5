@@ -81,7 +81,10 @@ if not _session_secret:
         "SECRET_KEY environment variable is required "
         "(used to sign session cookies that hold WebAuthn challenges)."
     )
-# The session cookie holds short-lived WebAuthn challenges. Harden it:
+# The session cookie holds short-lived WebAuthn challenges. Starlette >= 1.0
+# only re-issues the Set-Cookie when the session was actually modified
+# (Kludex/starlette#3166), so concurrent read-only responses can no longer
+# clobber a freshly written challenge with a stale cookie. Harden it:
 # - https_only: never send over plain HTTP (ingress already forces HTTPS/HSTS,
 #   this is defence in depth).
 # - same_site="lax": front and API share one origin now, so lax is enough and

@@ -21,7 +21,11 @@ from webauthn import (
     verify_registration_response,
 )
 from webauthn.helpers import parse_authentication_credential_json
-from webauthn.helpers.exceptions import InvalidAuthenticationResponse
+from webauthn.helpers.exceptions import (
+    InvalidAuthenticationResponse,
+    InvalidJSONStructure,
+    InvalidRegistrationResponse,
+)
 from webauthn.helpers.structs import (
     AttestationConveyancePreference,
     AuthenticatorSelectionCriteria,
@@ -130,6 +134,12 @@ def process_login(
                 session.execute(
                     update(UserDB).where(UserDB.id == user.id).values(password=new_hash)
                 )
+            # The login page prepares a conditional (autofill) passkey login on
+            # mount, leaving an auth_challenge in the cookie session. After a
+            # *password* login it is dead weight: drop it so the session
+            # empties and Starlette stops re-issuing the stale cookie on every
+            # subsequent response.
+            request.session.pop("auth_challenge", None)
         case LoginType.PASSKEY:
             if not data.passkey:
                 raise HTTPException(
@@ -448,7 +458,13 @@ async def preregister_passkey(
         attestation=AttestationConveyancePreference.NONE,
     )
 
-    # save challenge as base64 in session
+    # Save the challenge (base64) in the cookie session. Safe against the
+    # post-login request burst since Starlette >= 1.0: SessionMiddleware only
+    # re-issues the Set-Cookie when the session was actually MODIFIED, so a
+    # concurrent read-only response can no longer clobber this write with a
+    # stale cookie (Kludex/starlette#3166 - that race used to lose the
+    # challenge after the browser had already created the passkey, leaving an
+    # orphan credential in the user's keychain).
     request.session["reg_challenge"] = base64.b64encode(
         simple_registration_options.challenge
     ).decode("utf-8")
@@ -485,6 +501,12 @@ async def register_passkey(
             # here to keep passkey enrollment smooth on all devices.
             require_user_verification=False,
         )
+    except (InvalidJSONStructure, InvalidRegistrationResponse) as exc:
+        # Bad client data (malformed credential JSON or a failed WebAuthn
+        # verification) is a 400, not a 500.
+        raise HTTPException(
+            status_code=400, detail="Invalid registration response"
+        ) from exc
     finally:
         # A challenge is single-use, regardless of the outcome.
         request.session.pop("reg_challenge", None)
