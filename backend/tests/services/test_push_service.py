@@ -198,3 +198,25 @@ def test_send_to_users_skips_opted_out_users():
 
     # Only the opted-in user's single device is sent to.
     assert mock_send.call_count == 1
+
+
+def test_send_with_data_skips_opted_out_users():
+    session = _session()
+    _user_with_device(session, "on-user", receives_push=True)
+    _user_with_device(session, "off-user", receives_push=False)
+
+    with patch("bbe2.services.push_service._send_push") as mock_send:
+        send_push_to_users_with_data(
+            session=session,
+            settings=MagicMock(),
+            title="t",
+            body="b",
+            extra_by_user={
+                "on-user": {"eventId": 1, "rsvpToken": "x"},
+                "off-user": {"eventId": 1, "rsvpToken": "y"},
+            },
+        )
+
+    # The master switch also applies to per-user-data (RSVP) pushes.
+    assert mock_send.call_count == 1
+    assert mock_send.call_args.args[2].user_id == "on-user"

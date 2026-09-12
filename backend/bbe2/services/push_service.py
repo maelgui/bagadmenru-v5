@@ -78,12 +78,14 @@ def send_push_to_users_with_data(
     ``extra_by_user`` maps a user id to a dict of additional fields merged into
     that user's push payload (e.g. an RSVP quick-answer ``token`` and
     ``eventId`` so the service worker can answer directly from a notification
-    action). Only users present in the mapping are notified.
+    action). Only users present in the mapping are notified, and users who
+    turned off their ``receives_push`` master switch are skipped.
     """
     subscriptions = session.scalars(
-        select(PushSubscriptionDB).where(
-            PushSubscriptionDB.user_id.in_(extra_by_user.keys())
-        )
+        select(PushSubscriptionDB)
+        .join(UserDB, UserDB.id == PushSubscriptionDB.user_id)
+        .where(PushSubscriptionDB.user_id.in_(extra_by_user.keys()))
+        .where(UserDB.receives_push.is_(True))
     ).all()
 
     for sub in subscriptions:
