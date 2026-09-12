@@ -3,6 +3,7 @@ import secrets
 from datetime import datetime, timezone
 from typing import Annotated, Iterable
 
+import sentry_sdk
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -488,6 +489,16 @@ async def register_passkey(
 ) -> str:
     challenge = request.session.get("reg_challenge")
     if not challenge:
+        # Diagnostic: which session keys survived tells whether the cookie was
+        # clobbered (stale keys), never set, or emptied entirely.
+        with sentry_sdk.new_scope() as scope:
+            scope.set_tag("feature", "webauthn-register")
+            scope.set_extra("session_keys", sorted(request.session.keys()))
+            scope.set_extra("has_session_cookie", "session" in request.cookies)
+            sentry_sdk.capture_message(
+                "webauthn/register: no registration challenge in session",
+                level="warning",
+            )
         raise HTTPException(
             status_code=400, detail="No registration challenge in session"
         )
@@ -503,7 +514,16 @@ async def register_passkey(
         )
     except (InvalidJSONStructure, InvalidRegistrationResponse) as exc:
         # Bad client data (malformed credential JSON or a failed WebAuthn
-        # verification) is a 400, not a 500.
+        # verification) is a 400, not a 500. py_webauthn's message pinpoints
+        # the exact check that failed (origin, RP ID, challenge mismatch...)
+        # but the client only ever sees the generic detail — capture it.
+        with sentry_sdk.new_scope() as scope:
+            scope.set_tag("feature", "webauthn-register")
+            scope.set_extra("expected_rp_id", settings.relying_party_id)
+            scope.set_extra(
+                "expected_origin", str(settings.frontend_base_url).rstrip("/")
+            )
+            sentry_sdk.capture_exception(exc)
         raise HTTPException(
             status_code=400, detail="Invalid registration response"
         ) from exc

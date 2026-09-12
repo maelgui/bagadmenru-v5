@@ -8,6 +8,7 @@ import {
 } from '@simplewebauthn/browser';
 import { useMutation } from '@tanstack/react-query';
 import type { AuthenticationApi } from 'bagad-client';
+import { ResponseError } from 'bagad-client';
 import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../config/client';
 import env from '../env';
@@ -132,12 +133,24 @@ export async function attemptSilentPasskeyUpgrade(
       type: 'success',
     });
   } catch (error) {
+    // Attach the response detail: the backend returns two distinct 400s
+    // ("No registration challenge in session" vs "Invalid registration
+    // response") and the bare exception does not say which one.
+    let responseDetail: string | undefined = undefined;
+    let responseStatus: number | undefined = undefined;
+    if (error instanceof ResponseError) {
+      responseStatus = error.response.status;
+      responseDetail = await error.response.clone().text().catch(() => undefined);
+    }
     console.error(
       'Silent passkey upgrade: the device created a credential but server registration failed (orphan passkey)',
       error,
+      responseStatus,
+      responseDetail,
     );
     Sentry.captureException(error, {
       tags: { feature: 'silent-passkey-upgrade' },
+      extra: { responseStatus, responseDetail },
     });
   }
 }
