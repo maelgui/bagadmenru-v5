@@ -30,6 +30,29 @@ const COPY_FEEDBACK_MS = 2000;
 const CALENDAR_PERMISSION = 'view:calendar';
 
 /**
+ * The three flavors of one personal calendar feed. Built from the minted ICS
+ * URL in one place so the dialog renders on a single "links ready" check
+ * instead of juggling three independently-nullable strings.
+ */
+export interface SyncLinks {
+  /** The raw ICS feed URL (shown in the copy field). */
+  ics: string;
+  /** Same feed behind the webcal:// scheme (Apple Calendar subscribe flow). */
+  webcal: string;
+  /** Google Agenda "add by URL" flow, pre-filled with the webcal link. */
+  google: string;
+}
+
+function buildLinks(ics: string): SyncLinks {
+  const webcal = ics.replace(/^https?:\/\//, 'webcal://');
+  // The cid value must be URL-encoded: the personal link carries an
+  // ?api_key= query string that would otherwise be swallowed by the render
+  // URL itself.
+  const google = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal)}`;
+  return { ics, webcal, google };
+}
+
+/**
  * State and actions behind the calendar sync dialog, shared by every page
  * that offers it (calendar page, event pages header button).
  *
@@ -45,7 +68,6 @@ export function useCalendarSync() {
   const {
     mutate: mintLink,
     data: minted,
-    isPending,
     isError,
     reset,
   } = useMutation({
@@ -54,8 +76,8 @@ export function useCalendarSync() {
     }),
   });
 
-  const icsUrl = minted
-    ? `${env.VITE_BBE2_API_URL}/api/v1/events/export/ics/me?api_key=${minted.key}`
+  const links = minted
+    ? buildLinks(`${env.VITE_BBE2_API_URL}/api/v1/events/export/ics/me?api_key=${minted.key}`)
     : null;
 
   const openSync = () => {
@@ -74,7 +96,7 @@ export function useCalendarSync() {
   return {
     openSync,
     dialogProps: {
-      open: isOpen, onOpenChange, icsUrl, isPending, isError,
+      open: isOpen, onOpenChange, links, isError,
     },
   };
 }
@@ -127,26 +149,49 @@ function IcsLinkField({ url }: { url: string }) {
 }
 
 /**
+ * Same footprint as ``IcsLinkField`` while the link is being minted, so the
+ * dialog does not jump when the real field replaces it.
+ */
+function IcsLinkLoading() {
+  return (
+    <InputGroup aria-busy="true">
+      <InputGroupInput
+        readOnly
+        disabled
+        value=""
+        placeholder="Préparation du lien…"
+        aria-label="Préparation du lien"
+        className="font-mono text-xs"
+      />
+      <InputGroupAddon align="inline-end">
+        <Spinner />
+      </InputGroupAddon>
+    </InputGroup>
+  );
+}
+
+/**
  * One-click "add to calendar" footer shortcuts: Google Agenda for everyone,
  * plus the native webcal:// subscribe flow on Apple devices (where it is the
- * primary action, demoting Google to an outline button).
+ * primary action, demoting Google to an outline button). Rendered disabled
+ * while the link is still being minted, so the footer keeps a stable layout.
  */
-function SubscribeActions({ apple, googleUrl, webcalUrl }: {
+function SubscribeActions({ apple, links }: {
   apple: boolean;
-  googleUrl: string;
-  webcalUrl: string;
+  links: SyncLinks | null;
 }) {
   return (
     <>
       <Button
         variant={apple ? 'outline' : 'default'}
-        render={<a href={googleUrl} target="_blank" rel="noopener noreferrer" />}
+        disabled={!links}
+        render={links ? <a href={links.google} target="_blank" rel="noopener noreferrer" /> : undefined}
       >
         <CalendarDays data-icon="inline-start" />
         Google Agenda
       </Button>
       {apple ? (
-        <Button render={<a href={webcalUrl} />}>
+        <Button disabled={!links} render={links ? <a href={links.webcal} /> : undefined}>
           <CalendarPlus data-icon="inline-start" />
           Ajouter à mon agenda
         </Button>
@@ -158,33 +203,24 @@ function SubscribeActions({ apple, googleUrl, webcalUrl }: {
 /**
  * Calendar sync dialog (presentational). The parent (via ``useCalendarSync``)
  * mints a dedicated "Calendrier" API key when the dialog opens and passes the
- * resulting personal ICS URL in. The link is always shown in a read-only
- * field with a copy button, next to a one-click Google Agenda shortcut;
- * Apple devices additionally get a one-tap "Ajouter à mon agenda" button
- * that opens the webcal:// subscribe flow. No API-key jargon is exposed
- * here -- key management lives in the settings.
+ * resulting ``links`` in (null while minting). The dialog has exactly three
+ * exclusive states -- error, loading (no links yet) and ready -- and keeps
+ * the same layout across loading and ready so nothing jumps when the link
+ * arrives. No API-key jargon is exposed here; key management lives in the
+ * settings.
  */
 export default function CalendarSyncDialog({
   open,
   onOpenChange,
-  icsUrl,
-  isPending,
+  links,
   isError,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  icsUrl: string | null;
-  isPending: boolean;
+  links: SyncLinks | null;
   isError: boolean;
 }) {
   const apple = isAppleDevice();
-  const webcalUrl = icsUrl ? icsUrl.replace(/^https?:\/\//, 'webcal://') : null;
-  // Google Agenda's "add by URL" flow, pre-filled with the personal feed. The
-  // cid value must be URL-encoded: the personal link carries an ?api_key=
-  // query string that would otherwise be swallowed by the render URL itself.
-  const googleUrl = webcalUrl
-    ? `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcalUrl)}`
-    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -197,35 +233,24 @@ export default function CalendarSyncDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="flex flex-col gap-4 py-2">
-          {isPending ? (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Spinner />
-              Préparation du lien…
-            </div>
-          ) : null}
-
           {isError ? (
             <p className="text-sm text-destructive">
               La préparation du lien a échoué. Réessayez dans un instant.
             </p>
-          ) : null}
-
-          {icsUrl ? (
+          ) : (
             <>
               <p className="text-sm">
                 {apple
                   ? 'Touchez « Ajouter à mon agenda », utilisez Google Agenda, ou copiez ce lien pour l\u2019ajouter manuellement.'
                   : 'Ajoutez le calendrier en un clic avec Google Agenda, ou copiez ce lien et ajoutez-le manuellement dans votre application de calendrier.'}
               </p>
-              <IcsLinkField url={icsUrl} />
+              {links ? <IcsLinkField url={links.ics} /> : <IcsLinkLoading />}
             </>
-          ) : null}
+          )}
         </DialogBody>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fermer</Button>
-          {googleUrl && webcalUrl ? (
-            <SubscribeActions apple={apple} googleUrl={googleUrl} webcalUrl={webcalUrl} />
-          ) : null}
+          {isError ? null : <SubscribeActions apple={apple} links={links} />}
         </DialogFooter>
       </DialogContent>
     </Dialog>

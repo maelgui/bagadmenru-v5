@@ -35,20 +35,27 @@ afterEach(() => {
 });
 
 describe('IcsExportButton', () => {
-  it('opens the calendar sync dialog and mints a personal link', async () => {
+  it('shows a stable loading state, then the minted link and shortcuts', async () => {
     renderButton();
     fireEvent.click(screen.getByRole('button', { name: /Synchroniser/ }));
 
     expect(screen.getByRole('heading', { name: 'Ajouter à mon agenda' })).toBeDefined();
 
+    // While the key is being minted: placeholder field and a disabled Google
+    // Agenda button (a real <button>, not yet a link) keep the layout stable.
+    expect(screen.getByPlaceholderText('Préparation du lien…')).toBeDefined();
+    const pendingGoogle = screen.getByRole('button', { name: /Google Agenda/ });
+    expect(pendingGoogle.hasAttribute('disabled') || pendingGoogle.getAttribute('aria-disabled') === 'true').toBe(true);
+
     // Once minted, the personal ICS link shows up in the read-only field...
     const field = await screen.findByRole<HTMLInputElement>('textbox', { name: 'Lien du calendrier' });
     expect(field.value).toContain('/api/v1/events/export/ics/me?api_key=secret-key-123');
+    expect(screen.queryByPlaceholderText('Préparation du lien…')).toBeNull();
     expect(createMyApiKey).toHaveBeenCalledWith({
       apiKeyCreate: { label: 'Calendrier', authorizedPermissions: ['view:calendar'] },
     });
 
-    // ...and the Google Agenda shortcut points at the encoded webcal feed.
+    // ...and the Google Agenda shortcut becomes a link to the encoded webcal feed.
     const google = screen.getByRole('link', { name: /Google Agenda/ });
     const href = google.getAttribute('href') ?? '';
     expect(href).toContain('https://calendar.google.com/calendar/render?cid=');
