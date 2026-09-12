@@ -8,7 +8,7 @@
     "*"
   ],
   "scripts": {
-    "generate-client": "openapi-generator-cli generate -i http://backend:8000/openapi.json -g typescript-fetch -o ./lib/ --additional-properties=supportsES6=true,npmName=bagad-client,nullSafeAdditionalProps=false && yarn fix-client-binary",
+    "generate-client": "openapi-generator-cli generate -i ${OPENAPI_SPEC:-http://backend:8000/openapi.json} -g typescript-fetch -o ./lib/ --additional-properties=supportsES6=true,npmName=bagad-client,nullSafeAdditionalProps=false && yarn fix-client-binary",
     "fix-client-binary": "node scripts/fix-client-binary.mjs",
     "build:lib": "yarn workspace bagad-client build",
     "build:app": "yarn workspace bagad-frontend build",

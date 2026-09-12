@@ -65,6 +65,13 @@ docker compose up
    yarn generate-client   # Reads http://backend:8000/openapi.json (docker-compose host); from the host, Vite proxies it at http://localhost:5173/openapi.json
    yarn build:lib
    ```
+   CI enforces this: the `client-up-to-date` job regenerates the client from the
+   backend schema and fails if `frontend/lib/` differs from what is committed.
+   Without the compose stack running, you can regenerate offline:
+   ```bash
+   (cd backend && ENVIRONMENT=ci SECRET_KEY=x poetry run python scripts/export_openapi.py > /tmp/openapi.json)
+   (cd frontend && OPENAPI_SPEC=/tmp/openapi.json yarn generate-client)
+   ```
 
 ### Adding a New API Endpoint
 
