@@ -15,7 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import PasswordField from '../../components/PasswordField';
 import { queryClient, useApiClient } from '../../config/client';
-import { attemptSilentPasskeyUpgrade } from '../../utils/usePasskey';
 import { cn } from '@/lib/utils';
 
 const HTTP_UNAUTHORIZED = 401;
@@ -86,11 +85,11 @@ function AuthPage() {
           password: data.password,
         },
       });
-      const accountId = await postLogin();
-      // Fire-and-forget silent passkey upgrade (WebAuthn conditional create):
-      // only after a *password* login — a passkey login proves the account
-      // already has one for this context. Never blocks navigation.
-      void attemptSilentPasskeyUpgrade(authApi, accountId);
+      // Silent passkey upgrade (WebAuthn conditional create) disabled: the
+      // passkey lands in the OS keychain but does not show up in the site's
+      // passkeys settings — disabled until that bug is understood and fixed.
+      // Re-enable with: void attemptSilentPasskeyUpgrade(authApi, await postLogin());
+      await postLogin();
     } catch (error) {
       if (error instanceof ResponseError) {
         if (error.response.status === HTTP_UNAUTHORIZED) {
