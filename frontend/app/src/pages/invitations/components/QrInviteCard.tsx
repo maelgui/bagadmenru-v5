@@ -23,8 +23,9 @@ export default function QrInviteCard({
       <h2 className="text-lg font-medium">Faites scanner ce QR code</h2>
       <p className="text-sm text-muted-foreground">
         Montrez-le au nouveau membre, ou partagez le lien pour l&apos;envoyer par
-        message. Chaque lien ne permet qu&apos;une seule inscription&nbsp;: un
-        nouveau QR code apparaît automatiquement dès qu&apos;il a été utilisé.
+        message. Chaque lien ne permet qu&apos;une seule inscription&nbsp;:
+        générez-en un nouveau pour chaque personne avec «&nbsp;Nouveau
+        lien&nbsp;».
       </p>
 
       <div className="flex min-h-[208px] items-center justify-center">
