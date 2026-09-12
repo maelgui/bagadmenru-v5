@@ -454,4 +454,39 @@ export class AuthenticationApi extends runtime.BaseAPI {
         return await response.value();
     }
 
+    /**
+     * Forward-auth gate for the Mailpit UI (beta).  Reachable through Traefik\'s ``forwardAuth`` middleware, which replays the caller\'s cookies here before serving the internal Mailpit service. A 204 means the browser holds a valid session whose role grants ``VIEW:EMAIL`` (staff/admin); the ``Authorization`` dependency raises 401/403 otherwise. The body is empty on purpose: only the status code matters to Traefik.
+     * Verify Email Access
+     */
+    async verifyEmailAccessApiV1AuthVerifyGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/auth/verify`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Forward-auth gate for the Mailpit UI (beta).  Reachable through Traefik\'s ``forwardAuth`` middleware, which replays the caller\'s cookies here before serving the internal Mailpit service. A 204 means the browser holds a valid session whose role grants ``VIEW:EMAIL`` (staff/admin); the ``Authorization`` dependency raises 401/403 otherwise. The body is empty on purpose: only the status code matters to Traefik.
+     * Verify Email Access
+     */
+    async verifyEmailAccessApiV1AuthVerifyGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.verifyEmailAccessApiV1AuthVerifyGetRaw(initOverrides);
+    }
+
 }

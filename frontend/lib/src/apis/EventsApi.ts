@@ -300,7 +300,7 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Authenticated ICS feed for the current member.  Reached either from a browser session (cookie/JWT) or from an API key whose ``authorized_permissions`` include ``view:calendar`` -- the key is read from the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar app can subscribe by URL. Authentication is handled upstream in ``credentials``; this endpoint requires the fine-grained ``view:calendar`` permission (distinct from ``view:event``) so a calendar key is scoped to the feed alone and cannot list events. Content mirrors the public feed today; authenticating it per member is the groundwork for future personalisation.
+     * Authenticated ICS feed for the current member.  Reached either from a browser session (cookie/JWT) or from an API key whose ``authorized_permissions`` include ``view:calendar`` -- the key is read from the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar app can subscribe by URL. Authentication is handled upstream in ``credentials``; this endpoint requires the fine-grained ``view:calendar`` permission (distinct from ``view:event``) so a calendar key is scoped to the feed alone and cannot list events.  Each event title is prefixed with the member\'s participation status (present/absent/unanswered) so their responses are visible directly in the subscribed calendar; the public feed stays neutral.
      * Export Ics Me
      */
     async exportIcsMeApiV1EventsExportIcsMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -331,7 +331,7 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Authenticated ICS feed for the current member.  Reached either from a browser session (cookie/JWT) or from an API key whose ``authorized_permissions`` include ``view:calendar`` -- the key is read from the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar app can subscribe by URL. Authentication is handled upstream in ``credentials``; this endpoint requires the fine-grained ``view:calendar`` permission (distinct from ``view:event``) so a calendar key is scoped to the feed alone and cannot list events. Content mirrors the public feed today; authenticating it per member is the groundwork for future personalisation.
+     * Authenticated ICS feed for the current member.  Reached either from a browser session (cookie/JWT) or from an API key whose ``authorized_permissions`` include ``view:calendar`` -- the key is read from the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar app can subscribe by URL. Authentication is handled upstream in ``credentials``; this endpoint requires the fine-grained ``view:calendar`` permission (distinct from ``view:event``) so a calendar key is scoped to the feed alone and cannot list events.  Each event title is prefixed with the member\'s participation status (present/absent/unanswered) so their responses are visible directly in the subscribed calendar; the public feed stays neutral.
      * Export Ics Me
      */
     async exportIcsMeApiV1EventsExportIcsMeGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
