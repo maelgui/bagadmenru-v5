@@ -23,6 +23,14 @@ class MyProfileUpdate(_ProfileBase):
 
 
 class ProfileCreate(_ProfileBase):
+    # Defaults mirror the DB column defaults (UserDB) so a creation payload
+    # that omits the notification switches still succeeds instead of 422-ing.
+    # They live here (not on _ProfileBase) on purpose: update payloads must
+    # keep the fields required, so a partial PUT can never silently flip an
+    # existing member's preference back to True.
+    receives_emails: bool = True
+    receives_push: bool = True
+
     instrument_id: int
     group_ids: list[int]
     email: str

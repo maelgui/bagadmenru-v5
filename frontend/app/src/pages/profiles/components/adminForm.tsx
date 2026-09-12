@@ -58,7 +58,10 @@ export default function AdminEditProfileForm(
       // just carry the member's existing preference through unchanged.
       receivesPush: profile.receivesPush,
     } : {
-      // New members default to receiving push (matches the DB default).
+      // New members default to receiving emails and push (matches the DB
+      // defaults). Without an explicit default the switch renders off and the
+      // field is dropped from the JSON payload, failing the POST with a 422.
+      receivesEmails: true,
       receivesPush: true,
     },
   });
@@ -91,6 +94,10 @@ export default function AdminEditProfileForm(
           <Controller
             name="instrumentId"
             control={control}
+            // The backend requires instrument_id; without this rule an empty
+            // instrument is silently dropped from the payload and the POST
+            // fails with an opaque 422 instead of an inline error.
+            rules={{ required: 'Ce champ est obligatoire.' }}
             render={({ field }) => (
               <Combobox
                 items={instruments ?? []}
