@@ -111,8 +111,7 @@ export default function CalendarPage() {
       <CalendarSyncDialog
         open={dialogProps.open}
         onOpenChange={dialogProps.onOpenChange}
-        icsUrl={dialogProps.icsUrl}
-        isPending={dialogProps.isPending}
+        links={dialogProps.links}
         isError={dialogProps.isError}
       />
     </>

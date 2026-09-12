@@ -20,8 +20,7 @@ export default function IcsExportButton() {
       <CalendarSyncDialog
         open={dialogProps.open}
         onOpenChange={dialogProps.onOpenChange}
-        icsUrl={dialogProps.icsUrl}
-        isPending={dialogProps.isPending}
+        links={dialogProps.links}
         isError={dialogProps.isError}
       />
     </>
