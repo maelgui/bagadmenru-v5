@@ -1,5 +1,4 @@
 import { Check, HelpCircle, X } from 'lucide-react';
-import { Checkbox as CheckboxControl } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
 export default function Checkbox({
@@ -26,14 +25,23 @@ export default function Checkbox({
     <td className={cn(stateClass, 'h-8 border-4 border-background')}>
       <div className="flex items-center justify-center">
         {disabled ? icon : (
-          <CheckboxControl
+          // Tri-state control: empty before the first answer, then tick/cross.
+          // A dedicated button (not the shared Checkbox) because the shared
+          // component is binary and hardcodes its check indicator.
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={value === true}
             aria-label="Modifier la réponse"
-            checked={value === true}
-            className="size-6 border-2 border-border bg-background data-checked:border-primary data-checked:bg-background data-checked:text-foreground [&>svg]:size-4"
+            className={cn(
+              'flex size-6 items-center justify-center rounded-[5px] border-2 bg-background outline-none focus-visible:ring-3 focus-visible:ring-ring/30 [&>svg]:size-4',
+              value === true ? 'border-primary' : 'border-border',
+            )}
             onClick={onClick}
           >
+            {value === true ? <Check className="text-emerald-800" aria-hidden="true" /> : null}
             {value === false ? <X className="text-red-900" aria-hidden="true" /> : null}
-          </CheckboxControl>
+          </button>
         )}
       </div>
     </td>

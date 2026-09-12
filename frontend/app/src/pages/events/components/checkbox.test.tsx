@@ -3,16 +3,9 @@ import {
   cleanup, fireEvent, render, screen,
 } from '@testing-library/react';
 import {
-  afterEach, beforeAll, describe, expect, it, vi,
+  afterEach, describe, expect, it, vi,
 } from 'vitest';
 import Checkbox from './checkbox';
-
-beforeAll(() => {
-  // jsdom has no PointerEvent constructor; Base UI dispatches one on click.
-  if (typeof window.PointerEvent === 'undefined') {
-    Object.defineProperty(window, 'PointerEvent', { value: MouseEvent, writable: true });
-  }
-});
 
 function renderCell(value: boolean | undefined, onClick = vi.fn()) {
   render(
@@ -51,6 +44,7 @@ describe('Doodle Checkbox (edit mode)', () => {
   it('renders a tick once the user answered "yes"', () => {
     renderCell(true);
     const checkbox = screen.getByRole('checkbox', { name: 'Modifier la réponse' });
+    expect(checkbox.querySelector('svg')).not.toBeNull();
     expect(checkbox.getAttribute('aria-checked')).toBe('true');
   });
 
