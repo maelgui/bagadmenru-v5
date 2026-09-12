@@ -22,7 +22,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { useApiClient } from '../../../config/client';
 import BaseProfileFormFields from './baseForm';
 
-interface ProfileFormData extends ProfileUpdate, ProfileCreate { }
+// Intersection rather than `interface extends`: receivesEmails/receivesPush
+// are optional on ProfileCreate (backend defaults) but required on
+// ProfileUpdate, and an interface cannot extend both shapes. The intersection
+// narrows them back to required `boolean` — the form always provides them.
+type ProfileFormData = ProfileUpdate & ProfileCreate;
 
 interface AdminProfileForm {
   profile?: Profile
