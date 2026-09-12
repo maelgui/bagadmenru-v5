@@ -380,6 +380,86 @@ def test_register_finds_the_challenge_after_an_interleaved_request(
     assert response.json()["detail"] == "Invalid registration response"
 
 
+def test_register_accepts_a_conditional_create_attestation_without_up(
+    client: TestClient,
+):
+    """A conditional create (silent passkey upgrade) happens WITHOUT any user
+    gesture, so its attestation carries UP=0. Register must accept it — the
+    caller is already authenticated. Requiring user presence made every
+    silent upgrade fail with a 400 after the OS had already created the
+    passkey, leaving an orphan credential in the user's keychain."""
+    import hashlib
+    import json as jsonlib
+    import struct
+
+    import cbor2
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from webauthn.helpers import bytes_to_base64url
+
+    from bbe2.dependencies import get_settings
+    from bbe2.main import app
+
+    https_client = _https_client(client)
+    options = https_client.get("/api/v1/webauthn/preregister").json()
+    settings = app.dependency_overrides[get_settings]()
+
+    # Forge the exact shape a browser produces for a fmt="none" attestation,
+    # with the UP flag deliberately cleared (AT only), as in a conditional
+    # create ceremony.
+    client_data = jsonlib.dumps(
+        {
+            "type": "webauthn.create",
+            "challenge": options["challenge"],
+            "origin": str(settings.frontend_base_url).rstrip("/"),
+        }
+    ).encode()
+    public_numbers = (
+        ec.generate_private_key(ec.SECP256R1()).public_key().public_numbers()
+    )
+    cose_key = cbor2.dumps(
+        {
+            1: 2,  # kty: EC2
+            3: -7,  # alg: ES256
+            -1: 1,  # crv: P-256
+            -2: public_numbers.x.to_bytes(32, "big"),
+            -3: public_numbers.y.to_bytes(32, "big"),
+        }
+    )
+    credential_id = b"\x01" * 16
+    flags = 0b0100_0000  # AT set — UP (0x01) deliberately NOT set
+    auth_data = (
+        hashlib.sha256(settings.relying_party_id.encode()).digest()
+        + bytes([flags])
+        + struct.pack(">I", 0)  # sign count
+        + b"\x00" * 16  # AAGUID
+        + struct.pack(">H", len(credential_id))
+        + credential_id
+        + cose_key
+    )
+    attestation_object = cbor2.dumps(
+        {"fmt": "none", "attStmt": {}, "authData": auth_data}
+    )
+
+    response = https_client.post(
+        "/api/v1/webauthn/register",
+        json={
+            "id": bytes_to_base64url(credential_id),
+            "rawId": bytes_to_base64url(credential_id),
+            "response": {
+                "clientDataJSON": bytes_to_base64url(client_data),
+                "attestationObject": bytes_to_base64url(attestation_object),
+                "transports": ["internal"],
+            },
+            "type": "public-key",
+            "clientExtensionResults": {},
+        },
+    )
+    assert response.status_code == 200, response.text
+
+    passkeys = https_client.get("/api/v1/webauthn").json()
+    assert len(passkeys) == 1
+
+
 def test_register_without_pending_challenge_is_rejected(client: TestClient):
     https_client = _https_client(client)
     response = https_client.post("/api/v1/webauthn/register", json=_BOGUS_CREDENTIAL)
