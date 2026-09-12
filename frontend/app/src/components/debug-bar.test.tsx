@@ -24,7 +24,10 @@ vi.mock('../config/client', () => ({
         },
       ]),
     },
-    usersApi: { getMyPermissionsApiV1ProfilesMePermissionsGet: async () => await Promise.resolve(['read:events']) },
+    usersApi: {
+    getMyPermissionsApiV1ProfilesMePermissionsGet: async () => await Promise.resolve(['read:events']),
+    getMyRolesApiV1ProfilesMeRolesGet: async () => await Promise.resolve(['member']),
+  },
   }),
 }));
 
@@ -76,7 +79,8 @@ describe('DebugBar panel', () => {
     expect(await screen.findByText(/Jean\s+Test/)).toBeTruthy();
     expect(screen.getByText(/Anna\s+Autre/)).toBeTruthy();
     expect(screen.getByText('active')).toBeTruthy();
-    // Permissions fetched because an active session exists.
+    // Roles and permissions fetched because an active session exists.
+    expect(await screen.findByText('member')).toBeTruthy();
     expect(await screen.findByText('read:events')).toBeTruthy();
   });
 

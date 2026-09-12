@@ -83,12 +83,18 @@ function SessionsSection({ sessions }: { sessions: SessionInfo[] | undefined }) 
 }
 
 /**
- * Current account's permissions. Rendered only when an active session exists:
- * the endpoint requires auth, and fetching it as a guest would surface the
- * app-wide 401 error toast.
+ * Current account's roles and permissions. Rendered only when an active
+ * session exists: both endpoints require auth, and fetching them as a guest
+ * would surface the app-wide 401 error toast.
  */
 function PermissionsSection() {
   const { usersApi } = useApiClient();
+
+  const { data: roles } = useQuery({
+    queryKey: ['profiles', 'me', 'roles'],
+    queryFn: async () => await usersApi.getMyRolesApiV1ProfilesMeRolesGet(),
+    retry: false,
+  });
 
   const { data: permissions } = useQuery({
     queryKey: ['profiles', 'me', 'permissions'],
@@ -99,6 +105,20 @@ function PermissionsSection() {
   return (
     <div>
       <p className="mb-1 font-semibold">
+        Rôles (
+        {roles?.length ?? 0}
+        )
+      </p>
+      {roles !== undefined && roles.length > 0
+        ? (
+          <div className="flex flex-wrap gap-1" data-testid="debug-bar-roles">
+            {roles.filter((role) => role !== null).map((role) => (
+              <Badge key={role} variant="outline" className="font-mono">{role}</Badge>
+            ))}
+          </div>
+        )
+        : <p className="text-muted-foreground">Aucun rôle</p>}
+      <p className="mt-2 mb-1 font-semibold">
         Permissions (
         {permissions?.length ?? 0}
         )

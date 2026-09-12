@@ -20,6 +20,7 @@ function SeedApiCache({ children }: PropsWithChildren) {
   // useState initializer: runs exactly once per mount, before children render.
   useState(() => {
     queryClient.setQueryData(['version'], { version: '1.2.3-storybook' });
+    queryClient.setQueryData(['profiles', 'me', 'roles'], ['member', 'admin']);
     queryClient.setQueryData(['auth', 'sessions'], [
       {
         id: 'abcdef1234567890', firstName: 'Jean', lastName: 'Test', active: true,
