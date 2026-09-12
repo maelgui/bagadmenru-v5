@@ -378,10 +378,15 @@ async def create_profile(
     if membership_service.link_orphan_memberships_for_user(session, profile_db):
         session.commit()
 
+    # Welcome links are an onboarding path, not a security-sensitive reset
+    # requested seconds ago: reuse the invitation validity window (3 days)
+    # instead of the 1-hour reset default, so a member who opens the welcome
+    # email the next day does not land on a dead link.
     reset_token = create_action_token(
         session,
         ActionTokenValue.ResetPassword,
         {"user_id": profile_db.id},
+        expires_in=ActionTokenValue.Invitation.max_age,
     )
     unsubscribe_token = create_action_token(
         session,

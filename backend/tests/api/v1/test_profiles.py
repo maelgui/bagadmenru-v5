@@ -232,3 +232,53 @@ def test_create_profile_links_orphan_membership_by_adherent_email(
         assert all(r["helloasso_item_id"] != 7771 for r in unlinked)
     finally:
         app.dependency_overrides.pop(EmailSender, None)
+
+
+def test_create_profile_welcome_token_uses_invitation_validity(client: TestClient):
+    """The welcome email's reset link reuses the invitation validity window.
+
+    The 1-hour ResetPassword default fits a just-requested reset, not an
+    onboarding email: a new member opening their welcome email the next day
+    must not land on a dead link.
+    """
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from bbe2.database import get_engine
+    from bbe2.main import app
+    from bbe2.models.action_token import ActionTokenDB, ActionTokenValue
+    from bbe2.utils.templates import EmailSender
+
+    class _NoopSender:
+        async def batch_send_emails(self, subject, template_name, template_data):
+            return None
+
+    app.dependency_overrides[EmailSender] = lambda: _NoopSender()
+    try:
+        resp = client.post(
+            "/api/v1/profiles/",
+            json={
+                "first_name": "Welcome",
+                "last_name": "Token",
+                "email": "welcome.token@example.com",
+                "instrument_id": 1,
+                "group_ids": [],
+                "receives_emails": True,
+                "receives_push": True,
+            },
+        )
+        assert resp.status_code == 200, resp.text
+        user_id = resp.json()["id"]
+
+        engine = get_engine("sqlite:///tests.sqlite?check_same_thread=false")
+        with Session(engine) as session:
+            rows = session.scalars(
+                select(ActionTokenDB).where(
+                    ActionTokenDB.token_type == ActionTokenValue.ResetPassword.value
+                )
+            ).all()
+            row = next(r for r in rows if r.payload.get("user_id") == user_id)
+            validity = (row.expires_at - row.created_at).total_seconds()
+            assert validity == ActionTokenValue.Invitation.max_age
+    finally:
+        app.dependency_overrides.pop(EmailSender, None)

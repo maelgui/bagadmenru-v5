@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
 import { useApiClient } from '../../../config/client';
-import { extractErrorMessage } from '../errors';
+import { extractErrorMessage } from '../../../utils/errors';
 
 interface EmailFormValues {
   email: string;
