@@ -167,6 +167,40 @@ def test_list_profiles_membership_status_shown_with_permission(client: TestClien
     assert response.json()[0]["membership_active_season"] == expected_season
 
 
+def test_create_profile_defaults_notification_switches_to_true(client: TestClient):
+    """A creation payload omitting the notification switches still succeeds.
+
+    The switches default to True (mirroring the DB column defaults) so a
+    client that drops undefined values from its JSON payload does not 422.
+    Update payloads keep the fields required -- a partial PUT must never
+    silently flip an existing member's preference.
+    """
+    from bbe2.main import app
+    from bbe2.utils.templates import EmailSender
+
+    class _NoopSender:
+        async def batch_send_emails(self, subject, template_name, template_data):
+            return None
+
+    app.dependency_overrides[EmailSender] = lambda: _NoopSender()
+    try:
+        resp = client.post(
+            "/api/v1/profiles/",
+            json={
+                "first_name": "Default",
+                "last_name": "Switches",
+                "email": "default.switches@example.com",
+                "instrument_id": 1,
+                "group_ids": [],
+            },
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["receives_emails"] is True
+        assert resp.json()["receives_push"] is True
+    finally:
+        app.dependency_overrides.pop(EmailSender, None)
+
+
 def test_create_profile_links_orphan_membership_by_adherent_email(
     client: TestClient,
 ):
