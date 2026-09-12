@@ -5,11 +5,27 @@ import {
   afterEach, describe, expect, it, vi,
 } from 'vitest';
 import { ResponseError } from 'bagad-client';
+import { snoozePasskeyPrompts } from '../../utils/passkeySnooze';
 
 const resetPassword = vi.fn();
+const getMyProfile = vi.fn();
+let webauthnSupported = true;
 
 vi.mock('../../config/client', () => ({
-  useApiClient: () => ({ authApi: { resetPasswordApiV1AuthResetPost: resetPassword } }),
+  useApiClient: () => ({
+    authApi: { resetPasswordApiV1AuthResetPost: resetPassword },
+    usersApi: { getMyProfileApiV1ProfilesMeGet: getMyProfile },
+  }),
+  queryClient: { clear: vi.fn(), setQueryData: vi.fn() },
+}));
+
+vi.mock('@simplewebauthn/browser', () => ({
+  browserSupportsWebAuthn: () => webauthnSupported,
+}));
+
+// PasskeyEnrollment (rendered on the enroll step) pulls the registration hook.
+vi.mock('../../utils/usePasskey', () => ({
+  useRegisterPasskey: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }));
 
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
@@ -20,6 +36,7 @@ function renderPage() {
     <MemoryRouter initialEntries={['/auth/reset/tok123']}>
       <Routes>
         <Route path="/auth/reset/:token" element={<ChangePasswordPage />} />
+        <Route path="/" element={<div>home</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -33,15 +50,47 @@ function fillAndSubmit(password = 'nouveau-mdp', confirm = password) {
 
 afterEach(() => {
   cleanup();
+  window.localStorage.clear();
+  webauthnSupported = true;
   vi.clearAllMocks();
 });
 
 describe('ChangePasswordPage', () => {
-  it('shows the success screen when the reset succeeds', async () => {
-    resetPassword.mockResolvedValue(undefined);
+  it('offers passkey enrolment after a successful reset (auto-login)', async () => {
+    resetPassword.mockResolvedValue('OK');
+    getMyProfile.mockResolvedValue({ id: 'u1' });
+    renderPage();
+    fillAndSubmit();
+    expect(await screen.findByText('Sécurisez votre compte')).toBeTruthy();
+  });
+
+  it('skips the passkey offer when snoozed and shows the signed-in success screen', async () => {
+    resetPassword.mockResolvedValue('OK');
+    getMyProfile.mockResolvedValue({ id: 'u1' });
+    snoozePasskeyPrompts('u1');
     renderPage();
     fillAndSubmit();
     expect(await screen.findByText(/Mot de passe changé avec succès/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Accéder à mon espace/ })).toBeTruthy();
+  });
+
+  it('skips the passkey offer without WebAuthn support', async () => {
+    webauthnSupported = false;
+    resetPassword.mockResolvedValue('OK');
+    getMyProfile.mockResolvedValue({ id: 'u1' });
+    renderPage();
+    fillAndSubmit();
+    expect(await screen.findByText(/Mot de passe changé avec succès/)).toBeTruthy();
+  });
+
+  it('« Plus tard » snoozes the account and leaves for home', async () => {
+    resetPassword.mockResolvedValue('OK');
+    getMyProfile.mockResolvedValue({ id: 'u1' });
+    renderPage();
+    fillAndSubmit();
+    fireEvent.click(await screen.findByRole('button', { name: 'Plus tard' }));
+    expect(window.localStorage.getItem('bmr:passkey-snooze:u1')).toBeTruthy();
+    expect(await screen.findByText('home')).toBeTruthy();
   });
 
   it('surfaces a rejected token instead of failing silently', async () => {
