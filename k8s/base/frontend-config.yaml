@@ -8,3 +8,6 @@ data:
   # deploy does not silently report beta/preview errors as production noise.
   # Overridden per environment (see overlays).
   VITE_ENVIRONMENT: "production"
+  # Feature flags (see frontend/app/src/utils/features.ts). Default OFF;
+  # overlays flip them per environment. Only the literal "true" enables.
+  VITE_FEATURE_SILENT_PASSKEY_UPGRADE: "false"

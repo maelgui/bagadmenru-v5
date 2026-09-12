@@ -11,7 +11,7 @@ import type { AuthenticationApi } from 'bagad-client';
 import { ResponseError } from 'bagad-client';
 import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../config/client';
-import env from '../env';
+import features from './features';
 import { isPasskeySnoozed } from './passkeySnooze';
 
 /**
@@ -85,9 +85,10 @@ export interface RegisterPasskeyResult {
  * FIDO guidance says explicit prompts during sign-in perform poorly; this
  * transparent path is the recommended alternative.
  *
- * Rollout is gated to beta (and local dev) via the runtime-injected
- * VITE_ENVIRONMENT, failing closed when it is absent — same pattern as the
- * debug bar. Production keeps the explicit enrolment surfaces only.
+ * Rollout is gated on the silentPasskeyUpgrade feature flag (runtime
+ * ConfigMap / VITE_FEATURE_SILENT_PASSKEY_UPGRADE), failing closed when
+ * absent. Enabled on beta; production keeps the explicit enrolment surfaces
+ * only until the flag is flipped there.
  *
  * Respects the per-account snooze (an explicit « Plus tard » elsewhere also
  * silences this path). On success a small "handshake" toast tells the member
@@ -98,8 +99,7 @@ export async function attemptSilentPasskeyUpgrade(
   authApi: AuthenticationApi,
   accountId: string,
 ): Promise<void> {
-  const environment = env.VITE_ENVIRONMENT ?? (import.meta.env.DEV ? 'development' : 'production');
-  if (environment !== 'beta' && environment !== 'development') return;
+  if (!features.silentPasskeyUpgrade) return;
   if (!browserSupportsWebAuthn() || isPasskeySnoozed(accountId)) return;
 
   const createCredential = async (): Promise<RegistrationResponseJSON | null> => {

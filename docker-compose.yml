@@ -102,6 +102,10 @@ services:
     environment:
       # The app calls /api on its own origin; vite proxies it to the backend.
       - VITE_BBE2_API_URL=http://localhost:${FRONTEND_PORT:-5173}
+      # Feature flags (utils/features.ts). Enabled in local dev so the silent
+      # passkey upgrade is testable; deployed envs get them from the frontend
+      # ConfigMap (k8s/base/frontend-config.yaml + overlays).
+      - VITE_FEATURE_SILENT_PASSKEY_UPGRADE=true
       # Vite listens on this port inside the container (published via
       # FRONTEND_PORT). Proxy targets are fixed to the compose service names in
       # vite.config.ts.
