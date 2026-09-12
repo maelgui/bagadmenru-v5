@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import PasswordField from '../../components/PasswordField';
 import { queryClient, useApiClient } from '../../config/client';
+import { attemptSilentPasskeyUpgrade } from '../../utils/usePasskey';
 import { cn } from '@/lib/utils';
 
 const HTTP_UNAUTHORIZED = 401;
@@ -39,6 +40,7 @@ function AuthPage() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- location.state is set by AuthGuard
     const from = (location.state as { from?: string } | null)?.from;
     void navigate(from ?? '/', { replace: true });
+    return res.id;
   }, [navigate, usersApi, location.state]);
 
   const startPasskeyLogin = useCallback(async (conditional: boolean) => {
@@ -84,7 +86,11 @@ function AuthPage() {
           password: data.password,
         },
       });
-      await postLogin();
+      const accountId = await postLogin();
+      // Fire-and-forget silent passkey upgrade (WebAuthn conditional create):
+      // only after a *password* login — a passkey login proves the account
+      // already has one for this context. Never blocks navigation.
+      void attemptSilentPasskeyUpgrade(authApi, accountId);
     } catch (error) {
       if (error instanceof ResponseError) {
         if (error.response.status === HTTP_UNAUTHORIZED) {
