@@ -35,6 +35,55 @@ jobs:
       - run: yarn build
       - run: yarn lint
 
+  client-up-to-date:
+    runs-on: ubuntu-latest
+    name: Generated API client is up to date
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: poetry
+      - name: Install backend dependencies
+        working-directory: backend
+        run: poetry install
+      - name: Export OpenAPI schema
+        working-directory: backend
+        env:
+          ENVIRONMENT: ci
+          SECRET_KEY: my-secret-key-in-ci
+        run: poetry run python scripts/export_openapi.py > "$RUNNER_TEMP/openapi.json"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn
+      - name: Regenerate client from the exported schema
+        working-directory: frontend
+        env:
+          OPENAPI_SPEC: ${{ runner.temp }}/openapi.json
+        run: |
+          # Clean first so endpoints removed from the backend show up as
+          # deleted files in the diff (the generator never deletes stale files).
+          rm -rf lib/src
+          yarn generate-client
+      - name: Fail if the committed client differs
+        run: |
+          # -N registers untracked generated files (new endpoints/models) so
+          # they show up in git diff alongside modifications and deletions.
+          git add -N frontend/lib
+          if ! git diff --quiet -- frontend/lib; then
+            echo "::error::frontend/lib is out of sync with the backend OpenAPI schema. Regenerate it with 'yarn generate-client' (see CONTRIBUTING.md) and commit the result."
+            git diff --stat -- frontend/lib
+            exit 1
+          fi
+          echo "Generated client is up to date."
+
   test-backend:
     env:
       ENVIRONMENT: ci
@@ -107,6 +156,7 @@ jobs:
       - test-backend
       - test-migrations
       - lint-frontend
+      - client-up-to-date
     runs-on: ubuntu-latest
     strategy:
       matrix:
