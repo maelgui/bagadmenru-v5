@@ -18,7 +18,44 @@ permissions:
   packages: write
 
 jobs:
+  # Detect which components a PR touches so unrelated jobs can be skipped
+  # (Actions minutes are billed per job-minute, so skipping whole jobs is the
+  # main quota lever). Only runs on pull_request: on push to main every job
+  # runs unconditionally — the deploy chain must never depend on a diff.
+  #
+  # Dependency chain to keep in mind: backend → generated lib client →
+  # frontend. A backend change can alter the OpenAPI schema, so
+  # client-up-to-date must run on backend changes; if the schema did change,
+  # that gate fails and forces a lib regeneration commit, which is a
+  # frontend/** change and triggers lint-frontend on the next push. That is
+  # why lint-frontend itself can safely skip backend-only changes: it builds
+  # against the *committed* client.
+  changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/release.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/release.yml'
+
   lint-frontend:
+    needs: changes
+    # !cancelled(): run even though `changes` is skipped on push events.
+    if: >-
+      !cancelled() &&
+      (github.event_name == 'push' || needs.changes.outputs.frontend == 'true')
     defaults:
       run:
         working-directory: frontend
@@ -36,6 +73,14 @@ jobs:
       - run: yarn lint
 
   client-up-to-date:
+    needs: changes
+    # Runs on backend OR frontend changes: the backend defines the schema,
+    # and a frontend change may touch the committed lib/ by hand.
+    if: >-
+      !cancelled() &&
+      (github.event_name == 'push' ||
+       needs.changes.outputs.backend == 'true' ||
+       needs.changes.outputs.frontend == 'true')
     runs-on: ubuntu-latest
     name: Generated API client is up to date
     steps:
@@ -84,43 +129,20 @@ jobs:
           fi
           echo "Generated client is up to date."
 
+  # Unit tests + migration tests share one job: poetry/pipx setup was
+  # duplicated across two jobs (~2-3 billed minutes per PR push). The
+  # postgres service is only used by the migrations step — DATABASE_URL is
+  # scoped to that step so the unit tests keep running exactly as before.
   test-backend:
+    needs: changes
+    if: >-
+      !cancelled() &&
+      (github.event_name == 'push' || needs.changes.outputs.backend == 'true')
     env:
       ENVIRONMENT: ci
       SECRET_KEY: my-secret-key-in-ci
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./backend
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install poetry
-        run: pipx install poetry
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-          cache: poetry
-      - name: Install dependencies
-        run: poetry install
-      - name: Run pylint
-        run: poetry run pylint bbe2 --fail-under 8 --fail-on F,E,W --output-format=github --disable=C,R
-      - name: Run black
-        run: poetry run black --check bbe2
-      - name: Run isort
-        run: poetry run isort --check bbe2
-      - name: Run mypy
-        run: poetry run mypy bbe2
-      - name: Run tests
-        run: poetry run pytest -m "not migrations"
-
-  test-migrations:
-    env:
-      ENVIRONMENT: ci
-      SECRET_KEY: my-secret-key-in-ci
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
-    runs-on: ubuntu-latest
-    name: Test migrations (PostgreSQL)
+    name: Test backend & migrations
     defaults:
       run:
         shell: bash
@@ -147,14 +169,25 @@ jobs:
           cache: poetry
       - name: Install dependencies
         run: poetry install
+      - name: Run pylint
+        run: poetry run pylint bbe2 --fail-under 8 --fail-on F,E,W --output-format=github --disable=C,R
+      - name: Run black
+        run: poetry run black --check bbe2
+      - name: Run isort
+        run: poetry run isort --check bbe2
+      - name: Run mypy
+        run: poetry run mypy bbe2
+      - name: Run tests
+        run: poetry run pytest -m "not migrations"
       - name: Run migration tests
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
         run: poetry run pytest -m migrations --no-cov
 
   build-push:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs:
       - test-backend
-      - test-migrations
       - lint-frontend
       - client-up-to-date
     runs-on: ubuntu-latest
@@ -297,11 +330,35 @@ jobs:
           kubectl port-forward svc/mailpit 8025:8025 -n bagadmenru-beta &
           sleep 3
 
-      - name: Install Playwright
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      # The chromium download (~150MB) is the slow part of `playwright
+      # install`; cache it keyed on the lockfile (which pins the playwright
+      # version). On a hit only the apt system deps need installing.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Install dependencies
         working-directory: e2e
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
+        run: npm ci
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system deps (cached browsers)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: e2e
+        run: npx playwright install-deps chromium
 
       - name: Run E2E tests against beta
         working-directory: e2e
@@ -373,11 +430,32 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Playwright
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Install dependencies
         working-directory: e2e
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
+        run: npm ci
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system deps (cached browsers)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: e2e
+        run: npx playwright install-deps chromium
 
       - name: Smoke test
         working-directory: e2e
