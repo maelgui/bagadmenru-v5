@@ -33,7 +33,6 @@ export default function Checkbox({
             onClick={onClick}
           >
             {value === false ? <X className="text-red-900" aria-hidden="true" /> : null}
-            {value === undefined ? <HelpCircle className="text-sky-800" aria-hidden="true" /> : null}
           </CheckboxControl>
         )}
       </div>
