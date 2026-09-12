@@ -60,13 +60,13 @@ test.describe('Invitation signup', () => {
       // Regression assertion: we must reach passkey enrolment, NOT the invalid
       // invitation screen (which the consumed-token refetch used to trigger).
       await expect(
-        page.getByRole('button', { name: 'Créer une passkey' }),
+        page.getByRole('button', { name: 'Créer une clé d\'accès' }),
       ).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText(/invitation invalide|expirée/i)).toHaveCount(0);
 
       // Complete passkey enrolment and land on the "done" screen.
       await authenticator.withSuccessfulCeremony(async () => {
-        await page.getByRole('button', { name: 'Créer une passkey' }).click();
+        await page.getByRole('button', { name: 'Créer une clé d\'accès' }).click();
       });
       await expect(page.getByText('Bienvenue !')).toBeVisible({ timeout: 10_000 });
     } finally {
@@ -115,12 +115,12 @@ test.describe('Invitation signup', () => {
       // must proceed to passkey enrolment rather than flipping to the invalid
       // invitation screen.
       await expect(
-        page.getByRole('button', { name: 'Créer une passkey' }),
+        page.getByRole('button', { name: 'Créer une clé d\'accès' }),
       ).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText(/invitation invalide|expirée/i)).toHaveCount(0);
 
       await authenticator.withSuccessfulCeremony(async () => {
-        await page.getByRole('button', { name: 'Créer une passkey' }).click();
+        await page.getByRole('button', { name: 'Créer une clé d\'accès' }).click();
       });
       await expect(page.getByText('Bienvenue !')).toBeVisible({ timeout: 10_000 });
     } finally {

@@ -42,7 +42,7 @@ export default function PasswordSection() {
         <CardHeader>
           <CardTitle>Mot de passe</CardTitle>
           <CardDescription>
-            Définissez un nouveau mot de passe pour vous connecter sans passkey.
+            Définissez un nouveau mot de passe pour vous connecter sans clé d&apos;accès.
           </CardDescription>
         </CardHeader>
         <CardContent>

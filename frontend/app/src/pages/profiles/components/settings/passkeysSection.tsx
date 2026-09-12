@@ -1,10 +1,10 @@
-import { KeyRound, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Passkey } from 'bagad-client';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { UAParser } from 'ua-parser-js';
-import passkeyBlack from '../../../../assets/passkeys/FIDO_Passkey_mark_A_black.svg';
+import PasskeyIcon from '../../../../components/PasskeyIcon';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,20 +43,20 @@ import { useRegisterPasskey } from '../../../../utils/usePasskey';
 
 /**
  * Provider brand icon for a passkey, resolved from its AAGUID via the official
- * community mapping. Falls back to the generic FIDO passkey mark for unknown
- * authenticators. Honors the active light/dark theme.
+ * community mapping. Falls back to the generic FIDO passkey mark (currentColor,
+ * so it follows the theme) for unknown authenticators.
  */
 function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
   const { resolvedTheme } = useTheme();
   const { icon } = resolveAuthenticator(aaguid, resolvedTheme);
-  return <img src={icon ?? passkeyBlack} alt="" className="size-6" />;
+  return icon ? <img src={icon} alt="" className="size-6" /> : <PasskeyIcon className="size-6" />;
 }
 
 function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => void }) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { resolvedTheme } = useTheme();
   const { browser, os } = UAParser(passkey.lastUseUa ?? '');
-  const authenticatorName = resolveAuthenticator(passkey.aaguid, resolvedTheme).name ?? 'Passkey';
+  const authenticatorName = resolveAuthenticator(passkey.aaguid, resolvedTheme).name ?? 'Clé d\'accès';
 
   return (
     <Item variant="muted" className="items-start" data-credential-id={passkey.credentialId}>
@@ -100,9 +100,9 @@ function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => 
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer cette passkey ?</AlertDialogTitle>
+              <AlertDialogTitle>Supprimer cette clé d&apos;accès ?</AlertDialogTitle>
               <AlertDialogDescription>
-                Cette passkey ne pourra plus être utilisée pour vous connecter.
+                Cette clé d&apos;accès ne pourra plus être utilisée pour vous connecter.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -149,7 +149,7 @@ export default function PasskeysSection() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Passkeys</CardTitle>
+        <CardTitle>Clés d&apos;accès</CardTitle>
         <CardDescription>
           Connectez-vous sans mot de passe avec vos appareils.
         </CardDescription>
@@ -161,10 +161,10 @@ export default function PasskeysSection() {
                 toast.add(
                   result.status === 'already-registered'
                     ? {
-                        title: 'Cet appareil possède déjà une passkey pour votre compte.',
+                        title: 'Cet appareil possède déjà une clé d\'accès pour votre compte.',
                         type: 'info',
                       }
-                    : { title: 'Passkey ajoutée !', type: 'success' },
+                    : { title: 'Clé d\'accès ajoutée !', type: 'success' },
                 );
               },
               onError: () => {
@@ -178,7 +178,7 @@ export default function PasskeysSection() {
                 // action-first, non-alarming message instead — as recommended by
                 // FIDO Alliance and NN/g error-message guidelines.
                 toast.add({
-                  title: "L'ajout de la passkey n'a pas abouti. Vous en avez peut-être déjà une sur cet appareil — réessayez, ou configurez-la plus tard.",
+                  title: "L'ajout de la clé d'accès n'a pas abouti. Vous en avez peut-être déjà une sur cet appareil — réessayez, ou configurez-la plus tard.",
                   type: 'info',
                 });
               },
@@ -202,11 +202,11 @@ export default function PasskeysSection() {
         ) : (
           <Empty>
             <EmptyMedia variant="icon">
-              <KeyRound aria-hidden="true" />
+              <PasskeyIcon />
             </EmptyMedia>
-            <EmptyTitle>Aucune passkey</EmptyTitle>
+            <EmptyTitle>Aucune clé d&apos;accès</EmptyTitle>
             <EmptyDescription>
-              Ajoutez une passkey pour vous connecter plus rapidement et en toute sécurité.
+              Ajoutez une clé d&apos;accès pour vous connecter plus rapidement et en toute sécurité.
             </EmptyDescription>
           </Empty>
         )}
