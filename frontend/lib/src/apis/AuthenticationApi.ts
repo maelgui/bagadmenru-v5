@@ -19,6 +19,9 @@ import type {
   LoginData,
   LogoutRequest,
   Passkey,
+  PublicKeyCredentialCreationOptions,
+  PublicKeyCredentialRequestOptions,
+  RegistrationCredential,
   ResetPassword,
   ResetPasswordRequest,
   SessionInfo,
@@ -33,6 +36,12 @@ import {
     LogoutRequestToJSON,
     PasskeyFromJSON,
     PasskeyToJSON,
+    PublicKeyCredentialCreationOptionsFromJSON,
+    PublicKeyCredentialCreationOptionsToJSON,
+    PublicKeyCredentialRequestOptionsFromJSON,
+    PublicKeyCredentialRequestOptionsToJSON,
+    RegistrationCredentialFromJSON,
+    RegistrationCredentialToJSON,
     ResetPasswordFromJSON,
     ResetPasswordToJSON,
     ResetPasswordRequestFromJSON,
@@ -60,7 +69,7 @@ export interface ProcessLoginApiV1AuthLoginPostRequest {
 }
 
 export interface RegisterPasskeyApiV1WebauthnRegisterPostRequest {
-    requestBody: { [key: string]: any; };
+    registrationCredential: RegistrationCredential;
 }
 
 export interface ResetPasswordApiV1AuthResetPostRequest {
@@ -218,7 +227,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Prepare Login
      */
-    async prepareLoginApiV1AuthLoginGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async prepareLoginApiV1AuthLoginGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PublicKeyCredentialRequestOptions>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -230,17 +239,13 @@ export class AuthenticationApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => PublicKeyCredentialRequestOptionsFromJSON(jsonValue));
     }
 
     /**
      * Prepare Login
      */
-    async prepareLoginApiV1AuthLoginGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async prepareLoginApiV1AuthLoginGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PublicKeyCredentialRequestOptions> {
         const response = await this.prepareLoginApiV1AuthLoginGetRaw(initOverrides);
         return await response.value();
     }
@@ -248,7 +253,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Preregister Passkey
      */
-    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PublicKeyCredentialCreationOptions>> {
         const queryParameters: any = {};
 
         if (requestParameters['flow'] != null) {
@@ -272,17 +277,13 @@ export class AuthenticationApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => PublicKeyCredentialCreationOptionsFromJSON(jsonValue));
     }
 
     /**
      * Preregister Passkey
      */
-    async preregisterPasskeyApiV1WebauthnPreregisterGet(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async preregisterPasskeyApiV1WebauthnPreregisterGet(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PublicKeyCredentialCreationOptions> {
         const response = await this.preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -327,10 +328,10 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Register Passkey
      */
     async registerPasskeyApiV1WebauthnRegisterPostRaw(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
-        if (requestParameters['requestBody'] == null) {
+        if (requestParameters['registrationCredential'] == null) {
             throw new runtime.RequiredError(
-                'requestBody',
-                'Required parameter "requestBody" was null or undefined when calling registerPasskeyApiV1WebauthnRegisterPost().'
+                'registrationCredential',
+                'Required parameter "registrationCredential" was null or undefined when calling registerPasskeyApiV1WebauthnRegisterPost().'
             );
         }
 
@@ -353,7 +354,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: requestParameters['requestBody'],
+            body: RegistrationCredentialToJSON(requestParameters['registrationCredential']),
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {

@@ -339,9 +339,15 @@ def _https_client(client: TestClient) -> TestClient:
 
 
 _BOGUS_CREDENTIAL = {
-    "id": "bogus",
-    "rawId": "bogus",
-    "response": {},
+    # Shape-valid for the typed RegistrationCredential body (so it passes
+    # request validation) but cryptographically garbage: the 400 under test
+    # comes from WebAuthn verification, not from pydantic.
+    "id": "Ym9ndXM",
+    "rawId": "Ym9ndXM",
+    "response": {
+        "clientDataJSON": "Ym9ndXM",
+        "attestationObject": "Ym9ndXM",
+    },
     "type": "public-key",
 }
 

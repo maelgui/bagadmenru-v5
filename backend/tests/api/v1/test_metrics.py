@@ -8,7 +8,7 @@ tests in the session also increment them.
 from fastapi.testclient import TestClient
 from prometheus_client import REGISTRY
 
-from tests.api.v1.test_auth import _https_client, _seed_password
+from tests.api.v1.test_auth import _BOGUS_CREDENTIAL, _https_client, _seed_password
 
 
 def _counter(name: str, labels: dict[str, str]) -> float:
@@ -80,8 +80,10 @@ def test_preregister_declared_flow_counts_started_and_labels_register(
     assert _counter("bbe2_webauthn_registrations_total", started) == before_started + 1
 
     # A garbage credential fails verification: the outcome must carry the flow
-    # declared at preregister, proving it travelled through the session.
-    response = https_client.post("/api/v1/webauthn/register", json={"response": {}})
+    # declared at preregister, proving it travelled through the session. The
+    # body must be shape-valid (typed RegistrationCredential) so the 400 comes
+    # from WebAuthn verification, not 422 from request validation.
+    response = https_client.post("/api/v1/webauthn/register", json=_BOGUS_CREDENTIAL)
     assert response.status_code == 400
     assert _counter("bbe2_webauthn_registrations_total", invalid) == before_invalid + 1
 
@@ -104,7 +106,9 @@ def test_register_without_preregister_is_unknown_flow(client: TestClient):
     labels = {"flow": "unknown", "outcome": "missing_challenge"}
     before = _counter("bbe2_webauthn_registrations_total", labels)
 
-    response = client.post("/api/v1/webauthn/register", json={"response": {}})
+    # Shape-valid body (typed RegistrationCredential): the 400 under test is
+    # the missing challenge, not request validation.
+    response = client.post("/api/v1/webauthn/register", json=_BOGUS_CREDENTIAL)
     assert response.status_code == 400
     assert _counter("bbe2_webauthn_registrations_total", labels) == before + 1
 

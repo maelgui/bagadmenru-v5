@@ -40,3 +40,8 @@ from .push import (
 )
 from .response import Response, ResponseCreate
 from .utils import GetUploadUrlResponse
+from .webauthn import (
+    PublicKeyCredentialCreationOptions,
+    PublicKeyCredentialRequestOptions,
+    RegistrationCredential,
+)

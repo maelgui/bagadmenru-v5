@@ -7,7 +7,6 @@ import sentry_sdk
 from fastapi import (
     APIRouter,
     BackgroundTasks,
-    Body,
     Depends,
     HTTPException,
     Request,
@@ -105,7 +104,9 @@ def _client_ip(request: Request) -> str | None:
 
 
 @router.get("/auth/login")
-def prepare_login(request: Request, settings: SettingsDep):
+def prepare_login(
+    request: Request, settings: SettingsDep
+) -> schemas.PublicKeyCredentialRequestOptions:
     opt = generate_authentication_options(
         rp_id=settings.relying_party_id,
     )
@@ -113,9 +114,11 @@ def prepare_login(request: Request, settings: SettingsDep):
     # save challenge as base64 in session
     request.session["auth_challenge"] = base64.b64encode(opt.challenge).decode("utf-8")
 
-    return Response(
-        content=options_to_json(opt),
-        media_type="application/json",
+    # Validate py_webauthn's own serialisation into the wire-format schema:
+    # py_webauthn stays the source of truth for the base64url encoding, the
+    # schema only types it for OpenAPI / the generated client.
+    return schemas.PublicKeyCredentialRequestOptions.model_validate_json(
+        options_to_json(opt)
     )
 
 
@@ -457,7 +460,7 @@ async def preregister_passkey(
     session: SessionDep,
     settings: SettingsDep,
     flow: Literal["explicit", "silent"] = "explicit",
-):
+) -> schemas.PublicKeyCredentialCreationOptions:
     existing_credentials: Iterable[PasskeyDB] = []
     if current_user.passkey_user_id is None:
         # Generate
@@ -513,9 +516,8 @@ async def preregister_passkey(
     request.session["reg_flow"] = flow
     WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="started").inc()
 
-    return Response(
-        content=options_to_json(simple_registration_options),
-        media_type="application/json",
+    return schemas.PublicKeyCredentialCreationOptions.model_validate_json(
+        options_to_json(simple_registration_options)
     )
 
 
@@ -524,7 +526,7 @@ async def preregister_passkey(
     dependencies=[Depends(Authorization(Action.EDIT, Resource.ME))],
 )
 async def register_passkey(
-    body: Annotated[dict, Body()],
+    body: schemas.RegistrationCredential,
     request: Request,
     current_user: Annotated[UserDB, Depends(get_current_profile)],
     session: SessionDep,
@@ -552,7 +554,7 @@ async def register_passkey(
         )
     try:
         verification = verify_registration_response(
-            credential=body,
+            credential=body.model_dump(exclude_none=True),
             expected_challenge=base64.b64decode(challenge),
             expected_rp_id=settings.relying_party_id,
             expected_origin=str(settings.frontend_base_url).rstrip("/"),
@@ -595,7 +597,7 @@ async def register_passkey(
         sign_count=verification.sign_count,
         # The column/schema store transports as a space-delimited string
         # (the WebAuthn convention), so normalise the JS array here.
-        transports=" ".join(body["response"].get("transports", []) or []),
+        transports=" ".join(body.response.transports or []),
         device_type=verification.credential_device_type,
         back_up=verification.credential_backed_up,
         aaguid=verification.aaguid,

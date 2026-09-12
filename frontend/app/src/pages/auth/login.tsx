@@ -1,5 +1,5 @@
 import {
-  browserSupportsWebAuthn, type PublicKeyCredentialRequestOptionsJSON, startAuthentication,
+  browserSupportsWebAuthn, startAuthentication,
   WebAuthnError,
 } from '@simplewebauthn/browser';
 import { KeyRound } from 'lucide-react';
@@ -16,6 +16,7 @@ import { Spinner } from '@/components/ui/spinner';
 import PasswordField from '../../components/PasswordField';
 import { queryClient, useApiClient } from '../../config/client';
 import { attemptSilentPasskeyUpgrade } from '../../utils/usePasskey';
+import { toRequestOptionsJSON } from '../../utils/webauthnWire';
 import { cn } from '@/lib/utils';
 
 const HTTP_UNAUTHORIZED = 401;
@@ -45,8 +46,7 @@ function AuthPage() {
 
   const startPasskeyLogin = useCallback(async (conditional: boolean) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The API response matches PublicKeyCredentialRequestOptionsJSON but the generated client types it as object
-      const opt = await authApi.prepareLoginApiV1AuthLoginGet() as PublicKeyCredentialRequestOptionsJSON;
+      const opt = toRequestOptionsJSON(await authApi.prepareLoginApiV1AuthLoginGet());
       const res = await startAuthentication({ optionsJSON: opt, useBrowserAutofill: conditional });
       await authApi.processLoginApiV1AuthLoginPost({
         loginData: {

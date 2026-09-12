@@ -1,7 +1,6 @@
 import * as Sentry from '@sentry/react';
 import {
   browserSupportsWebAuthn,
-  type PublicKeyCredentialCreationOptionsJSON,
   type RegistrationResponseJSON,
   startRegistration,
   WebAuthnError,
@@ -13,6 +12,7 @@ import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../config/client';
 import features from './features';
 import { isPasskeySnoozed } from './passkeySnooze';
+import { toCreationOptionsJSON } from './webauthnWire';
 
 /**
  * Reusable passkey enrollment.
@@ -34,12 +34,11 @@ export function useRegisterPasskey() {
 
   return useMutation({
     mutationFn: async (): Promise<RegisterPasskeyResult> => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- API response type is not narrowed to the WebAuthn options shape
-      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ flow: 'explicit' }) as PublicKeyCredentialCreationOptionsJSON;
+      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ flow: 'explicit' });
 
       try {
-        const attResp = await startRegistration({ optionsJSON: registrationOpt });
-        await authApi.registerPasskeyApiV1WebauthnRegisterPost({ requestBody: attResp });
+        const attResp = await startRegistration({ optionsJSON: toCreationOptionsJSON(registrationOpt) });
+        await authApi.registerPasskeyApiV1WebauthnRegisterPost({ registrationCredential: attResp });
         return { status: 'created' };
       } catch (error) {
         // The browser throws InvalidStateError when the presented authenticator
@@ -104,10 +103,9 @@ export async function attemptSilentPasskeyUpgrade(
 
   const createCredential = async (): Promise<RegistrationResponseJSON | null> => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- API response type is not narrowed to the WebAuthn options shape
-      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ flow: 'silent' }) as PublicKeyCredentialCreationOptionsJSON;
+      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ flow: 'silent' });
       return await startRegistration({
-        optionsJSON: registrationOpt,
+        optionsJSON: toCreationOptionsJSON(registrationOpt),
         useAutoRegister: true,
       });
     } catch {
@@ -126,7 +124,7 @@ export async function attemptSilentPasskeyUpgrade(
   // server-side leaves an orphan credential in the user's keychain that will
   // 401 at the next passkey login — that must never be swallowed silently.
   try {
-    await authApi.registerPasskeyApiV1WebauthnRegisterPost({ requestBody: attResp });
+    await authApi.registerPasskeyApiV1WebauthnRegisterPost({ registrationCredential: attResp });
     await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
     toast.add({
       title: 'Une clé d\'accès a été créée pour votre compte sur cet appareil. Vous pourrez vous connecter sans mot de passe.',
