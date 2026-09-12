@@ -511,6 +511,12 @@ async def register_passkey(
             # UV requested as "preferred" in the options; not hard-required
             # here to keep passkey enrollment smooth on all devices.
             require_user_verification=False,
+            # A conditional create (silent passkey upgrade after password
+            # login) happens by design without any user gesture, so the UP
+            # flag is 0 in its attestation. WebAuthn L3 tells RPs supporting
+            # conditional creation not to require user presence at
+            # registration; the caller is already authenticated here.
+            require_user_presence=False,
         )
     except (InvalidJSONStructure, InvalidRegistrationResponse) as exc:
         # Bad client data (malformed credential JSON or a failed WebAuthn
