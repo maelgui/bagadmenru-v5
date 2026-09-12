@@ -364,6 +364,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
+     * Set the new password and sign the member in.  Mirrors the invitation-accept flow: proving control of the email (the reset link) plus setting the password is a full authentication, so the member lands signed in (additive session cookies, becomes the active account) instead of being bounced to the login form. The client can then offer passkey enrolment right away (FIDO account-recovery pattern).  The response body stays \"OK\" so the generated client is unchanged; the session travels in the cookies.
      * Reset Password
      */
     async resetPasswordApiV1AuthResetPostRaw(requestParameters: ResetPasswordApiV1AuthResetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
@@ -407,6 +408,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
+     * Set the new password and sign the member in.  Mirrors the invitation-accept flow: proving control of the email (the reset link) plus setting the password is a full authentication, so the member lands signed in (additive session cookies, becomes the active account) instead of being bounced to the login form. The client can then offer passkey enrolment right away (FIDO account-recovery pattern).  The response body stays \"OK\" so the generated client is unchanged; the session travels in the cookies.
      * Reset Password
      */
     async resetPasswordApiV1AuthResetPost(requestParameters: ResetPasswordApiV1AuthResetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
