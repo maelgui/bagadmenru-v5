@@ -65,10 +65,30 @@ test.describe('Password Reset Flow', () => {
       // Submit the new password
       await page.click('button[type="submit"]');
 
-      // Should show success message
-      await expect(
-        page.getByText('Mot de passe changé avec succès')
-      ).toBeVisible({ timeout: 10_000 });
+      // 7. The reset signs the member in. On WebAuthn-capable browsers
+      // (Playwright Chromium is one) the flow then offers passkey enrollment;
+      // otherwise it shows the plain success screen.
+      const passkeyOffer = page.getByRole('heading', {
+        name: 'Sécurisez votre compte',
+      });
+      const successMessage = page.getByText('Mot de passe changé avec succès');
+      await expect(passkeyOffer.or(successMessage)).toBeVisible({
+        timeout: 10_000,
+      });
+
+      // 8. Complete the flow like a member would: decline the passkey offer
+      // ("Plus tard") or follow the success screen's "Accéder à mon espace"
+      // link. Either way we must land on the app home, signed in.
+      if (await passkeyOffer.isVisible()) {
+        await page.getByRole('button', { name: 'Plus tard' }).click();
+      } else {
+        await page.getByRole('link', { name: 'Accéder à mon espace' }).click();
+      }
+      await expect(page).toHaveURL(/\/$/, { timeout: 10_000 });
+      // Signed-in oracle: the account switcher only renders with a session.
+      await expect(page.getByRole('button', { name: /^Comptes [-—]/ })).toBeVisible({
+        timeout: 10_000,
+      });
     }
   });
 
