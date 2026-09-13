@@ -22,6 +22,41 @@ export async function clearSession(page: Page): Promise<void> {
 }
 
 /**
+ * Suppress the silent post-login passkey upgrade (conditional create fired
+ * after every password login on beta/dev) for the E2E account, using the
+ * app's own per-account snooze (`bmr:passkey-snooze:<accountId>`).
+ *
+ * Without this, the upgrade's pending `navigator.credentials.create()` races
+ * the explicit ceremonies these tests drive on the shared virtual
+ * authenticator: arming the authenticator for an "Ajouter" click can resolve
+ * the pending silent create instead, stranding an orphan credential that
+ * 401s every subsequent passkey login.
+ *
+ * Injected via `addInitScript` so it survives `clearSession()` (which wipes
+ * localStorage) and applies before any app code runs on every navigation.
+ */
+export async function snoozeSilentPasskeyUpgrade(page: Page): Promise<void> {
+  const token = await loginViaAPI(E2E_USER.email, E2E_USER.password);
+  const ctx = await request.newContext({ baseURL: API_URL });
+  let accountId: string;
+  try {
+    const res = await ctx.get('/api/v1/profiles/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.ok(), 'must resolve the E2E account id').toBeTruthy();
+    accountId = ((await res.json()) as { id: string }).id;
+  } finally {
+    await ctx.dispose();
+  }
+  const key = `bmr:passkey-snooze:${accountId}`;
+  const until = String(Date.now() + 60 * 60 * 1000);
+  await page.addInitScript(
+    ([k, v]) => { window.localStorage.setItem(k, v); },
+    [key, until] as const
+  );
+}
+
+/**
  * Register a passkey through the UI (click "Ajouter" and complete the ceremony)
  * and return the credential id that was created on the authenticator.
  * Assumes the passkeys page is already loaded.
@@ -31,9 +66,23 @@ export async function registerPasskeyViaUI(
   authenticator: VirtualAuthenticator
 ): Promise<string> {
   const before = await authenticator.getCredentials();
+  // The CDP `credentialAdded` event fires when the AUTHENTICATOR creates the
+  // credential — before the app's POST /webauthn/register persists it. Wait
+  // for the backend write too: a test that proceeds immediately (e.g. clears
+  // the session) can otherwise strand the POST without its auth cookie,
+  // leaving an orphan credential on the authenticator that 401s every
+  // subsequent passkey login.
+  const persisted = page.waitForResponse(
+    (res) =>
+      res.url().includes('/api/v1/webauthn/register') &&
+      res.request().method() === 'POST',
+    { timeout: 10_000 }
+  );
   await authenticator.withSuccessfulCeremony(async () => {
     await page.getByRole('button', { name: 'Ajouter' }).click();
   });
+  const res = await persisted;
+  expect(res.ok(), 'backend must persist the passkey').toBeTruthy();
   const after = await authenticator.getCredentials();
   const created = after.find(
     (c) => !before.some((b) => b.credentialId === c.credentialId)

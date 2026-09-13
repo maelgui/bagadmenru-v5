@@ -10,6 +10,7 @@ import {
   deleteAllPasskeys,
   countPasskeys,
   passkeyRow,
+  snoozeSilentPasskeyUpgrade,
 } from './helpers/passkeys';
 
 /**
@@ -32,6 +33,10 @@ test.describe('Passkeys (WebAuthn)', () => {
   let authenticator: VirtualAuthenticator;
 
   test.beforeEach(async ({ page }) => {
+    // These tests drive explicit WebAuthn ceremonies on a shared virtual
+    // authenticator; the silent post-login upgrade would race them (see
+    // snoozeSilentPasskeyUpgrade). Snooze it for the whole spec.
+    await snoozeSilentPasskeyUpgrade(page);
     authenticator = await VirtualAuthenticator.create(page);
   });
 
@@ -152,6 +157,19 @@ test.describe('Passkeys (WebAuthn)', () => {
 
   test.describe('login', () => {
     test('logs in by clicking the Passkey button', async ({ page }) => {
+      // Disable conditional mediation for this test: the login page's
+      // mount-time autofill ceremony would otherwise compete with the clicked
+      // modal ceremony for the authenticator and the single server-side
+      // challenge slot. With it off (a browser without autofill support —
+      // @simplewebauthn then skips the conditional ceremony after its
+      // challenge fetch), the clicked ceremony is the only one. The
+      // conditional path has its own test below.
+      await page.addInitScript(() => {
+        if (window.PublicKeyCredential) {
+          window.PublicKeyCredential.isConditionalMediationAvailable =
+            async () => false;
+        }
+      });
       await loginViaUI(page, E2E_USER.email, E2E_USER.password);
       await page.goto(PASSKEYS_ROUTE);
       await registerPasskeyViaUI(page, authenticator);
@@ -159,10 +177,12 @@ test.describe('Passkeys (WebAuthn)', () => {
       await clearSession(page);
       await page.goto('/auth/login');
 
-      // The login page also fires conditional autofill on mount, so two
-      // ceremonies may compete for the authenticator. We arm it and click the
-      // Passkey button, then assert the end outcome (authenticated) rather than
-      // tying success to a single ceremony event, which would be racy.
+      // Let the mount-time challenge fetches settle (their Set-Cookie must
+      // not land after the clicked fetch's), then arm BEFORE clicking: the
+      // CDP authenticator only auto-completes a modal ceremony that STARTS
+      // while presence simulation is on — arming after the modal get() is
+      // pending leaves it hanging forever.
+      await page.waitForLoadState('networkidle');
       await authenticator.arm();
       try {
         await page.getByRole('button', { name: 'Clé d\'accès' }).click();
@@ -188,6 +208,31 @@ test.describe('Passkeys (WebAuthn)', () => {
       await registerPasskeyViaUI(page, authenticator);
 
       await clearSession(page);
+
+      // In dev, React StrictMode double-mounts the login effect, firing TWO
+      // challenge fetches; the second overwrites the first's challenge in the
+      // server session, while the CDP authenticator (armed below) may resolve
+      // the FIRST ceremony → its POST 401s against the newer challenge.
+      // Serve both fetches the SAME cached response (body + Set-Cookie), so
+      // every ceremony carries the challenge the session actually holds.
+      // Transparent on production builds (single fetch, e.g. beta).
+      // Note on multiple Set-Cookie: headers() folds them with '\n' and the
+      // Chromium fulfill path splits them back on '\n' (splitSetCookieHeader
+      // before Fetch.fulfillRequest), so the round-trip preserves them all —
+      // verified against playwright-core 1.63. fulfill() only accepts a
+      // headers object, so headersArray() would not be usable here anyway.
+      let cachedChallenge: { body: string; headers: { [k: string]: string } } | null = null;
+      await page.route('**/api/v1/auth/login', async (route) => {
+        if (route.request().method() !== 'GET') {
+          await route.fallback();
+          return;
+        }
+        if (cachedChallenge === null) {
+          const res = await route.fetch();
+          cachedChallenge = { body: await res.text(), headers: res.headers() };
+        }
+        await route.fulfill({ status: 200, ...cachedChallenge });
+      });
 
       // The login page starts a silent conditional (autofill) assertion on mount
       // (startAuthentication with useBrowserAutofill: true). We do NOT click the
