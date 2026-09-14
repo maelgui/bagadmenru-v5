@@ -51,6 +51,10 @@ export interface LogoutApiV1AuthLogoutPostRequest {
     logoutRequest?: LogoutRequest;
 }
 
+export interface PreregisterPasskeyApiV1WebauthnPreregisterGetRequest {
+    flow?: PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum;
+}
+
 export interface ProcessLoginApiV1AuthLoginPostRequest {
     loginData: LoginData;
 }
@@ -244,8 +248,12 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Preregister Passkey
      */
-    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
         const queryParameters: any = {};
+
+        if (requestParameters['flow'] != null) {
+            queryParameters['flow'] = requestParameters['flow'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -274,8 +282,8 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Preregister Passkey
      */
-    async preregisterPasskeyApiV1WebauthnPreregisterGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.preregisterPasskeyApiV1WebauthnPreregisterGetRaw(initOverrides);
+    async preregisterPasskeyApiV1WebauthnPreregisterGet(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -492,3 +500,12 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
 }
+
+/**
+ * @export
+ */
+export const PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum = {
+    Explicit: 'explicit',
+    Silent: 'silent'
+} as const;
+export type PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum = typeof PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum[keyof typeof PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum];

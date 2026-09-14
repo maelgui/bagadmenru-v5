@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -153,6 +154,15 @@ async def request_context(request: Request, call_next):
 
 
 app.include_router(api_router, prefix="/api/v1")
+
+# Prometheus metrics at the app root, OUTSIDE /api on purpose: the ingress only
+# forwards /api (and /_mail) to the backend, so /metrics is reachable from
+# inside the cluster (scraper, kubectl port-forward) but never from the
+# internet. Default HTTP metrics (latency histogram, request counts) plus the
+# custom auth-flow counters registered in bbe2.metrics.
+Instrumentator(excluded_handlers=["/metrics"]).instrument(app).expose(
+    app, include_in_schema=False
+)
 
 
 @app.exception_handler(EmailSendError)

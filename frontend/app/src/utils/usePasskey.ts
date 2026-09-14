@@ -35,7 +35,7 @@ export function useRegisterPasskey() {
   return useMutation({
     mutationFn: async (): Promise<RegisterPasskeyResult> => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- API response type is not narrowed to the WebAuthn options shape
-      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet() as PublicKeyCredentialCreationOptionsJSON;
+      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ flow: 'explicit' }) as PublicKeyCredentialCreationOptionsJSON;
 
       try {
         const attResp = await startRegistration({ optionsJSON: registrationOpt });
@@ -105,7 +105,7 @@ export async function attemptSilentPasskeyUpgrade(
   const createCredential = async (): Promise<RegistrationResponseJSON | null> => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- API response type is not narrowed to the WebAuthn options shape
-      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet() as PublicKeyCredentialCreationOptionsJSON;
+      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ flow: 'silent' }) as PublicKeyCredentialCreationOptionsJSON;
       return await startRegistration({
         optionsJSON: registrationOpt,
         useAutoRegister: true,

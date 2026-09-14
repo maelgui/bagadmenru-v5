@@ -1,7 +1,7 @@
 import base64
 import secrets
 from datetime import datetime, timezone
-from typing import Annotated, Iterable
+from typing import Annotated, Iterable, Literal
 
 import sentry_sdk
 from fastapi import (
@@ -38,6 +38,7 @@ from webauthn.helpers.structs import (
 from bbe2 import schemas
 from bbe2.config import Settings
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
+from bbe2.metrics import AUTH_LOGINS, PASSWORD_RESETS, WEBAUTHN_REGISTRATIONS
 from bbe2.models.action_token import ActionTokenValue
 from bbe2.models.passkey import PasskeyDB
 from bbe2.models.user import UserDB
@@ -73,6 +74,18 @@ from bbe2.utils.auth import (
 from bbe2.utils.correlation import get_correlation_id
 
 router = APIRouter()
+
+
+def _login_failure(
+    method: str, outcome: str, status_code: int, detail: str
+) -> HTTPException:
+    """Count a failed login attempt and build the HTTPException to raise.
+
+    Keeps every failure site in ``process_login`` a one-liner while
+    guaranteeing the counter and the response can never diverge.
+    """
+    AUTH_LOGINS.labels(method=method, outcome=outcome).inc()
+    return HTTPException(status_code=status_code, detail=detail)
 
 
 def _client_ip(request: Request) -> str | None:
@@ -121,16 +134,24 @@ def process_login(
             ).first()
             if not user or not user.is_active:
                 myctx.dummy_verify()
-                raise HTTPException(status_code=401, detail="Bad credentials")
+                raise _login_failure(
+                    "password", "bad_credentials", 401, "Bad credentials"
+                )
             if not data.password:
-                raise HTTPException(status_code=400, detail="Password is required")
+                raise _login_failure(
+                    "password", "invalid_request", 400, "Password is required"
+                )
             if not user.password:
                 # Passkey-only account with no password hash set.
                 myctx.dummy_verify()
-                raise HTTPException(status_code=401, detail="Bad credentials")
+                raise _login_failure(
+                    "password", "bad_credentials", 401, "Bad credentials"
+                )
             valid, new_hash = myctx.verify_and_update(data.password, user.password)
             if not valid:
-                raise HTTPException(status_code=401, detail="Bad credentials")
+                raise _login_failure(
+                    "password", "bad_credentials", 401, "Bad credentials"
+                )
             if new_hash:
                 session.execute(
                     update(UserDB).where(UserDB.id == user.id).values(password=new_hash)
@@ -143,19 +164,24 @@ def process_login(
             request.session.pop("auth_challenge", None)
         case LoginType.PASSKEY:
             if not data.passkey:
-                raise HTTPException(
-                    status_code=400, detail="Passkey credential is required"
+                raise _login_failure(
+                    "passkey", "invalid_request", 400, "Passkey credential is required"
                 )
             credential = parse_authentication_credential_json(data.passkey)
             passkey = session.scalar(
                 select(PasskeyDB).where(PasskeyDB.credential_id == credential.raw_id)
             )
             if not passkey or not passkey.user.is_active:
-                raise HTTPException(status_code=401, detail="Bad credentials")
+                raise _login_failure(
+                    "passkey", "bad_credentials", 401, "Bad credentials"
+                )
             challenge = request.session.get("auth_challenge")
             if not challenge:
-                raise HTTPException(
-                    status_code=400, detail="No authentication challenge in session"
+                raise _login_failure(
+                    "passkey",
+                    "missing_challenge",
+                    400,
+                    "No authentication challenge in session",
                 )
             try:
                 res = verify_authentication_response(
@@ -172,7 +198,9 @@ def process_login(
                     require_user_verification=False,
                 )
             except InvalidAuthenticationResponse as exc:
-                raise HTTPException(status_code=401, detail="Bad credentials") from exc
+                raise _login_failure(
+                    "passkey", "bad_credentials", 401, "Bad credentials"
+                ) from exc
             finally:
                 # A challenge is single-use, regardless of the outcome.
                 request.session.pop("auth_challenge", None)
@@ -191,6 +219,7 @@ def process_login(
 
     # Add this account as an additive browser session (multi-account) and make
     # it the active one. Any other signed-in accounts keep their sessions.
+    AUTH_LOGINS.labels(method=data.type.value, outcome="success").inc()
     access_token = create_access_token(user, settings)
     set_session_cookies(response, user.id, access_token, settings)
     return Token(access_token=access_token, token_type="bearer")
@@ -248,6 +277,7 @@ def reset_password(
     user.password = myctx.hash(body.password)
     session.commit()
 
+    PASSWORD_RESETS.labels(stage="completed").inc()
     access_token = create_access_token(user, settings)
     set_session_cookies(response, user.id, access_token, settings)
     return "OK"
@@ -380,6 +410,11 @@ async def reset_password_request(
     )
     session.commit()
 
+    # Counted only when the account exists and a reset email is actually sent,
+    # so the funnel numerator/denominator (completed/requested) stays honest —
+    # requests for unknown emails also return "OK" but send nothing.
+    PASSWORD_RESETS.labels(stage="requested").inc()
+
     # Send off the request's critical path: a slow/unreachable SMTP server must
     # not stall (or fail) this response. The token is already persisted, so the
     # link is valid immediately. Capture the correlation ID now and re-set it in
@@ -421,6 +456,7 @@ async def preregister_passkey(
     current_user: Annotated[UserDB, Depends(get_current_profile)],
     session: SessionDep,
     settings: SettingsDep,
+    flow: Literal["explicit", "silent"] = "explicit",
 ):
     existing_credentials: Iterable[PasskeyDB] = []
     if current_user.passkey_user_id is None:
@@ -469,6 +505,13 @@ async def preregister_passkey(
     request.session["reg_challenge"] = base64.b64encode(
         simple_registration_options.challenge
     ).decode("utf-8")
+    # The flow the client declared when it started the ceremony (explicit
+    # enrolment vs silent conditional create) travels with the challenge and
+    # labels the outcome counter at /webauthn/register. Counting "started"
+    # here gives a funnel: silent ceremonies the browser aborted after
+    # preregister (declined conditional create) never reach register at all.
+    request.session["reg_flow"] = flow
+    WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="started").inc()
 
     return Response(
         content=options_to_json(simple_registration_options),
@@ -487,8 +530,13 @@ async def register_passkey(
     session: SessionDep,
     settings: SettingsDep,
 ) -> str:
+    # The flow declared at /webauthn/preregister travels in the session next
+    # to the challenge and is consumed with it (single-use). "unknown" means
+    # register was reached without a preregister in this session.
+    flow = request.session.pop("reg_flow", "unknown")
     challenge = request.session.get("reg_challenge")
     if not challenge:
+        WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="missing_challenge").inc()
         # Diagnostic: which session keys survived tells whether the cookie was
         # clobbered (stale keys), never set, or emptied entirely.
         with sentry_sdk.new_scope() as scope:
@@ -511,14 +559,17 @@ async def register_passkey(
             # UV requested as "preferred" in the options; not hard-required
             # here to keep passkey enrollment smooth on all devices.
             require_user_verification=False,
-            # A conditional create (silent passkey upgrade after password
-            # login) happens by design without any user gesture, so the UP
-            # flag is 0 in its attestation. WebAuthn L3 tells RPs supporting
-            # conditional creation not to require user presence at
-            # registration; the caller is already authenticated here.
-            require_user_presence=False,
+            # WebAuthn L3 §7.1 step 15: the RP verifies UP=1 for every
+            # registration EXCEPT a conditional create, which happens by
+            # design without any user gesture (UP=0 — §5.1.3 makes the client
+            # set requireUserPresence to false only for conditional
+            # mediation). The flow declared at preregister tells us which
+            # ceremony this is, so only the silent conditional create is
+            # exempted; explicit enrolments must carry a user gesture.
+            require_user_presence=flow != "silent",
         )
     except (InvalidJSONStructure, InvalidRegistrationResponse) as exc:
+        WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="invalid").inc()
         # Bad client data (malformed credential JSON or a failed WebAuthn
         # verification) is a 400, not a 500. py_webauthn's message pinpoints
         # the exact check that failed (origin, RP ID, challenge mismatch...)
@@ -554,6 +605,7 @@ async def register_passkey(
     )
     session.add(passkey_db)
 
+    WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="success").inc()
     return "OK"
 
 
