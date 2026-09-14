@@ -380,14 +380,13 @@ def test_register_finds_the_challenge_after_an_interleaved_request(
     assert response.json()["detail"] == "Invalid registration response"
 
 
-def test_register_accepts_a_conditional_create_attestation_without_up(
-    client: TestClient,
-):
-    """A conditional create (silent passkey upgrade) happens WITHOUT any user
-    gesture, so its attestation carries UP=0. Register must accept it — the
-    caller is already authenticated. Requiring user presence made every
-    silent upgrade fail with a 400 after the OS had already created the
-    passkey, leaving an orphan credential in the user's keychain."""
+def _post_forged_registration(https_client: TestClient, options: dict, up: bool):
+    """POST a forged fmt="none" registration matching the pending challenge.
+
+    Forges the exact shape a browser produces, with the UP flag set or
+    cleared: a conditional create ceremony carries UP=0 (no user gesture), an
+    explicit enrolment carries UP=1.
+    """
     import hashlib
     import json as jsonlib
     import struct
@@ -399,13 +398,8 @@ def test_register_accepts_a_conditional_create_attestation_without_up(
     from bbe2.dependencies import get_settings
     from bbe2.main import app
 
-    https_client = _https_client(client)
-    options = https_client.get("/api/v1/webauthn/preregister").json()
     settings = app.dependency_overrides[get_settings]()
 
-    # Forge the exact shape a browser produces for a fmt="none" attestation,
-    # with the UP flag deliberately cleared (AT only), as in a conditional
-    # create ceremony.
     client_data = jsonlib.dumps(
         {
             "type": "webauthn.create",
@@ -426,7 +420,7 @@ def test_register_accepts_a_conditional_create_attestation_without_up(
         }
     )
     credential_id = b"\x01" * 16
-    flags = 0b0100_0000  # AT set — UP (0x01) deliberately NOT set
+    flags = 0b0100_0000 | (0b0000_0001 if up else 0)  # AT, plus UP when asked
     auth_data = (
         hashlib.sha256(settings.relying_party_id.encode()).digest()
         + bytes([flags])
@@ -440,7 +434,7 @@ def test_register_accepts_a_conditional_create_attestation_without_up(
         {"fmt": "none", "attStmt": {}, "authData": auth_data}
     )
 
-    response = https_client.post(
+    return https_client.post(
         "/api/v1/webauthn/register",
         json={
             "id": bytes_to_base64url(credential_id),
@@ -454,6 +448,49 @@ def test_register_accepts_a_conditional_create_attestation_without_up(
             "clientExtensionResults": {},
         },
     )
+
+
+def test_register_accepts_a_conditional_create_attestation_without_up(
+    client: TestClient,
+):
+    """A conditional create (silent passkey upgrade) happens WITHOUT any user
+    gesture, so its attestation carries UP=0. When the client declared
+    flow=silent at preregister, register must accept it — the caller is
+    already authenticated. Requiring user presence made every silent upgrade
+    fail with a 400 after the OS had already created the passkey, leaving an
+    orphan credential in the user's keychain."""
+    https_client = _https_client(client)
+    options = https_client.get(
+        "/api/v1/webauthn/preregister", params={"flow": "silent"}
+    ).json()
+
+    response = _post_forged_registration(https_client, options, up=False)
+    assert response.status_code == 200, response.text
+
+    passkeys = https_client.get("/api/v1/webauthn").json()
+    assert len(passkeys) == 1
+
+
+def test_register_rejects_missing_user_presence_on_explicit_flow(
+    client: TestClient,
+):
+    """WebAuthn L3 §7.1 step 15: outside conditional mediation the RP must
+    verify UP=1. An explicit enrolment (settings page, post-reset screen)
+    always involves a user gesture, so a UP=0 attestation on the explicit
+    flow is invalid."""
+    https_client = _https_client(client)
+    options = https_client.get("/api/v1/webauthn/preregister").json()
+
+    response = _post_forged_registration(https_client, options, up=False)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid registration response"
+
+
+def test_register_accepts_user_presence_on_explicit_flow(client: TestClient):
+    https_client = _https_client(client)
+    options = https_client.get("/api/v1/webauthn/preregister").json()
+
+    response = _post_forged_registration(https_client, options, up=True)
     assert response.status_code == 200, response.text
 
     passkeys = https_client.get("/api/v1/webauthn").json()
