@@ -44,7 +44,7 @@ jobs:
       # must succeed on push: a skipped job poisons the implicit success()
       # of every job transitively downstream of it, which silently skipped
       # build-push and the whole deploy chain on main.
-      - uses: dorny/paths-filter@v4
+      - uses: dorny/paths-filter@v3
         if: github.event_name == 'pull_request'
         id: filter
         with:
