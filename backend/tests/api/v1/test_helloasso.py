@@ -511,3 +511,53 @@ def test_custom_field_email_parsing():
     assert item0.custom_field_email() == "adherent@example.com"
     # The second item's Email answer "hugiy" is not an email -> ignored.
     assert item1.custom_field_email() is None
+
+
+def _counter(name: str, labels: dict[str, str]) -> float:
+    from prometheus_client import REGISTRY
+
+    return REGISTRY.get_sample_value(name, labels) or 0.0
+
+
+def test_webhook_counters_ok_ignored_and_rejected(helloasso_client: TestClient):
+    def snap():
+        return {
+            o: _counter("bbe2_helloasso_webhooks_total", {"outcome": o})
+            for o in ("ok", "ignored", "invalid_signature", "invalid_json")
+        }
+
+    before = snap()
+
+    # Authentic + recognized -> ok
+    resp = helloasso_client.post(
+        f"/api/v1/helloasso/webhook?token={WEBHOOK_TOKEN}",
+        json=_membership_order(),
+    )
+    assert resp.status_code == 200
+
+    # Authentic + unrecognized shape -> ignored
+    resp = helloasso_client.post(
+        f"/api/v1/helloasso/webhook?token={WEBHOOK_TOKEN}",
+        json={"hello": "world"},
+    )
+    assert resp.status_code == 200
+
+    # No auth -> invalid_signature
+    resp = helloasso_client.post("/api/v1/helloasso/webhook", json=_membership_order())
+    assert resp.status_code == 401
+
+    # Authentic + malformed JSON -> invalid_json
+    resp = helloasso_client.post(
+        f"/api/v1/helloasso/webhook?token={WEBHOOK_TOKEN}",
+        content=b"{not json",
+        headers={"Content-Type": "application/json"},
+    )
+    assert resp.status_code == 400
+
+    after = snap()
+    assert {k: after[k] - before[k] for k in before} == {
+        "ok": 1,
+        "ignored": 1,
+        "invalid_signature": 1,
+        "invalid_json": 1,
+    }

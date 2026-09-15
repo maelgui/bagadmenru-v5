@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bbe2.config import Settings
+from bbe2.metrics import PUSH_SENDS
 from bbe2.models.push_subscription import PushSubscriptionDB
 from bbe2.models.user import UserDB
 from bbe2.services.events import count_unanswered_events
@@ -24,6 +25,7 @@ def send_push_to_user(
     title: str,
     body: str,
     url: Optional[str] = None,
+    kind: str = "event",
 ) -> None:
     """Send push notification to all devices of a specific user.
 
@@ -39,7 +41,7 @@ def send_push_to_user(
     ).all()
 
     for sub in subscriptions:
-        _send_push(session, settings, sub, title, body, url)
+        _send_push(session, settings, sub, title, body, url, kind=kind)
 
 
 def send_push_to_users(
@@ -49,6 +51,7 @@ def send_push_to_users(
     title: str,
     body: str,
     url: Optional[str] = None,
+    kind: str = "event",
 ) -> None:
     """Send push notification to all devices of multiple users.
 
@@ -62,7 +65,7 @@ def send_push_to_users(
     ).all()
 
     for sub in subscriptions:
-        _send_push(session, settings, sub, title, body, url)
+        _send_push(session, settings, sub, title, body, url, kind=kind)
 
 
 def send_push_to_users_with_data(
@@ -72,6 +75,7 @@ def send_push_to_users_with_data(
     body: str,
     extra_by_user: dict[str, dict[str, Any]],
     url: Optional[str] = None,
+    kind: str = "event",
 ) -> None:
     """Send a push to multiple users, with per-user extra payload data.
 
@@ -97,6 +101,7 @@ def send_push_to_users_with_data(
             body,
             url,
             extra=extra_by_user.get(sub.user_id),
+            kind=kind,
         )
 
 
@@ -108,6 +113,7 @@ def _send_push(
     body: str,
     url: Optional[str] = None,
     extra: Optional[dict[str, Any]] = None,
+    kind: str = "event",
 ) -> None:
     """Send a single push notification."""
     if not settings.vapid_private_key or not settings.vapid_public_key:
@@ -147,6 +153,7 @@ def _send_push(
             vapid_private_key=settings.vapid_private_key,
             vapid_claims={"sub": settings.vapid_claims_email},
         )
+        PUSH_SENDS.labels(kind=kind, outcome="success").inc()
         # Record last successful delivery so the device list can show
         # "last notification sent ...". This is the only durable health
         # signal we keep; dead subscriptions are pruned below instead.
@@ -156,6 +163,7 @@ def _send_push(
         logger.error("Push notification failed: %s", ex)
         # If subscription is expired or invalid (410 Gone or 404), remove it
         if ex.response and ex.response.status_code in (404, 410):
+            PUSH_SENDS.labels(kind=kind, outcome="expired").inc()
             logger.info(
                 "Removing expired subscription %s for user %s",
                 subscription.id,
@@ -163,3 +171,5 @@ def _send_push(
             )
             session.delete(subscription)
             session.commit()
+        else:
+            PUSH_SENDS.labels(kind=kind, outcome="failure").inc()

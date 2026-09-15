@@ -27,6 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from bbe2 import models
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
+from bbe2.metrics import INVITATIONS
 from bbe2.models.action_token import ActionTokenValue
 from bbe2.schemas.auth import Token
 from bbe2.schemas.invitation import (
@@ -115,6 +116,8 @@ async def create_invitation(
             ],
         )
 
+    INVITATIONS.labels(stage="created").inc()
+
     return InvitationCreated(
         token=token,
         url=url,
@@ -128,6 +131,7 @@ async def get_invitation(token: str, session: SessionDep) -> InvitationInfo:
     """Public: return prefill data for the signup form (does not consume)."""
     row = peek_invitation(session, token)
     payload = InvitationPayload.model_validate(row.payload)
+    INVITATIONS.labels(stage="viewed").inc()
     return InvitationInfo.from_payload(payload)
 
 
@@ -155,6 +159,7 @@ async def request_otp(
 
     code = issue_otp(session, invitation, body.email)
     session.commit()
+    INVITATIONS.labels(stage="otp_requested").inc()
 
     await sender.batch_send_emails(
         subject="[bagadmenru] Votre code de vérification",
@@ -222,6 +227,7 @@ async def accept_invitation(
 
     session.commit()
     session.refresh(profile_db)
+    INVITATIONS.labels(stage="accepted").inc()
 
     # Sign the new member in as an additive session and make them the active
     # account, without logging out any other account in the browser (family

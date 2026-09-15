@@ -40,3 +40,52 @@ PASSWORD_RESETS = Counter(
     #        | completed (new password set via the emailed link)
     ["stage"],
 )
+
+PUSH_SENDS = Counter(
+    "bbe2_push_sends_total",
+    "Web push delivery attempts by kind and outcome.",
+    # kind: event (new event notification) | test (device test button)
+    # outcome: success
+    #          | expired (endpoint answered 404/410; subscription pruned)
+    #          | failure (any other WebPushException)
+    # Deliveries skipped because VAPID keys are unset are not counted: nothing
+    # was attempted.
+    ["kind", "outcome"],
+)
+
+EMAILS_SENT = Counter(
+    "bbe2_emails_sent_total",
+    "Outgoing SMTP emails by outcome.",
+    # outcome: success | failure (SMTP/transport error; the send raises)
+    # Dry-run mode (email_dry_run) does not count: nothing was attempted.
+    ["outcome"],
+)
+
+INVITATIONS = Counter(
+    "bbe2_invitations_total",
+    "Member invitation funnel.",
+    # stage: created (token issued) | viewed (valid token opened)
+    #        | otp_requested (verification code emailed)
+    #        | accepted (account created)
+    # viewed counts every valid GET, so re-opens inflate it slightly; it is a
+    # funnel indicator, not an exact unique-visitor count.
+    ["stage"],
+)
+
+HELLOASSO_WEBHOOKS = Counter(
+    "bbe2_helloasso_webhooks_total",
+    "HelloAsso webhook deliveries by outcome.",
+    # outcome: ok (persisted) | ignored (authentic but unrecognized shape)
+    #          | invalid_signature (rejected 401) | invalid_json (rejected 400)
+    # A spike of invalid_signature means someone is probing the endpoint.
+    ["outcome"],
+)
+
+EVENT_RESPONSES = Counter(
+    "bbe2_event_responses_total",
+    "Event RSVP responses recorded.",
+    # source: app (authenticated PUT from the UI)
+    #         | link (quick-answer token from email/push notification)
+    # value: yes | no
+    ["source", "value"],
+)

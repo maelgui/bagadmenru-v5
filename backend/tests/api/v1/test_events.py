@@ -332,3 +332,43 @@ def test_export_ics_me_prefixes_unanswered(client: TestClient):
     response = client.get("/api/v1/events/export/ics/me")
     assert response.status_code == 200
     assert "SUMMARY:❔ Saint Nicolas" in response.text
+
+
+def _counter(name: str, labels: dict[str, str]) -> float:
+    from prometheus_client import REGISTRY
+
+    return REGISTRY.get_sample_value(name, labels) or 0.0
+
+
+def test_rsvp_via_app_increments_counter(client: TestClient):
+    labels = {"source": "app", "value": "yes"}
+    before = _counter("bbe2_event_responses_total", labels)
+    response = client.put("/api/v1/events/1/responses", json={"value": True})
+    assert response.status_code == 200
+    assert _counter("bbe2_event_responses_total", labels) == before + 1
+
+
+def test_rsvp_via_link_increments_counter(client: TestClient):
+    create = client.post(
+        "/api/v1/events/",
+        json={
+            "title": "Fest-noz métrique",
+            "description": "d",
+            "date": "2025-06-01",
+            "costume": "POLO",
+            "category": "CAT1",
+            "is_in_doodle": True,
+        },
+    )
+    assert create.status_code == 201
+    token = make_response_token(event_id=create.json()["id"])
+
+    labels = {"source": "link", "value": "no"}
+    before = _counter("bbe2_event_responses_total", labels)
+    save = client.put(
+        "/api/v1/responses/link/save",
+        headers={"token": token},
+        json={"value": False},
+    )
+    assert save.status_code == 200
+    assert _counter("bbe2_event_responses_total", labels) == before + 1
