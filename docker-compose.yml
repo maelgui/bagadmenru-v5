@@ -77,7 +77,10 @@ services:
       - IMAP_PASSWORD=${IMAP_PASSWORD}
       - SECRET_KEY=my-super-secret-key
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
-      - VAPID_PUBLIC_KEY=BEibjIo7p3zTBbEJc2Oywfvxe655TUTH-cklnkx0dPtAN2FktdtDEJV91xMrCdEbMaNBupoB699ENzTC3zr_ZWM
+      # Public half of the pair above — both come from the environment; see
+      # docs/runbooks/vapid-rotation.md to generate a local dev pair. Unset,
+      # push notifications are simply disabled (backend logs a warning).
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_CLAIMS_EMAIL=mailto:contact@bagadmenru.bzh
       - HELLOASSO_WEBHOOK_TOKEN=${HELLOASSO_WEBHOOK_TOKEN:-}
     depends_on:

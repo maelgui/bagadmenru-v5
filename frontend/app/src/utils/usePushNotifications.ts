@@ -15,6 +15,30 @@ async function getBrowserSubscription(): Promise<PushSubscription | null> {
   return await registration.pushManager.getSubscription();
 }
 
+/**
+ * Whether a browser push subscription is bound to the given VAPID public key.
+ *
+ * After a server-side VAPID key rotation, existing browser subscriptions stay
+ * bound to the OLD key: the backend can no longer push to them (403, pruned
+ * server-side) and re-registering the same subscription would be useless. A
+ * mismatch means the subscription must be dropped and recreated.
+ */
+export function subscriptionMatchesServerKey(
+  subscription: PushSubscription,
+  serverPublicKey: string,
+): boolean {
+  const raw = subscription.options.applicationServerKey;
+  if (!raw) {
+    return false;
+  }
+  let binary = '';
+  for (const byte of new Uint8Array(raw)) {
+    binary += String.fromCharCode(byte);
+  }
+  const base64url = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return base64url === serverPublicKey;
+}
+
 // Matches the backend fingerprint (`_device_hash`): SHA-256 hex truncated to
 // this many chars. 64 bits is ample to distinguish one user's devices.
 const DEVICE_HASH_LEN = 16;
@@ -95,13 +119,18 @@ export function usePushNotifications() {
 
       const registration = await navigator.serviceWorker.ready;
       let subscription = await registration.pushManager.getSubscription();
-      if (!subscription) {
-        const { publicKey } = await pushApi.getVapidPublicKeyApiV1PushVapidPublicKeyGet();
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: publicKey,
-        });
+      const { publicKey } = await pushApi.getVapidPublicKeyApiV1PushVapidPublicKeyGet();
+      if (subscription && !subscriptionMatchesServerKey(subscription, publicKey)) {
+        // Bound to a rotated-away VAPID key: the backend can never deliver to
+        // it again. Drop it so a fresh subscription is created under the
+        // current key.
+        await subscription.unsubscribe();
+        subscription = null;
       }
+      subscription ??= await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: publicKey,
+      });
 
       const { keys } = subscription.toJSON();
       await pushApi.subscribeApiV1PushSubscribePost({

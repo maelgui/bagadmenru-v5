@@ -286,3 +286,30 @@ def test_push_other_error_counts_failure():
             session.query(models.PushSubscriptionDB).filter_by(user_id="erin").count()
             == 1
         )
+
+
+def test_push_vapid_key_mismatch_prunes_subscription():
+    """After a VAPID key rotation the push service answers 403 (the
+    subscription is bound to the OLD key). The subscription can never be
+    delivered to again, so it must be pruned — this is what makes a key
+    rotation self-healing instead of leaving dead subscriptions behind."""
+    from pywebpush import WebPushException
+
+    labels = {"kind": "event", "outcome": "expired"}
+    with _session() as session:
+        _user_with_device(session, "fred", receives_push=True)
+        before = _counter("bbe2_push_sends_total", labels)
+
+        response = MagicMock()
+        response.status_code = 403
+        with patch(
+            "bbe2.services.push_service.webpush",
+            side_effect=WebPushException("vapid mismatch", response=response),
+        ):
+            send_push_to_user(session, _settings(), "fred", "t", "b")
+
+        assert _counter("bbe2_push_sends_total", labels) == before + 1
+        assert (
+            session.query(models.PushSubscriptionDB).filter_by(user_id="fred").count()
+            == 0
+        )
