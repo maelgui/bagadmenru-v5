@@ -9,6 +9,7 @@ from sqlalchemy import select
 from bbe2 import models, schemas
 from bbe2.crud import CRUDEvent
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
+from bbe2.metrics import EVENT_RESPONSES
 from bbe2.models.action_token import ActionTokenValue
 from bbe2.services.notifications import notify_new_event
 from bbe2.utils.auth import (
@@ -292,6 +293,7 @@ async def create_response(
         session.add(db_response)
 
     session.commit()
+    EVENT_RESPONSES.labels(source="app", value="yes" if response.value else "no").inc()
 
     return db_response
 
@@ -352,6 +354,7 @@ async def create_response_by_token(
     )
     session.merge(db_object)
     session.commit()
+    EVENT_RESPONSES.labels(source="link", value="yes" if response.value else "no").inc()
     return db_object
 
 

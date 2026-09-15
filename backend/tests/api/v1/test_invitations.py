@@ -626,3 +626,58 @@ def test_accept_never_grants_admin_even_if_default(client: TestClient, sender):
         assert "admin" not in role_ids
         assert 70 not in group_ids
         assert 71 in group_ids
+
+
+def _counter(name: str, labels: dict[str, str]) -> float:
+    from prometheus_client import REGISTRY
+
+    return REGISTRY.get_sample_value(name, labels) or 0.0
+
+
+def test_invitation_funnel_counters(client: TestClient, sender):
+    def snap():
+        return {
+            stage: _counter("bbe2_invitations_total", {"stage": stage})
+            for stage in ("created", "viewed", "otp_requested", "accepted")
+        }
+
+    before = snap()
+
+    created = client.post("/api/v1/invitations", json={"channel": "link"})
+    assert created.status_code == 201
+    token = created.json()["token"]
+
+    viewed = client.get(f"/api/v1/invitations/{token}")
+    assert viewed.status_code == 200
+
+    otp = client.post(
+        f"/api/v1/invitations/{token}/otp", json={"email": "new.member@example.com"}
+    )
+    assert otp.status_code == 204
+
+    accepted = client.post(
+        f"/api/v1/invitations/{token}/accept",
+        json={
+            "email": "new.member@example.com",
+            "code": sender.last_code(),
+            "first_name": "New",
+            "last_name": "Member",
+            "instrument_id": 1,
+        },
+    )
+    assert accepted.status_code == 201
+
+    after = snap()
+    assert {k: after[k] - before[k] for k in before} == {
+        "created": 1,
+        "viewed": 1,
+        "otp_requested": 1,
+        "accepted": 1,
+    }
+
+
+def test_invalid_invitation_token_does_not_count_viewed(client: TestClient, sender):
+    before = _counter("bbe2_invitations_total", {"stage": "viewed"})
+    response = client.get("/api/v1/invitations/not-a-real-token")
+    assert response.status_code in (400, 404)
+    assert _counter("bbe2_invitations_total", {"stage": "viewed"}) == before

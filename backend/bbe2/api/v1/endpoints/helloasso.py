@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from bbe2 import models, schemas
 from bbe2.dependencies import SessionDep, SettingsDep
+from bbe2.metrics import HELLOASSO_WEBHOOKS
 from bbe2.services import membership as membership_service
 from bbe2.utils.auth import Action, Authorization, Resource
 
@@ -71,6 +72,7 @@ async def helloasso_webhook(
     raw_body = await request.body()
 
     if not _verify_authenticity(settings, raw_body, x_ha_signature, token):
+        HELLOASSO_WEBHOOKS.labels(outcome="invalid_signature").inc()
         logger.warning("Rejected HelloAsso webhook: authenticity check failed")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -81,6 +83,7 @@ async def helloasso_webhook(
         payload = await request.json()
     except ValueError as exc:
         # Malformed JSON is a client error; retrying won't help, so 400.
+        HELLOASSO_WEBHOOKS.labels(outcome="invalid_json").inc()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid JSON body",
@@ -91,10 +94,12 @@ async def helloasso_webhook(
     except ValueError:
         # Unknown event shape: acknowledge so HelloAsso stops retrying, but
         # record it for debugging.
+        HELLOASSO_WEBHOOKS.labels(outcome="ignored").inc()
         logger.info("Ignoring unrecognized HelloAsso notification: %s", payload)
         return {"status": "ignored"}
 
     processed = membership_service.ingest_notification(session, notification, payload)
+    HELLOASSO_WEBHOOKS.labels(outcome="ok").inc()
     logger.info(
         "Processed HelloAsso %s notification: %d membership item(s)",
         notification.event_type,

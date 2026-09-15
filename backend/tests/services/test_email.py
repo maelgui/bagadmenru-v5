@@ -165,3 +165,60 @@ def test_send_emails_attaches_calendar_invitation():
     assert part.get_param("method") == "REQUEST"
     assert part.get_filename() == "invitation.ics"
     assert b"BEGIN:VCALENDAR" in part.get_payload(decode=True)
+
+
+def _counter(name: str, labels: dict[str, str]) -> float:
+    from prometheus_client import REGISTRY
+
+    return REGISTRY.get_sample_value(name, labels) or 0.0
+
+
+def test_send_emails_success_increments_counter():
+    import asyncio
+
+    before = _counter("bbe2_emails_sent_total", {"outcome": "success"})
+    with patch("bbe2.services.email.aiosmtplib.send", new=AsyncMock()):
+        asyncio.run(
+            send_emails(
+                _FakeSettings(),
+                [
+                    OutgoingEmail(
+                        to="a@example.com",
+                        subject="s",
+                        body_html="<p>x</p>",
+                        body_text="x",
+                    )
+                ],
+            )
+        )
+    assert _counter("bbe2_emails_sent_total", {"outcome": "success"}) == before + 1
+
+
+def test_send_emails_failure_increments_counter_and_raises():
+    import asyncio
+
+    import aiosmtplib as smtplib_mod
+    import pytest
+
+    from bbe2.services.email import EmailSendError
+
+    before = _counter("bbe2_emails_sent_total", {"outcome": "failure"})
+    with patch(
+        "bbe2.services.email.aiosmtplib.send",
+        new=AsyncMock(side_effect=smtplib_mod.SMTPException("refused")),
+    ):
+        with pytest.raises(EmailSendError):
+            asyncio.run(
+                send_emails(
+                    _FakeSettings(),
+                    [
+                        OutgoingEmail(
+                            to="a@example.com",
+                            subject="s",
+                            body_html="<p>x</p>",
+                            body_text="x",
+                        )
+                    ],
+                )
+            )
+    assert _counter("bbe2_emails_sent_total", {"outcome": "failure"}) == before + 1

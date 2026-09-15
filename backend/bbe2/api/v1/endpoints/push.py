@@ -133,6 +133,7 @@ async def test_push(
         title="Test - Bagad Men Ru",
         body="Les notifications push fonctionnent !",
         url="/",
+        kind="test",
     )
     return {"status": "sent"}
 

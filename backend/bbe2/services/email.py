@@ -11,6 +11,7 @@ from imapclient import IMAPClient  # type: ignore
 from pydantic import BaseModel, Field
 
 from bbe2.config import Settings
+from bbe2.metrics import EMAILS_SENT
 from bbe2.utils.correlation import CORRELATION_ID_HEADER, get_correlation_id
 
 logger = logging.getLogger(__name__)
@@ -117,8 +118,10 @@ async def send_emails(
     for msg in messages:
         try:
             await aiosmtplib.send(msg, **smtp_kwargs)
+            EMAILS_SENT.labels(outcome="success").inc()
             logger.info("Email sent to %s: %s", msg["To"], msg["Subject"])
         except (aiosmtplib.SMTPException, OSError) as e:
+            EMAILS_SENT.labels(outcome="failure").inc()
             # SMTPException covers protocol/auth errors; OSError covers a
             # refused connection, timeout, or DNS failure when the SMTP server
             # is unreachable. Wrap both so callers can return a clean 503.

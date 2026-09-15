@@ -220,3 +220,69 @@ def test_send_with_data_skips_opted_out_users():
     # The master switch also applies to per-user-data (RSVP) pushes.
     assert mock_send.call_count == 1
     assert mock_send.call_args.args[2].user_id == "on-user"
+
+
+def _counter(name: str, labels: dict[str, str]) -> float:
+    from prometheus_client import REGISTRY
+
+    return REGISTRY.get_sample_value(name, labels) or 0.0
+
+
+def test_push_success_increments_counter_with_kind():
+    labels = {"kind": "event", "outcome": "success"}
+    with _session() as session:
+        _user_with_device(session, "carol", receives_push=True)
+        before = _counter("bbe2_push_sends_total", labels)
+
+        with patch("bbe2.services.push_service.webpush"):
+            send_push_to_user(session, _settings(), "carol", "t", "b")
+
+        assert _counter("bbe2_push_sends_total", labels) == before + 1
+
+
+def test_push_expired_subscription_counts_expired_and_prunes():
+    from pywebpush import WebPushException
+
+    labels = {"kind": "event", "outcome": "expired"}
+    with _session() as session:
+        _user_with_device(session, "dave", receives_push=True)
+        before = _counter("bbe2_push_sends_total", labels)
+
+        response = MagicMock()
+        response.status_code = 410
+        with patch(
+            "bbe2.services.push_service.webpush",
+            side_effect=WebPushException("gone", response=response),
+        ):
+            send_push_to_user(session, _settings(), "dave", "t", "b")
+
+        assert _counter("bbe2_push_sends_total", labels) == before + 1
+        # The dead subscription must be pruned.
+        assert (
+            session.query(models.PushSubscriptionDB).filter_by(user_id="dave").count()
+            == 0
+        )
+
+
+def test_push_other_error_counts_failure():
+    from pywebpush import WebPushException
+
+    labels = {"kind": "test", "outcome": "failure"}
+    with _session() as session:
+        _user_with_device(session, "erin", receives_push=True)
+        before = _counter("bbe2_push_sends_total", labels)
+
+        response = MagicMock()
+        response.status_code = 500
+        with patch(
+            "bbe2.services.push_service.webpush",
+            side_effect=WebPushException("boom", response=response),
+        ):
+            send_push_to_user(session, _settings(), "erin", "t", "b", kind="test")
+
+        assert _counter("bbe2_push_sends_total", labels) == before + 1
+        # Non-expired failures must NOT prune the subscription.
+        assert (
+            session.query(models.PushSubscriptionDB).filter_by(user_id="erin").count()
+            == 1
+        )
