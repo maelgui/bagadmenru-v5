@@ -161,13 +161,19 @@ def _send_push(
         session.commit()
     except WebPushException as ex:
         logger.error("Push notification failed: %s", ex)
-        # If subscription is expired or invalid (410 Gone or 404), remove it
-        if ex.response and ex.response.status_code in (404, 410):
+        # Remove subscriptions that can never be delivered to again:
+        # - 404/410: the push service says the subscription expired or is gone
+        # - 401/403: the subscription is bound to a different VAPID key (e.g.
+        #   after a key rotation) — every future attempt would fail the same
+        #   way, so pruning it lets the device re-subscribe cleanly under the
+        #   new key instead of silently never receiving pushes again.
+        if ex.response and ex.response.status_code in (401, 403, 404, 410):
             PUSH_SENDS.labels(kind=kind, outcome="expired").inc()
             logger.info(
-                "Removing expired subscription %s for user %s",
+                "Removing dead subscription %s for user %s (HTTP %s)",
                 subscription.id,
                 subscription.user_id,
+                ex.response.status_code,
             )
             session.delete(subscription)
             session.commit()
