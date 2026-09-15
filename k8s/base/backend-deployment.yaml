@@ -13,6 +13,12 @@ spec:
     metadata:
       labels:
         app: backend
+      annotations:
+        # Découverte par Grafana Alloy (repo k8s-infra, cluster/monitoring) :
+        # scrape du /metrics exposé hors ingress par le backend (bbe2/main.py).
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
     spec:
       imagePullSecrets:
         - name: ghcr-credentials
