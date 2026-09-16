@@ -10,7 +10,7 @@ import GroupForm from './components/groupForm';
 export default function AddGroupPage() {
   const { usersApi } = useApiClient();
   const navigate = useNavigate();
-  const { mutate } = useMutation({
+  const { mutateAsync } = useMutation({
     mutationFn: async (data: GroupCreate) => await usersApi.createGroupApiV1GroupsPost({ groupCreate: data }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['groups'] });
@@ -21,7 +21,10 @@ export default function AddGroupPage() {
       toast.add({ title: `Erreur lors de la création du groupe : ${error.message}`, type: 'error' });
     },
   });
-  const onSubmit = (data: GroupCreate) => mutate(data);
+  // Await the mutation so react-hook-form's isSubmitting reflects it: with a
+  // fire-and-forget mutate() the submit button never disables and a slow
+  // network allows a double POST creating two groups.
+  const onSubmit = async (data: GroupCreate) => await mutateAsync(data);
 
   return (
     <>

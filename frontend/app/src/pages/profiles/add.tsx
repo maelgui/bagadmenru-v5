@@ -11,7 +11,7 @@ export default function CreateProfilePage() {
   const { usersApi } = useApiClient();
   const navigate = useNavigate();
 
-  const { mutate } = useMutation({
+  const { mutateAsync } = useMutation({
     mutationFn: async (data: ProfileCreate) => await toast.promise(
       usersApi.createProfileApiV1ProfilesPost({
         profileCreate: data,
@@ -27,7 +27,10 @@ export default function CreateProfilePage() {
       void navigate('/profile');
     },
   });
-  const onSubmit = (data: ProfileCreate) => mutate(data);
+  // Await the mutation so react-hook-form's isSubmitting reflects it: with a
+  // fire-and-forget mutate() the submit button never disables and a slow
+  // network allows a double POST creating two profiles.
+  const onSubmit = async (data: ProfileCreate) => await mutateAsync(data);
 
   return (
     <>

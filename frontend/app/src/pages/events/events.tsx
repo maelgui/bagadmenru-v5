@@ -34,6 +34,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -41,9 +42,25 @@ import { queryClient, useApiClient } from '../../config/client';
 import EventCategories from '../../utils/event-category';
 import IcsExportButton from './components/ics-export';
 
-function EventRow({ event, onDelete }: { event: Event; onDelete: (id: number) => void }) {
+function EventRow({ event }: { event: Event }) {
+  const { eventsApi } = useApiClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const category = EventCategories[event.category];
+
+  // The mutation lives in the row so the confirm dialog can stay open with a
+  // pending (disabled + spinner) action until the row actually disappears.
+  // Closing the dialog on click let the row linger during a slow delete, and
+  // a re-confirmation fired a second DELETE ending in a 404.
+  const { mutate: deleteEvent, isPending: isDeleting } = useMutation({
+    mutationFn: async () => await eventsApi.deleteEventApiV1EventsEventIdDelete({ eventId: event.id }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['events'] });
+      setConfirmOpen(false);
+    },
+    onError: () => {
+      toast.add({ title: 'Une erreur est survenue.', type: 'error' });
+    },
+  });
 
   return (
     <Item variant="outline">
@@ -110,10 +127,8 @@ function EventRow({ event, onDelete }: { event: Event; onDelete: (id: number) =>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => {
-                onDelete(event.id);
-                setConfirmOpen(false);
-              }}
+              pending={isDeleting}
+              onClick={() => deleteEvent()}
             >
               Supprimer
             </AlertDialogAction>
@@ -129,13 +144,6 @@ export default function EventsManagePage() {
   const { data: events } = useQuery({
     queryKey: ['events', 'list', { limit: 100, ordering: '-date' }],
     queryFn: async () => await eventsApi.listEventsApiV1EventsGet({ limit: 100, ordering: '-date' }),
-  });
-
-  const { mutate: deleteEvent } = useMutation({
-    mutationFn: async (id: number) => await eventsApi.deleteEventApiV1EventsEventIdDelete({ eventId: id }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['events'] });
-    },
   });
 
   return (
@@ -156,7 +164,7 @@ export default function EventsManagePage() {
         {events?.length ? (
           <ItemGroup>
             {events.map((event) => (
-              <EventRow key={event.id} event={event} onDelete={deleteEvent} />
+              <EventRow key={event.id} event={event} />
             ))}
           </ItemGroup>
         ) : (

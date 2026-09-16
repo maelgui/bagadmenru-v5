@@ -35,7 +35,7 @@ export default function EditProfilePage() {
     queryFn: async () => await usersApi.getProfileApiV1ProfilesProfileIdGet({ profileId }),
   });
 
-  const { mutate } = useMutation({
+  const { mutateAsync } = useMutation({
     mutationFn: async (data: ProfileUpdate) => await toast.promise(
       usersApi.updateProfileApiV1ProfilesProfileIdPut({ profileId, profileUpdate: data }),
       messages,
@@ -70,7 +70,9 @@ export default function EditProfilePage() {
         ]}
       />
       <Container>
-        <AdminEditProfileForm profile={profile} onSubmit={(data) => mutate(data)} />
+        {/* Await the mutation so react-hook-form's isSubmitting disables the
+            submit button for the whole request (prevents double submits). */}
+        <AdminEditProfileForm profile={profile} onSubmit={async (data) => await mutateAsync(data)} />
       </Container>
     </>
   );
