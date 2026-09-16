@@ -66,6 +66,13 @@ class Profile(_ProfileBase):
     # lets the UI show which season an "up to date" member has paid for.
     membership_active_season: Optional[str] = None
 
+    # Whether the account has a password (vs passkey-only). Only populated on
+    # ``GET /profiles/me`` — same anti-leak pattern as ``membership_status``:
+    # it stays ``None`` on other members' profiles so the member list never
+    # reveals who is passkey-only. Drives the post-recovery choice (passkey
+    # vs new password) and the account-security settings.
+    has_password: Optional[bool] = None
+
     @computed_field  # type: ignore[misc]
     @property
     def picture_url(self) -> Optional[str]:

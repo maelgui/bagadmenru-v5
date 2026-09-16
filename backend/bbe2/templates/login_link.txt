@@ -1,0 +1,13 @@
+Bonjour,
+
+Vous avez demandé à vous reconnecter à Bagad Men Ru.
+
+Votre code de connexion : {{ code }}
+
+Saisissez-le sur la page où vous l'avez demandé. Ce code est valable 10 minutes.
+
+Vous pouvez aussi vous connecter directement en suivant ce lien (valable 10 minutes, utilisable une seule fois) :
+
+{{ frontend_url }}/auth/reset/{{ grant_id }}?code={{ code }}
+
+Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.

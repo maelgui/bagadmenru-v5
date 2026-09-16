@@ -38,6 +38,7 @@ src/models/InvitationChannel.ts
 src/models/InvitationCreate.ts
 src/models/InvitationCreated.ts
 src/models/InvitationInfo.ts
+src/models/LoginCode.ts
 src/models/LoginData.ts
 src/models/LoginType.ts
 src/models/LogoutRequest.ts
@@ -58,14 +59,15 @@ src/models/PushDevice.ts
 src/models/PushSubscriptionCreate.ts
 src/models/PushSubscriptionResponse.ts
 src/models/RankingInfo.ts
+src/models/RecoveryGrant.ts
 src/models/Res.ts
-src/models/ResetPassword.ts
 src/models/ResetPasswordRequest.ts
 src/models/Response.ts
 src/models/ResponseCreate.ts
 src/models/Role.ts
 src/models/SeasonRanking.ts
 src/models/SessionInfo.ts
+src/models/SetPassword.ts
 src/models/Token.ts
 src/models/UnlinkedMembership.ts
 src/models/UserRankingItem.ts

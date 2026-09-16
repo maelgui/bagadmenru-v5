@@ -33,11 +33,14 @@ WEBAUTHN_REGISTRATIONS = Counter(
     ["flow", "outcome"],
 )
 
-PASSWORD_RESETS = Counter(
-    "bbe2_password_resets_total",
-    "Password reset funnel.",
-    # stage: requested (reset email actually sent, i.e. account exists)
-    #        | completed (new password set via the emailed link)
+LOGIN_LINKS = Counter(
+    "bbe2_login_links_total",
+    "Email recovery funnel (single flow for every account type).",
+    # stage: requested (recovery email actually sent, i.e. account exists)
+    #        | used_code (signed in by typing the emailed 6-digit code, primary)
+    #        | used_link (signed in via the emailed link — same grant+code
+    #          prefilled in a URL; the split is client-declared and only
+    #          exists for this funnel)
     ["stage"],
 )
 

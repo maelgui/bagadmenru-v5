@@ -194,11 +194,20 @@ export default createBrowserRouter([
           },
           {
             path: 'reset',
-            lazy: lazyPage(async () => await import('../pages/auth/lostPassword')),
+            children: [
+              {
+                index: true,
+                lazy: lazyPage(async () => await import('../pages/auth/recovery/RequestStep')),
+              },
+              {
+                path: ':grantId',
+                lazy: lazyPage(async () => await import('../pages/auth/recovery/GrantStep')),
+              },
+            ],
           },
           {
-            path: 'reset/:token',
-            lazy: lazyPage(async () => await import('../pages/auth/changePassword')),
+            path: 'next',
+            lazy: lazyPage(async () => await import('../pages/auth/next')),
           },
         ],
       },
