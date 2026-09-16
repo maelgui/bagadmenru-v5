@@ -38,7 +38,7 @@ export default function EditEventPage() {
   });
   const onSubmit = (event: EventCreate) => mutate(event);
 
-  const { mutate: deleteMutation } = useMutation({
+  const { mutate: deleteMutation, isPending: isDeleting } = useMutation({
     mutationFn: async (id: number) => await eventsApi.deleteEventApiV1EventsEventIdDelete({ eventId: id }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
@@ -71,7 +71,11 @@ export default function EditEventPage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction variant="destructive" onClick={() => deleteMutation(parsedEventId)}>
+                <AlertDialogAction
+                  variant="destructive"
+                  pending={isDeleting}
+                  onClick={() => deleteMutation(parsedEventId)}
+                >
                   Supprimer
                 </AlertDialogAction>
               </AlertDialogFooter>

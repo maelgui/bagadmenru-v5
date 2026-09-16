@@ -245,7 +245,7 @@ function UnlinkedRow({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction onClick={() => invite()}>
+              <AlertDialogAction pending={isInviting} onClick={() => invite()}>
                 Envoyer l&apos;invitation
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -268,7 +268,11 @@ function UnlinkedRow({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction variant="destructive" onClick={() => remove()}>
+              <AlertDialogAction
+                variant="destructive"
+                pending={isDeleting}
+                onClick={() => remove()}
+              >
                 Supprimer
               </AlertDialogAction>
             </AlertDialogFooter>

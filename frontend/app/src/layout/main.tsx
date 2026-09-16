@@ -1,21 +1,11 @@
-import { useIsFetching } from '@tanstack/react-query';
-import nprogress from 'nprogress';
-import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import Footer from '../components/footer';
 import Navbar from '../components/navbar';
+import { useRouteProgress } from '../utils/useRouteProgress';
 
 export default function MainLayout() {
-  const isFetching = useIsFetching();
-
-  useEffect(() => {
-    if (isFetching) {
-      nprogress.inc();
-    } else {
-      nprogress.done();
-    }
-  }, [isFetching]);
+  useRouteProgress();
 
   return (
     <div className="flex min-h-screen flex-col text-foreground">
