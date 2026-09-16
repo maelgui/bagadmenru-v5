@@ -1,0 +1,20 @@
+# Gitleaks configuration — extends the default ruleset.
+# Scanned in CI by .github/workflows/gitleaks.yml (full history on every run).
+#
+# One-off historical findings are pinned by fingerprint in .gitleaksignore;
+# this file only holds structural allowlists that must apply to future
+# commits too.
+
+[extend]
+useDefault = true
+
+# Sealed-secrets manifests contain asymmetrically-encrypted blobs that only
+# the cluster's sealed-secrets controller can decrypt. They are committed on
+# purpose and re-trip the generic-api-key rule on every secret rotation.
+# Trade-off: a plaintext secret accidentally pasted into one of these files
+# would not be caught — these files must only ever contain kubeseal output.
+[allowlist]
+description = "sealed-secrets are encrypted by design"
+paths = [
+    '''k8s/overlays/[^/]+/sealed-secrets\.yaml''',
+]

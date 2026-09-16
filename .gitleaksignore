@@ -1,0 +1,28 @@
+# Known historical findings from the 2026-09-15 pre-public-release audit.
+# Every entry is on the revocation checklist (rotate/revoke the secret; this
+# file only silences the already-audited history). Format:
+# <commit>:<file>:<rule-id>:<line>.
+# NEVER add an entry for a live secret — rotate it instead.
+
+# VAPID private key of the compromised pair (rotation runbook:
+# docs/runbooks/vapid-rotation.md, self-healing since PR #1334)
+fc539a13e8d0f336c73c9e64aead531935e385e1:docker-compose.yml:generic-api-key:67
+
+# 2024-03 docker-compose: AWS access key pair + Scaleway secret (revocation
+# checklist items 1 and 2)
+3d77409ab66efa7facb82ac78c3d3b3dcff917d0:docker-compose.yml:aws-access-token:73
+3d77409ab66efa7facb82ac78c3d3b3dcff917d0:docker-compose.yml:generic-api-key:74
+3d77409ab66efa7facb82ac78c3d3b3dcff917d0:docker-compose.yml:generic-api-key:77
+
+# 2024 docker-compose SECRET_KEY (checklist item 5: confirm sealed beta/prod
+# values differ; rotate if identical)
+f6052d25781946ad352fae3aca86cddb9db17547:docker-compose.yml:generic-api-key:46
+
+# Keycloak client secret from the removed auth-provider/ (checklist item 4:
+# verify the instance is decommissioned)
+9a1d69897e8c2face4043535a2ea6e68bbd17371:auth-provider/src/configuration.ts:generic-api-key:47
+
+# VAPID *public* key test fixture (not a secret; future commits carry an
+# inline gitleaks:allow, these two predate it)
+6aef6639d06c80a9a67d4dd784e04c8bddabbace:frontend/app/src/utils/usePushNotifications.test.ts:generic-api-key:23
+3628034f2635e763b384049b1874a531860dac89:frontend/app/src/utils/usePushNotifications.test.ts:generic-api-key:23
