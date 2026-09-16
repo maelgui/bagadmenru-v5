@@ -108,7 +108,7 @@ class Settings(BaseSettings):
     # touched (revoking it would break a live calendar subscription); the TTL
     # covers a subscription made but not yet polled by the calendar client.
     # Set to 0 to disable the sweep.
-    stale_auto_api_key_ttl_hours: int = 24
+    stale_auto_api_key_ttl_hours: int = 48
 
     @property
     def email_from(self) -> str:
