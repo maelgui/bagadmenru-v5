@@ -20,6 +20,7 @@ function base64urlToBuffer(value: string): ArrayBuffer {
 }
 
 // A realistic P-256 uncompressed-point VAPID public key (base64url, no padding).
+// Public key, not a secret — gitleaks:allow
 const SERVER_KEY = 'BEibjIo7p3zTBbEJc2Oywfvxe655TUTH-cklnkx0dPtAN2FktdtDEJV91xMrCdEbMaNBupoB699ENzTC3zr_ZWM';
 
 describe('subscriptionMatchesServerKey', () => {
