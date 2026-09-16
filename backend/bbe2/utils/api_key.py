@@ -11,10 +11,10 @@ exactly once), and resolve an incoming key to its owner with
 
 import hashlib
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session as DbSession
 
 from bbe2.models.api_key import ApiKeyDB
@@ -109,3 +109,42 @@ def revoke_api_key(db: DbSession, user_id: str, key_hash: str) -> bool:
     row.revoked_at = datetime.now(timezone.utc)
     db.flush()
     return True
+
+
+def revoke_stale_auto_generated_keys(
+    db: DbSession, *, ttl_hours: int, now: Optional[datetime] = None
+) -> int:
+    """Revoke auto-generated API keys that were minted but never used.
+
+    UI flows like the calendar-sync dialog mint a fresh key on every open
+    (keys are hash-only, so an existing key can never be re-vended); a member
+    who opens the dialog without subscribing leaves a live orphan key behind.
+    This revokes -- never deletes, the row keeps its audit trail -- keys that
+    are ``auto_generated``, never authenticated (``last_used_at`` is null) and
+    older than ``ttl_hours``. A key that authenticated even once is left
+    alone: revoking it would break the calendar subscription already polling
+    it. The TTL leaves room for a subscription made but not yet polled.
+
+    A ``ttl_hours`` of 0 disables the sweep. Returns the number of keys
+    revoked.
+    """
+    if ttl_hours <= 0:
+        return 0
+
+    now = now or datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=ttl_hours)
+
+    result = db.execute(
+        update(ApiKeyDB)
+        .where(
+            ApiKeyDB.auto_generated.is_(True),
+            ApiKeyDB.last_used_at.is_(None),
+            ApiKeyDB.revoked_at.is_(None),
+            ApiKeyDB.created_at < cutoff,
+        )
+        .values(revoked_at=now)
+    )
+    db.flush()
+    # session.execute of a Core UPDATE returns a CursorResult exposing rowcount;
+    # mypy only sees the base Result, so read it defensively.
+    return getattr(result, "rowcount", 0) or 0

@@ -100,6 +100,16 @@ class Settings(BaseSettings):
     # dead; the delay only leaves a short window for debugging/audit.
     action_token_ttl_days: int = 7
 
+    # Auto-generated API keys (minted by UI flows such as the calendar-sync
+    # dialog, one fresh key per dialog open) that never authenticated are dead
+    # weight: the member closed the dialog without subscribing. A daily job
+    # revokes -- never deletes -- auto-generated keys with no ``last_used_at``
+    # older than this many hours. A key that authenticated even once is never
+    # touched (revoking it would break a live calendar subscription); the TTL
+    # covers a subscription made but not yet polled by the calendar client.
+    # Set to 0 to disable the sweep.
+    stale_auto_api_key_ttl_hours: int = 24
+
     @property
     def email_from(self) -> str:
         """The RFC 5322 ``From:`` header line, e.g. ``Name <addr@host>``.

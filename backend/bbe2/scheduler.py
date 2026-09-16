@@ -11,6 +11,7 @@ from bbe2.models import GroupDB
 from bbe2.services import membership as membership_service
 from bbe2.utils import get_logger
 from bbe2.utils.action_token import purge_expired_action_tokens
+from bbe2.utils.api_key import revoke_stale_auto_generated_keys
 
 scheduler = AsyncIOScheduler()
 
@@ -181,6 +182,9 @@ async def daily_cleanup():
       to a member) older than ``unlinked_membership_ttl_days``.
     - Deletes dead action tokens (expired / consumed / revoked) past the
       ``action_token_ttl_days`` grace period.
+    - Revokes auto-generated API keys that were never used (minted by the
+      calendar-sync dialog but never subscribed) older than
+      ``stale_auto_api_key_ttl_hours``.
     """
     settings = get_settings()
     with session_ctx(settings.database_url) as ses:
@@ -193,3 +197,8 @@ async def daily_cleanup():
             ses, grace_days=settings.action_token_ttl_days
         )
         logger.info("Action token purge complete: %d deleted", tokens)
+
+        keys = revoke_stale_auto_generated_keys(
+            ses, ttl_hours=settings.stale_auto_api_key_ttl_hours
+        )
+        logger.info("Stale auto-generated API key sweep complete: %d revoked", keys)
