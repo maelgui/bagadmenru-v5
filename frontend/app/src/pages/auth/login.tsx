@@ -9,14 +9,13 @@ import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import PasskeyIcon from '../../components/PasskeyIcon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import PasswordField from '../../components/PasswordField';
 import { queryClient, useApiClient } from '../../config/client';
 import { attemptSilentPasskeyUpgrade } from '../../utils/usePasskey';
-import { cn } from '@/lib/utils';
 
 const HTTP_UNAUTHORIZED = 401;
 
@@ -135,13 +134,13 @@ function AuthPage() {
               autoComplete="current-password"
               registration={register('password', { required: 'Ce champ est obligatoire.' })}
             />
-            <div className="flex justify-between">
-              <Link to="/auth/reset" className={cn(buttonVariants({ variant: 'ghost' }))}>Mot de passe oublié</Link>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Spinner data-icon="inline-start" /> : <KeyRound data-icon="inline-start" />}
-                Connexion
-              </Button>
+            <div className="flex justify-end">
+              <Link to="/auth/reset" className="text-sm text-muted-foreground underline-offset-4 hover:underline">Mot de passe oublié&nbsp;?</Link>
             </div>
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? <Spinner data-icon="inline-start" /> : <KeyRound data-icon="inline-start" />}
+              Connexion
+            </Button>
           </FieldGroup>
         </fieldset>
       </form>
