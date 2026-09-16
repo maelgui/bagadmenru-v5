@@ -27,6 +27,7 @@ import {
   FieldTitle,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import {
   InputGroup,
   InputGroupAddon,
@@ -44,7 +45,7 @@ export default function PermissionsForm({ onSubmit, data = undefined }: Permissi
   const { usersApi } = useApiClient();
   const rolesAnchor = useComboboxAnchor();
   const {
-    register, handleSubmit, setValue, formState: { errors }, control,
+    register, handleSubmit, setValue, formState: { errors, isSubmitting }, control,
   } = useForm<GroupCreate & { mailingListEnabled: boolean }>({
     defaultValues: {
       color: '#932a58',
@@ -202,7 +203,10 @@ export default function PermissionsForm({ onSubmit, data = undefined }: Permissi
           )}
         />
 
-        <Button type="submit">Enregistrer</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? <Spinner data-icon="inline-start" /> : null}
+          Enregistrer
+        </Button>
       </FieldGroup>
     </form>
   );

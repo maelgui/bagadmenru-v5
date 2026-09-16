@@ -92,4 +92,32 @@ describe('AdminEditProfileForm (creation)', () => {
     await waitFor(() => expect(screen.getAllByText('Ce champ est obligatoire.').length).toBeGreaterThan(0));
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  // Regression: the add/edit profile pages used a fire-and-forget mutate() in
+  // onSubmit, so isSubmitting never turned true, the button never disabled,
+  // and a slow network allowed a double POST creating two profiles. The pages
+  // now await mutateAsync; this pins the form side of that contract.
+  it('disables the submit button while an async onSubmit is pending', async () => {
+    const user = userEvent.setup();
+    const { promise, resolve: resolveSubmit } = Promise.withResolvers<undefined>();
+    const onSubmit = vi.fn().mockImplementation(async () => await promise);
+    renderForm(onSubmit);
+
+    await user.type(screen.getByLabelText('Prénom'), 'New');
+    await user.type(screen.getByLabelText('Nom'), 'Member');
+    await user.type(screen.getByLabelText('E-mail'), 'new.member@example.com');
+    const instrumentInput = await screen.findByRole('combobox', { name: 'Instrument' });
+    await user.click(instrumentInput);
+    await user.type(instrumentInput, 'Bomb');
+    await user.click(await screen.findByRole('option', { name: 'Bombarde' }));
+
+    const button = screen.getByRole('button', { name: 'Enregistrer' });
+    await user.click(button);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(button.hasAttribute('disabled')).toBe(true);
+
+    resolveSubmit(undefined);
+    await waitFor(() => expect(button.hasAttribute('disabled')).toBe(false));
+  });
 });

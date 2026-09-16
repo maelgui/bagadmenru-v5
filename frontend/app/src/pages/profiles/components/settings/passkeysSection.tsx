@@ -52,11 +52,28 @@ function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
   return icon ? <img src={icon} alt="" className="size-6" /> : <PasskeyIcon className="size-6" />;
 }
 
-function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => void }) {
+function PasskeyItem({ passkey }: { passkey: Passkey }) {
+  const { authApi } = useApiClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { resolvedTheme } = useTheme();
   const { browser, os } = UAParser(passkey.lastUseUa ?? '');
   const authenticatorName = resolveAuthenticator(passkey.aaguid, resolvedTheme).name ?? 'Clé d\'accès';
+
+  // The mutation lives in the item so the confirm dialog can stay open with a
+  // pending (disabled + spinner) action until the passkey actually disappears,
+  // instead of closing immediately and leaving a still-deletable ghost row.
+  const { mutate: deletePasskey, isPending: isDeleting } = useMutation({
+    mutationFn: async () => await authApi.deletePasskeyApiV1WebauthnCredentialIdDelete({
+      credentialId: passkey.credentialId,
+    }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
+      setIsDeleteDialogOpen(false);
+    },
+    onError: () => {
+      toast.add({ title: 'Une erreur est survenue.', type: 'error' });
+    },
+  });
 
   return (
     <Item variant="muted" className="items-start" data-credential-id={passkey.credentialId}>
@@ -109,10 +126,8 @@ function PasskeyItem({ passkey, onDelete }: { passkey: Passkey, onDelete: () => 
               <AlertDialogCancel>Annuler</AlertDialogCancel>
               <AlertDialogAction
                 variant="destructive"
-                onClick={() => {
-                  onDelete();
-                  setIsDeleteDialogOpen(false);
-                }}
+                pending={isDeleting}
+                onClick={() => deletePasskey()}
               >
                 Supprimer
               </AlertDialogAction>
@@ -136,15 +151,6 @@ export default function PasskeysSection() {
   });
 
   const register = useRegisterPasskey();
-
-  const { mutate: deleteMutation } = useMutation({
-    mutationFn: async (cid: string) => await authApi.deletePasskeyApiV1WebauthnCredentialIdDelete({
-      credentialId: cid,
-    }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
-    },
-  });
 
   return (
     <Card>
@@ -196,7 +202,6 @@ export default function PasskeysSection() {
             <PasskeyItem
               passkey={e}
               key={e.credentialId}
-              onDelete={() => deleteMutation(e.credentialId)}
             />
           ))
         ) : (

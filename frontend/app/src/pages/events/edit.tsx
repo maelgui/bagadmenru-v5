@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { toast } from '@/components/ui/toast';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
@@ -29,14 +30,20 @@ export default function EditEventPage() {
   });
 
   const navigate = useNavigate();
-  const { mutate } = useMutation({
+  const { mutateAsync } = useMutation({
     mutationFn: async (event: EventCreate) => await eventsApi.updateEventApiV1EventsEventIdPut({ eventId: parsedEventId, eventCreate: event }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['events'] });
       void navigate('/events/manage');
     },
+    onError: (error) => {
+      toast.add({ title: `Erreur lors de la modification de l'évènement : ${error.message}`, type: 'error' });
+    },
   });
-  const onSubmit = (event: EventCreate) => mutate(event);
+  // Await the mutation so react-hook-form's isSubmitting reflects it: with a
+  // fire-and-forget mutate() the submit button never disables and a slow
+  // network allows double submits.
+  const onSubmit = async (event: EventCreate) => await mutateAsync(event);
 
   const { mutate: deleteMutation, isPending: isDeleting } = useMutation({
     mutationFn: async (id: number) => await eventsApi.deleteEventApiV1EventsEventIdDelete({ eventId: id }),

@@ -20,7 +20,7 @@ export default function EditGroupPage() {
     queryFn: async () => await usersApi.getGroupApiV1GroupsGroupIdGet({ groupId }),
     select: (data) => ({ roleIds: data.roles.map((role) => role.id), ...data }),
   });
-  const { mutate } = useMutation({
+  const { mutateAsync } = useMutation({
     mutationFn: async (data: GroupUpdate) => await usersApi.updateGroupApiV1GroupsGroupIdPut({ groupId, groupUpdate: data }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['groups'] });
@@ -32,7 +32,9 @@ export default function EditGroupPage() {
       toast.add({ title: `Erreur lors de la modification du groupe : ${error.message}`, type: 'error' });
     },
   });
-  const onSubmit = (data: GroupCreate) => mutate(data);
+  // Await the mutation so react-hook-form's isSubmitting reflects it (see
+  // groups/add.tsx): prevents double submits on a slow network.
+  const onSubmit = async (data: GroupCreate) => await mutateAsync(data);
 
   return (
     <>
