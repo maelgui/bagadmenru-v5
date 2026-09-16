@@ -3,6 +3,7 @@ import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
@@ -141,14 +142,28 @@ function AlertDialogDescription({
 
 function AlertDialogAction({
   className,
+  pending = false,
+  disabled = false,
+  children,
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: React.ComponentProps<typeof Button> & {
+  /**
+   * True while the confirmed action is running. Disables the button and shows
+   * a spinner, so a slow mutation gives immediate feedback and cannot be
+   * fired twice by repeated clicks.
+   */
+  pending?: boolean
+}) {
   return (
     <Button
       data-slot="alert-dialog-action"
       className={cn(className)}
+      disabled={disabled || pending}
       {...props}
-    />
+    >
+      {pending && <Spinner data-icon="inline-start" />}
+      {children}
+    </Button>
   )
 }
 

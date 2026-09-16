@@ -58,10 +58,11 @@ function DeleteFileDialog({
           <AlertDialogCancel>Annuler</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            disabled={file === undefined || isPending}
+            disabled={file === undefined}
+            pending={isPending}
             onClick={() => { if (file) onConfirm(file.id); }}
           >
-            {isPending ? <Spinner data-icon="inline-start" /> : <Trash2 data-icon="inline-start" />}
+            {!isPending && <Trash2 data-icon="inline-start" />}
             Supprimer
           </AlertDialogAction>
         </AlertDialogFooter>

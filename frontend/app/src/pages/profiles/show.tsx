@@ -37,7 +37,7 @@ export default function ShowProfilePage() {
     queryFn: async () => await usersApi.getProfileApiV1ProfilesProfileIdGet({ profileId }),
   });
 
-  const { mutate: deleteProfile } = useMutation({
+  const { mutate: deleteProfile, isPending: isDeactivating } = useMutation({
     mutationFn: async () => await toast.promise(
       usersApi.deleteProfileApiV1ProfilesProfileIdDelete({ profileId }),
       {
@@ -78,7 +78,11 @@ export default function ShowProfilePage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => deleteProfile()}>
+            <AlertDialogAction
+              variant="destructive"
+              pending={isDeactivating}
+              onClick={() => deleteProfile()}
+            >
               Désactiver
             </AlertDialogAction>
           </AlertDialogFooter>
