@@ -26,7 +26,13 @@ class ActionTokenValue(Enum):
     """The kinds of action token, and their validity/replay policy."""
 
     CreateResponseByToken = "CreateResponseByToken"
-    ResetPassword = "ResetPassword"
+    # Account-recovery grant (also the welcome-email sign-in). The opaque
+    # token doubles as the grant's PUBLIC identifier; the emailed 6-digit
+    # code (hash in the payload) is the secret — RFC 8628's
+    # device_code/user_code split. The stored value keeps the historical
+    # "ResetPassword" name so rows in flight (welcome links live 3 days)
+    # survive a deploy; only the Python name reflects today's meaning.
+    Recovery = "ResetPassword"
     Unsubscribe = "Unsubscribe"
     # Self-service onboarding invitation. The raw token is embedded in a signup
     # link (and QR code). Its payload carries the delivery channel and any
@@ -43,8 +49,12 @@ class ActionTokenValue(Enum):
         match self:
             case ActionTokenValue.CreateResponseByToken:
                 return 3600 * 24 * 7  # 7 jours
-            case ActionTokenValue.ResetPassword:
-                return 3600  # 1h
+            case ActionTokenValue.Recovery:
+                # One short expiry for the whole grant (code AND link): the
+                # email is triggered by a user action, so the member is
+                # actively waiting for it. The welcome email mints its token
+                # with an explicit longer expires_in (see profiles.py).
+                return 600  # 10 min
             case ActionTokenValue.Unsubscribe:
                 return 3600 * 24 * 7  # 7 jours
             case ActionTokenValue.Invitation:
@@ -61,9 +71,9 @@ class ActionTokenValue(Enum):
     def single_use(self) -> bool:
         """Whether a token of this type is invalidated after its first use.
 
-        Password resets must not be replayable, so they are single-use. The RSVP
-        quick-answer and unsubscribe links are meant to be re-openable within
-        their validity window, so they are reusable.
+        Recovery grants sign the member in, so they must not be replayable:
+        single-use. The RSVP quick-answer and unsubscribe links are meant to
+        be re-openable within their validity window, so they are reusable.
 
         Invitations are single-use: one invitation onboards exactly one member.
         The EmailVerification (OTP) token is *not* marked single-use here because
@@ -73,7 +83,7 @@ class ActionTokenValue(Enum):
         read before the code is even checked.
         """
         return self in (
-            ActionTokenValue.ResetPassword,
+            ActionTokenValue.Recovery,
             ActionTokenValue.Invitation,
         )
 

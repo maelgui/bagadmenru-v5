@@ -16,35 +16,45 @@
 import * as runtime from '../runtime';
 import type {
   HTTPValidationError,
+  LoginCode,
   LoginData,
   LogoutRequest,
   Passkey,
-  ResetPassword,
+  RecoveryGrant,
   ResetPasswordRequest,
   SessionInfo,
+  SetPassword,
   Token,
 } from '../models/index';
 import {
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    LoginCodeFromJSON,
+    LoginCodeToJSON,
     LoginDataFromJSON,
     LoginDataToJSON,
     LogoutRequestFromJSON,
     LogoutRequestToJSON,
     PasskeyFromJSON,
     PasskeyToJSON,
-    ResetPasswordFromJSON,
-    ResetPasswordToJSON,
+    RecoveryGrantFromJSON,
+    RecoveryGrantToJSON,
     ResetPasswordRequestFromJSON,
     ResetPasswordRequestToJSON,
     SessionInfoFromJSON,
     SessionInfoToJSON,
+    SetPasswordFromJSON,
+    SetPasswordToJSON,
     TokenFromJSON,
     TokenToJSON,
 } from '../models/index';
 
 export interface DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest {
     credentialId: string;
+}
+
+export interface LoginWithCodeApiV1AuthLoginCodePostRequest {
+    loginCode: LoginCode;
 }
 
 export interface LogoutApiV1AuthLogoutPostRequest {
@@ -63,13 +73,12 @@ export interface RegisterPasskeyApiV1WebauthnRegisterPostRequest {
     requestBody: { [key: string]: any; };
 }
 
-export interface ResetPasswordApiV1AuthResetPostRequest {
-    token: string;
-    resetPassword: ResetPassword;
-}
-
 export interface ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest {
     resetPasswordRequest: ResetPasswordRequest;
+}
+
+export interface SetPasswordApiV1AuthSetPasswordPostRequest {
+    setPassword: SetPassword;
 }
 
 /**
@@ -181,6 +190,44 @@ export class AuthenticationApi extends runtime.BaseAPI {
      */
     async listSessionsApiV1AuthSessionsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<SessionInfo>> {
         const response = await this.listSessionsApiV1AuthSessionsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Sign the member in from an emailed recovery grant (grant id + code).  Single consumption endpoint of the recovery email, for every account type. The grant id publicly identifies the request; the 6-digit code is the secret (RFC 8628\'s device_code/user_code split). The email offers it two ways: the code to type into the page that requested it — the primary path, keeping the session (and the passkey ceremony that may follow) in a real browser instead of an email app\'s WebView — and a link that is this same call with both fields prefilled in its URL (verification_uri_complete pattern). Also the landing of the welcome email sent when staff creates a member by hand.  Proving control of the email is a full authentication (same reasoning as the invitation-accept flow), so the member lands signed in (additive session cookies, becomes the active account) and the client offers how to secure the next sign-in: a passkey, or a new password for accounts that had one.  Guessing is bounded by the attempt counter (then the grant is revoked) and the grant\'s short lifetime. Every failure returns the same 403 so the endpoint reveals nothing about account existence, pending recoveries, or grant-id validity (decoy grant ids answer identically).
+     * Login With Code
+     */
+    async loginWithCodeApiV1AuthLoginCodePostRaw(requestParameters: LoginWithCodeApiV1AuthLoginCodePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
+        if (requestParameters['loginCode'] == null) {
+            throw new runtime.RequiredError(
+                'loginCode',
+                'Required parameter "loginCode" was null or undefined when calling loginWithCodeApiV1AuthLoginCodePost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/api/v1/auth/login_code`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: LoginCodeToJSON(requestParameters['loginCode']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TokenFromJSON(jsonValue));
+    }
+
+    /**
+     * Sign the member in from an emailed recovery grant (grant id + code).  Single consumption endpoint of the recovery email, for every account type. The grant id publicly identifies the request; the 6-digit code is the secret (RFC 8628\'s device_code/user_code split). The email offers it two ways: the code to type into the page that requested it — the primary path, keeping the session (and the passkey ceremony that may follow) in a real browser instead of an email app\'s WebView — and a link that is this same call with both fields prefilled in its URL (verification_uri_complete pattern). Also the landing of the welcome email sent when staff creates a member by hand.  Proving control of the email is a full authentication (same reasoning as the invitation-accept flow), so the member lands signed in (additive session cookies, becomes the active account) and the client offers how to secure the next sign-in: a passkey, or a new password for accounts that had one.  Guessing is bounded by the attempt counter (then the grant is revoked) and the grant\'s short lifetime. Every failure returns the same 403 so the endpoint reveals nothing about account existence, pending recoveries, or grant-id validity (decoy grant ids answer identically).
+     * Login With Code
+     */
+    async loginWithCodeApiV1AuthLoginCodePost(requestParameters: LoginWithCodeApiV1AuthLoginCodePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Token> {
+        const response = await this.loginWithCodeApiV1AuthLoginCodePostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -372,62 +419,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Set the new password and sign the member in.  Mirrors the invitation-accept flow: proving control of the email (the reset link) plus setting the password is a full authentication, so the member lands signed in (additive session cookies, becomes the active account) instead of being bounced to the login form. The client can then offer passkey enrolment right away (FIDO account-recovery pattern).  The response body stays \"OK\" so the generated client is unchanged; the session travels in the cookies.
-     * Reset Password
-     */
-    async resetPasswordApiV1AuthResetPostRaw(requestParameters: ResetPasswordApiV1AuthResetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
-        if (requestParameters['token'] == null) {
-            throw new runtime.RequiredError(
-                'token',
-                'Required parameter "token" was null or undefined when calling resetPasswordApiV1AuthResetPost().'
-            );
-        }
-
-        if (requestParameters['resetPassword'] == null) {
-            throw new runtime.RequiredError(
-                'resetPassword',
-                'Required parameter "resetPassword" was null or undefined when calling resetPasswordApiV1AuthResetPost().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-        if (requestParameters['token'] != null) {
-            headerParameters['token'] = String(requestParameters['token']);
-        }
-
-        const response = await this.request({
-            path: `/api/v1/auth/reset`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: ResetPasswordToJSON(requestParameters['resetPassword']),
-        }, initOverrides);
-
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<any>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
-
-    /**
-     * Set the new password and sign the member in.  Mirrors the invitation-accept flow: proving control of the email (the reset link) plus setting the password is a full authentication, so the member lands signed in (additive session cookies, becomes the active account) instead of being bounced to the login form. The client can then offer passkey enrolment right away (FIDO account-recovery pattern).  The response body stays \"OK\" so the generated client is unchanged; the session travels in the cookies.
-     * Reset Password
-     */
-    async resetPasswordApiV1AuthResetPost(requestParameters: ResetPasswordApiV1AuthResetPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
-        const response = await this.resetPasswordApiV1AuthResetPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
      * Reset Password Request
      */
-    async resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+    async resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RecoveryGrant>> {
         if (requestParameters['resetPasswordRequest'] == null) {
             throw new runtime.RequiredError(
                 'resetPasswordRequest',
@@ -449,6 +443,51 @@ export class AuthenticationApi extends runtime.BaseAPI {
             body: ResetPasswordRequestToJSON(requestParameters['resetPasswordRequest']),
         }, initOverrides);
 
+        return new runtime.JSONApiResponse(response, (jsonValue) => RecoveryGrantFromJSON(jsonValue));
+    }
+
+    /**
+     * Reset Password Request
+     */
+    async resetPasswordRequestApiV1AuthResetPasswordRequestPost(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RecoveryGrant> {
+        const response = await this.resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Set (or replace) the signed-in member\'s password.  Recovery successor of the old ``POST /auth/reset``: proving control of the email (code or link) already signed the member in, so setting a new password is now an authenticated action instead of a token-bearing one. Deliberately does not require the current password — the flow exists precisely because it was forgotten. The trust boundary is kept at \"proved email control recently\" by requiring a FRESH session (see ``SET_PASSWORD_MAX_SESSION_AGE``): without it, any live session (they last 90 days and cannot be revoked) could quietly take over the account with a password of its own. Also usable later from the account-security settings for members who want a fallback password, behind a fresh re-authentication.
+     * Set Password
+     */
+    async setPasswordApiV1AuthSetPasswordPostRaw(requestParameters: SetPasswordApiV1AuthSetPasswordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        if (requestParameters['setPassword'] == null) {
+            throw new runtime.RequiredError(
+                'setPassword',
+                'Required parameter "setPassword" was null or undefined when calling setPasswordApiV1AuthSetPasswordPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/auth/set_password`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SetPasswordToJSON(requestParameters['setPassword']),
+        }, initOverrides);
+
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<string>(response);
         } else {
@@ -457,10 +496,11 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Reset Password Request
+     * Set (or replace) the signed-in member\'s password.  Recovery successor of the old ``POST /auth/reset``: proving control of the email (code or link) already signed the member in, so setting a new password is now an authenticated action instead of a token-bearing one. Deliberately does not require the current password — the flow exists precisely because it was forgotten. The trust boundary is kept at \"proved email control recently\" by requiring a FRESH session (see ``SET_PASSWORD_MAX_SESSION_AGE``): without it, any live session (they last 90 days and cannot be revoked) could quietly take over the account with a password of its own. Also usable later from the account-security settings for members who want a fallback password, behind a fresh re-authentication.
+     * Set Password
      */
-    async resetPasswordRequestApiV1AuthResetPasswordRequestPost(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
-        const response = await this.resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters, initOverrides);
+    async setPasswordApiV1AuthSetPasswordPost(requestParameters: SetPasswordApiV1AuthSetPasswordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.setPasswordApiV1AuthSetPasswordPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

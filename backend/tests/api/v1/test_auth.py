@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import update
@@ -55,6 +57,15 @@ def test_login_sets_cookie_with_root_path(client: TestClient):
 
 
 def _seed_password(email: str, password: str) -> None:
+    _set_user_values(email, password=myctx.hash(password))
+
+
+def _clear_password(email: str) -> None:
+    """Make the account passwordless (passkey-only), as invitation signups are."""
+    _set_user_values(email, password=None)
+
+
+def _set_user_values(email: str, **values) -> None:
     from sqlalchemy.orm import sessionmaker
 
     from bbe2.database import get_engine
@@ -63,11 +74,7 @@ def _seed_password(email: str, password: str) -> None:
     engine = get_engine(DATABASE_URL)
     Session = sessionmaker(bind=engine)
     with Session() as s:
-        s.execute(
-            update(UserDB)
-            .where(UserDB.email == email)
-            .values(password=myctx.hash(password))
-        )
+        s.execute(update(UserDB).where(UserDB.email == email).values(**values))
         s.commit()
 
 
@@ -238,30 +245,43 @@ def reset_sender(client):
 def test_reset_password_request_sends_email_for_known_user(
     client: TestClient, reset_sender
 ):
+    # Single converged template: even an account WITH a password gets the
+    # hybrid recovery email (code + link) — proving control of the email is
+    # the actual authentication factor, whatever the account type.
+    _seed_password("john.doe@example.com", "s3cret-password")
     response = client.post(
         "/api/v1/auth/reset_password_request",
         json={"email": "john.doe@example.com"},
     )
     assert response.status_code == 200
-    # The background task ran and produced exactly one reset email.
+    # The background task ran and produced exactly one recovery email.
     assert len(reset_sender.sent) == 1
     sent = reset_sender.sent[0]
-    assert sent["template_name"] == "reset_password"
+    assert sent["template_name"] == "login_link"
+    assert sent["subject"] == "Votre code de connexion"
     assert sent["to"] == "john.doe@example.com"
-    # The template gets the token and the frontend URL to build the link.
-    assert sent["template_data"]["token"]
+    # The template gets the grant id, the 6-digit code and the frontend URL.
+    assert sent["template_data"]["grant_id"]
+    code = sent["template_data"]["code"]
+    assert len(code) == 6 and code.isdigit()
     assert "frontend_url" in sent["template_data"]
+    # The response hands the requesting page the same grant id the email
+    # carries, so the typed code verifies against the right grant.
+    assert response.json()["grant_id"] == sent["template_data"]["grant_id"]
 
 
 def test_reset_password_request_unknown_email_sends_nothing(
     client: TestClient, reset_sender
 ):
-    # Must still return OK (no user enumeration) but emit no email.
+    # No user enumeration: the response must be indistinguishable from a
+    # known email's (a decoy grant id of the same shape) while no email goes
+    # out.
     response = client.post(
         "/api/v1/auth/reset_password_request",
         json={"email": "does-not-exist@example.com"},
     )
     assert response.status_code == 200
+    assert response.json()["grant_id"]
     assert reset_sender.sent == []
 
 
@@ -281,34 +301,325 @@ def test_reset_password_request_propagates_correlation_id(
     assert reset_sender.correlation_ids == [correlation_id]
 
 
-def test_reset_password_signs_the_member_in(client: TestClient, reset_sender):
-    """A successful reset also signs the member in (auto-login).
+def test_set_password_replaces_password_for_signed_in_member(
+    client: TestClient, reset_sender
+):
+    """The authenticated successor of the old ``POST /auth/reset``.
 
-    Mirrors the invitation-accept flow: proving control of the email plus
-    setting the password is a full authentication, so the response must set the
-    session cookies (additive session, active account) — the client then offers
-    passkey enrolment right away instead of bouncing to the login form.
+    Recovery signs the member in (code or link); setting a new password is
+    then a plain authenticated action — no token, and deliberately no current
+    password (the flow exists because it was forgotten).
     """
+    _seed_password("john.doe@example.com", "s3cret-password")
+    try:
+        response = client.post(
+            "/api/v1/auth/set_password",
+            json={"password": "brand-new-password"},
+        )
+        assert response.status_code == 200
+
+        # A stale session cannot mint itself a durable password credential:
+        # sessions last 90 days and cannot be revoked, so this action is
+        # reserved to sessions younger than SET_PASSWORD_MAX_SESSION_AGE
+        # (recovery sign-ins are seconds old when they reach it).
+        import jwt
+
+        from bbe2.schemas import JwtPayload
+        from tests.conftest import get_fake_settings
+
+        now = datetime.now(tz=timezone.utc)
+        stale_token = jwt.encode(
+            JwtPayload(
+                sub="a8e2d3249e9d997e",
+                roles=[],
+                first_name="Mael",
+                last_name="Gui",
+                email="mael.gui@example.com",
+                iat=now - timedelta(minutes=20),
+                exp=now + timedelta(minutes=5),
+            ).model_dump(),
+            get_fake_settings().jwt_secret_key,
+            algorithm="HS256",
+        )
+        response = client.post(
+            "/api/v1/auth/set_password",
+            json={"password": "hijack"},
+            headers={"Authorization": f"Bearer {stale_token}"},
+        )
+        assert response.status_code == 403
+
+        # The new password is live: it signs the member in.
+        response = client.post(
+            "/api/v1/auth/login",
+            json={
+                "type": "password",
+                "email": "john.doe@example.com",
+                "password": "brand-new-password",
+            },
+        )
+        assert response.status_code == 200
+    finally:
+        # Restore the seed value so the shared test database keeps working
+        # for other tests that password-login as this user.
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+# ---------------------------------------------------------------------------
+# Recovery sign-in: /auth/reset_password_request is the single entry point
+# (anti-enumeration preserved) and sends the same recovery email to every
+# account type. One credential, two vehicles (RFC 8628's device_code/user_code
+# split): the grant id publicly identifies the request, the 6-digit code is
+# the secret, and the emailed link is the same pair prefilled in a URL. All
+# paths land on POST /auth/login_code, which signs the member in without
+# involving a password.
+# ---------------------------------------------------------------------------
+
+
+def test_reset_password_request_passwordless_account_gets_login_link_email(
+    client: TestClient, reset_sender
+):
+    _clear_password("john.doe@example.com")
+    try:
+        response = client.post(
+            "/api/v1/auth/reset_password_request",
+            json={"email": "john.doe@example.com"},
+        )
+        assert response.status_code == 200
+        assert len(reset_sender.sent) == 1
+        sent = reset_sender.sent[0]
+        # A member who never had a password must not be asked to reset one:
+        # the recovery email carries a sign-in code (primary) + link (fallback).
+        assert sent["template_name"] == "login_link"
+        assert sent["subject"] == "Votre code de connexion"
+        assert sent["to"] == "john.doe@example.com"
+        assert sent["template_data"]["grant_id"]
+        code = sent["template_data"]["code"]
+        assert len(code) == 6 and code.isdigit()
+        assert "frontend_url" in sent["template_data"]
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+def _request_recovery(client, reset_sender) -> dict:
+    """POST a recovery request for john.doe and return the email's template data."""
     client.post(
         "/api/v1/auth/reset_password_request",
         json={"email": "john.doe@example.com"},
     )
-    token = reset_sender.sent[0]["template_data"]["token"]
+    return reset_sender.sent[-1]["template_data"]
 
-    # Reset to the seed value so the shared test database keeps working for
-    # other tests that password-login as this user.
+
+def test_login_code_signs_the_member_in(client: TestClient, reset_sender):
+    _clear_password("john.doe@example.com")
+    try:
+        data = _request_recovery(client, reset_sender)
+        response = client.post(
+            "/api/v1/auth/login_code",
+            json={"grant_id": data["grant_id"], "code": data["code"]},
+        )
+        assert response.status_code == 200
+        # Signed in: additive session cookie + active account, like a login.
+        assert response.cookies.get("bmr_session_a8e2d3249e9d997e")
+        assert response.cookies.get("active_account") == "a8e2d3249e9d997e"
+        assert response.json()["access_token"]
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+def test_login_code_via_link_is_the_same_credential(
+    client: TestClient, reset_sender
+):
+    # The emailed link is this same call with both fields prefilled in its
+    # URL; ``via`` only labels the funnel metric.
+    _clear_password("john.doe@example.com")
+    try:
+        data = _request_recovery(client, reset_sender)
+        response = client.post(
+            "/api/v1/auth/login_code",
+            json={"grant_id": data["grant_id"], "code": data["code"], "via": "link"},
+        )
+        assert response.status_code == 200
+        assert response.cookies.get("bmr_session_a8e2d3249e9d997e")
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+def test_login_code_grant_is_single_use(client: TestClient, reset_sender):
+    _clear_password("john.doe@example.com")
+    try:
+        data = _request_recovery(client, reset_sender)
+        body = {"grant_id": data["grant_id"], "code": data["code"]}
+        first = client.post("/api/v1/auth/login_code", json=body)
+        assert first.status_code == 200
+        # Replaying the credential (typed again, or the emailed link opened
+        # after the code was used) must not mint a second session.
+        second = client.post("/api/v1/auth/login_code", json=body)
+        assert second.status_code == 403
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+def test_login_code_rejects_garbage_grant(client: TestClient):
+    # Unknown grant ids (including decoys handed out for unknown emails) get
+    # the same uniform 403 as a wrong code.
     response = client.post(
-        "/api/v1/auth/reset",
-        json={
-            "email": "john.doe@example.com",
-            "password": "s3cret-password",
-            "password_confirm": "s3cret-password",
-        },
-        headers={"token": token},
+        "/api/v1/auth/login_code",
+        json={"grant_id": "not-a-real-grant", "code": "123456"},
     )
-    assert response.status_code == 200
-    assert response.cookies.get("bmr_session_a8e2d3249e9d997e")
-    assert response.cookies.get("active_account") == "a8e2d3249e9d997e"
+    assert response.status_code == 403
+    assert not response.cookies.get("bmr_session_a8e2d3249e9d997e")
+
+
+def test_login_code_rejects_decoy_grant_for_unknown_email(
+    client: TestClient, reset_sender
+):
+    # The decoy grant returned for an unknown email must behave exactly like
+    # a wrong code against a real grant: uniform 403, nothing to learn.
+    response = client.post(
+        "/api/v1/auth/reset_password_request",
+        json={"email": "does-not-exist@example.com"},
+    )
+    decoy = response.json()["grant_id"]
+    response = client.post(
+        "/api/v1/auth/login_code",
+        json={"grant_id": decoy, "code": "123456"},
+    )
+    assert response.status_code == 403
+
+
+def test_login_code_rejects_deactivated_account(client: TestClient, reset_sender):
+    # The grant was issued while the account was active, but the account may
+    # have been deactivated since: the code must not resurrect its access.
+    _clear_password("john.doe@example.com")
+    try:
+        data = _request_recovery(client, reset_sender)
+        _set_user_values("john.doe@example.com", is_active=False)
+        response = client.post(
+            "/api/v1/auth/login_code",
+            json={"grant_id": data["grant_id"], "code": data["code"]},
+        )
+        assert response.status_code == 403
+        assert not response.cookies.get("bmr_session_a8e2d3249e9d997e")
+    finally:
+        _set_user_values("john.doe@example.com", is_active=True)
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+def test_login_code_attempts_exhaustion_revokes_the_grant(
+    client: TestClient, reset_sender
+):
+    from bbe2.services.otp import OTP_MAX_ATTEMPTS
+
+    _clear_password("john.doe@example.com")
+    try:
+        data = _request_recovery(client, reset_sender)
+        wrong = "000000" if data["code"] != "000000" else "111111"
+        for _ in range(OTP_MAX_ATTEMPTS):
+            response = client.post(
+                "/api/v1/auth/login_code",
+                json={"grant_id": data["grant_id"], "code": wrong},
+            )
+            assert response.status_code == 403
+        # The grant is now revoked: even the correct code (typed or via the
+        # emailed link) fails.
+        assert (
+            client.post(
+                "/api/v1/auth/login_code",
+                json={"grant_id": data["grant_id"], "code": data["code"]},
+            ).status_code
+            == 403
+        )
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+def test_login_code_wrong_then_right_within_attempts(client: TestClient, reset_sender):
+    _clear_password("john.doe@example.com")
+    try:
+        data = _request_recovery(client, reset_sender)
+        wrong = "000000" if data["code"] != "000000" else "111111"
+        assert (
+            client.post(
+                "/api/v1/auth/login_code",
+                json={"grant_id": data["grant_id"], "code": wrong},
+            ).status_code
+            == 403
+        )
+        # One typo must not lock the member out.
+        assert (
+            client.post(
+                "/api/v1/auth/login_code",
+                json={"grant_id": data["grant_id"], "code": data["code"]},
+            ).status_code
+            == 200
+        )
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+def test_new_recovery_request_supersedes_the_previous_grant(
+    client: TestClient, reset_sender
+):
+    _clear_password("john.doe@example.com")
+    try:
+        first = _request_recovery(client, reset_sender)
+        second = _request_recovery(client, reset_sender)
+        # Only the latest email is valid: the old grant is dead.
+        assert (
+            client.post(
+                "/api/v1/auth/login_code",
+                json={"grant_id": first["grant_id"], "code": first["code"]},
+            ).status_code
+            == 403
+        )
+        assert (
+            client.post(
+                "/api/v1/auth/login_code",
+                json={"grant_id": second["grant_id"], "code": second["code"]},
+            ).status_code
+            == 200
+        )
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")
+
+
+def test_recovery_grant_expires(client: TestClient, reset_sender):
+    # Single short expiry (Recovery.max_age, 10 min) for the whole grant:
+    # once the token row expires, the code dies with it (typed or via link).
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy.orm import sessionmaker
+
+    from bbe2.database import get_engine
+    from bbe2.models.action_token import ActionTokenDB, ActionTokenValue
+    from tests.conftest import DATABASE_URL
+
+    _clear_password("john.doe@example.com")
+    try:
+        data = _request_recovery(client, reset_sender)
+
+        # Age the grant directly on the token row.
+        engine = get_engine(DATABASE_URL)
+        Session = sessionmaker(bind=engine)
+        with Session() as s:
+            row = (
+                s.query(ActionTokenDB)
+                .filter(ActionTokenDB.token_type == ActionTokenValue.Recovery.value)
+                .order_by(ActionTokenDB.created_at.desc())
+                .first()
+            )
+            row.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+            s.commit()
+
+        assert (
+            client.post(
+                "/api/v1/auth/login_code",
+                json={"grant_id": data["grant_id"], "code": data["code"]},
+            ).status_code
+            == 403
+        )
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")
 
 
 # --- WebAuthn registration challenge vs. concurrent responses ---------------

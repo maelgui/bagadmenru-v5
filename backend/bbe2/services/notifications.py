@@ -157,25 +157,34 @@ async def notify_new_event(
             logger.error("Unable to send push notifications: %s", exc)
 
 
-async def send_password_reset_email(
+async def send_login_link_email(
     sender: EmailSender,
     email: str,
-    token: str,
+    grant_id: str,
+    code: str,
     frontend_url: str,
     correlation_id: Optional[str] = None,
 ) -> None:
-    """Background task: send the password-reset email.
+    """Background task: send the recovery email (single flow for every account).
 
-    The reset token is created and committed inside the request (so the link is
-    valid immediately); only the actual SMTP send runs here, off the request's
-    critical path. Sending is deliberately fire-and-forget: the endpoint always
-    returns ``OK`` regardless of delivery to avoid revealing whether an account
-    exists, so a transport failure is logged rather than surfaced.
+    The email offers one credential two ways: the 6-digit code to type into
+    the page that requested it (primary — keeps the session in a real
+    browser), and a sign-in link that is the same grant_id + code prefilled
+    in a URL (fallback, RFC 8628's verification_uri_complete pattern). Both
+    land on ``POST /auth/login_code``. Proving control of the email signs
+    the member in; securing the next sign-in (passkey or new password)
+    happens after, in the app. Sending is deliberately fire-and-forget: the
+    requesting endpoint answers identically regardless of delivery to avoid
+    revealing whether an account exists, so transport failures are logged
+    rather than surfaced. The grant is created and committed inside the
+    request (so the code is valid immediately); only the actual SMTP send
+    runs here, off the request's critical path.
 
     Args:
         email: Recipient address.
-        token: The already-persisted reset action token.
-        frontend_url: Base URL used to build the reset link in the template.
+        grant_id: The already-persisted recovery grant's public identifier.
+        code: The 6-digit code (its hash lives in the grant payload).
+        frontend_url: Base URL used to build the sign-in link in the template.
         correlation_id: Correlation ID captured from the originating request.
             Re-set here because background tasks run outside the request's
             context, so the email service can stamp it on outgoing mail.
@@ -184,17 +193,18 @@ async def send_password_reset_email(
         set_correlation_id(correlation_id)
     try:
         await sender.batch_send_emails(
-            "Reinitialisation de votre mot de passe.",
-            "reset_password",
+            "Votre code de connexion",
+            "login_link",
             [
                 EmailData(
                     to=email,
                     template_data={
-                        "token": token,
+                        "grant_id": grant_id,
+                        "code": code,
                         "frontend_url": frontend_url,
                     },
                 ),
             ],
         )
     except EmailSendError as exc:
-        logger.error("Unable to send password-reset email: %s", exc)
+        logger.error("Unable to send login-link email: %s", exc)

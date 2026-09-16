@@ -26,7 +26,7 @@ def test_raw_token_is_never_stored(client):
     """Only the SHA-256 hash of the token is persisted, never the raw value."""
     with _session() as session:
         raw = create_action_token(
-            session, ActionTokenValue.ResetPassword, {"user_id": SEEDED_USER_ID}
+            session, ActionTokenValue.Recovery, {"user_id": SEEDED_USER_ID}
         )
         session.commit()
         row = session.scalars(
@@ -42,10 +42,10 @@ def test_raw_token_is_never_stored(client):
 def test_consume_returns_payload_for_valid_token(client):
     with _session() as session:
         raw = create_action_token(
-            session, ActionTokenValue.ResetPassword, {"user_id": SEEDED_USER_ID}
+            session, ActionTokenValue.Recovery, {"user_id": SEEDED_USER_ID}
         )
         session.commit()
-        payload = consume_action_token(session, raw, ActionTokenValue.ResetPassword)
+        payload = consume_action_token(session, raw, ActionTokenValue.Recovery)
         assert payload == {"user_id": SEEDED_USER_ID}
 
 
@@ -53,16 +53,16 @@ def test_reset_password_token_is_single_use(client):
     """A password-reset token cannot be replayed after its first use."""
     with _session() as session:
         raw = create_action_token(
-            session, ActionTokenValue.ResetPassword, {"user_id": SEEDED_USER_ID}
+            session, ActionTokenValue.Recovery, {"user_id": SEEDED_USER_ID}
         )
         session.commit()
 
-        first = consume_action_token(session, raw, ActionTokenValue.ResetPassword)
+        first = consume_action_token(session, raw, ActionTokenValue.Recovery)
         session.commit()
         assert first is not None
 
         # Second attempt with the same token must be rejected.
-        second = consume_action_token(session, raw, ActionTokenValue.ResetPassword)
+        second = consume_action_token(session, raw, ActionTokenValue.Recovery)
         assert second is None
 
 
@@ -103,9 +103,7 @@ def test_consume_rejects_wrong_type(client):
 def test_consume_rejects_unknown_token(client):
     with _session() as session:
         assert (
-            consume_action_token(
-                session, "does-not-exist", ActionTokenValue.ResetPassword
-            )
+            consume_action_token(session, "does-not-exist", ActionTokenValue.Recovery)
             is None
         )
 
@@ -114,20 +112,18 @@ def test_consume_rejects_expired_token(client):
     with _session() as session:
         raw = create_action_token(
             session,
-            ActionTokenValue.ResetPassword,
+            ActionTokenValue.Recovery,
             {"user_id": SEEDED_USER_ID},
             expires_in=-1,  # already expired
         )
         session.commit()
-        assert (
-            consume_action_token(session, raw, ActionTokenValue.ResetPassword) is None
-        )
+        assert consume_action_token(session, raw, ActionTokenValue.Recovery) is None
 
 
 def test_consume_rejects_revoked_token(client):
     with _session() as session:
         raw = create_action_token(
-            session, ActionTokenValue.ResetPassword, {"user_id": SEEDED_USER_ID}
+            session, ActionTokenValue.Recovery, {"user_id": SEEDED_USER_ID}
         )
         row = session.scalars(
             select(ActionTokenDB).where(
@@ -136,16 +132,14 @@ def test_consume_rejects_revoked_token(client):
         ).one()
         row.revoked_at = datetime.now(timezone.utc)
         session.commit()
-        assert (
-            consume_action_token(session, raw, ActionTokenValue.ResetPassword) is None
-        )
+        assert consume_action_token(session, raw, ActionTokenValue.Recovery) is None
 
 
 def _make_token(session, token_hash, *, expires_at, used_at=None, revoked_at=None):
     session.add(
         ActionTokenDB(
             token_hash=token_hash,
-            token_type=ActionTokenValue.ResetPassword.value,
+            token_type=ActionTokenValue.Recovery.value,
             payload={},
             created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
             expires_at=expires_at,

@@ -1,8 +1,8 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import PasskeyIcon from '../../components/PasskeyIcon';
-import { useRegisterPasskey } from '../../utils/usePasskey';
+import PasskeyIcon from './PasskeyIcon';
+import { useRegisterPasskey } from '../utils/usePasskey';
 
 /**
  * Reusable "create a passkey" screen.
@@ -24,11 +24,13 @@ export default function PasskeyEnrollment({
   onSkip,
   title = 'Sécurisez votre compte',
   description = 'Créez une clé d\'accès pour vous connecter sans mot de passe, avec votre empreinte, votre visage ou le code de votre appareil.',
+  skipNote = 'Vous pourrez créer une clé d\'accès à tout moment depuis vos réglages.',
 }: {
   onEnrolled: () => void;
   onSkip?: () => void;
   title?: string;
   description?: string;
+  skipNote?: string;
 }) {
   const register = useRegisterPasskey();
 
@@ -73,7 +75,7 @@ export default function PasskeyEnrollment({
             Plus tard
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
-            Vous pourrez créer une clé d&apos;accès à tout moment depuis vos réglages.
+            {skipNote}
           </p>
         </>
       ) : null}

@@ -25,6 +25,9 @@ def test_read_my_profile(client: TestClient):
         "is_active": True,
         "membership_status": None,
         "membership_active_season": None,
+        # Populated on /me only; True or False depending on which tests
+        # seeded/cleared the shared DB's password before this one.
+        "has_password": ANY,
     }
 
 
@@ -50,6 +53,7 @@ def test_read_profile(client: TestClient):
         "is_active": True,
         "membership_status": None,
         "membership_active_season": None,
+        "has_password": None,
     }
 
 
@@ -90,6 +94,7 @@ def test_update_my_profile(mock_set_tags: MagicMock, client: TestClient):
         "is_active": True,
         "membership_status": None,
         "membership_active_season": None,
+        "has_password": None,
     }
 
 
@@ -116,6 +121,7 @@ def test_list_profiles(client: TestClient):
             "is_active": True,
             "membership_status": None,
             "membership_active_season": None,
+            "has_password": None,
         }
     ]
 
@@ -308,11 +314,14 @@ def test_create_profile_welcome_token_uses_invitation_validity(client: TestClien
         with Session(engine) as session:
             rows = session.scalars(
                 select(ActionTokenDB).where(
-                    ActionTokenDB.token_type == ActionTokenValue.ResetPassword.value
+                    ActionTokenDB.token_type == ActionTokenValue.Recovery.value
                 )
             ).all()
             row = next(r for r in rows if r.payload.get("user_id") == user_id)
             validity = (row.expires_at - row.created_at).total_seconds()
             assert validity == ActionTokenValue.Invitation.max_age
+            # The welcome link is grant+code prefilled in a URL: without the
+            # code half the emailed link could never sign the member in.
+            assert row.payload.get("code_hash")
     finally:
         app.dependency_overrides.pop(EmailSender, None)

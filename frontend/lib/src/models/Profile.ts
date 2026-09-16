@@ -108,6 +108,12 @@ export interface Profile {
     membershipActiveSeason?: string | null;
     /**
      * 
+     * @type {boolean}
+     * @memberof Profile
+     */
+    hasPassword?: boolean | null;
+    /**
+     * 
      * @type {string}
      * @memberof Profile
      */
@@ -154,6 +160,7 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'isActive': json['is_active'],
         'membershipStatus': json['membership_status'] == null ? undefined : MembershipStatusFromJSON(json['membership_status']),
         'membershipActiveSeason': json['membership_active_season'] == null ? undefined : json['membership_active_season'],
+        'hasPassword': json['has_password'] == null ? undefined : json['has_password'],
         'pictureUrl': json['picture_url'],
     };
 }
@@ -181,6 +188,7 @@ export function ProfileToJSONTyped(value?: Profile | null, ignoreDiscriminator: 
         'is_active': value['isActive'],
         'membership_status': MembershipStatusToJSON(value['membershipStatus']),
         'membership_active_season': value['membershipActiveSeason'],
+        'has_password': value['hasPassword'],
         'picture_url': value['pictureUrl'],
     };
 }

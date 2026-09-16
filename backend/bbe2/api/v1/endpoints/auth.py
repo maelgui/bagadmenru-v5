@@ -1,6 +1,6 @@
 import base64
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Iterable, Literal
 
 import sentry_sdk
@@ -14,6 +14,7 @@ from fastapi import (
     Response,
 )
 from sqlalchemy import select, update
+from sqlalchemy.orm import Session as DbSession
 from webauthn import (
     generate_authentication_options,
     generate_registration_options,
@@ -38,27 +39,45 @@ from webauthn.helpers.structs import (
 from bbe2 import schemas
 from bbe2.config import Settings
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
-from bbe2.metrics import AUTH_LOGINS, PASSWORD_RESETS, WEBAUTHN_REGISTRATIONS
-from bbe2.models.action_token import ActionTokenValue
+from bbe2.metrics import (
+    AUTH_LOGINS,
+    LOGIN_LINKS,
+    WEBAUTHN_REGISTRATIONS,
+)
+from bbe2.models.action_token import ActionTokenDB, ActionTokenValue
 from bbe2.models.passkey import PasskeyDB
 from bbe2.models.user import UserDB
 from bbe2.schemas.auth import (
+    JwtPayload,
+    LoginCode,
     LoginData,
     LoginType,
     LogoutRequest,
-    ResetPassword,
+    RecoveryGrant,
     ResetPasswordRequest,
     SessionInfo,
+    SetPassword,
     Token,
 )
-from bbe2.services.notifications import send_password_reset_email
-from bbe2.utils.action_token import create_action_token
+from bbe2.services.notifications import send_login_link_email
+from bbe2.services.otp import (
+    OTP_MAX_ATTEMPTS,
+    OtpAttempt,
+    OtpDep,
+    generate_otp,
+    hash_otp,
+)
+from bbe2.utils.action_token import (
+    as_aware,
+    create_action_token,
+    generate_action_token,
+    peek_action_token,
+)
 from bbe2.utils.auth import (
     ACTIVE_ACCOUNT_COOKIE,
     LEGACY_ACCESS_TOKEN_COOKIE,
     SESSION_COOKIE_PREFIX,
     Action,
-    ActionTokenAuthorization,
     Authorization,
     Resource,
     clear_active_account_cookie,
@@ -242,44 +261,45 @@ def verify_email_access() -> Response:
     return Response(status_code=204)
 
 
-@router.post("/auth/reset")
-def reset_password(
-    body: ResetPassword,
-    token_payload: Annotated[
-        dict, Depends(ActionTokenAuthorization(ActionTokenValue.ResetPassword))
-    ],
+# A stolen (irrevocable, long-lived) session must not be able to mint itself
+# a durable password credential: setting a password without knowing the old
+# one is reserved to sessions younger than this. Recovery sign-ins are
+# seconds old when they reach set_password, so the flow is unaffected.
+SET_PASSWORD_MAX_SESSION_AGE = timedelta(minutes=15)
+
+
+@router.post("/auth/set_password")
+def set_password(
+    body: SetPassword,
+    payload: Annotated[JwtPayload, Depends(Authorization(Action.EDIT, Resource.ME))],
+    current_user: Annotated[UserDB, Depends(get_current_profile)],
     session: SessionDep,
-    settings: SettingsDep,
-    response: Response,
-):
-    """Set the new password and sign the member in.
+) -> str:
+    """Set (or replace) the signed-in member's password.
 
-    Mirrors the invitation-accept flow: proving control of the email (the
-    reset link) plus setting the password is a full authentication, so the
-    member lands signed in (additive session cookies, becomes the active
-    account) instead of being bounced to the login form. The client can then
-    offer passkey enrolment right away (FIDO account-recovery pattern).
-
-    The response body stays "OK" so the generated client is unchanged; the
-    session travels in the cookies.
+    Recovery successor of the old ``POST /auth/reset``: proving control of
+    the email (code or link) already signed the member in, so setting a new
+    password is now an authenticated action instead of a token-bearing one.
+    Deliberately does not require the current password — the flow exists
+    precisely because it was forgotten. The trust boundary is kept at "proved
+    email control recently" by requiring a FRESH session (see
+    ``SET_PASSWORD_MAX_SESSION_AGE``): without it, any live session (they
+    last 90 days and cannot be revoked) could quietly take over the account
+    with a password of its own. Also usable later from the account-security
+    settings for members who want a fallback password, behind a fresh
+    re-authentication.
     """
-    if body.password != body.password_confirm:
-        raise HTTPException(status_code=400, detail="password mismatch")
+    if not payload.issued_within(SET_PASSWORD_MAX_SESSION_AGE):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Par sécurité, définir un mot de passe nécessite une "
+                "connexion récente. Reconnectez-vous puis réessayez."
+            ),
+        )
 
-    user = session.scalars(
-        select(UserDB).where(UserDB.id == token_payload["user_id"])
-    ).first()
-    # The token was only issued for an existing, active account, but the
-    # account may have been deactivated since: do not resurrect its access.
-    if not user or not user.is_active:
-        raise HTTPException(status_code=403, detail="Invalid token")
-
-    user.password = myctx.hash(body.password)
+    current_user.password = myctx.hash(body.password)
     session.commit()
-
-    PASSWORD_RESETS.labels(stage="completed").inc()
-    access_token = create_access_token(user, settings)
-    set_session_cookies(response, user.id, access_token, settings)
     return "OK"
 
 
@@ -398,37 +418,157 @@ async def reset_password_request(
     session: SessionDep,
     sender: SenderDep,
     background_tasks: BackgroundTasks,
-) -> str:
+) -> RecoveryGrant:
     user = session.scalars(select(UserDB).where(UserDB.email == body.email)).first()
     if not user or not user.is_active:
-        return "OK"
+        # Anti-enumeration: unknown emails get a random grant id of the same
+        # shape, never persisted. Code attempts against it hit the same
+        # uniform 403 as a wrong code (the grant lookup finds nothing).
+        return RecoveryGrant(grant_id=generate_action_token())
 
-    token = create_action_token(
+    # Every account gets the same recovery email, carrying a 6-digit code and
+    # a sign-in link that is the very same credential with both fields
+    # prefilled in its URL (RFC 8628's verification_uri_complete pattern).
+    # Both only demonstrate control of the email — the actual authentication
+    # factor — so there is nothing a password-specific reset form would add:
+    # the member lands signed in and then chooses how to secure the next
+    # sign-in (passkey, or a new password for accounts that had one). The
+    # typed code is the primary path (it signs in the browser tab that asked,
+    # avoiding the email-app WebView trap right before the passkey ceremony);
+    # the link is the familiar-gesture fallback. One template for everyone
+    # also means the email itself can never leak the account type.
+    #
+    # A fresh request supersedes any previous recovery grant, mirroring the
+    # invitation OTP semantics: only the latest email is valid.
+    _revoke_pending_recovery_grants(session, user.id)
+    code = generate_otp()
+
+    # The grant id is the opaque token returned by create_action_token: the
+    # row is still found by its hash, but the id is no longer a secret — the
+    # code is (only its hash is stored, so a DB leak still replays nothing).
+    # One short expiry (Recovery.max_age, 10 min) for the whole grant — the
+    # member just asked for this email and is waiting for it.
+    grant_id = create_action_token(
         session,
-        ActionTokenValue.ResetPassword,
-        {"user_id": user.id},
+        ActionTokenValue.Recovery,
+        {
+            "user_id": user.id,
+            "code_hash": hash_otp(code),
+            "attempts_left": OTP_MAX_ATTEMPTS,
+        },
     )
     session.commit()
 
-    # Counted only when the account exists and a reset email is actually sent,
-    # so the funnel numerator/denominator (completed/requested) stays honest —
-    # requests for unknown emails also return "OK" but send nothing.
-    PASSWORD_RESETS.labels(stage="requested").inc()
+    # Counted only when the account exists and an email is actually sent, so
+    # the funnel numerator/denominator stays honest — requests for unknown
+    # emails also get a (decoy) grant but send nothing.
+    LOGIN_LINKS.labels(stage="requested").inc()
 
     # Send off the request's critical path: a slow/unreachable SMTP server must
-    # not stall (or fail) this response. The token is already persisted, so the
-    # link is valid immediately. Capture the correlation ID now and re-set it in
+    # not stall (or fail) this response. The grant is already persisted, so the
+    # code is valid immediately. Capture the correlation ID now and re-set it in
     # the task, which runs outside this request's context.
     background_tasks.add_task(
-        send_password_reset_email,
+        send_login_link_email,
         sender,
         user.email,
-        token,
+        grant_id,
+        code,
         str(settings.frontend_base_url).rstrip("/"),
         get_correlation_id(),
     )
 
-    return "OK"
+    return RecoveryGrant(grant_id=grant_id)
+
+
+def _revoke_pending_recovery_grants(session: DbSession, user_id: str) -> None:
+    """Invalidate every live recovery grant for ``user_id``.
+
+    Only the latest emailed grant should be valid. Also catches a
+    still-pending welcome link (same token type): the fresh recovery email
+    supersedes it, which is the intent. The user id lives in the JSON payload
+    (the table has no user column: it also holds tokens with no user, and
+    nothing else queries by user), and the pending set is tiny (short TTL +
+    purge job), so filtering in Python beats indexing it.
+    """
+    now = datetime.now(timezone.utc)
+    rows = session.scalars(
+        select(ActionTokenDB)
+        .where(ActionTokenDB.token_type == ActionTokenValue.Recovery.value)
+        .where(ActionTokenDB.revoked_at.is_(None))
+        .where(ActionTokenDB.used_at.is_(None))
+    ).all()
+    for row in rows:
+        if row.payload.get("user_id") == user_id and as_aware(row.expires_at) > now:
+            row.revoked_at = now
+    session.flush()
+
+
+@router.post("/auth/login_code")
+def login_with_code(
+    body: LoginCode,
+    session: SessionDep,
+    settings: SettingsDep,
+    otp: OtpDep,
+    response: Response,
+) -> Token:
+    """Sign the member in from an emailed recovery grant (grant id + code).
+
+    Single consumption endpoint of the recovery email, for every account
+    type. The grant id publicly identifies the request; the 6-digit code is
+    the secret (RFC 8628's device_code/user_code split). The email offers it
+    two ways: the code to type into the page that requested it — the primary
+    path, keeping the session (and the passkey ceremony that may follow) in
+    a real browser instead of an email app's WebView — and a link that is
+    this same call with both fields prefilled in its URL
+    (verification_uri_complete pattern). Also the landing of the welcome
+    email sent when staff creates a member by hand.
+
+    Proving control of the email is a full authentication (same reasoning as
+    the invitation-accept flow), so the member lands signed in (additive
+    session cookies, becomes the active account) and the client offers how
+    to secure the next sign-in: a passkey, or a new password for accounts
+    that had one.
+
+    Guessing is bounded by the attempt counter (then the grant is revoked)
+    and the grant's short lifetime. Every failure returns the same 403 so
+    the endpoint reveals nothing about account existence, pending
+    recoveries, or grant-id validity (decoy grant ids answer identically).
+    """
+    failure = HTTPException(status_code=403, detail="Invalid code")
+
+    # Same validity checks as the header-token flows (type, revoked, used,
+    # expired), without consuming: the code must still be verified.
+    row = peek_action_token(session, body.grant_id, ActionTokenValue.Recovery)
+    if row is None:
+        raise failure
+
+    now = datetime.now(timezone.utc)
+    # Shared attempt state machine (services/otp.py): burns one attempt per
+    # mismatch and revokes the whole grant once exhausted — someone is
+    # guessing. The service commits failed attempts itself (they must survive
+    # the raise below). Expiry is the token row's TTL, already enforced by
+    # the lookup above.
+    if otp.verify(row, body.code) is not OtpAttempt.OK:
+        raise failure
+
+    # The grant was only issued for an existing, active account (its user_id
+    # was written server-side at mint time), but the account may have been
+    # deactivated since: do not resurrect its access.
+    user = session.scalars(
+        select(UserDB).where(UserDB.id == row.payload["user_id"])
+    ).first()
+    if not user or not user.is_active:
+        raise failure
+
+    # Correct code, active account: consume the grant (single-use). SessionDep
+    # commits when the handler returns, so no explicit commit is needed here.
+    row.used_at = now
+
+    LOGIN_LINKS.labels(stage=f"used_{body.via}").inc()
+    access_token = create_access_token(user, settings)
+    set_session_cookies(response, user.id, access_token, settings)
+    return Token(access_token=access_token, token_type="bearer")
 
 
 @router.get(

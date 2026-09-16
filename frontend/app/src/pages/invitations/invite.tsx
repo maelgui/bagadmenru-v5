@@ -8,7 +8,7 @@ import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../../config/client';
 import InvalidInvitationAlert from './components/InvalidInvitationAlert';
 import OtpScreen from './components/OtpScreen';
-import PasskeyEnrollment from './PasskeyEnrollment';
+import PasskeyEnrollment from '../../components/PasskeyEnrollment';
 import SignupForm from './components/SignupForm';
 import { extractErrorMessage } from '../../utils/errors';
 import type { SignupFormValues } from './types';
