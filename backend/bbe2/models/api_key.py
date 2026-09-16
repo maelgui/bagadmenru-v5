@@ -13,8 +13,9 @@ the user which key is which without ever revealing the full secret again.
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import JSON, DateTime, ForeignKey, String
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import false as sa_false
 from sqlalchemy.sql import func
 
 from bbe2.models.base import Base
@@ -44,6 +45,15 @@ class ApiKeyDB(Base):
 
     # Human-friendly label chosen by the member (e.g. "iPhone calendar").
     label: Mapped[str] = mapped_column(String(64), nullable=False)
+
+    # True when the key was minted automatically by a UI flow (e.g. the
+    # calendar-sync dialog) rather than deliberately created by the member in
+    # the settings. Purely informative -- shown as a badge in the key list so
+    # members can tell hand-made keys from auto-minted ones. Declared by the
+    # client at creation; it grants nothing, so trusting it is harmless.
+    auto_generated: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=sa_false()
+    )
 
     # Subset of the owner's RBAC permissions this key is allowed to exercise,
     # as "action:resource" strings (e.g. "view:calendar"). A key can never do

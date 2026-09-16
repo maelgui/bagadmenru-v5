@@ -13,6 +13,10 @@ class ApiKeyCreate(BaseModel):
     # Subset of the member's own RBAC permissions ("action:resource") the key
     # may exercise. Must be non-empty: a key that authorizes nothing is useless.
     authorized_permissions: list[str] = Field(min_length=1)
+    # Declared by the client when a UI flow mints the key on the member's
+    # behalf (e.g. the calendar-sync dialog), so it can be badged apart from
+    # hand-made keys. Informative only -- it grants nothing.
+    auto_generated: bool = False
 
 
 class ApiKey(BaseModel):
@@ -24,6 +28,7 @@ class ApiKey(BaseModel):
     prefix: str
     label: str
     authorized_permissions: list[str]
+    auto_generated: bool
     created_at: datetime
     last_used_at: Optional[datetime] = None
     revoked_at: Optional[datetime] = None

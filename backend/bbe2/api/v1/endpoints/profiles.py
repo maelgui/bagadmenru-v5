@@ -159,7 +159,11 @@ async def create_my_api_key(
             detail=f"Permission(s) not held by the member: {', '.join(excess)}",
         )
     raw_key, row = create_api_key(
-        session, payload.sub, body.label, body.authorized_permissions
+        session,
+        payload.sub,
+        body.label,
+        body.authorized_permissions,
+        auto_generated=body.auto_generated,
     )
     session.commit()
     session.refresh(row)
