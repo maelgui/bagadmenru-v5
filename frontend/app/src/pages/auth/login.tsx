@@ -62,7 +62,7 @@ function AuthPage() {
       // Conditional (autofill) login runs silently on mount; only surface an
       // error when the user explicitly clicked the Passkey button.
       if (!conditional) {
-        setErrorMsg('La connexion par clé d\'accès a échoué. Veuillez réessayer ou utiliser votre mot de passe.');
+        setErrorMsg('La connexion par clé d\'accès a échoué. Réessayez ou utilisez une autre méthode ci-dessous.');
       }
     }
   }, [authApi, postLogin]);
@@ -135,7 +135,7 @@ function AuthPage() {
               registration={register('password', { required: 'Ce champ est obligatoire.' })}
             />
             <div className="flex justify-end">
-              <Link to="/auth/reset" className="text-sm text-muted-foreground underline-offset-4 hover:underline">Mot de passe oublié&nbsp;?</Link>
+              <Link to="/auth/reset" className="text-sm text-muted-foreground underline-offset-4 hover:underline">Impossible de vous connecter&nbsp;?</Link>
             </div>
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? <Spinner data-icon="inline-start" /> : <KeyRound data-icon="inline-start" />}

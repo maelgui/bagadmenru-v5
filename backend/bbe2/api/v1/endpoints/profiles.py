@@ -26,6 +26,7 @@ from bbe2.schemas.utils import (
     UserRankings,
 )
 from bbe2.services import membership as membership_service
+from bbe2.services.otp import OTP_MAX_ATTEMPTS, generate_otp, hash_otp
 from bbe2.utils.action_token import create_action_token
 from bbe2.utils.api_key import create_api_key, revoke_api_key
 from bbe2.utils.auth import (
@@ -60,7 +61,12 @@ async def get_my_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
 
-    return db_profile
+    # Populated on the caller's own profile only (see the schema comment):
+    # tells the client whether this is a passkey-only account, for the
+    # post-recovery choice and the account-security settings.
+    profile = schemas.Profile.model_validate(db_profile)
+    profile.has_password = db_profile.password is not None
+    return profile
 
 
 @profiles_router.get(
@@ -384,14 +390,22 @@ async def create_profile(
     if membership_service.link_orphan_memberships_for_user(session, profile_db):
         session.commit()
 
-    # Welcome links are an onboarding path, not a security-sensitive reset
+    # Welcome links are an onboarding path, not a security-sensitive recovery
     # requested seconds ago: reuse the invitation validity window (3 days)
-    # instead of the 1-hour reset default, so a member who opens the welcome
-    # email the next day does not land on a dead link.
-    reset_token = create_action_token(
+    # instead of the short recovery default, so a member who opens the welcome
+    # email the next day does not land on a dead link. The grant has the same
+    # shape as every Recovery grant (grant id + code); the welcome email only
+    # carries the link form (grant + code prefilled in the URL) since there is
+    # no requesting page waiting for a typed code.
+    welcome_code = generate_otp()
+    welcome_grant = create_action_token(
         session,
-        ActionTokenValue.ResetPassword,
-        {"user_id": profile_db.id},
+        ActionTokenValue.Recovery,
+        {
+            "user_id": profile_db.id,
+            "code_hash": hash_otp(welcome_code),
+            "attempts_left": OTP_MAX_ATTEMPTS,
+        },
         expires_in=ActionTokenValue.Invitation.max_age,
     )
     unsubscribe_token = create_action_token(
@@ -409,7 +423,8 @@ async def create_profile(
                 template_data={
                     "user": profile_db,
                     "frontend_url": str(settings.frontend_base_url).rstrip("/"),
-                    "token": reset_token,
+                    "grant_id": welcome_grant,
+                    "code": welcome_code,
                     "unsubscribe_token": unsubscribe_token,
                 },
             )

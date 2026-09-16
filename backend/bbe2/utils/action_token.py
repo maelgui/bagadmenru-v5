@@ -30,7 +30,7 @@ def generate_action_token() -> str:
     return secrets.token_urlsafe(48)
 
 
-def _as_aware(value: datetime) -> datetime:
+def as_aware(value: datetime) -> datetime:
     """Treat naive datetimes (from some drivers) as UTC for safe comparison."""
     if value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
@@ -93,7 +93,7 @@ def peek_action_token(
         return None
     if row.used_at is not None:
         return None
-    if _as_aware(row.expires_at) <= now:
+    if as_aware(row.expires_at) <= now:
         return None
 
     return row
@@ -142,7 +142,7 @@ def consume_action_token(
         return None
     if row.used_at is not None:
         return None
-    if _as_aware(row.expires_at) <= now:
+    if as_aware(row.expires_at) <= now:
         return None
 
     if token_type.single_use:

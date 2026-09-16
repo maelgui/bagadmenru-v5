@@ -10,7 +10,7 @@ let mutationState: { mutate: typeof mutate, isPending: boolean, isError: boolean
   mutate, isPending: false, isError: false,
 };
 
-vi.mock('../../utils/usePasskey', () => ({
+vi.mock('../utils/usePasskey', () => ({
   useRegisterPasskey: () => mutationState,
 }));
 

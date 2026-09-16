@@ -8,7 +8,12 @@ tests in the session also increment them.
 from fastapi.testclient import TestClient
 from prometheus_client import REGISTRY
 
-from tests.api.v1.test_auth import _https_client, _seed_password
+from tests.api.v1.test_auth import (  # noqa: F401  (reset_sender is a fixture)
+    _clear_password,
+    _https_client,
+    _seed_password,
+    reset_sender,
+)
 
 
 def _counter(name: str, labels: dict[str, str]) -> float:
@@ -109,9 +114,12 @@ def test_register_without_preregister_is_unknown_flow(client: TestClient):
     assert _counter("bbe2_webauthn_registrations_total", labels) == before + 1
 
 
-def test_password_reset_request_counts_only_existing_accounts(client: TestClient):
+def test_recovery_request_counts_only_existing_accounts(client: TestClient):
     labels = {"stage": "requested"}
-    before = _counter("bbe2_password_resets_total", labels)
+    # Single converged funnel: every account type (password or not) feeds
+    # bbe2_login_links_total.
+    _seed_password("john.doe@example.com", "s3cret-password")
+    before = _counter("bbe2_login_links_total", labels)
 
     # Unknown email: returns OK (no enumeration) but must NOT count.
     response = client.post(
@@ -119,7 +127,7 @@ def test_password_reset_request_counts_only_existing_accounts(client: TestClient
         json={"email": "nobody@example.com"},
     )
     assert response.status_code == 200
-    assert _counter("bbe2_password_resets_total", labels) == before
+    assert _counter("bbe2_login_links_total", labels) == before
 
     # Existing account: counts.
     response = client.post(
@@ -127,4 +135,54 @@ def test_password_reset_request_counts_only_existing_accounts(client: TestClient
         json={"email": "john.doe@example.com"},
     )
     assert response.status_code == 200
-    assert _counter("bbe2_password_resets_total", labels) == before + 1
+    assert _counter("bbe2_login_links_total", labels) == before + 1
+
+
+def test_login_link_funnel_counts_requested_and_used(client: TestClient, reset_sender):
+    _clear_password("john.doe@example.com")
+    try:
+        requested_before = _counter("bbe2_login_links_total", {"stage": "requested"})
+        link_before = _counter("bbe2_login_links_total", {"stage": "used_link"})
+        code_before = _counter("bbe2_login_links_total", {"stage": "used_code"})
+
+        response = client.post(
+            "/api/v1/auth/reset_password_request",
+            json={"email": "john.doe@example.com"},
+        )
+        assert response.status_code == 200
+        assert (
+            _counter("bbe2_login_links_total", {"stage": "requested"})
+            == requested_before + 1
+        )
+
+        # Code path (primary).
+        data = reset_sender.sent[-1]["template_data"]
+        response = client.post(
+            "/api/v1/auth/login_code",
+            json={"grant_id": data["grant_id"], "code": data["code"]},
+        )
+        assert response.status_code == 200
+        assert (
+            _counter("bbe2_login_links_total", {"stage": "used_code"})
+            == code_before + 1
+        )
+
+        # Link path (fallback) — the same call with via="link", as the page
+        # sends it when the fields came prefilled from the emailed URL. Needs
+        # a fresh grant, the code consumed it.
+        client.post(
+            "/api/v1/auth/reset_password_request",
+            json={"email": "john.doe@example.com"},
+        )
+        data = reset_sender.sent[-1]["template_data"]
+        response = client.post(
+            "/api/v1/auth/login_code",
+            json={"grant_id": data["grant_id"], "code": data["code"], "via": "link"},
+        )
+        assert response.status_code == 200
+        assert (
+            _counter("bbe2_login_links_total", {"stage": "used_link"})
+            == link_before + 1
+        )
+    finally:
+        _seed_password("john.doe@example.com", "s3cret-password")

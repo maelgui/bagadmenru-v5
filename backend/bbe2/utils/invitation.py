@@ -10,8 +10,6 @@ intent-revealing calls. Two token kinds are involved:
   email when the invitation did not.
 """
 
-import hashlib
-import secrets
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -22,29 +20,33 @@ from sqlalchemy.orm import Session as DbSession
 from bbe2.models.action_token import ActionTokenDB, ActionTokenValue
 from bbe2.models.user import UserDB
 from bbe2.schemas.invitation import InvitationPayload
+from bbe2.services.otp import (
+    OTP_MAX_AGE,
+    OTP_MAX_ATTEMPTS,
+    OtpAttempt,
+    OtpService,
+    generate_otp,
+    hash_otp,
+)
 from bbe2.utils.action_token import (
     create_action_token,
     peek_action_token,
     revoke_action_token,
 )
 
-OTP_MAX_AGE = 600  # 10 min
-OTP_MAX_ATTEMPTS = 5
+# Re-exported for existing importers; the primitives now live in
+# ``bbe2.services.otp`` so the account-recovery login code can share them.
+__all__ = [
+    "OTP_MAX_AGE",
+    "OTP_MAX_ATTEMPTS",
+    "generate_otp",
+    "hash_otp",
+]
 # Minimum delay between two OTP requests for the same invitation. Prevents an
 # email-send loop (each request emails a code) without external rate limiting:
 # the last-sent timestamp is tracked in the invitation's own payload. The
 # attempt counter (OTP_MAX_ATTEMPTS) separately caps guessing of a sent code.
 OTP_RESEND_COOLDOWN = 60  # seconds
-
-
-def hash_otp(code: str) -> str:
-    """SHA-256 of an OTP code (never store the plaintext code)."""
-    return hashlib.sha256(code.encode("utf-8")).hexdigest()
-
-
-def generate_otp() -> str:
-    """Return a zero-padded 6-digit numeric code."""
-    return f"{secrets.randbelow(1_000_000):06d}"
 
 
 def email_exists(session: DbSession, email: str) -> bool:
@@ -167,22 +169,19 @@ def verify_otp(
             detail="Le code ne correspond pas à cette adresse.",
         )
 
-    attempts_left = int(otp_payload.get("attempts_left", 0))
-    if attempts_left <= 0:
-        revoke_action_token(session, otp_token)
-        session.commit()
+    # Shared attempt state machine (services/otp.py): burns one attempt per
+    # mismatch and revokes the OTP once exhausted, committing failed attempts
+    # itself (they must survive the raises below). Expiry is the OTP token's
+    # own TTL, enforced by the row lookup above. Built on the session rather
+    # than injected: this helper is plumbing already handed the request's
+    # session by the endpoint.
+    outcome = OtpService(session).verify(otp_row, code)
+    if outcome is OtpAttempt.EXHAUSTED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Trop de tentatives. Demandez un nouveau code.",
         )
-
-    if hash_otp(code) != otp_payload.get("code_hash"):
-        # Burn one attempt; revoke once exhausted.
-        attempts_left -= 1
-        otp_row.payload = {**otp_payload, "attempts_left": attempts_left}
-        if attempts_left <= 0:
-            revoke_action_token(session, otp_token)
-        session.commit()
+    if outcome is not OtpAttempt.OK:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Code incorrect.",
