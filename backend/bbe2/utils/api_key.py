@@ -42,13 +42,16 @@ def create_api_key(
     user_id: str,
     label: str,
     authorized_permissions: list[str],
+    auto_generated: bool = False,
 ) -> tuple[str, ApiKeyDB]:
     """Create an API-key row for ``user_id`` and return ``(raw_key, row)``.
 
     The raw key is returned to the caller (to show the member once) but only its
     hash is persisted. ``authorized_permissions`` is the subset of the owner's
-    RBAC permissions ("action:resource") the key may exercise. The row is
-    flushed so its generated columns are readable.
+    RBAC permissions ("action:resource") the key may exercise.
+    ``auto_generated`` marks keys minted by a UI flow (badge in the key list)
+    as opposed to keys the member created deliberately. The row is flushed so
+    its generated columns are readable.
     """
     raw_key = generate_api_key()
     row = ApiKeyDB(
@@ -57,6 +60,7 @@ def create_api_key(
         prefix=raw_key[:_DISPLAY_PREFIX_LEN],
         label=label,
         authorized_permissions=list(authorized_permissions),
+        auto_generated=auto_generated,
     )
     db.add(row)
     db.flush()

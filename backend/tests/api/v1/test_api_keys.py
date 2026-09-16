@@ -100,6 +100,34 @@ def test_create_api_key_requires_at_least_one_permission(
     assert response.status_code == 422
 
 
+def test_api_key_auto_generated_flag_defaults_false_and_round_trips(
+    client: TestClient, monkeypatch
+):
+    _grant_member_permissions(monkeypatch)
+    # Omitted -> manual key (auto_generated false), e.g. settings page.
+    manual = client.post(
+        "/api/v1/profiles/me/api-keys",
+        json={"label": "manuelle", "authorized_permissions": [CALENDAR_PERMISSION]},
+    ).json()
+    assert manual["auto_generated"] is False
+
+    # Declared true -> auto-minted key, e.g. the calendar-sync dialog.
+    auto = client.post(
+        "/api/v1/profiles/me/api-keys",
+        json={
+            "label": "Calendrier",
+            "authorized_permissions": [CALENDAR_PERMISSION],
+            "auto_generated": True,
+        },
+    ).json()
+    assert auto["auto_generated"] is True
+
+    # The flag round-trips through the listing.
+    listed = {k["key_hash"]: k for k in client.get("/api/v1/profiles/me/api-keys").json()}
+    assert listed[manual["key_hash"]]["auto_generated"] is False
+    assert listed[auto["key_hash"]]["auto_generated"] is True
+
+
 def test_revoke_api_key(client: TestClient, monkeypatch):
     _grant_member_permissions(monkeypatch)
     created = client.post(
