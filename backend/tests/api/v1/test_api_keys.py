@@ -182,3 +182,96 @@ def test_public_ics_needs_no_auth(client: TestClient):
     response = anon.get("/api/v1/events/export/ics")
     assert response.status_code == 200
     assert "text/calendar" in response.headers["content-type"]
+
+
+# --- Stale auto-generated key sweep (daily_cleanup) ------------------------
+
+
+def _insert_key(
+    session,
+    key_hash,
+    *,
+    created_at,
+    auto_generated=True,
+    last_used_at=None,
+    revoked_at=None,
+):
+    from bbe2.models.api_key import ApiKeyDB
+
+    session.add(
+        ApiKeyDB(
+            key_hash=key_hash,
+            user_id=SEEDED_USER_ID,
+            prefix="bmr_test",
+            label="Calendrier",
+            authorized_permissions=[CALENDAR_PERMISSION],
+            auto_generated=auto_generated,
+            created_at=created_at,
+            last_used_at=last_used_at,
+            revoked_at=revoked_at,
+        )
+    )
+
+
+def test_sweep_revokes_only_old_unused_auto_keys(client: TestClient):
+    """Only auto-generated, never-used keys past the TTL are revoked."""
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import select
+
+    from bbe2.models.api_key import ApiKeyDB
+    from bbe2.utils.api_key import revoke_stale_auto_generated_keys
+
+    engine = get_engine(DATABASE_URL)
+    session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    now = datetime(2026, 6, 1, 12, 0, tzinfo=timezone.utc)
+    old = now - timedelta(hours=48)
+    fresh = now - timedelta(hours=1)
+
+    with session_local() as session:
+        session.query(ApiKeyDB).delete()
+        # Dead dialog open: auto, never used, past the TTL -> revoked.
+        _insert_key(session, "dead", created_at=old)
+        # Live subscription: auto and old, but it authenticated -> kept.
+        _insert_key(session, "subscribed", created_at=old, last_used_at=fresh)
+        # Just minted: auto and unused, but within the TTL -> kept.
+        _insert_key(session, "fresh", created_at=fresh)
+        # Hand-created key, even old and unused -> never touched.
+        _insert_key(session, "manual", created_at=old, auto_generated=False)
+        # Already revoked -> not counted again.
+        _insert_key(session, "gone", created_at=old, revoked_at=old)
+        session.commit()
+
+        revoked = revoke_stale_auto_generated_keys(session, ttl_hours=24, now=now)
+        session.commit()
+        assert revoked == 1
+
+        rows = {r.key_hash: r for r in session.scalars(select(ApiKeyDB)).all()}
+        assert rows["dead"].revoked_at is not None
+        assert rows["subscribed"].revoked_at is None
+        assert rows["fresh"].revoked_at is None
+        assert rows["manual"].revoked_at is None
+
+
+def test_sweep_disabled_when_ttl_zero(client: TestClient):
+    """A ttl_hours of 0 disables the sweep entirely."""
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import select
+
+    from bbe2.models.api_key import ApiKeyDB
+    from bbe2.utils.api_key import revoke_stale_auto_generated_keys
+
+    engine = get_engine(DATABASE_URL)
+    session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    now = datetime(2026, 6, 1, 12, 0, tzinfo=timezone.utc)
+
+    with session_local() as session:
+        session.query(ApiKeyDB).delete()
+        _insert_key(session, "dead", created_at=now - timedelta(days=30))
+        session.commit()
+
+        assert revoke_stale_auto_generated_keys(session, ttl_hours=0, now=now) == 0
+        session.commit()
+        row = session.scalars(select(ApiKeyDB)).one()
+        assert row.revoked_at is None
