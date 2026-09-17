@@ -16,7 +16,7 @@ from bbe2.crud import CRUDProfile
 from bbe2.dependencies import S3Dep, SenderDep, SessionDep, SettingsDep, get_s3_helper
 from bbe2.models.action_token import ActionTokenValue
 from bbe2.schemas.helloasso import MembershipInfo
-from bbe2.schemas.profile import MinimalGroup, Profile
+from bbe2.schemas.profile import Profile
 from bbe2.schemas.utils import (
     GlobalStats,
     MyStats,
@@ -556,9 +556,6 @@ async def get_global_stats(
     )
 
 
-# Rankings only consider activity from this date onward (start of the
-# 2024-2025 season).
-RANKINGS_SINCE = datetime(2024, 9, 1)
 # Minimum positive responses (all-time) for a user to appear in the rankings.
 MIN_POSITIVE_RESPONSES = 3
 # September is the first month of a new season.
@@ -581,40 +578,19 @@ def _season_expr(date_col):
     return case((month >= SEASON_START_MONTH, year), else_=year - 1)
 
 
-def _user_db_to_profile(user_db: models.UserDB) -> Profile:
-    """Map a ``UserDB`` row to the public ``Profile`` schema."""
-    return Profile(
-        id=user_db.id,
-        email=user_db.email,
-        first_name=user_db.first_name,
-        last_name=user_db.last_name,
-        picture_key=user_db.picture_key,
-        receives_emails=user_db.receives_emails,
-        receives_push=user_db.receives_push,
-        is_active=user_db.is_active,
-        groups=[
-            MinimalGroup(id=g.id, name=g.name, color=g.color) for g in user_db.groups
-        ],
-        instrument=(
-            MinimalGroup(
-                id=user_db.instrument.id,
-                name=user_db.instrument.name,
-                color=user_db.instrument.color,
-            )
-            if user_db.instrument
-            else None
-        ),
-    )
-
-
 def _load_profiles(session, user_ids: set[str]) -> dict[str, Profile]:
-    """Load and map the given users to public profiles, keyed by id."""
+    """Load the given users and map them to public profiles, keyed by id.
+
+    ``Profile`` (and ``MinimalGroup``) declare ``from_attributes=True``, so
+    Pydantic reads the ORM row directly; the ``get_s3_helper`` dependency on
+    the route wires up ``picture_url`` during serialization.
+    """
     if not user_ids:
         return {}
     users = session.scalars(
         select(models.UserDB).where(models.UserDB.id.in_(user_ids))
     ).all()
-    return {user.id: _user_db_to_profile(user) for user in users}
+    return {user.id: Profile.model_validate(user) for user in users}
 
 
 def _query_rankings(session):
@@ -656,7 +632,6 @@ def _query_rankings(session):
         .join(models.UserDB, models.UserDB.id == models.ResponseDB.user_id)
         .where(models.UserDB.is_active)
         .where(models.EventDB.is_in_doodle.is_(True))
-        .where(models.EventDB.date > RANKINGS_SINCE)
         .group_by(
             func.grouping_sets(  # pylint: disable=not-callable
                 tuple_(models.ResponseDB.user_id, season),
@@ -670,7 +645,6 @@ def _query_rankings(session):
     event_counts = (
         select(season.label("season"), sql_fn.count().label("n_events"))
         .where(models.EventDB.is_in_doodle.is_(True))
-        .where(models.EventDB.date > RANKINGS_SINCE)
         .group_by(season)
         .cte("event_counts")
     )
