@@ -63,7 +63,7 @@ jobs:
       run:
         working-directory: frontend
     runs-on: ubuntu-latest
-    name: Lint & build frontend
+    name: Lint, test & build frontend
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -72,7 +72,9 @@ jobs:
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
       - run: yarn
+      # Tests depend on the built bagad-client lib, so build must run first.
       - run: yarn build
+      - run: yarn workspace bagad-frontend test
       - run: yarn lint
 
   client-up-to-date:
