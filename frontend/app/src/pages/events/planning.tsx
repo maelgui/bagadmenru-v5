@@ -22,9 +22,6 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from '@/components/ui/tooltip';
 import AvatarGroup from '../../components/avatar-group';
 import Container from '../../components/container';
 import Header from '../../components/header';
@@ -148,18 +145,21 @@ export function MyResponseBlock({
   );
 }
 
-function ResponsesDialog({
-  event, responses, instruments, profiles, responseByInstrument, open, onOpenChange,
+export function ResponsesDialog({
+  event, responses, instruments, profiles, responseByInstrument, totalMembers, open, onOpenChange,
 }: {
   event: Event;
   responses: EnrichedResponse[];
   instruments: MinimalGroup[];
   profiles: Profile[];
   responseByInstrument: Map<number | undefined, EnrichedResponse[]>;
+  totalMembers: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const noResponseProfiles = profiles.filter((person) => !responses.find((response) => response.userId === person.id));
+  const presentCount = responses.filter((response) => response.value).length;
+  const responseRate = totalMembers > 0 ? Math.round((responses.length / totalMembers) * PERCENT) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -167,10 +167,25 @@ function ResponsesDialog({
         <DialogHeader>
           <DialogTitle>Réponses pour l&apos;évènement <i>{event.title}</i></DialogTitle>
           <DialogDescription>
-            <strong>{responses.filter((response) => response.value).length} réponses positives</strong> sur {responses.length} réponses
+            Détail des réponses par membre
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col items-center justify-center gap-1 p-4">
+              <span className="font-heading text-3xl text-primary">{presentCount}</span>
+              <span className="text-sm text-muted-foreground">présent{presentCount > 1 ? 's' : ''}</span>
+            </div>
+            <div className="flex flex-col items-center justify-center gap-1 p-4">
+              <CircularProgress
+                value={responseRate}
+                size={52}
+                label={<span className="font-heading text-xs text-primary">{responseRate}%</span>}
+                aria-label={`${responses.length} réponses sur ${totalMembers} membres`}
+              />
+              <span className="text-sm text-muted-foreground">de réponses ({responses.length}/{totalMembers})</span>
+            </div>
+          </div>
           <ul>
             {instruments.map((instrument) => (
               <li key={instrument.id}>
@@ -219,8 +234,6 @@ function EventCard({
     myResponse, myInstrumentResponses, otherInstrumentsResponses, totalOtherInstrumentsResponses, responseByInstrument,
   } = useEventResponsesSummary(responses, instruments);
 
-  const responseRate = totalMembers > 0 ? Math.round((responses.length / totalMembers) * PERCENT) : 0;
-
   const mutation = useMutation({
     mutationFn: async (response: boolean) => await eventsApi.createResponseApiV1EventsEventIdResponsesPut({
       eventId: event.id,
@@ -243,24 +256,7 @@ function EventCard({
         <div className="text-sm">{event.description}</div>
         <div className="my-4">
           <h4 className="flex items-baseline justify-between pb-1 font-semibold">
-            <span className="flex items-center gap-2">
-              Participants
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={(
-                      <span className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
-                        <CircularProgress value={responseRate} size={16} strokeWidth={2} label={null} aria-label={`${responses.length} réponses sur ${totalMembers} membres`} />
-                        {responseRate}%
-                      </span>
-                    )}
-                  />
-                  <TooltipContent>
-                    {responses.length} membre{responses.length > 1 ? 's ont' : ' a'} répondu sur {totalMembers} - {responseRate}% de participation renseignée
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </span>
+            Participants
             <Button variant="ghost" size="sm" onClick={() => setOpenUserList(true)}>
               <ExternalLink data-icon="inline-start" />
               Liste complète
@@ -297,6 +293,7 @@ function EventCard({
         instruments={instruments}
         profiles={profiles}
         responseByInstrument={responseByInstrument}
+        totalMembers={totalMembers}
         open={openUserList}
         onOpenChange={setOpenUserList}
       />
