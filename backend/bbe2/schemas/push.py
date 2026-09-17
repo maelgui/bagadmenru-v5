@@ -46,12 +46,11 @@ class PushDevice(BaseModel):
     sent yet). device_hash is a stable, non-reversible fingerprint of the push
     endpoint: the browser hashes its own endpoint the same way to recognise
     which row is "this device" without the endpoint ever being exposed.
-
-    ``from_attributes`` lets a ``PushSubscriptionDB`` row be validated (or
-    returned) directly; the validator below derives ``device_hash`` from the
-    row's endpoint and drops the endpoint so it is never serialized.
     """
 
+    # from_attributes lets a PushSubscriptionDB row be validated (or returned)
+    # directly; the validator below derives device_hash from the row's endpoint
+    # and drops the endpoint so it is never serialized.
     model_config = ConfigDict(from_attributes=True)
 
     id: str
