@@ -37,12 +37,6 @@ export interface PushDevice {
      * @type {string}
      * @memberof PushDevice
      */
-    deviceHash: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PushDevice
-     */
     userAgent?: string | null;
     /**
      * 
@@ -56,6 +50,12 @@ export interface PushDevice {
      * @memberof PushDevice
      */
     createdAt: Date;
+    /**
+     * Server-computed fingerprint of the endpoint (never the endpoint).
+     * @type {string}
+     * @memberof PushDevice
+     */
+    readonly deviceHash: string;
 }
 
 /**
@@ -63,8 +63,8 @@ export interface PushDevice {
  */
 export function instanceOfPushDevice(value: object): value is PushDevice {
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('deviceHash' in value) || value['deviceHash'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('deviceHash' in value) || value['deviceHash'] === undefined) return false;
     return true;
 }
 
@@ -79,10 +79,10 @@ export function PushDeviceFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return {
         
         'id': json['id'],
-        'deviceHash': json['device_hash'],
         'userAgent': json['user_agent'] == null ? undefined : json['user_agent'],
         'lastUsedAt': json['last_used_at'] == null ? undefined : (new Date(json['last_used_at'])),
         'createdAt': (new Date(json['created_at'])),
+        'deviceHash': json['device_hash'],
     };
 }
 
@@ -90,7 +90,7 @@ export function PushDeviceToJSON(json: any): PushDevice {
     return PushDeviceToJSONTyped(json, false);
 }
 
-export function PushDeviceToJSONTyped(value?: PushDevice | null, ignoreDiscriminator: boolean = false): any {
+export function PushDeviceToJSONTyped(value?: Omit<PushDevice, 'device_hash'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -98,7 +98,6 @@ export function PushDeviceToJSONTyped(value?: PushDevice | null, ignoreDiscrimin
     return {
         
         'id': value['id'],
-        'device_hash': value['deviceHash'],
         'user_agent': value['userAgent'],
         'last_used_at': value['lastUsedAt'] == null ? undefined : ((value['lastUsedAt'] as any).toISOString()),
         'created_at': ((value['createdAt']).toISOString()),
