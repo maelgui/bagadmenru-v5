@@ -634,7 +634,7 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get rankings of users based on their response metrics. Returns rankings for n_responses, n_positive_responses, and avg_response_time. Only includes users with more than 5 positive responses since 2024-09-01.
+     * Rank active members by how they engage with events, per season.  For each season (plus an all-time window) members are ranked on three metrics, in order of the values we want to encourage:  * **Reactivity** — median delay between an event being published and the   member answering it (yes or no). Answering quickly lets the bagad commit   to organisers, so this is the primary metric. * **Response rate** — share of the season\'s answerable events the member   responded to. Per-season only (a cross-season rate is meaningless), so   it is omitted from the all-time window. * **Positive responses** — absolute count of \"yes\" answers, i.e. turnouts.   Secondary, but tracked because outings keep the group alive.  Only members with at least :data:`MIN_POSITIVE_RESPONSES` positive responses all-time appear, to avoid ranking one-off participants.
      * Get User Rankings
      */
     async getUserRankingsApiV1StatsRankingsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserRankings>> {
@@ -661,7 +661,7 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get rankings of users based on their response metrics. Returns rankings for n_responses, n_positive_responses, and avg_response_time. Only includes users with more than 5 positive responses since 2024-09-01.
+     * Rank active members by how they engage with events, per season.  For each season (plus an all-time window) members are ranked on three metrics, in order of the values we want to encourage:  * **Reactivity** — median delay between an event being published and the   member answering it (yes or no). Answering quickly lets the bagad commit   to organisers, so this is the primary metric. * **Response rate** — share of the season\'s answerable events the member   responded to. Per-season only (a cross-season rate is meaningless), so   it is omitted from the all-time window. * **Positive responses** — absolute count of \"yes\" answers, i.e. turnouts.   Secondary, but tracked because outings keep the group alive.  Only members with at least :data:`MIN_POSITIVE_RESPONSES` positive responses all-time appear, to avoid ranking one-off participants.
      * Get User Rankings
      */
     async getUserRankingsApiV1StatsRankingsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserRankings> {

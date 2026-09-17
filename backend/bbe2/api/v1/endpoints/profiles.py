@@ -1,11 +1,12 @@
 import logging
 import uuid
-from datetime import datetime
+from collections import defaultdict
+from datetime import datetime, timedelta
 from typing import Annotated
 
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import cast, func, select, update
+from sqlalchemy import Float, case, cast, extract, func, select, tuple_, update
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import functions as sql_fn
 from sqlalchemy.types import Integer
@@ -20,6 +21,7 @@ from bbe2.schemas.utils import (
     GlobalStats,
     MyStats,
     RankingInfo,
+    SeasonRanking,
     UserRankingItem,
     UserRankings,
 )
@@ -554,6 +556,184 @@ async def get_global_stats(
     )
 
 
+# Rankings only consider activity from this date onward (start of the
+# 2024-2025 season).
+RANKINGS_SINCE = datetime(2024, 9, 1)
+# Minimum positive responses (all-time) for a user to appear in the rankings.
+MIN_POSITIVE_RESPONSES = 3
+# September is the first month of a new season.
+SEASON_START_MONTH = 9
+
+
+def _season_of(date: datetime) -> int:
+    """Return the starting year of the season a date falls into.
+
+    A season spans September (year N) to August (year N+1); months before
+    September belong to the previous year's season.
+    """
+    return date.year if date.month >= SEASON_START_MONTH else date.year - 1
+
+
+def _season_expr(date_col):
+    """SQL counterpart of :func:`_season_of` for grouping/filtering."""
+    year = cast(extract("year", date_col), Integer)
+    month = cast(extract("month", date_col), Integer)
+    return case((month >= SEASON_START_MONTH, year), else_=year - 1)
+
+
+def _user_db_to_profile(user_db: models.UserDB) -> Profile:
+    """Map a ``UserDB`` row to the public ``Profile`` schema."""
+    return Profile(
+        id=user_db.id,
+        email=user_db.email,
+        first_name=user_db.first_name,
+        last_name=user_db.last_name,
+        picture_key=user_db.picture_key,
+        receives_emails=user_db.receives_emails,
+        receives_push=user_db.receives_push,
+        is_active=user_db.is_active,
+        groups=[
+            MinimalGroup(id=g.id, name=g.name, color=g.color) for g in user_db.groups
+        ],
+        instrument=(
+            MinimalGroup(
+                id=user_db.instrument.id,
+                name=user_db.instrument.name,
+                color=user_db.instrument.color,
+            )
+            if user_db.instrument
+            else None
+        ),
+    )
+
+
+def _load_profiles(session, user_ids: set[str]) -> dict[str, Profile]:
+    """Load and map the given users to public profiles, keyed by id."""
+    if not user_ids:
+        return {}
+    users = session.scalars(
+        select(models.UserDB).where(models.UserDB.id.in_(user_ids))
+    ).all()
+    return {user.id: _user_db_to_profile(user) for user in users}
+
+
+def _query_rankings(session):
+    """Compute per-season and all-time rankings in a single SQL statement.
+
+    The heavy lifting stays in the database:
+
+    * one aggregation over ``GROUPING SETS`` produces per-``(user, season)``
+      rows *and* per-``user`` all-time rows (the latter carry ``season IS
+      NULL``) in a single pass, with the median response delay computed via
+      ``percentile_cont``;
+    * answerable-event counts per season are joined in to derive the response
+      rate (left undefined for the all-time window);
+    * three ``dense_rank()`` window functions partitioned by window rank each
+      metric independently.
+
+    Eligibility (>= :data:`MIN_POSITIVE_RESPONSES` positive answers all-time)
+    is read from each user's all-time row and broadcast across their season
+    rows with a windowed ``max`` so the filter applies uniformly.
+    """
+    season = _season_expr(models.EventDB.date)
+    delay_seconds = extract("epoch", models.ResponseDB.date - models.EventDB.created_at)
+
+    # 1. Per-(user, season) rows AND per-user all-time rows (season IS NULL)
+    #    in a single pass via GROUPING SETS.
+    metrics = (
+        select(
+            models.ResponseDB.user_id.label("user_id"),
+            season.label("season"),
+            sql_fn.count().label("n_responses"),
+            sql_fn.coalesce(
+                sql_fn.sum(cast(models.ResponseDB.value, Integer)), 0
+            ).label("n_positive"),
+            func.percentile_cont(0.5)  # pylint: disable=not-callable
+            .within_group(delay_seconds)
+            .label("median_seconds"),
+        )
+        .join(models.EventDB, models.ResponseDB.event_id == models.EventDB.id)
+        .join(models.UserDB, models.UserDB.id == models.ResponseDB.user_id)
+        .where(models.UserDB.is_active)
+        .where(models.EventDB.is_in_doodle.is_(True))
+        .where(models.EventDB.date > RANKINGS_SINCE)
+        .group_by(
+            func.grouping_sets(  # pylint: disable=not-callable
+                tuple_(models.ResponseDB.user_id, season),
+                tuple_(models.ResponseDB.user_id),
+            )
+        )
+        .cte("metrics")
+    )
+
+    # 2. Answerable events per season, the response-rate denominator.
+    event_counts = (
+        select(season.label("season"), sql_fn.count().label("n_events"))
+        .where(models.EventDB.is_in_doodle.is_(True))
+        .where(models.EventDB.date > RANKINGS_SINCE)
+        .group_by(season)
+        .cte("event_counts")
+    )
+
+    # 3. Derive response rate and broadcast the all-time positive count.
+    all_time_positive = sql_fn.max(
+        case((metrics.c.season.is_(None), metrics.c.n_positive))
+    ).over(partition_by=metrics.c.user_id)
+    response_rate = case(
+        (
+            metrics.c.season.isnot(None) & (event_counts.c.n_events > 0),
+            cast(metrics.c.n_responses, Float) / event_counts.c.n_events,
+        )
+    )
+    enriched = (
+        select(
+            metrics.c.user_id,
+            metrics.c.season,
+            metrics.c.n_responses,
+            metrics.c.n_positive,
+            metrics.c.median_seconds,
+            response_rate.label("response_rate"),
+            all_time_positive.label("all_time_positive"),
+        )
+        .join(event_counts, event_counts.c.season == metrics.c.season, isouter=True)
+        .cte("enriched")
+    )
+
+    # 4. Keep eligible members, then dense-rank each metric within its window.
+    eligible = (
+        select(enriched)
+        .where(enriched.c.all_time_positive >= MIN_POSITIVE_RESPONSES)
+        .cte("eligible")
+    )
+    ranked = select(
+        eligible.c.user_id,
+        eligible.c.season,
+        eligible.c.n_positive,
+        eligible.c.median_seconds,
+        eligible.c.response_rate,
+        sql_fn.dense_rank()
+        .over(
+            partition_by=eligible.c.season,
+            order_by=eligible.c.median_seconds.asc().nulls_last(),
+        )
+        .label("reactivity_rank"),
+        sql_fn.dense_rank()
+        .over(
+            partition_by=eligible.c.season,
+            order_by=eligible.c.response_rate.desc().nulls_last(),
+        )
+        .label("response_rate_rank"),
+        sql_fn.dense_rank()
+        .over(
+            partition_by=eligible.c.season,
+            order_by=eligible.c.n_positive.desc(),
+        )
+        .label("positive_rank"),
+    )
+
+    return session.execute(ranked).all()
+
+
 @stats_router.get(
     "/rankings",
     response_model=UserRankings,
@@ -566,119 +746,64 @@ async def get_global_stats(
 async def get_user_rankings(
     session: SessionDep,
 ) -> UserRankings:
+    """Rank active members by how they engage with events, per season.
+
+    For each season (plus an all-time window) members are ranked on three
+    metrics, in order of the values we want to encourage:
+
+    * **Reactivity** — median delay between an event being published and the
+      member answering it (yes or no). Answering quickly lets the bagad commit
+      to organisers, so this is the primary metric.
+    * **Response rate** — share of the season's answerable events the member
+      responded to. Per-season only (a cross-season rate is meaningless), so
+      it is omitted from the all-time window.
+    * **Positive responses** — absolute count of "yes" answers, i.e. turnouts.
+      Secondary, but tracked because outings keep the group alive.
+
+    Only members with at least :data:`MIN_POSITIVE_RESPONSES` positive
+    responses all-time appear, to avoid ranking one-off participants.
     """
-    Get rankings of users based on their response metrics.
-    Returns rankings for n_responses, n_positive_responses, and avg_response_time.
-    Only includes users with more than 5 positive responses since 2024-09-01.
-    """
-    # Create a subquery to get the base metrics
-    subq = (
-        select(
-            models.UserDB.id.label("user_id"),
-            sql_fn.count().label("n_responses"),
-            sql_fn.sum(cast(models.ResponseDB.value, Integer)).label(
-                "n_positive_responses"
-            ),
-            func.avg(models.ResponseDB.date - models.EventDB.created_at).label(
-                "avg_response_time"
-            ),
+    ranked_rows = _query_rankings(session)
+    if not ranked_rows:
+        return UserRankings(seasons=[])
+
+    profiles = _load_profiles(session, {row.user_id for row in ranked_rows})
+
+    # Group rows into windows: a NULL season is the all-time window, which we
+    # place last; individual seasons come newest-first.
+    items_by_window: dict[int | None, list[UserRankingItem]] = defaultdict(list)
+    for row in ranked_rows:
+        profile = profiles.get(row.user_id)
+        if profile is None:
+            continue
+        items_by_window[row.season].append(
+            UserRankingItem(
+                user=profile,
+                ranks=RankingInfo(
+                    median_response_time=(
+                        timedelta(seconds=row.median_seconds)
+                        if row.median_seconds is not None
+                        else None
+                    ),
+                    median_response_time_rank=row.reactivity_rank,
+                    response_rate=row.response_rate,
+                    response_rate_rank=row.response_rate_rank,
+                    n_positive_responses=row.n_positive,
+                    n_positive_responses_rank=row.positive_rank,
+                ),
+            )
         )
-        .join(models.ResponseDB, models.UserDB.id == models.ResponseDB.user_id)
-        .join(models.EventDB, models.ResponseDB.event_id == models.EventDB.id)
-        .where(models.UserDB.is_active)
-        .where(models.EventDB.date > datetime(2024, 9, 1))
-        .group_by(models.UserDB.id)
-        .having(func.sum(cast(models.ResponseDB.value == True, Integer)) >= 3)
-        .subquery()
+
+    seasons = sorted((s for s in items_by_window if s is not None), reverse=True)
+    ordered_windows: list[int | None] = [*seasons, None]
+
+    return UserRankings(
+        seasons=[
+            SeasonRanking(season=window, items=items_by_window[window])
+            for window in ordered_windows
+            if window in items_by_window
+        ]
     )
-
-    # Query with window functions to calculate ranks
-    q = select(
-        models.UserDB,
-        subq.c.n_responses,
-        subq.c.n_positive_responses,
-        subq.c.avg_response_time,
-        sql_fn.dense_rank()
-        .over(order_by=subq.c.n_responses.desc())
-        .label("n_responses_rank"),
-        sql_fn.dense_rank()
-        .over(order_by=subq.c.n_positive_responses.desc())
-        .label("n_positive_responses_rank"),
-        sql_fn.dense_rank()
-        .over(order_by=subq.c.avg_response_time.asc())
-        .label("avg_response_time_rank"),
-    ).join(subq, models.UserDB.id == subq.c.user_id)
-
-    results = session.execute(q).all()
-
-    # Convert results to list of dictionaries
-    user_data = []
-    for row in results:
-        # Handle NULL avg_response_time_rank (when avg_response_time is NULL)
-        avg_response_time_rank = (
-            row.avg_response_time_rank if row.avg_response_time is not None else None
-        )
-
-        user_data.append(
-            {
-                "user_db": row.UserDB,
-                "n_responses": row.n_responses,
-                "n_positive_responses": row.n_positive_responses,
-                "avg_response_time": row.avg_response_time,
-                "n_responses_rank": row.n_responses_rank,
-                "n_positive_responses_rank": row.n_positive_responses_rank,
-                "avg_response_time_rank": avg_response_time_rank,
-            }
-        )
-
-    # Create UserRankingItem objects with nested structure
-    ranking_items = []
-    for user in user_data:
-        ranking_info = RankingInfo(
-            n_responses=user["n_responses"],
-            n_positive_responses=user["n_positive_responses"],
-            avg_response_time=user["avg_response_time"],
-            n_responses_rank=user["n_responses_rank"],
-            n_positive_responses_rank=user["n_positive_responses_rank"],
-            avg_response_time_rank=user["avg_response_time_rank"],
-        )
-
-        # Convert UserDB to Profile
-        user_db = user["user_db"]
-
-        # Create a Profile object with the correct field types
-        profile = Profile(
-            id=user_db.id,
-            email=user_db.email,
-            first_name=user_db.first_name,
-            last_name=user_db.last_name,
-            picture_key=user_db.picture_key,
-            receives_emails=user_db.receives_emails,
-            receives_push=user_db.receives_push,
-            is_active=user_db.is_active,
-            groups=[
-                MinimalGroup(id=g.id, name=g.name, color=g.color)
-                for g in user_db.groups
-            ],
-            instrument=(
-                MinimalGroup(
-                    id=user_db.instrument.id,
-                    name=user_db.instrument.name,
-                    color=user_db.instrument.color,
-                )
-                if user_db.instrument
-                else None
-            ),
-        )
-
-        # Create the nested item
-        ranking_item = UserRankingItem(
-            user=profile, ranks=ranking_info  # Use the Profile object
-        )
-
-        ranking_items.append(ranking_item)
-
-    return UserRankings(rankings=ranking_items)
 
 
 groups_router = APIRouter(prefix="/groups")

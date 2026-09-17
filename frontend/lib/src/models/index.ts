@@ -50,6 +50,7 @@ export * from './ResetPasswordRequest';
 export * from './Response';
 export * from './ResponseCreate';
 export * from './Role';
+export * from './SeasonRanking';
 export * from './SessionInfo';
 export * from './Token';
 export * from './UnlinkedMembership';

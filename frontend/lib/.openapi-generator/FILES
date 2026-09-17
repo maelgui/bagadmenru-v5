@@ -64,6 +64,7 @@ src/models/ResetPasswordRequest.ts
 src/models/Response.ts
 src/models/ResponseCreate.ts
 src/models/Role.ts
+src/models/SeasonRanking.ts
 src/models/SessionInfo.ts
 src/models/Token.ts
 src/models/UnlinkedMembership.ts

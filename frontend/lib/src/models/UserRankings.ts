@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { UserRankingItem } from './UserRankingItem';
+import type { SeasonRanking } from './SeasonRanking';
 import {
-    UserRankingItemFromJSON,
-    UserRankingItemFromJSONTyped,
-    UserRankingItemToJSON,
-    UserRankingItemToJSONTyped,
-} from './UserRankingItem';
+    SeasonRankingFromJSON,
+    SeasonRankingFromJSONTyped,
+    SeasonRankingToJSON,
+    SeasonRankingToJSONTyped,
+} from './SeasonRanking';
 
 /**
  * 
@@ -29,17 +29,17 @@ import {
 export interface UserRankings {
     /**
      * 
-     * @type {Array<UserRankingItem>}
+     * @type {Array<SeasonRanking>}
      * @memberof UserRankings
      */
-    rankings: Array<UserRankingItem>;
+    seasons: Array<SeasonRanking>;
 }
 
 /**
  * Check if a given object implements the UserRankings interface.
  */
 export function instanceOfUserRankings(value: object): value is UserRankings {
-    if (!('rankings' in value) || value['rankings'] === undefined) return false;
+    if (!('seasons' in value) || value['seasons'] === undefined) return false;
     return true;
 }
 
@@ -53,7 +53,7 @@ export function UserRankingsFromJSONTyped(json: any, ignoreDiscriminator: boolea
     }
     return {
         
-        'rankings': ((json['rankings'] as Array<any>).map(UserRankingItemFromJSON)),
+        'seasons': ((json['seasons'] as Array<any>).map(SeasonRankingFromJSON)),
     };
 }
 
@@ -68,7 +68,7 @@ export function UserRankingsToJSONTyped(value?: UserRankings | null, ignoreDiscr
 
     return {
         
-        'rankings': ((value['rankings'] as Array<any>).map(UserRankingItemToJSON)),
+        'seasons': ((value['seasons'] as Array<any>).map(SeasonRankingToJSON)),
     };
 }
 
