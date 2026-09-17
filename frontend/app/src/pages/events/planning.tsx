@@ -19,7 +19,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
@@ -79,34 +81,49 @@ function responseSortFn(first: EnrichedResponse, second: EnrichedResponse) {
 }
 
 function AnswerButtons({
-  current, disabled, onAnswer,
+  current = undefined, pendingValue = undefined, disabled, onAnswer,
 }: {
   current?: boolean;
+  pendingValue?: boolean;
   disabled: boolean;
   onAnswer: (value: boolean) => void;
 }) {
+  const selected = current === undefined ? [] : [current ? 'yes' : 'no'];
+  const selectedClass = 'aria-pressed:bg-primary/10 aria-pressed:text-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary';
   return (
-    <div className="flex justify-center gap-2">
-      <Button variant={current === true ? 'default' : 'outline'} size="sm" disabled={disabled} onClick={() => onAnswer(true)}>
-        <Check data-icon="inline-start" />
-        Je participe
-      </Button>
-      <Button variant={current === false ? 'default' : 'outline'} size="sm" disabled={disabled} onClick={() => onAnswer(false)}>
-        <X data-icon="inline-start" />
-        Je ne participe pas
-      </Button>
+    <div className="flex justify-center">
+      <ToggleGroup variant="outline" size="sm" spacing={0} value={selected} disabled={disabled}>
+        <ToggleGroupItem value="yes" className={selectedClass} onClick={() => onAnswer(true)}>
+          {pendingValue === true ? <Spinner data-icon="inline-start" /> : <Check data-icon="inline-start" />}
+          Je participe
+        </ToggleGroupItem>
+        <ToggleGroupItem value="no" className={selectedClass} onClick={() => onAnswer(false)}>
+          {pendingValue === false ? <Spinner data-icon="inline-start" /> : <X data-icon="inline-start" />}
+          Je ne participe pas
+        </ToggleGroupItem>
+      </ToggleGroup>
     </div>
   );
 }
 
-function MyResponseBlock({
-  myResponse, isSaving, onAnswer,
+export function MyResponseBlock({
+  myResponse = undefined, isSaving, pendingValue = undefined, onAnswer,
 }: {
   myResponse?: EnrichedResponse;
   isSaving: boolean;
-  onAnswer: (value: boolean) => void;
+  pendingValue?: boolean;
+  onAnswer: (value: boolean) => Promise<unknown>;
 }) {
   const [editing, setEditing] = useState(false);
+
+  const handleAnswer = async (value: boolean) => {
+    try {
+      await onAnswer(value);
+      setEditing(false);
+    } catch {
+      // La sauvegarde a échoué (toast d'erreur déjà affiché) : on reste en mode édition.
+    }
+  };
 
   return (
     <div className="mt-4">
@@ -120,7 +137,7 @@ function MyResponseBlock({
         ) : null}
       </h4>
       {myResponse === undefined || editing ? (
-        <AnswerButtons current={myResponse?.value} disabled={isSaving} onAnswer={onAnswer} />
+        <AnswerButtons current={myResponse?.value} disabled={isSaving} pendingValue={pendingValue} onAnswer={handleAnswer} />
       ) : (
         <div className="flex items-center gap-2 text-sm">
           <ResponseIcon value={myResponse.value} />
@@ -211,6 +228,7 @@ function EventCard({
     }),
     onSettled: async () => await queryClient.invalidateQueries({ queryKey: ['responses'] }),
     onSuccess: () => toast.add({ title: 'Réponse enregistrée', type: 'success' }),
+    onError: () => toast.add({ title: "Impossible d'enregistrer votre réponse", type: 'error' }),
   });
 
   return (
@@ -266,7 +284,12 @@ function EventCard({
             emptyMessage="Aucun participant"
           />
         </div>
-        <MyResponseBlock myResponse={myResponse} isSaving={mutation.isPending} onAnswer={(value) => mutation.mutate(value)} />
+        <MyResponseBlock
+          myResponse={myResponse}
+          isSaving={mutation.isPending}
+          pendingValue={mutation.isPending ? mutation.variables : undefined}
+          onAnswer={async (value) => await mutation.mutateAsync(value)}
+        />
       </div>
       <ResponsesDialog
         event={event}
