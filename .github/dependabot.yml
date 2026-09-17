@@ -13,15 +13,10 @@ updates:
     assignees:
       - maelgui
     groups:
-      # Regroupe tous les minor/patch de dev en une seule PR
-      dev-deps:
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
-      # Regroupe tous les minor/patch de prod en une seule PR
-      prod-deps:
-        dependency-type: "production"
+      # Regroupe tous les minor/patch en une seule PR
+      frontend-deps:
+        patterns:
+          - "*"
         update-types:
           - "minor"
           - "patch"
@@ -57,13 +52,10 @@ updates:
     assignees:
       - maelgui
     groups:
-      dev-deps:
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
-      prod-deps:
-        dependency-type: "production"
+      # Regroupe tous les minor/patch en une seule PR
+      backend-deps:
+        patterns:
+          - "*"
         update-types:
           - "minor"
           - "patch"
