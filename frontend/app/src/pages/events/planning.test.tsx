@@ -2,15 +2,21 @@
 import {
   cleanup, fireEvent, render, screen, waitFor,
 } from '@testing-library/react';
-import type { Response } from 'bagad-client';
+import type { Event, Response } from 'bagad-client';
 import {
   afterEach, describe, expect, it, vi,
 } from 'vitest';
-import { MyResponseBlock } from './planning';
+import { MyResponseBlock, ResponsesDialog } from './planning';
 
 function myResponse(value: boolean): Response {
   return {
     value, userId: 'user-1', eventId: 1, date: new Date('2026-09-17'),
+  };
+}
+
+function eventResponse(userId: string, value: boolean): Response {
+  return {
+    value, userId, eventId: 1, date: new Date('2026-09-17'),
   };
 }
 
@@ -62,5 +68,54 @@ describe('Planning MyResponseBlock', () => {
     expect(yesButton.querySelector('[data-slot="spinner"]')).toBeNull();
     expect(noButton).toHaveProperty('disabled', true);
     expect(yesButton).toHaveProperty('disabled', true);
+  });
+});
+
+describe('Planning ResponsesDialog', () => {
+  const event: Event = {
+    id: 1,
+    title: 'Répétition',
+    description: '',
+    date: new Date('2026-09-17'),
+    costume: 'NONE',
+    category: 'Répétition',
+    isInDoodle: true,
+  };
+
+  function renderDialog(responses: Response[], totalMembers: number) {
+    render(
+      <ResponsesDialog
+        event={event}
+        responses={responses}
+        instruments={[]}
+        profiles={[]}
+        responseByInstrument={new Map()}
+        totalMembers={totalMembers}
+        open
+        onOpenChange={vi.fn()}
+      />,
+    );
+  }
+
+  it('shows the present count and the response rate as prominent indicators', () => {
+    renderDialog([
+      eventResponse('user-1', true),
+      eventResponse('user-2', true),
+      eventResponse('user-3', false),
+    ], 4);
+
+    // 2 positive answers out of 3 responses, 4 members total.
+    expect(screen.getByText('2')).toBeTruthy();
+    expect(screen.getByText('présents')).toBeTruthy();
+    expect(screen.getByText('75%')).toBeTruthy();
+    expect(screen.getByText('de réponses (3/4)')).toBeTruthy();
+    expect(screen.getByLabelText('3 réponses sur 4 membres')).toBeTruthy();
+  });
+
+  it('handles the singular and an empty member list without dividing by zero', () => {
+    renderDialog([eventResponse('user-1', true)], 0);
+
+    expect(screen.getByText('présent')).toBeTruthy();
+    expect(screen.getByText('0%')).toBeTruthy();
   });
 });
