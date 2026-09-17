@@ -8,7 +8,7 @@ scripts = { bbe2 = 'bbe2.cli:app' }
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.141.1"
-uvicorn = "^0.52.4"
+uvicorn = "^0.53.0"
 python-multipart = "^0.0.32"
 boto3 = "1.35.64"
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
