@@ -1,0 +1,21 @@
+name: Dependency review
+
+# Blocks a PR that INTRODUCES a dependency with a known vulnerability —
+# complementary to Dependabot, which only catches up after the fact.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          comment-summary-in-pr: on-failure
