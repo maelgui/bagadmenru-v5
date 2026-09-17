@@ -8,6 +8,7 @@ earlier today must still count as upcoming.
 
 from datetime import datetime
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
@@ -90,3 +91,93 @@ def test_banner_pending_count_non_negative(client: TestClient):
     my_stats = client.get("/api/v1/stats/me").json()
     pending = global_stats["n_upcoming_event"] - my_stats["n_upcomming_responses"]
     assert pending >= 0
+
+
+def _add_answered_event(event_id: int, event_date: datetime, value: bool) -> None:
+    """Insert an event on ``event_date`` answered by the seeded user."""
+    engine = get_engine(DATABASE_URL)
+    session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    with session_local() as session:
+        session.add(
+            models.EventDB(
+                id=event_id,
+                title=f"Event {event_id}",
+                description="seasonal",
+                date=event_date,
+                costume=Costume.NONE,
+                category="TEST",
+                is_in_doodle=True,
+            )
+        )
+        session.flush()
+        session.add(
+            models.ResponseDB(
+                value=value,
+                date=event_date,
+                event_id=event_id,
+                user_id=SEEDED_USER_ID,
+            )
+        )
+        session.commit()
+
+
+def test_rankings_split_responses_by_season(client: TestClient):
+    """A user's responses must be grouped into seasons that run Sept->Aug.
+
+    Events in Oct 2024 and Feb 2025 both belong to season 2024; an event in
+    Oct 2025 belongs to season 2025. So the seeded user must expose those two
+    distinct seasons with the right response counts.
+    """
+    # Season 2024: two positive responses (Oct 2024 + Feb 2025).
+    _add_answered_event(200, datetime(2024, 10, 15), value=True)
+    _add_answered_event(201, datetime(2025, 2, 10), value=True)
+    # Season 2025: one positive response (Oct 2025).
+
+
+def test_rankings_split_responses_by_season(client: TestClient):
+    """Responses must be grouped into Sept->Aug seasons, each its own window.
+
+    Events in Oct 2024 and Feb 2025 both belong to season 2024; an event in
+    Oct 2025 belongs to season 2025. The endpoint must therefore expose those
+    seasons as distinct ranking windows and place the seeded user in them.
+
+    The rankings query relies on PostgreSQL-only features
+    (``percentile_cont``, ``GROUPING SETS``), so this behaviour is only
+    asserted when running against Postgres; on SQLite it is skipped.
+    """
+    if not DATABASE_URL.startswith("postgresql"):
+        pytest.skip(
+            "Rankings query requires PostgreSQL (percentile_cont/grouping sets)"
+        )
+
+    # Season 2024: three positive responses so the user is eligible.
+    _add_answered_event(200, datetime(2024, 10, 15), value=True)
+    _add_answered_event(201, datetime(2024, 11, 12), value=True)
+    _add_answered_event(202, datetime(2025, 2, 10), value=True)
+    # Season 2025: one response.
+    _add_answered_event(203, datetime(2025, 10, 20), value=True)
+
+    resp = client.get("/api/v1/stats/rankings")
+    assert resp.status_code == 200
+
+    windows = {w["season"]: w for w in resp.json()["seasons"]}
+    # Individual seasons plus an all-time window (season is null).
+    assert 2024 in windows
+    assert 2025 in windows
+    assert None in windows
+
+    def user_in(window):
+        return any(it["user"]["id"] == SEEDED_USER_ID for it in window["items"])
+
+    assert user_in(windows[2024])
+    assert user_in(windows[2025])
+
+    # Per-season windows expose a response rate; the all-time one does not.
+    me_2024 = next(
+        it for it in windows[2024]["items"] if it["user"]["id"] == SEEDED_USER_ID
+    )
+    me_all = next(
+        it for it in windows[None]["items"] if it["user"]["id"] == SEEDED_USER_ID
+    )
+    assert me_2024["ranks"]["response_rate"] is not None
+    assert me_all["ranks"]["response_rate"] is None

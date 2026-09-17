@@ -14,17 +14,39 @@
 
 import { mapValues } from '../runtime';
 /**
+ * A single user's metrics and dense ranks within one ranking window.
  * 
+ * A window is either a single season or the all-time aggregate. Ranks are
+ * computed in SQL. ``response_rate`` and its rank are ``None`` in the
+ * all-time window, where a rate across seasons is not meaningful.
  * @export
  * @interface RankingInfo
  */
 export interface RankingInfo {
     /**
      * 
+     * @type {string}
+     * @memberof RankingInfo
+     */
+    medianResponseTime: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof RankingInfo
      */
-    nResponses: number;
+    medianResponseTimeRank: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof RankingInfo
+     */
+    responseRate: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof RankingInfo
+     */
+    responseRateRank: number | null;
     /**
      * 
      * @type {number}
@@ -33,40 +55,22 @@ export interface RankingInfo {
     nPositiveResponses: number;
     /**
      * 
-     * @type {string}
-     * @memberof RankingInfo
-     */
-    avgResponseTime: string | null;
-    /**
-     * 
-     * @type {number}
-     * @memberof RankingInfo
-     */
-    nResponsesRank: number;
-    /**
-     * 
      * @type {number}
      * @memberof RankingInfo
      */
     nPositiveResponsesRank: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof RankingInfo
-     */
-    avgResponseTimeRank: number | null;
 }
 
 /**
  * Check if a given object implements the RankingInfo interface.
  */
 export function instanceOfRankingInfo(value: object): value is RankingInfo {
-    if (!('nResponses' in value) || value['nResponses'] === undefined) return false;
+    if (!('medianResponseTime' in value) || value['medianResponseTime'] === undefined) return false;
+    if (!('medianResponseTimeRank' in value) || value['medianResponseTimeRank'] === undefined) return false;
+    if (!('responseRate' in value) || value['responseRate'] === undefined) return false;
+    if (!('responseRateRank' in value) || value['responseRateRank'] === undefined) return false;
     if (!('nPositiveResponses' in value) || value['nPositiveResponses'] === undefined) return false;
-    if (!('avgResponseTime' in value) || value['avgResponseTime'] === undefined) return false;
-    if (!('nResponsesRank' in value) || value['nResponsesRank'] === undefined) return false;
     if (!('nPositiveResponsesRank' in value) || value['nPositiveResponsesRank'] === undefined) return false;
-    if (!('avgResponseTimeRank' in value) || value['avgResponseTimeRank'] === undefined) return false;
     return true;
 }
 
@@ -80,12 +84,12 @@ export function RankingInfoFromJSONTyped(json: any, ignoreDiscriminator: boolean
     }
     return {
         
-        'nResponses': json['n_responses'],
+        'medianResponseTime': json['median_response_time'],
+        'medianResponseTimeRank': json['median_response_time_rank'],
+        'responseRate': json['response_rate'],
+        'responseRateRank': json['response_rate_rank'],
         'nPositiveResponses': json['n_positive_responses'],
-        'avgResponseTime': json['avg_response_time'],
-        'nResponsesRank': json['n_responses_rank'],
         'nPositiveResponsesRank': json['n_positive_responses_rank'],
-        'avgResponseTimeRank': json['avg_response_time_rank'],
     };
 }
 
@@ -100,12 +104,12 @@ export function RankingInfoToJSONTyped(value?: RankingInfo | null, ignoreDiscrim
 
     return {
         
-        'n_responses': value['nResponses'],
+        'median_response_time': value['medianResponseTime'],
+        'median_response_time_rank': value['medianResponseTimeRank'],
+        'response_rate': value['responseRate'],
+        'response_rate_rank': value['responseRateRank'],
         'n_positive_responses': value['nPositiveResponses'],
-        'avg_response_time': value['avgResponseTime'],
-        'n_responses_rank': value['nResponsesRank'],
         'n_positive_responses_rank': value['nPositiveResponsesRank'],
-        'avg_response_time_rank': value['avgResponseTimeRank'],
     };
 }
 
