@@ -1,6 +1,5 @@
 """Push notification endpoints."""
 
-import hashlib
 import logging
 from typing import Annotated, Optional
 
@@ -15,17 +14,6 @@ from bbe2.utils.auth import get_current_user2
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/push", tags=["Push Notifications"])
-
-# Length of the endpoint fingerprint returned to the client. 16 hex chars
-# (64 bits) is ample to distinguish a single user's handful of devices while
-# staying non-reversible; the browser computes the same value over its own
-# endpoint to recognise "this device".
-_DEVICE_HASH_LEN = 16
-
-
-def _device_hash(endpoint: str) -> str:
-    """Stable, non-reversible fingerprint of a push endpoint."""
-    return hashlib.sha256(endpoint.encode("utf-8")).hexdigest()[:_DEVICE_HASH_LEN]
 
 
 @router.get("/vapid-public-key", response_model=schemas.VapidPublicKeyResponse)
@@ -58,16 +46,9 @@ async def list_subscriptions(
         )
     ).all()
 
-    return [
-        schemas.PushDevice(
-            id=sub.id,
-            device_hash=_device_hash(sub.endpoint),
-            user_agent=sub.user_agent,
-            last_used_at=sub.last_used_at,
-            created_at=sub.created_at,
-        )
-        for sub in subscriptions
-    ]
+    # PushDevice derives device_hash from each row's endpoint and drops the
+    # endpoint, so returning the ORM rows directly is safe (see schema).
+    return subscriptions
 
 
 @router.post(
