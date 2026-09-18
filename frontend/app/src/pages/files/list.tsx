@@ -293,8 +293,8 @@ function FolderBody({
   content?: { folders: FileOrFolder[]; files: FileOrFolder[] };
   isDragActive: boolean;
   canCreate: boolean;
-  onDelete: (file: FileOrFolder) => void;
-  onRename: (file: FileOrFolder) => void;
+  onDelete?: (file: FileOrFolder) => void;
+  onRename?: (file: FileOrFolder) => void;
 }) {
   if (status === 'pending') {
     return (
@@ -326,10 +326,10 @@ function FolderBody({
         </Empty>
       ) : null}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {content.folders.map((file) => <FileItem key={file.id} file={file} deleteFn={() => onDelete(file)} renameFn={() => onRename(file)} />)}
+        {content.folders.map((file) => <FileItem key={file.id} file={file} deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} />)}
       </div>
       <div className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {content.files.map((file) => <FileItem key={file.id} file={file} big deleteFn={() => onDelete(file)} renameFn={() => onRename(file)} />)}
+        {content.files.map((file) => <FileItem key={file.id} file={file} big deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} />)}
       </div>
     </>
   );
@@ -337,6 +337,9 @@ function FolderBody({
 
 export default function ListFilesPage() {
   const { can } = usePermissions();
+  const canCreate = can('create', 'file');
+  const canEdit = can('edit', 'file');
+  const canDelete = can('delete', 'file');
   const params = useParams();
   const { folder, children, status, breadcrumb } = useFolder(params.folderId);
   const { createFolder, uploadFiles, deleteFile, renameFile } = useFileMutations(folder?.id);
@@ -349,6 +352,9 @@ export default function ListFilesPage() {
     onDrop: (acceptedFiles) => uploadFiles.mutate(acceptedFiles),
     noClick: true,
     noKeyboard: true,
+    // Uploading requires create:file; without it, drag-and-drop must be inert
+    // (the header upload button is already hidden).
+    noDrag: !canCreate,
   });
 
   return (
@@ -357,7 +363,7 @@ export default function ListFilesPage() {
         title="Fichiers"
         subtitle={folder?.name ?? <Skeleton className="h-4 w-32" />}
         breadcrumb={buildBreadcrumb(params.folderId, breadcrumb)}
-        actions={can('create', 'file') ? [
+        actions={canCreate ? [
           <label key="upload-file" className={cn(buttonVariants({ variant: 'outline' }), 'cursor-pointer')}>
             <CloudUpload data-icon="inline-start" />
             Ajouter un fichier
@@ -375,9 +381,9 @@ export default function ListFilesPage() {
             status={status}
             content={children}
             isDragActive={isDragActive}
-            canCreate={can('create', 'file')}
-            onDelete={setFileToDelete}
-            onRename={setFileToRename}
+            canCreate={canCreate}
+            onDelete={canDelete ? setFileToDelete : undefined}
+            onRename={canEdit ? setFileToRename : undefined}
           />
         </div>
       </Container>
