@@ -57,15 +57,31 @@ export function destinationAfterSwitch(pathname: string): string {
   return redirectHome ? '/' : pathname;
 }
 
+/**
+ * Message to toast for a failed query, or null to stay silent.
+ *
+ * A 401 is never toasted: not being authenticated is already handled by a
+ * redirect to the login page (AuthGuard redirects guests, and an expired
+ * session flips the ['profiles', 'me'] auth probe to Guest on its next
+ * refetch). A toast on top of that redirect is pure noise - it used to greet
+ * guests with a stack of "Vous ne semblez pas authentifié" on every load.
+ */
+export function toastTitleForQueryError(error: Error): string | null {
+  if (error instanceof ResponseError && error.response.status === HTTP_UNAUTHORIZED) {
+    return null;
+  }
+  if (error instanceof ResponseError && error.response.status === HTTP_FORBIDDEN) {
+    return "Vous n'avez pas les droits nécessaires pour accéder à cette ressource.";
+  }
+  return `Something went wrong: ${error.message}`;
+}
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      if (error instanceof ResponseError && error.response.status === HTTP_FORBIDDEN) {
-        toast.add({ title: "Vous n'avez pas les droits nécessaires pour accéder à cette ressource.", type: 'error' });
-      } else if (error instanceof ResponseError && error.response.status === HTTP_UNAUTHORIZED) {
-        toast.add({ title: 'Vous ne semblez pas authentifié.', type: 'error' });
-      } else {
-        toast.add({ title: `Something went wrong: ${error.message}`, type: 'error' });
+      const title = toastTitleForQueryError(error);
+      if (title !== null) {
+        toast.add({ title, type: 'error' });
       }
     },
 

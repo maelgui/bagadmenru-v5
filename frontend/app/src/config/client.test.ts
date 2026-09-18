@@ -1,7 +1,26 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+import { ResponseError } from 'bagad-client';
 
-import { destinationAfterSwitch } from './client';
+import { destinationAfterSwitch, toastTitleForQueryError } from './client';
+
+describe('toastTitleForQueryError', () => {
+  const httpError = (status: number) => new ResponseError(new Response(null, { status }));
+
+  it('stays silent on 401 (the auth guard already redirects to login)', () => {
+    expect(toastTitleForQueryError(httpError(401))).toBeNull();
+  });
+
+  it('explains a 403', () => {
+    expect(toastTitleForQueryError(httpError(403)))
+      .toBe("Vous n'avez pas les droits nécessaires pour accéder à cette ressource.");
+  });
+
+  it('reports any other error with its message', () => {
+    expect(toastTitleForQueryError(new Error('boom'))).toBe('Something went wrong: boom');
+    expect(toastTitleForQueryError(httpError(500))).toMatch(/Something went wrong/);
+  });
+});
 
 describe('destinationAfterSwitch', () => {
   it('keeps generic pages after an account switch', () => {
