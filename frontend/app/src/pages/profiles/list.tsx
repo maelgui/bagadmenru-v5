@@ -424,7 +424,11 @@ export default function ProfilesPage() {
         title="Liste des membres"
         subtitle="Pensez à ajouter votre photo"
         actions={[
-          <Link key="rankings" className={buttonVariants({ variant: 'outline' })} to="/profile/rankings">
+          <Link
+            key="rankings"
+            className={cn(buttonVariants({ variant: 'outline' }), !can('view', 'response') && 'hidden')}
+            to="/profile/rankings"
+          >
             <Medal data-icon="inline-start" />
             Classements
           </Link>,
