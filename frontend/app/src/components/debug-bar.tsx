@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ACTIVE_ACCOUNT_COOKIE, useApiClient } from '../config/client';
 import env from '../env';
+import { useMailpitNotifications } from '../utils/useMailpitNotifications';
 
 // The devtools are stripped from production bundles when imported from the
 // package root, and beta *is* a production build - so use the /production
@@ -140,7 +141,7 @@ function PermissionsSection() {
  * Expanded debug panel. Mounted only when the bar is open, so none of its
  * queries run while the bar sits collapsed.
  */
-function DebugPanel({ onClose }: { onClose: () => void }) {
+function DebugPanel({ onClose, mailCount }: { onClose: () => void; mailCount: number }) {
   const { authApi, defaultApi } = useApiClient();
   const [devtoolsOpen, setDevtoolsOpen] = useState(false);
 
@@ -195,17 +196,29 @@ function DebugPanel({ onClose }: { onClose: () => void }) {
           the bar renders: beta and review apps via the /_mail ingress (gated
           by the site session), local compose via the vite proxy. Bare
           `yarn dev` without the stack 404s - acceptable for a debug tool. */}
-      <a
-        href="/_mail/"
-        target="_blank"
-        rel="noreferrer"
-        data-testid="debug-bar-mailpit-link"
-        className="flex w-fit items-center gap-1.5 font-semibold hover:underline"
-      >
-        <Mail className="size-3.5" aria-hidden="true" />
-        Mailpit
-        <ExternalLink className="size-3 text-muted-foreground" aria-hidden="true" />
-      </a>
+      <div className="flex items-center gap-1.5">
+        <a
+          href="/_mail/"
+          target="_blank"
+          rel="noreferrer"
+          data-testid="debug-bar-mailpit-link"
+          className="flex w-fit items-center gap-1.5 font-semibold hover:underline"
+        >
+          <Mail className="size-3.5" aria-hidden="true" />
+          Mailpit
+          <ExternalLink className="size-3 text-muted-foreground" aria-hidden="true" />
+        </a>
+        {mailCount > 0 && (
+          <Badge
+            variant="secondary"
+            className="h-4 px-1.5"
+            title="Mails reçus depuis le chargement de la page"
+            data-testid="debug-bar-mailpit-count"
+          >
+            {mailCount}
+          </Badge>
+        )}
+      </div>
 
       <SessionsSection sessions={sessions} />
 
@@ -245,13 +258,16 @@ function DebugPanel({ onClose }: { onClose: () => void }) {
  */
 export default function DebugBar() {
   const [open, setOpen] = useState(false);
+  // Mounted at the bar level (not the panel) so mail toasts fire even while
+  // the bar sits collapsed - that is the point of a notification.
+  const mailCount = useMailpitNotifications(environment !== 'production');
 
   if (environment === 'production') return null;
 
   return (
     <div className="fixed bottom-3 left-3 z-50 print:hidden">
       {open
-        ? <DebugPanel onClose={() => { setOpen(false); }} />
+        ? <DebugPanel onClose={() => { setOpen(false); }} mailCount={mailCount} />
         : (
           <button
             type="button"
