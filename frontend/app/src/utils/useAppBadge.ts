@@ -23,8 +23,17 @@ export function useAppBadge(): void {
   const { eventsApi } = useApiClient();
   const profile = useUserProfile();
 
-  const { data: events } = useQuery(upcomingDoodleEventsQuery(eventsApi));
-  const { data: responses } = useQuery(upcomingResponsesQuery(eventsApi));
+  // This hook is mounted above the router, outside AuthGuard, so it renders
+  // for guests too. Hold the authenticated queries back until the profile
+  // probe confirms a signed-in member: a guest would only collect 401s.
+  const { data: events } = useQuery({
+    ...upcomingDoodleEventsQuery(eventsApi),
+    enabled: !!profile,
+  });
+  const { data: responses } = useQuery({
+    ...upcomingResponsesQuery(eventsApi),
+    enabled: !!profile,
+  });
 
   useEffect(() => {
     // Feature-detect: the Badging API is absent on unsupported browsers and
