@@ -96,7 +96,8 @@ function typeCode(code: string) {
 beforeEach(() => {
   requestReset.mockResolvedValue({ grantId: 'grant-abc' });
   loginWithCode.mockResolvedValue({ accessToken: 'jwt', tokenType: 'bearer' });
-  getMyProfile.mockResolvedValue({ id: 'acc-1', firstName: 'John' });
+  // Default: a password account — lands on the chooser (passkey vs password).
+  getMyProfile.mockResolvedValue({ id: 'acc-1', firstName: 'John', hasPassword: true });
 });
 
 afterEach(() => {
@@ -114,12 +115,12 @@ describe('Recovery flow', () => {
     expect(screen.getByText(/Vous avez reçu un code \?/)).toBeTruthy();
   });
 
-  it('signs in with the code (against the request grant) then offers a passkey', async () => {
+  it('signs in with the code (against the request grant) then lands on the chooser', async () => {
     renderPage();
     await requestEmail();
     typeCode('123456');
     await waitFor(() => {
-      expect(screen.getByText('Créez une clé d\'accès')).toBeTruthy();
+      expect(screen.getByText(/Comment voulez-vous vous reconnecter/)).toBeTruthy();
     });
     expect(loginWithCode).toHaveBeenCalledWith({
       loginCode: { grantId: 'grant-abc', code: '123456' },
@@ -146,7 +147,7 @@ describe('Recovery flow', () => {
   it('signs in automatically when the URL carries the emailed grant+code link', async () => {
     renderPage('/auth/reset/grant-abc?code=123456');
     await waitFor(() => {
-      expect(screen.getByText('Créez une clé d\'accès')).toBeTruthy();
+      expect(screen.getByText(/Comment voulez-vous vous reconnecter/)).toBeTruthy();
     });
     // The link is the same credential submitted once, labelled for the funnel.
     expect(loginWithCode).toHaveBeenCalledTimes(1);
@@ -167,5 +168,32 @@ describe('Recovery flow', () => {
     // The dead link lands on the same code form: retype or request anew.
     expect(loginWithCode).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('link', { name: 'demandez un nouvel email' })).toBeTruthy();
+  });
+
+  it('takes a passkey-only account straight to the passkey offer (no chooser)', async () => {
+    getMyProfile.mockResolvedValue({ id: 'acc-1', firstName: 'John', hasPassword: false });
+    renderPage();
+    await requestEmail();
+    typeCode('123456');
+    await waitFor(() => {
+      expect(screen.getByText('Créez une clé d\'accès')).toBeTruthy();
+    });
+    expect(screen.queryByText(/Comment voulez-vous vous reconnecter/)).toBeNull();
+  });
+
+  it('lets a password account choose to set a new password', async () => {
+    renderPage();
+    await requestEmail();
+    typeCode('123456');
+    await waitFor(() => {
+      expect(screen.getByText(/Comment voulez-vous vous reconnecter/)).toBeTruthy();
+    });
+    fireEvent.click(screen.getByText('Définir un nouveau mot de passe'));
+    await waitFor(() => {
+      expect(screen.getByText('Nouveau mot de passe')).toBeTruthy();
+    });
+    // Back returns to the chooser (the choice is not addressable).
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+    expect(screen.getByText(/Comment voulez-vous vous reconnecter/)).toBeTruthy();
   });
 });
