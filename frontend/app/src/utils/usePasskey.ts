@@ -1,7 +1,9 @@
 import * as Sentry from '@sentry/react';
 import {
+  type AuthenticationResponseJSON,
   browserSupportsWebAuthn,
   type PublicKeyCredentialCreationOptionsJSON,
+  type PublicKeyCredentialRequestOptionsJSON,
   type RegistrationResponseJSON,
   startRegistration,
   WebAuthnError,
@@ -13,6 +15,33 @@ import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../config/client';
 import features from './features';
 import { isPasskeySnoozed } from './passkeySnooze';
+
+/**
+ * Best-effort WebAuthn Signal API: tell the passkey provider (Keychain,
+ * Google Password Manager…) that the backend no longer knows this credential,
+ * so it deletes its orphan copy and stops suggesting a key that can never
+ * work again. No-op when the browser or provider lacks support.
+ */
+export async function signalUnknownPasskey(
+  opt: PublicKeyCredentialRequestOptionsJSON | undefined,
+  res: AuthenticationResponseJSON | undefined,
+) {
+  if (
+    !res || !opt?.rpId
+    || typeof PublicKeyCredential === 'undefined'
+    || !('signalUnknownCredential' in PublicKeyCredential)
+  ) {
+    return;
+  }
+  try {
+    await PublicKeyCredential.signalUnknownCredential({
+      rpId: opt.rpId,
+      credentialId: res.id,
+    });
+  } catch {
+    // Sync with the provider is opportunistic; ignore failures.
+  }
+}
 
 /**
  * Reusable passkey enrollment.

@@ -190,7 +190,20 @@ def process_login(
             passkey = session.scalar(
                 select(PasskeyDB).where(PasskeyDB.credential_id == credential.raw_id)
             )
-            if not passkey or not passkey.user.is_active:
+            if not passkey:
+                # Unknown credential id: the passkey was deleted server-side
+                # while the user's provider kept its copy (orphan), or it was
+                # never registered here. The distinct 404 lets the frontend
+                # call PublicKeyCredential.signalUnknownCredential() so the
+                # provider deletes the orphan and stops suggesting it.
+                # Credential IDs are high-entropy values minted by the
+                # authenticator, so the 404/401 split enables no enumeration.
+                raise _login_failure(
+                    "passkey", "unknown_credential", 404, "Unknown credential"
+                )
+            if not passkey.user.is_active:
+                # The credential exists but the account is deactivated: plain
+                # 401 and no signal — the passkey must survive reactivation.
                 raise _login_failure(
                     "passkey", "bad_credentials", 401, "Bad credentials"
                 )
