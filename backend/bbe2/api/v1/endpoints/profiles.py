@@ -729,6 +729,10 @@ def _query_rankings(session):
     dependencies=[
         Depends(Authorization(Action.VIEW, Resource.EVENT)),
         Depends(Authorization(Action.VIEW, Resource.PROFILE)),
+        # Rankings are aggregated response data (counts, positive answers,
+        # response delays), so seeing them requires the same permission as
+        # seeing individual responses. Notably excludes the eleves role.
+        Depends(Authorization(Action.VIEW, Resource.RESPONSE)),
         Depends(get_s3_helper),
     ],
 )

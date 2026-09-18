@@ -6,15 +6,20 @@ consistent with the PWA app badge throughout the day. An event scheduled
 earlier today must still count as upcoming.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
+import jwt
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
+import bbe2.utils.auth
 from bbe2 import models
 from bbe2.database import get_engine
 from bbe2.schemas import Costume
+from bbe2.schemas.auth import JwtPayload
+from bbe2.utils import permissions
+from bbe2.utils.permissions import Action, Resource, is_allowed
 
 SEEDED_USER_ID = "a8e2d3249e9d997e"
 DATABASE_URL = "sqlite:///tests.sqlite?check_same_thread=false"
@@ -122,19 +127,6 @@ def _add_answered_event(event_id: int, event_date: datetime, value: bool) -> Non
 
 
 def test_rankings_split_responses_by_season(client: TestClient):
-    """A user's responses must be grouped into seasons that run Sept->Aug.
-
-    Events in Oct 2024 and Feb 2025 both belong to season 2024; an event in
-    Oct 2025 belongs to season 2025. So the seeded user must expose those two
-    distinct seasons with the right response counts.
-    """
-    # Season 2024: two positive responses (Oct 2024 + Feb 2025).
-    _add_answered_event(200, datetime(2024, 10, 15), value=True)
-    _add_answered_event(201, datetime(2025, 2, 10), value=True)
-    # Season 2025: one positive response (Oct 2025).
-
-
-def test_rankings_split_responses_by_season(client: TestClient):
     """Responses must be grouped into Sept->Aug seasons, each its own window.
 
     Events in Oct 2024 and Feb 2025 both belong to season 2024; an event in
@@ -239,3 +231,53 @@ def test_backfilled_response_without_date(client: TestClient):
     assert stats["n_positive_responses"] == 1
     # But excluded from the response-time average.
     assert stats["avg_response_time"] is None
+
+
+def _token_with_roles(roles: list[str]) -> str:
+    """Mint a valid JWT for the seeded user carrying the given roles."""
+    from tests.conftest import get_fake_settings
+
+    payload = JwtPayload(
+        sub=SEEDED_USER_ID,
+        roles=roles,
+        first_name="john",
+        last_name="doe",
+        email="john.doe@example.com",
+        exp=datetime.now(tz=timezone.utc) + timedelta(minutes=5),
+        iat=datetime.now(tz=timezone.utc),
+    ).model_dump()
+    return jwt.encode(payload, get_fake_settings().jwt_secret_key, algorithm="HS256")
+
+
+def test_rankings_forbidden_without_view_response(client: TestClient, monkeypatch):
+    """Rankings are aggregated response data, so they require view:response.
+
+    A role holding view:event and view:profile but NOT view:response (eleves)
+    must be rejected: eleves cannot see individual responses on the planning,
+    so they must not see the response-derived rankings either. The `client`
+    fixture patches is_allowed to always grant, so restore the real RBAC
+    matrix for this test. The 403 fires in the Authorization dependency,
+    before the PostgreSQL-only ranking query runs.
+    """
+    monkeypatch.setattr(bbe2.utils.auth, "is_allowed", permissions.is_allowed)
+
+    resp = client.get(
+        "/api/v1/stats/rankings",
+        headers={"Authorization": f"Bearer {_token_with_roles(['eleves'])}"},
+    )
+    assert resp.status_code == 403
+
+
+def test_rankings_permission_matrix():
+    """The bagad role must hold every permission the rankings endpoint
+    requires; eleves must miss exactly view:response."""
+    required = [
+        (Action.VIEW, Resource.EVENT),
+        (Action.VIEW, Resource.PROFILE),
+        (Action.VIEW, Resource.RESPONSE),
+    ]
+    for action, resource in required:
+        assert is_allowed(["bagad"], action, resource)
+    assert is_allowed(["eleves"], Action.VIEW, Resource.EVENT)
+    assert is_allowed(["eleves"], Action.VIEW, Resource.PROFILE)
+    assert not is_allowed(["eleves"], Action.VIEW, Resource.RESPONSE)
