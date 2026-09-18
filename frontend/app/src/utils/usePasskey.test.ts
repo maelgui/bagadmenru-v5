@@ -5,6 +5,7 @@ import {
 
 const startRegistration = vi.fn();
 let webauthnSupported = true;
+let webauthnAutofillSupported = false;
 // Hoisted: these are read while the mock factories execute, before the test
 // file body runs.
 const {
@@ -25,6 +26,7 @@ const {
 
 vi.mock('@simplewebauthn/browser', () => ({
   browserSupportsWebAuthn: () => webauthnSupported,
+  browserSupportsWebAuthnAutofill: async () => await Promise.resolve(webauthnAutofillSupported),
   startRegistration: (...args: unknown[]) => startRegistration(...args) as unknown,
   WebAuthnError: class WebAuthnError extends Error {},
 }));
@@ -41,7 +43,9 @@ vi.mock('@sentry/react', () => ({ captureException: sentryCapture }));
 vi.mock('../env', () => ({ default: mockEnv }));
 
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
-import { attemptSilentPasskeyUpgrade, signalUnknownPasskey } from './usePasskey';
+import {
+  attemptSilentPasskeyUpgrade, browserSupportsConditionalGet, signalAllAcceptedPasskeys, signalUnknownPasskey,
+} from './usePasskey';
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
 import { snoozePasskeyPrompts } from './passkeySnooze';
 
@@ -58,6 +62,7 @@ const asAuthApi = (api: FakeAuthApi) => api as unknown as Parameters<typeof atte
 afterEach(() => {
   window.localStorage.clear();
   webauthnSupported = true;
+  webauthnAutofillSupported = false;
   mockEnv.VITE_FEATURE_SILENT_PASSKEY_UPGRADE = 'true';
   vi.clearAllMocks();
 });
@@ -162,5 +167,72 @@ describe('signalUnknownPasskey', () => {
     const signal = vi.fn().mockRejectedValue(new Error('boom'));
     vi.stubGlobal('PublicKeyCredential', { signalUnknownCredential: signal });
     await expect(signalUnknownPasskey(...asArgs())).resolves.toBeUndefined();
+  });
+});
+
+describe('signalAllAcceptedPasskeys', () => {
+  const signal = {
+    rpId: 'bagadmenru.bzh',
+    userHandle: 'user-handle-b64url',
+    remainingCredentialIds: ['kept-cred-b64url'],
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('hands the provider the list of still-valid credentials', async () => {
+    const signalAll = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('PublicKeyCredential', { signalAllAcceptedCredentials: signalAll });
+    await signalAllAcceptedPasskeys(signal);
+    expect(signalAll).toHaveBeenCalledWith({
+      rpId: 'bagadmenru.bzh',
+      userId: 'user-handle-b64url',
+      allAcceptedCredentialIds: ['kept-cred-b64url'],
+    });
+  });
+
+  it('is a no-op when the browser lacks the Signal API', async () => {
+    vi.stubGlobal('PublicKeyCredential', {});
+    await expect(signalAllAcceptedPasskeys(signal)).resolves.toBeUndefined();
+  });
+
+  it('swallows a provider rejection (opportunistic sync)', async () => {
+    const signalAll = vi.fn().mockRejectedValue(new Error('boom'));
+    vi.stubGlobal('PublicKeyCredential', { signalAllAcceptedCredentials: signalAll });
+    await expect(signalAllAcceptedPasskeys(signal)).resolves.toBeUndefined();
+  });
+});
+
+describe('browserSupportsConditionalGet', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('trusts getClientCapabilities().conditionalGet when available', async () => {
+    vi.stubGlobal('PublicKeyCredential', {
+      getClientCapabilities: async () => await Promise.resolve({ conditionalGet: true }),
+    });
+    await expect(browserSupportsConditionalGet()).resolves.toBe(true);
+
+    vi.stubGlobal('PublicKeyCredential', {
+      getClientCapabilities: async () => await Promise.resolve({ conditionalGet: false }),
+    });
+    await expect(browserSupportsConditionalGet()).resolves.toBe(false);
+  });
+
+  it('fails closed when the capability is not reported', async () => {
+    vi.stubGlobal('PublicKeyCredential', {
+      getClientCapabilities: async () => await Promise.resolve({}),
+    });
+    await expect(browserSupportsConditionalGet()).resolves.toBe(false);
+  });
+
+  it('falls back to isConditionalMediationAvailable on older browsers', async () => {
+    vi.stubGlobal('PublicKeyCredential', {});
+    webauthnAutofillSupported = true;
+    await expect(browserSupportsConditionalGet()).resolves.toBe(true);
+    webauthnAutofillSupported = false;
+    await expect(browserSupportsConditionalGet()).resolves.toBe(false);
   });
 });

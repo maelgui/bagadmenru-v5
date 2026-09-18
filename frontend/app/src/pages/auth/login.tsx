@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import PasswordField from '../../components/PasswordField';
 import { queryClient, useApiClient } from '../../config/client';
-import { attemptSilentPasskeyUpgrade, signalUnknownPasskey } from '../../utils/usePasskey';
+import { attemptSilentPasskeyUpgrade, browserSupportsConditionalGet, signalUnknownPasskey } from '../../utils/usePasskey';
 
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_NOT_FOUND = 404;
@@ -94,15 +94,18 @@ function AuthPage() {
         }
         return 'restart';
       }
+      if (error instanceof WebAuthnError && error.name === 'NotAllowedError') {
+        // The user dismissed the ceremony: cancelled the OS dialog after
+        // picking a passkey in the autofill, cancelled the explicit modal,
+        // or let it time out. A deliberate choice, not a failure — stay
+        // silent (per the web.dev guidance) but re-arm: the ceremony is
+        // consumed either way.
+        return 'restart';
+      }
       if (conditional) {
-        // NotAllowedError: the user picked a passkey in the autofill dialog
-        // then cancelled the OS prompt. A deliberate, silent dismissal — but
-        // the ceremony is consumed, so ask for a re-arm. Anything else
-        // (browser without conditional UI, network failure…) must NOT
-        // restart: it would loop without any user gesture as a brake.
-        if (error instanceof WebAuthnError && error.name === 'NotAllowedError') {
-          return 'restart';
-        }
+        // Anything else on the silent flow (browser without conditional UI,
+        // network failure…) must NOT restart: it would loop without any
+        // user gesture as a brake.
         console.error(error);
         return 'stop';
       }
@@ -136,8 +139,15 @@ function AuthPage() {
     if (!browserSupportsWebAuthn()) {
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- starts the WebAuthn conditional (autofill) login, an external async operation; state is only set asynchronously in its error handler
-    void armConditionalLogin();
+    void (async () => {
+      // Capability check (getClientCapabilities().conditionalGet, with the
+      // legacy fallback) instead of blindly starting the ceremony: browsers
+      // without conditional UI would otherwise fetch a challenge only to
+      // throw it away.
+      if (await browserSupportsConditionalGet()) {
+        await armConditionalLogin();
+      }
+    })();
   }, [armConditionalLogin]);
 
   const onSubmit = async (data: { email: string, password: string }) => {

@@ -39,7 +39,7 @@ import {
 import { queryClient, useApiClient } from '../../../../config/client';
 import { useTheme } from '../../../../config/theme';
 import { resolveAuthenticator } from '../../../../utils/authenticators';
-import { useRegisterPasskey } from '../../../../utils/usePasskey';
+import { signalAllAcceptedPasskeys, useRegisterPasskey } from '../../../../utils/usePasskey';
 
 /**
  * Provider brand icon for a passkey, resolved from its AAGUID via the official
@@ -66,7 +66,12 @@ function PasskeyItem({ passkey }: { passkey: Passkey }) {
     mutationFn: async () => await authApi.deletePasskeyApiV1WebauthnCredentialIdDelete({
       credentialId: passkey.credentialId,
     }),
-    onSuccess: async () => {
+    onSuccess: async (signal) => {
+      // Proactive Signal API, fire-and-forget: hand the provider the list of
+      // still-valid credentials so it deletes its copy of the removed key
+      // now, instead of suggesting an orphan that would fail at the next
+      // login. Best-effort — the dialog close never waits on the provider.
+      void signalAllAcceptedPasskeys(signal);
       await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
       setIsDeleteDialogOpen(false);
     },

@@ -24,3 +24,20 @@ class Passkey(BaseModel):
     @field_serializer("credential_id")
     def serialize_credential_id(self, credential_id: bytes, _info) -> str:
         return base64.urlsafe_b64encode(credential_id).decode()
+
+
+class PasskeySignal(BaseModel):
+    """Payload for ``PublicKeyCredential.signalAllAcceptedCredentials()``.
+
+    Returned by the passkey DELETE endpoint so the client can tell the passkey
+    provider (Keychain, Google Password Manager…) which credentials are still
+    valid — the provider then deletes its copy of the removed one instead of
+    keeping an orphan that would fail at the next login. All identifiers use
+    base64url **without padding**, the encoding the WebAuthn Signal API
+    expects (unlike ``Passkey.credential_id``, which keeps its historical
+    padded form).
+    """
+
+    rp_id: str
+    user_handle: str
+    remaining_credential_ids: list[str]
