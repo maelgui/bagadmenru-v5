@@ -20,7 +20,7 @@ export function RankingsTable({
       <TableHeader>
         <TableRow>
           <TableHead className="w-12">#</TableHead>
-          <TableHead>Membre</TableHead>
+          <TableHead className="w-full max-w-0">Membre</TableHead>
           <TableHead className="text-right">{metric.label}</TableHead>
         </TableRow>
       </TableHeader>
@@ -32,12 +32,12 @@ export function RankingsTable({
               <TableCell className="font-semibold text-muted-foreground">
                 {index + PODIUM_SIZE + 1}
               </TableCell>
-              <TableCell>
+              <TableCell className="w-full max-w-0">
                 <Link
                   to={`/profile/${item.user.id}`}
-                  className="flex items-center gap-3 hover:underline"
+                  className="flex min-w-0 items-center gap-3 hover:underline"
                 >
-                  <Avatar size="sm">
+                  <Avatar size="sm" className="shrink-0">
                     <AvatarImage
                       src={item.user.pictureUrl ?? undefined}
                       alt={`${item.user.firstName} ${item.user.lastName}`}
@@ -46,11 +46,11 @@ export function RankingsTable({
                       {initials(item.user.firstName, item.user.lastName)}
                     </AvatarFallback>
                   </Avatar>
-                  <span>
+                  <span className="truncate">
                     {item.user.firstName} {item.user.lastName}
                   </span>
                   {isMe && (
-                    <Badge variant="outline" className="ml-1">
+                    <Badge variant="outline" className="ml-1 shrink-0">
                       Vous
                     </Badge>
                   )}

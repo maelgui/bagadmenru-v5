@@ -12,10 +12,11 @@ const PODIUM_CONFIG: Array<{ icon: LucideIcon; iconClass: string; ring: string }
 ];
 
 // Podium display order: 2nd, 1st, 3rd, with 1st raised in the middle.
+// The podium keeps its 3-column shape on mobile: everything is simply smaller.
 const PODIUM_LAYOUT = [
-  { order: 'order-2', height: 'h-16 md:h-20', avatar: 'size-24' }, // 1st
-  { order: 'order-1', height: 'h-12 md:h-14', avatar: 'size-20' }, // 2nd
-  { order: 'order-3', height: 'h-10', avatar: 'size-20' }, // 3rd
+  { order: 'order-2', height: 'h-12 md:h-20', avatar: 'size-16 md:size-24' }, // 1st
+  { order: 'order-1', height: 'h-9 md:h-14', avatar: 'size-14 md:size-20' }, // 2nd
+  { order: 'order-3', height: 'h-8 md:h-10', avatar: 'size-14 md:size-20' }, // 3rd
 ];
 
 function PodiumCard({
@@ -35,20 +36,22 @@ function PodiumCard({
     <div className={`flex w-full flex-col items-center ${layout.order}`}>
       <Link
         to={`/profile/${user.id}`}
-        className="flex flex-col items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="flex w-full min-w-0 flex-col items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
-        <Icon className={`mb-2 size-7 ${iconClass}`} aria-hidden="true" />
-        <Avatar className={`${layout.avatar} ring-4 ${ring} ring-offset-2 ring-offset-background`}>
+        <Icon className={`mb-2 size-5 md:size-7 ${iconClass}`} aria-hidden="true" />
+        <Avatar className={`${layout.avatar} ring-2 md:ring-4 ${ring} ring-offset-2 ring-offset-background`}>
           <AvatarImage src={user.pictureUrl ?? undefined} alt={`${user.firstName} ${user.lastName}`} />
           <AvatarFallback>{initials(user.firstName, user.lastName)}</AvatarFallback>
         </Avatar>
-        <span className="mt-3 font-bold">{user.firstName}</span>
-        <span className="text-sm font-semibold text-muted-foreground">
+        <span className="mt-3 w-full truncate text-center text-sm font-bold md:text-base">
+          {user.firstName}
+        </span>
+        <span className="w-full truncate text-center text-xs font-semibold text-muted-foreground md:text-sm">
           {metric.format(metric.value(item.ranks))}
         </span>
       </Link>
       <div
-        className={`mt-3 flex w-full items-start justify-center rounded-t-xl bg-muted pt-2 text-2xl font-black text-muted-foreground ${layout.height}`}
+        className={`mt-3 flex w-full items-start justify-center rounded-t-xl bg-muted pt-2 text-xl font-black text-muted-foreground md:text-2xl ${layout.height}`}
       >
         {position + 1}
       </div>
@@ -58,7 +61,7 @@ function PodiumCard({
 
 export function Podium({ top, metric }: { top: UserRankingItem[]; metric: MetricDef }) {
   return (
-    <div className="mx-auto grid max-w-2xl grid-cols-1 items-end gap-4 md:grid-cols-3">
+    <div className="mx-auto grid max-w-2xl grid-cols-3 items-end gap-2 md:gap-4">
       {top.map((item, index) => (
         <PodiumCard key={item.user.id} item={item} position={index} metric={metric} />
       ))}

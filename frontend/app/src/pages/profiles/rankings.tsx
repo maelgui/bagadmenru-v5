@@ -70,6 +70,7 @@ function RankingsContent({
             if (next) setSeasonKey(next);
           }}
           aria-label="Choisir la saison"
+          className="max-w-full flex-wrap justify-center"
         >
           {windows.map((w) => (
             <ToggleGroupItem key={String(w.season ?? 'all')} value={String(w.season ?? 'all')}>
@@ -85,6 +86,7 @@ function RankingsContent({
             if (isMetricId(next)) setMetricId(next);
           }}
           aria-label="Choisir la métrique du classement"
+          className="max-w-full flex-wrap justify-center"
         >
           {availableMetrics.map((m) => (
             <ToggleGroupItem key={m.id} value={m.id}>
