@@ -140,6 +140,91 @@ def test_login_passkey_only_account_returns_401(client: TestClient):
     assert response.json()["detail"] == "Bad credentials"
 
 
+def _assertion_json(credential_id: bytes) -> str:
+    """A syntactically valid WebAuthn assertion for the given credential id.
+
+    The signature is garbage: these tests exercise the credential lookup,
+    which happens before any cryptographic verification.
+    """
+    import json as jsonlib
+
+    from webauthn.helpers import bytes_to_base64url
+
+    return jsonlib.dumps(
+        {
+            "id": bytes_to_base64url(credential_id),
+            "rawId": bytes_to_base64url(credential_id),
+            "response": {
+                "clientDataJSON": bytes_to_base64url(b"{}"),
+                "authenticatorData": bytes_to_base64url(b"\x00" * 37),
+                "signature": bytes_to_base64url(b"\x00" * 8),
+            },
+            "type": "public-key",
+            "clientExtensionResults": {},
+        }
+    )
+
+
+def test_login_with_unknown_passkey_returns_404(client: TestClient):
+    """An assertion whose credential id is not in the DB gets a distinct 404
+    (not the generic 401) so the frontend can call
+    PublicKeyCredential.signalUnknownCredential() and the passkey provider
+    deletes its orphan copy (WebAuthn Signal API)."""
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"type": "passkey", "passkey": _assertion_json(b"\x99" * 16)},
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Unknown credential"
+
+
+def test_login_with_passkey_of_inactive_account_returns_401(client: TestClient):
+    """The credential EXISTS but the account is deactivated: plain 401, never
+    404 -- signalling would make the provider delete a passkey that must
+    survive a reactivation."""
+    from sqlalchemy.orm import sessionmaker
+
+    from bbe2 import models
+    from bbe2.database import get_engine
+    from tests.conftest import DATABASE_URL
+
+    credential_id = b"\x42" * 16
+    passkey_user_id = b"\x24" * 8
+    engine = get_engine(DATABASE_URL)
+    with sessionmaker(bind=engine)() as session:
+        session.merge(
+            models.UserDB(
+                id="deadbeef00000001",
+                email="inactive@example.com",
+                first_name="ina",
+                last_name="ctive",
+                instrument_id=1,
+                is_active=False,
+                passkey_user_id=passkey_user_id,
+            )
+        )
+        session.merge(
+            models.PasskeyDB(
+                passkey_user_id=passkey_user_id,
+                credential_id=credential_id,
+                public_key=b"\x00" * 32,
+                sign_count=0,
+                transports="internal",
+                device_type="single_device",
+                back_up=False,
+                aaguid="",
+            )
+        )
+        session.commit()
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"type": "passkey", "passkey": _assertion_json(credential_id)},
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Bad credentials"
+
+
 def test_logout_clears_cookie(client: TestClient):
     # A client whose only credential is the legacy access_token cookie must
     # still be able to log out (backward compatibility). Drop the Bearer header

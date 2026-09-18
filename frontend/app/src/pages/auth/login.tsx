@@ -1,4 +1,5 @@
 import {
+  type AuthenticationResponseJSON,
   browserSupportsWebAuthn, type PublicKeyCredentialRequestOptionsJSON, startAuthentication,
   WebAuthnError,
 } from '@simplewebauthn/browser';
@@ -15,9 +16,20 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import PasswordField from '../../components/PasswordField';
 import { queryClient, useApiClient } from '../../config/client';
-import { attemptSilentPasskeyUpgrade } from '../../utils/usePasskey';
+import { attemptSilentPasskeyUpgrade, signalUnknownPasskey } from '../../utils/usePasskey';
 
 const HTTP_UNAUTHORIZED = 401;
+const HTTP_NOT_FOUND = 404;
+
+/**
+ * Outcome of a passkey login ceremony.
+ * - `logged-in`: success, navigation to the app is underway.
+ * - `restart`: the ceremony was consumed by a user gesture without logging
+ *   in — the conditional (autofill) request must be re-armed.
+ * - `stop`: aborted by our own code or failed without a user gesture; do not
+ *   re-arm (it would loop).
+ */
+type PasskeyLoginOutcome = 'logged-in' | 'restart' | 'stop';
 
 function AuthPage() {
   const { authApi, usersApi } = useApiClient();
@@ -42,11 +54,23 @@ function AuthPage() {
     return res.id;
   }, [navigate, usersApi, location.state]);
 
-  const startPasskeyLogin = useCallback(async (conditional: boolean) => {
+  /**
+   * Run one passkey ceremony (conditional autofill or explicit modal).
+   *
+   * The outcome tells the caller whether the conditional (autofill) request
+   * needs re-arming: a `navigator.credentials.get({mediation:'conditional'})`
+   * call is single-use — once the user picks a passkey it is consumed, even
+   * if they then cancel the OS dialog or the server rejects the assertion.
+   * Without a restart, passkey suggestions silently stop appearing until a
+   * full page reload.
+   */
+  const startPasskeyLogin = useCallback(async (conditional: boolean): Promise<PasskeyLoginOutcome> => {
+    let opt: PublicKeyCredentialRequestOptionsJSON | undefined = undefined;
+    let res: AuthenticationResponseJSON | undefined = undefined;
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The API response matches PublicKeyCredentialRequestOptionsJSON but the generated client types it as object
-      const opt = await authApi.prepareLoginApiV1AuthLoginGet() as PublicKeyCredentialRequestOptionsJSON;
-      const res = await startAuthentication({ optionsJSON: opt, useBrowserAutofill: conditional });
+      opt = await authApi.prepareLoginApiV1AuthLoginGet() as PublicKeyCredentialRequestOptionsJSON;
+      res = await startAuthentication({ optionsJSON: opt, useBrowserAutofill: conditional });
       await authApi.processLoginApiV1AuthLoginPost({
         loginData: {
           type: LoginType.Passkey,
@@ -54,26 +78,67 @@ function AuthPage() {
         },
       });
       await postLogin();
+      return 'logged-in';
     } catch (error) {
       if (error instanceof WebAuthnError && error.name === 'AbortError') {
-        return;
+        // Aborted by our own code: a newer ceremony is already replacing
+        // this one, nothing to re-arm.
+        return 'stop';
+      }
+      if (error instanceof ResponseError && error.response.status === HTTP_NOT_FOUND) {
+        // The passkey was deleted server-side while the user's provider kept
+        // its copy: signal the provider to drop the orphan.
+        await signalUnknownPasskey(opt, res);
+        if (!conditional) {
+          setErrorMsg('Cette clé d\'accès n\'est plus reconnue par le site. Utilisez une autre méthode de connexion ci-dessous.');
+        }
+        return 'restart';
+      }
+      if (conditional) {
+        // NotAllowedError: the user picked a passkey in the autofill dialog
+        // then cancelled the OS prompt. A deliberate, silent dismissal — but
+        // the ceremony is consumed, so ask for a re-arm. Anything else
+        // (browser without conditional UI, network failure…) must NOT
+        // restart: it would loop without any user gesture as a brake.
+        if (error instanceof WebAuthnError && error.name === 'NotAllowedError') {
+          return 'restart';
+        }
+        console.error(error);
+        return 'stop';
       }
       console.error(error);
-      // Conditional (autofill) login runs silently on mount; only surface an
-      // error when the user explicitly clicked the Passkey button.
-      if (!conditional) {
-        setErrorMsg('La connexion par clé d\'accès a échoué. Réessayez ou utilisez une autre méthode ci-dessous.');
-      }
+      // Conditional (autofill) login runs silently on mount; this branch is
+      // the explicit button flow.
+      setErrorMsg('La connexion par clé d\'accès a échoué. Réessayez ou utilisez une autre méthode ci-dessous.');
+      return 'restart';
     }
   }, [authApi, postLogin]);
+
+  /**
+   * Arm the conditional (autofill) passkey request and keep it armed: a
+   * `restart` outcome normally follows a user gesture (picking a passkey in
+   * the autofill dialog), so the loop cannot spin on its own. As a safety
+   * net, a ceremony that ends near-instantly (no gesture fits in < 1s) is
+   * never re-armed.
+   */
+  const armConditionalLogin = useCallback(async () => {
+    const MIN_GESTURE_MS = 1000;
+    for (;;) {
+      const startedAt = Date.now();
+      const outcome = await startPasskeyLogin(true);
+      if (outcome !== 'restart' || Date.now() - startedAt < MIN_GESTURE_MS) {
+        return;
+      }
+    }
+  }, [startPasskeyLogin]);
 
   useEffect(() => {
     if (!browserSupportsWebAuthn()) {
       return;
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- starts the WebAuthn conditional (autofill) login, an external async operation; state is only set asynchronously in its error handler
-    void startPasskeyLogin(true);
-  }, [startPasskeyLogin]);
+    void armConditionalLogin();
+  }, [armConditionalLogin]);
 
   const onSubmit = async (data: { email: string, password: string }) => {
     setErrorMsg(undefined);
@@ -124,6 +189,10 @@ function AuthPage() {
                 aria-invalid={!!errors.email}
                 {...register('email', { required: 'Ce champ est obligatoire.' })}
                 autoComplete="email webauthn"
+                // Dedicated login page: focusing the webauthn-annotated field
+                // at load opens the autofill prompt (passkeys + passwords)
+                // immediately, per the web.dev passkey-form-autofill guidance.
+                autoFocus
               />
               <FieldError>{errors.email?.message}</FieldError>
             </Field>
@@ -147,7 +216,18 @@ function AuthPage() {
       {browserSupportsWebAuthn() ? (
         <>
           <div className="my-12 flex items-center text-muted-foreground before:mr-3 before:block before:h-px before:grow before:bg-border after:ml-3 after:block after:h-px after:grow after:bg-border">Ou</div>
-          <Button type="button" onClick={async () => await startPasskeyLogin(false)} className="w-full">
+          <Button
+            type="button"
+            onClick={async () => {
+              // The explicit modal ceremony aborts the pending conditional
+              // request (only one get() at a time): re-arm it if the modal
+              // flow ends without a login.
+              if (await startPasskeyLogin(false) === 'restart') {
+                void armConditionalLogin();
+              }
+            }}
+            className="w-full"
+          >
             <PasskeyIcon className="size-6" />
             Clé d&apos;accès
           </Button>

@@ -41,7 +41,7 @@ vi.mock('@sentry/react', () => ({ captureException: sentryCapture }));
 vi.mock('../env', () => ({ default: mockEnv }));
 
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
-import { attemptSilentPasskeyUpgrade } from './usePasskey';
+import { attemptSilentPasskeyUpgrade, signalUnknownPasskey } from './usePasskey';
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
 import { snoozePasskeyPrompts } from './passkeySnooze';
 
@@ -124,5 +124,43 @@ describe('attemptSilentPasskeyUpgrade', () => {
     await expect(attemptSilentPasskeyUpgrade(asAuthApi(authApi), 'u1')).resolves.toBeUndefined();
     expect(authApi.registerPasskeyApiV1WebauthnRegisterPost).not.toHaveBeenCalled();
     expect(toastAdd).not.toHaveBeenCalled();
+  });
+});
+
+describe('signalUnknownPasskey', () => {
+  const opt = { challenge: 'c', rpId: 'bagadmenru.bzh' };
+  const res = { id: 'cred-id-b64url' };
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- test doubles narrowed to the fields the helper reads
+  const asArgs = () => [opt, res] as unknown as Parameters<typeof signalUnknownPasskey>;
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('signals the provider with the rpId and credential id', async () => {
+    const signal = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('PublicKeyCredential', { signalUnknownCredential: signal });
+    await signalUnknownPasskey(...asArgs());
+    expect(signal).toHaveBeenCalledWith({ rpId: 'bagadmenru.bzh', credentialId: 'cred-id-b64url' });
+  });
+
+  it('is a no-op when the browser lacks the Signal API', async () => {
+    vi.stubGlobal('PublicKeyCredential', {});
+    await expect(signalUnknownPasskey(...asArgs())).resolves.toBeUndefined();
+  });
+
+  it('is a no-op without a ceremony result or rpId', async () => {
+    const signal = vi.fn();
+    vi.stubGlobal('PublicKeyCredential', { signalUnknownCredential: signal });
+    const [optArg, resArg] = asArgs();
+    await signalUnknownPasskey(undefined, resArg);
+    await signalUnknownPasskey(optArg, undefined);
+    expect(signal).not.toHaveBeenCalled();
+  });
+
+  it('swallows a provider rejection (opportunistic sync)', async () => {
+    const signal = vi.fn().mockRejectedValue(new Error('boom'));
+    vi.stubGlobal('PublicKeyCredential', { signalUnknownCredential: signal });
+    await expect(signalUnknownPasskey(...asArgs())).resolves.toBeUndefined();
   });
 });

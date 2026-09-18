@@ -16,6 +16,8 @@ AUTH_LOGINS = Counter(
     "Login attempts by method and outcome.",
     # method: password | passkey
     # outcome: success | bad_credentials | invalid_request | missing_challenge
+    #          | unknown_credential (passkey deleted server-side; the client
+    #            is told via 404 so it can signal the provider)
     ["method", "outcome"],
 )
 
