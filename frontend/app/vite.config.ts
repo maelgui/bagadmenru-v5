@@ -42,8 +42,13 @@ export default defineConfig(({ mode }) => {
         '/docs': 'http://backend:8000',
         '/openapi.json': 'http://backend:8000',
         // Mailpit runs with MP_WEBROOT=_mail, so it serves under /_mail and
-        // emits prefix-aware URLs — no rewrite needed.
-        '/_mail': { target: 'http://mailpit:8025', changeOrigin: true },
+        // emits prefix-aware URLs — no rewrite needed. ws:true also proxies
+        // the /_mail/api/events websocket (live updates in the Mailpit UI and
+        // the debug bar's mail notifications). No changeOrigin: Mailpit's
+        // websocket upgrader rejects requests whose Origin doesn't match the
+        // Host header, and changeOrigin rewrites Host (to mailpit:8025) but
+        // not the browser's Origin (localhost).
+        '/_mail': { target: 'http://mailpit:8025', ws: true },
         '/minio': {
           target: 'http://storage:9090',
           changeOrigin: true,
