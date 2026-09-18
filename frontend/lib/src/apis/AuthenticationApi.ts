@@ -20,6 +20,7 @@ import type {
   LoginData,
   LogoutRequest,
   Passkey,
+  PasskeySignal,
   RecoveryGrant,
   ResetPasswordRequest,
   SessionInfo,
@@ -37,6 +38,8 @@ import {
     LogoutRequestToJSON,
     PasskeyFromJSON,
     PasskeyToJSON,
+    PasskeySignalFromJSON,
+    PasskeySignalToJSON,
     RecoveryGrantFromJSON,
     RecoveryGrantToJSON,
     ResetPasswordRequestFromJSON,
@@ -87,9 +90,10 @@ export interface SetPasswordApiV1AuthSetPasswordPostRequest {
 export class AuthenticationApi extends runtime.BaseAPI {
 
     /**
+     * Delete a passkey and return the Signal API payload.  The response lists the credentials still valid for this user so the client can call ``PublicKeyCredential.signalAllAcceptedCredentials()``: the passkey provider then deletes its local copy of the removed key immediately, instead of keeping an orphan that would be suggested at the next login and fail.
      * Delete Passkey
      */
-    async deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+    async deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PasskeySignal>> {
         if (requestParameters['credentialId'] == null) {
             throw new runtime.RequiredError(
                 'credentialId',
@@ -116,17 +120,14 @@ export class AuthenticationApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<string>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => PasskeySignalFromJSON(jsonValue));
     }
 
     /**
+     * Delete a passkey and return the Signal API payload.  The response lists the credentials still valid for this user so the client can call ``PublicKeyCredential.signalAllAcceptedCredentials()``: the passkey provider then deletes its local copy of the removed key immediately, instead of keeping an orphan that would be suggested at the next login and fail.
      * Delete Passkey
      */
-    async deletePasskeyApiV1WebauthnCredentialIdDelete(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+    async deletePasskeyApiV1WebauthnCredentialIdDelete(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PasskeySignal> {
         const response = await this.deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters, initOverrides);
         return await response.value();
     }

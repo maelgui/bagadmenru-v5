@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react';
 import {
   type AuthenticationResponseJSON,
   browserSupportsWebAuthn,
+  browserSupportsWebAuthnAutofill,
   type PublicKeyCredentialCreationOptionsJSON,
   type PublicKeyCredentialRequestOptionsJSON,
   type RegistrationResponseJSON,
@@ -9,12 +10,35 @@ import {
   WebAuthnError,
 } from '@simplewebauthn/browser';
 import { useMutation } from '@tanstack/react-query';
-import type { AuthenticationApi } from 'bagad-client';
+import type { AuthenticationApi, PasskeySignal } from 'bagad-client';
 import { ResponseError } from 'bagad-client';
 import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../config/client';
 import features from './features';
 import { isPasskeySnoozed } from './passkeySnooze';
+
+/**
+ * Whether the browser supports the conditional (autofill) WebAuthn get.
+ *
+ * Prefers `PublicKeyCredential.getClientCapabilities().conditionalGet` (the
+ * detection the WebAuthn L3 spec and web.dev now recommend), falling back to
+ * `isConditionalMediationAvailable()` on browsers that predate it
+ * (Chrome < 133, Safari < 17.4). Fail closed.
+ */
+export async function browserSupportsConditionalGet(): Promise<boolean> {
+  if (typeof PublicKeyCredential === 'undefined') {
+    return false;
+  }
+  if ('getClientCapabilities' in PublicKeyCredential) {
+    try {
+      const capabilities = await PublicKeyCredential.getClientCapabilities();
+      return Boolean(capabilities.conditionalGet);
+    } catch {
+      // Fall through to the legacy detection.
+    }
+  }
+  return await browserSupportsWebAuthnAutofill();
+}
 
 /**
  * Best-effort WebAuthn Signal API: tell the passkey provider (Keychain,
@@ -37,6 +61,32 @@ export async function signalUnknownPasskey(
     await PublicKeyCredential.signalUnknownCredential({
       rpId: opt.rpId,
       credentialId: res.id,
+    });
+  } catch {
+    // Sync with the provider is opportunistic; ignore failures.
+  }
+}
+
+/**
+ * Best-effort WebAuthn Signal API, proactive flavour: after a passkey is
+ * deleted on the site, give the provider the list of credentials the backend
+ * still accepts so it drops its copy of the removed one immediately — the
+ * reactive `signalUnknownPasskey` would only clean it up after a failed
+ * login attempt. The payload comes straight from the DELETE response.
+ * No-op when the browser or provider lacks support.
+ */
+export async function signalAllAcceptedPasskeys(signal: PasskeySignal) {
+  if (
+    typeof PublicKeyCredential === 'undefined'
+    || !('signalAllAcceptedCredentials' in PublicKeyCredential)
+  ) {
+    return;
+  }
+  try {
+    await PublicKeyCredential.signalAllAcceptedCredentials({
+      rpId: signal.rpId,
+      userId: signal.userHandle,
+      allAcceptedCredentialIds: signal.remainingCredentialIds,
     });
   } catch {
     // Sync with the provider is opportunistic; ignore failures.

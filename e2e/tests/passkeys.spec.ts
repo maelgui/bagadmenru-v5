@@ -250,7 +250,7 @@ test.describe('Passkeys (WebAuthn)', () => {
       });
     });
 
-    test('shows an error when user verification fails at login', async ({ page }) => {
+    test('stays silent when the ceremony is cancelled or fails at login', async ({ page }) => {
       await loginViaUI(page, E2E_USER.email, E2E_USER.password);
       await page.goto(PASSKEYS_ROUTE);
       if ((await page.getByRole('button', { name: 'Supprimer' }).count()) === 0) {
@@ -260,15 +260,28 @@ test.describe('Passkeys (WebAuthn)', () => {
       await clearSession(page);
       await page.goto('/auth/login');
 
-      // Explicit Passkey-button login with UV refused → the app surfaces its error.
+      // Explicit Passkey-button login with UV refused. The browser reports a
+      // deliberate cancel and a UV failure identically (NotAllowedError) and
+      // the OS dialog already showed the outcome: the app stays silent (no
+      // error alert) and re-arms the conditional (autofill) request. That
+      // re-arm fetch is the deterministic proof the failed ceremony was
+      // handled: the first challenge GET after the click belongs to the
+      // clicked ceremony, the second is the re-arm.
+      let challengeFetches = 0;
+      const rearmed = page.waitForResponse((res) => {
+        if (res.url().includes('/api/v1/auth/login') && res.request().method() === 'GET') {
+          challengeFetches += 1;
+          return challengeFetches >= 2;
+        }
+        return false;
+      });
       await authenticator.withFailedCeremony(
         async () => {
           await page.getByRole('button', { name: 'Clé d\'accès' }).click();
+          await rearmed;
         },
         async () => {
-          await expect(
-            page.getByText('La connexion par clé d\'accès a échoué', { exact: false })
-          ).toBeVisible();
+          await expect(page.getByText('Erreur de connexion')).not.toBeVisible();
         }
       );
 

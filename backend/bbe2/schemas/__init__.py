@@ -21,7 +21,7 @@ from .invitation import (
     InvitationInfo,
     OtpRequest,
 )
-from .passkey import Passkey
+from .passkey import Passkey, PasskeySignal
 from .profile import (
     Group,
     GroupCreate,

@@ -511,9 +511,7 @@ def test_login_code_signs_the_member_in(client: TestClient, reset_sender):
         _seed_password("john.doe@example.com", "s3cret-password")
 
 
-def test_login_code_via_link_is_the_same_credential(
-    client: TestClient, reset_sender
-):
+def test_login_code_via_link_is_the_same_credential(client: TestClient, reset_sender):
     # The emailed link is this same call with both fields prefilled in its
     # URL; ``via`` only labels the funnel metric.
     _clear_password("john.doe@example.com")
@@ -934,3 +932,53 @@ def test_password_login_empties_the_challenge_session(client: TestClient):
     assert response.status_code == 200
     # Session emptied -> Starlette expires the cookie on this response.
     assert "session=null" in (response.headers.get("set-cookie") or "")
+
+
+def test_delete_passkey_returns_signal_payload(client: TestClient):
+    """DELETE /webauthn/{id} returns the signalAllAcceptedCredentials()
+    payload: rpId, user handle and the credentials still valid, all in
+    base64url WITHOUT padding (the encoding the WebAuthn Signal API expects),
+    so the provider can immediately drop its copy of the deleted key."""
+    import base64 as b64
+
+    from sqlalchemy.orm import sessionmaker
+    from webauthn.helpers import bytes_to_base64url
+
+    from bbe2 import models
+    from bbe2.database import get_engine
+    from tests.conftest import DATABASE_URL
+
+    user_handle = b"\x77" * 8
+    deleted_id = b"\x0a" * 16
+    kept_id = b"\x0b" * 16
+    engine = get_engine(DATABASE_URL)
+    with sessionmaker(bind=engine)() as session:
+        # The fixture-authenticated user (john.doe) gets two passkeys.
+        user = session.get(models.UserDB, "a8e2d3249e9d997e")
+        user.passkey_user_id = user_handle
+        for credential_id in (deleted_id, kept_id):
+            session.merge(
+                models.PasskeyDB(
+                    passkey_user_id=user_handle,
+                    credential_id=credential_id,
+                    public_key=b"\x00" * 32,
+                    sign_count=0,
+                    transports="internal",
+                    device_type="single_device",
+                    back_up=False,
+                    aaguid="",
+                )
+            )
+        session.commit()
+
+    # The path parameter keeps the historical PADDED serialization of the
+    # Passkey schema; only the response payload is unpadded.
+    response = client.delete(
+        f"/api/v1/webauthn/{b64.urlsafe_b64encode(deleted_id).decode()}"
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["user_handle"] == bytes_to_base64url(user_handle)
+    assert "=" not in payload["user_handle"]
+    assert payload["remaining_credential_ids"] == [bytes_to_base64url(kept_id)]
+    assert payload["rp_id"]

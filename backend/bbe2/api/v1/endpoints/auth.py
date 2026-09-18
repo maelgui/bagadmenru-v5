@@ -22,7 +22,7 @@ from webauthn import (
     verify_authentication_response,
     verify_registration_response,
 )
-from webauthn.helpers import parse_authentication_credential_json
+from webauthn.helpers import bytes_to_base64url, parse_authentication_credential_json
 from webauthn.helpers.exceptions import (
     InvalidAuthenticationResponse,
     InvalidJSONStructure,
@@ -770,7 +770,16 @@ async def delete_passkey(
     credential_id: str,
     current_user: Annotated[UserDB, Depends(get_current_profile)],
     session: SessionDep,
-) -> str:
+    settings: SettingsDep,
+) -> schemas.PasskeySignal:
+    """Delete a passkey and return the Signal API payload.
+
+    The response lists the credentials still valid for this user so the
+    client can call ``PublicKeyCredential.signalAllAcceptedCredentials()``:
+    the passkey provider then deletes its local copy of the removed key
+    immediately, instead of keeping an orphan that would be suggested at the
+    next login and fail.
+    """
     q = (
         select(PasskeyDB)
         .where(PasskeyDB.passkey_user_id == current_user.passkey_user_id)
@@ -779,7 +788,17 @@ async def delete_passkey(
     res = session.scalars(q).first()
     if not res:
         raise HTTPException(status_code=404, detail="Passkey not found")
+    user_handle = res.passkey_user_id
     session.delete(res)
     session.commit()
 
-    return "OK"
+    remaining = session.scalars(
+        select(PasskeyDB).where(PasskeyDB.passkey_user_id == user_handle)
+    ).all()
+    return schemas.PasskeySignal(
+        rp_id=settings.relying_party_id,
+        user_handle=bytes_to_base64url(user_handle),
+        remaining_credential_ids=[
+            bytes_to_base64url(key.credential_id) for key in remaining
+        ],
+    )
