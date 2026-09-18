@@ -181,3 +181,61 @@ def test_rankings_split_responses_by_season(client: TestClient):
     )
     assert me_2024["ranks"]["response_rate"] is not None
     assert me_all["ranks"]["response_rate"] is None
+
+
+def _add_backfilled_response(event_id: int, event_date: datetime) -> None:
+    """Insert an event answered by the seeded user with a NULL date.
+
+    This is the shape of rows imported from the previous site: the answer
+    (yes/no) is known but the answer date is not.
+    """
+    engine = get_engine(DATABASE_URL)
+    session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    with session_local() as session:
+        session.add(
+            models.EventDB(
+                id=event_id,
+                title=f"Event {event_id}",
+                description="backfilled",
+                date=event_date,
+                costume=Costume.NONE,
+                category="TEST",
+                is_in_doodle=True,
+            )
+        )
+        session.flush()
+        session.add(
+            models.ResponseDB(
+                value=True,
+                date=None,
+                event_id=event_id,
+                user_id=SEEDED_USER_ID,
+            )
+        )
+        session.commit()
+
+
+def test_backfilled_response_without_date(client: TestClient):
+    """A backfilled response (date=None) must serialize and not break stats.
+
+    ``responses.date`` is nullable for rows imported from the previous site.
+    Such a response still counts as an answer (n_responses) but is excluded
+    from the average response time (SQL AVG ignores NULLs), so with only a
+    NULL-date response in the season the average must be null, not an error.
+    """
+    _add_backfilled_response(300, datetime.now())
+
+    resp = client.get("/api/v1/responses/", params={"user_id": SEEDED_USER_ID})
+    assert resp.status_code == 200
+    backfilled = next(r for r in resp.json() if r["event_id"] == 300)
+    assert backfilled["value"] is True
+    assert backfilled["date"] is None
+
+    resp = client.get("/api/v1/stats/me")
+    assert resp.status_code == 200
+    stats = resp.json()
+    # Counted as a response, positive.
+    assert stats["n_responses"] == 1
+    assert stats["n_positive_responses"] == 1
+    # But excluded from the response-time average.
+    assert stats["avg_response_time"] is None

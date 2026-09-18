@@ -42,7 +42,7 @@ export interface Response {
      * @type {Date}
      * @memberof Response
      */
-    date: Date;
+    date: Date | null;
 }
 
 /**
@@ -69,7 +69,7 @@ export function ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'value': json['value'],
         'userId': json['user_id'],
         'eventId': json['event_id'],
-        'date': (new Date(json['date'])),
+        'date': (json['date'] == null ? null : new Date(json['date'])),
     };
 }
 
@@ -87,7 +87,7 @@ export function ResponseToJSONTyped(value?: Response | null, ignoreDiscriminator
         'value': value['value'],
         'user_id': value['userId'],
         'event_id': value['eventId'],
-        'date': ((value['date']).toISOString()),
+        'date': (value['date'] == null ? null : (value['date'] as any).toISOString()),
     };
 }
 
