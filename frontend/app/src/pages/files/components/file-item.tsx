@@ -93,6 +93,13 @@ export default function FileItem({
   const icon = createElement(getIcon(file), { 'aria-hidden': true });
   const isFile = file.type === FileOrFolderType.File;
 
+  // Each action only renders when its capability is actually available: the
+  // caller passes renameFn/deleteFn only when the user holds the matching
+  // permission (edit:file / delete:file). With no action at all, the whole
+  // menu trigger disappears.
+  const showDownload = isFile && !!file.downloadUrl;
+  const hasActions = !noAction && (showDownload || renameFn !== undefined || deleteFn !== undefined);
+
   return (
     <Item variant={variant} className="relative transition-colors hover:bg-muted">
       {big ? (
@@ -108,7 +115,7 @@ export default function FileItem({
         </ItemTitle>
         <FolderCount file={file} />
       </ItemContent>
-      {!noAction ? (
+      {hasActions ? (
         <ItemActions>
           <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger
@@ -117,33 +124,39 @@ export default function FileItem({
               <EllipsisVertical />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuGroup>
-                {isFile && file.downloadUrl ? (
-                  <DropdownMenuItem
-                    render={(
-                      <a
-                        href={file.downloadUrl}
-                        download={file.name}
-                        rel="noopener noreferrer"
-                      />
-                    )}
-                  >
-                    <Download />
-                    Télécharger
+              {showDownload || renameFn ? (
+                <DropdownMenuGroup>
+                  {showDownload ? (
+                    <DropdownMenuItem
+                      render={(
+                        <a
+                          href={file.downloadUrl ?? undefined}
+                          download={file.name}
+                          rel="noopener noreferrer"
+                        />
+                      )}
+                    >
+                      <Download />
+                      Télécharger
+                    </DropdownMenuItem>
+                  ) : null}
+                  {renameFn ? (
+                    <DropdownMenuItem onClick={renameFn}>
+                      <Pencil />
+                      Renommer...
+                    </DropdownMenuItem>
+                  ) : null}
+                </DropdownMenuGroup>
+              ) : null}
+              {(showDownload || renameFn) && deleteFn ? <DropdownMenuSeparator /> : null}
+              {deleteFn ? (
+                <DropdownMenuGroup>
+                  <DropdownMenuItem variant="destructive" onClick={deleteFn}>
+                    <Trash2 />
+                    Supprimer...
                   </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem onClick={renameFn}>
-                  <Pencil />
-                  Renommer...
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem variant="destructive" onClick={deleteFn}>
-                  <Trash2 />
-                  Supprimer...
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
+                </DropdownMenuGroup>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         </ItemActions>
