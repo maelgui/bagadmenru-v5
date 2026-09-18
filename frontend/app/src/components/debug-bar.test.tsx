@@ -31,6 +31,13 @@ vi.mock('../config/client', () => ({
   }),
 }));
 
+// Mock the Mailpit notifications hook: jsdom would otherwise open a real
+// WebSocket. The mocked count also drives the badge test below.
+const mockMailCount = vi.hoisted(() => ({ value: 0 }));
+vi.mock('../utils/useMailpitNotifications', () => ({
+  useMailpitNotifications: () => mockMailCount.value,
+}));
+
 /** Import a fresh copy of the component with the given runtime environment. */
 async function loadDebugBar(environment?: string) {
   vi.resetModules();
@@ -93,6 +100,23 @@ describe('DebugBar panel', () => {
     const link = await screen.findByTestId('debug-bar-mailpit-link');
     expect(link.getAttribute('href')).toBe('/_mail/');
     expect(link.getAttribute('target')).toBe('_blank');
+    // No badge while no mail has been received.
+    expect(screen.queryByTestId('debug-bar-mailpit-count')).toBeNull();
+  });
+
+  it('shows the received-mail count next to the Mailpit link', async () => {
+    mockMailCount.value = 3;
+    try {
+      const DebugBar = await loadDebugBar('beta');
+      renderWithQuery(<DebugBar />);
+
+      fireEvent.click(screen.getByTestId('debug-bar-toggle'));
+
+      const badge = await screen.findByTestId('debug-bar-mailpit-count');
+      expect(badge.textContent).toBe('3');
+    } finally {
+      mockMailCount.value = 0;
+    }
   });
 
   it('closes back to the pill', async () => {
