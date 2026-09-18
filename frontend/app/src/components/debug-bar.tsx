@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { Bug, X } from 'lucide-react';
+import {
+  Bug, ExternalLink, Mail, X,
+} from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import type { SessionInfo } from 'bagad-client';
 
@@ -188,6 +190,22 @@ function DebugPanel({ onClose }: { onClose: () => void }) {
         <Row label="Backend" value={versionData ? versionData.version : '…'} testId="debug-bar-backend-version" />
         <Row label="API" value={env.VITE_BBE2_API_URL} testId="debug-bar-api-url" />
       </dl>
+
+      {/* Mailpit (MP_WEBROOT=_mail) is same-origin in every environment where
+          the bar renders: beta and review apps via the /_mail ingress (gated
+          by the site session), local compose via the vite proxy. Bare
+          `yarn dev` without the stack 404s - acceptable for a debug tool. */}
+      <a
+        href="/_mail/"
+        target="_blank"
+        rel="noreferrer"
+        data-testid="debug-bar-mailpit-link"
+        className="flex w-fit items-center gap-1.5 font-semibold hover:underline"
+      >
+        <Mail className="size-3.5" aria-hidden="true" />
+        Mailpit
+        <ExternalLink className="size-3 text-muted-foreground" aria-hidden="true" />
+      </a>
 
       <SessionsSection sessions={sessions} />
 

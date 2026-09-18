@@ -84,6 +84,17 @@ describe('DebugBar panel', () => {
     expect(await screen.findByText('read:events')).toBeTruthy();
   });
 
+  it('links to the Mailpit UI on the same origin', async () => {
+    const DebugBar = await loadDebugBar('beta');
+    renderWithQuery(<DebugBar />);
+
+    fireEvent.click(screen.getByTestId('debug-bar-toggle'));
+
+    const link = await screen.findByTestId('debug-bar-mailpit-link');
+    expect(link.getAttribute('href')).toBe('/_mail/');
+    expect(link.getAttribute('target')).toBe('_blank');
+  });
+
   it('closes back to the pill', async () => {
     const DebugBar = await loadDebugBar('beta');
     renderWithQuery(<DebugBar />);
