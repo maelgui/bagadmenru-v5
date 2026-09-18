@@ -27,6 +27,8 @@ export interface MetricDef {
   id: MetricId;
   label: string;
   short: string;
+  /** One-line explanation of what the metric measures, shown when selected. */
+  description: string;
   rankKey: keyof Pick<
     RankingInfo,
     'medianResponseTimeRank' | 'responseRateRank' | 'nPositiveResponsesRank'
@@ -70,6 +72,8 @@ export const METRICS: MetricDef[] = [
     id: 'reactivity',
     label: 'Réactivité',
     short: 'Réactivité',
+    description:
+      'Délai médian entre la publication d’un événement et la réponse du membre, oui ou non.',
     rankKey: 'medianResponseTimeRank',
     higherIsBetter: false, // a shorter delay is better
     seasonalOnly: false,
@@ -80,6 +84,8 @@ export const METRICS: MetricDef[] = [
     id: 'responseRate',
     label: 'Taux de réponse',
     short: 'Assiduité',
+    description:
+      'Part des événements de la saison auxquels le membre a répondu, quelle que soit la réponse.',
     rankKey: 'responseRateRank',
     higherIsBetter: true,
     seasonalOnly: true,
@@ -90,6 +96,8 @@ export const METRICS: MetricDef[] = [
     id: 'attendance',
     label: 'Participations',
     short: 'Présence',
+    description:
+      'Nombre de sorties du membre : les événements auxquels il a répondu oui.',
     rankKey: 'nPositiveResponsesRank',
     higherIsBetter: true,
     seasonalOnly: false,

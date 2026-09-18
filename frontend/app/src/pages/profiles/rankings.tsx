@@ -22,7 +22,8 @@ import { Podium } from './rankings/Podium';
 import { ProgressionCard } from './rankings/ProgressionCard';
 import { RankingsTable } from './rankings/RankingsTable';
 
-function RankingsContent({
+// Exported for testing.
+export function RankingsContent({
   windows,
   currentUserId,
 }: {
@@ -94,6 +95,13 @@ function RankingsContent({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+
+        <p
+          aria-live="polite"
+          className="max-w-md text-center text-sm text-muted-foreground"
+        >
+          {metric.description}
+        </p>
       </div>
 
       <Podium top={top} metric={metric} />
