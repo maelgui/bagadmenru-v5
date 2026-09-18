@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -16,4 +17,5 @@ class Response(ResponseBase):
 
     user_id: str
     event_id: int
-    date: datetime
+    # None for responses imported from the previous site (answer date unknown).
+    date: Optional[datetime]

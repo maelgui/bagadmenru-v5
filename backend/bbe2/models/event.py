@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -31,7 +32,9 @@ class ResponseDB(Base):
     __tablename__ = "responses"
 
     value: Mapped[bool] = mapped_column(nullable=True)
-    date: Mapped[datetime]
+    # NULL means the response was imported from the previous site and the
+    # actual answer date is unknown; the API always sets a date on creation.
+    date: Mapped[Optional[datetime]] = mapped_column(nullable=True)
 
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id"), primary_key=True)
     event: Mapped["EventDB"] = relationship(back_populates="responses")
