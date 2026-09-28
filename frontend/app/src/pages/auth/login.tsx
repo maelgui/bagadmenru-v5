@@ -3,16 +3,17 @@ import {
   browserSupportsWebAuthn, type PublicKeyCredentialRequestOptionsJSON, startAuthentication,
   WebAuthnError,
 } from '@simplewebauthn/browser';
-import { KeyRound } from 'lucide-react';
+import { KeyRound, Mail } from 'lucide-react';
 import { LoginType, ResponseError } from 'bagad-client';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import PasskeyIcon from '../../components/PasskeyIcon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import PasswordField from '../../components/PasswordField';
 import { queryClient, useApiClient } from '../../config/client';
@@ -213,9 +214,6 @@ function AuthPage() {
               autoComplete="current-password"
               registration={register('password', { required: 'Ce champ est obligatoire.' })}
             />
-            <div className="flex justify-end">
-              <Link to="/auth/reset" className="text-sm text-muted-foreground underline-offset-4 hover:underline">Impossible de vous connecter&nbsp;?</Link>
-            </div>
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? <Spinner data-icon="inline-start" /> : <KeyRound data-icon="inline-start" />}
               Connexion
@@ -223,11 +221,19 @@ function AuthPage() {
           </FieldGroup>
         </fieldset>
       </form>
-      {browserSupportsWebAuthn() ? (
-        <>
-          <div className="my-12 flex items-center text-muted-foreground before:mr-3 before:block before:h-px before:grow before:bg-border after:ml-3 after:block after:h-px after:grow after:bg-border">Ou</div>
+      {/*
+        Alternative sign-in methods, always offered as a third door so no
+        member has to know how their account is configured. The email link
+        works with or without WebAuthn (it reuses the recovery grant+code
+        flow), so this block is never gated on browser support; only the
+        passkey button is.
+      */}
+      <div className="my-12 flex items-center text-muted-foreground before:mr-3 before:block before:h-px before:grow before:bg-border after:ml-3 after:block after:h-px after:grow after:bg-border">Ou</div>
+      <div className="flex flex-col gap-3">
+        {browserSupportsWebAuthn() ? (
           <Button
             type="button"
+            variant="outline"
             onClick={async () => {
               // The explicit modal ceremony aborts the pending conditional
               // request (only one get() at a time): re-arm it if the modal
@@ -241,8 +247,17 @@ function AuthPage() {
             <PasskeyIcon className="size-6" />
             Clé d&apos;accès
           </Button>
-        </>
-      ) : null}
+        ) : null}
+        {/*
+          The universal fallback for a mixed-comfort membership: if you no
+          longer know whether you have a password or a passkey, click here
+          and check your email. Reuses the recovery grant+code flow.
+        */}
+        <Link to="/auth/reset" className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}>
+          <Mail data-icon="inline-start" />
+          M&apos;envoyer un lien de connexion
+        </Link>
+      </div>
     </div>
   );
 }
