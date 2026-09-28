@@ -16,6 +16,44 @@ from tests.api.v1.test_auth import (  # noqa: F401  (reset_sender is a fixture)
 )
 
 
+def _gauge(name: str, labels: dict[str, str] | None = None) -> float:
+    return REGISTRY.get_sample_value(name, labels or {}) or 0.0
+
+
+def _seed_passkey(email: str) -> None:
+    """Attach one passkey to the user with the given email.
+
+    Mirrors the invitation/enrolment path: a passkey row keyed on the user's
+    passkey_user_id. Enough for the membership gauges to count the member as
+    passkey-holding.
+    """
+    from sqlalchemy.orm import sessionmaker
+
+    from bbe2 import models
+    from bbe2.database import get_engine
+    from tests.conftest import DATABASE_URL
+
+    engine = get_engine(DATABASE_URL)
+    Session = sessionmaker(bind=engine)
+    with Session() as s:
+        user = s.query(models.UserDB).filter(models.UserDB.email == email).one()
+        if user.passkey_user_id is None:
+            user.passkey_user_id = b"\x7f" * 8
+        s.add(
+            models.PasskeyDB(
+                passkey_user_id=user.passkey_user_id,
+                credential_id=b"cred-" + email.encode()[:16],
+                public_key=b"pk",
+                sign_count=0,
+                transports="internal",
+                device_type="single_device",
+                back_up=False,
+                aaguid="00000000-0000-0000-0000-000000000000",
+            )
+        )
+        s.commit()
+
+
 def _counter(name: str, labels: dict[str, str]) -> float:
     return REGISTRY.get_sample_value(name, labels) or 0.0
 
@@ -186,3 +224,98 @@ def test_login_link_funnel_counts_requested_and_used(client: TestClient, reset_s
         )
     finally:
         _seed_password("john.doe@example.com", "s3cret-password")
+
+
+# --- Membership / credential gauges (scrape-time state, not flow) -----------
+#
+# Unlike the counters above, these are computed by the custom collector at
+# scrape time from the DB. Scraping /metrics triggers collect(); we then read
+# the freshly-set gauge samples from the registry. The seeded user (john.doe)
+# starts passwordless with no passkey, so the base fixture is a known state.
+
+
+def test_membership_gauges_are_exposed(client: TestClient):
+    # Trigger a scrape so the collector runs against the test DB.
+    body = client.get("/metrics").text
+    assert "bbe2_users" in body
+    assert "bbe2_users_credentials" in body
+    assert "bbe2_passkeys" in body
+    assert "bbe2_push_subscriptions" in body
+
+
+def test_users_gauge_counts_active_member(client: TestClient):
+    client.get("/metrics")
+    # The single seeded member is active.
+    assert _gauge("bbe2_users", {"state": "active"}) == 1
+    assert _gauge("bbe2_users", {"state": "inactive"}) == 0
+
+
+def test_credential_buckets_reflect_passwordless_seed(client: TestClient):
+    # Seed state: john.doe has no password and no passkey -> "none".
+    client.get("/metrics")
+    assert _gauge("bbe2_users_credentials", {"credential": "none"}) == 1
+    assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 0
+    assert _gauge("bbe2_users_credentials", {"credential": "password"}) == 0
+    assert _gauge("bbe2_passkeys") == 0
+
+
+def test_credential_buckets_count_password_only(client: TestClient):
+    _seed_password("john.doe@example.com", "s3cret-password")
+    try:
+        client.get("/metrics")
+        assert _gauge("bbe2_users_credentials", {"credential": "password"}) == 1
+        assert _gauge("bbe2_users_credentials", {"credential": "password_only"}) == 1
+        assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 0
+        assert _gauge("bbe2_users_credentials", {"credential": "none"}) == 0
+    finally:
+        _clear_password("john.doe@example.com")
+
+
+def test_credential_buckets_count_passkey_only(client: TestClient):
+    # Passwordless seed + a passkey -> passkey_only, and bbe2_passkeys counts it.
+    _seed_passkey("john.doe@example.com")
+    client.get("/metrics")
+    assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 1
+    assert _gauge("bbe2_users_credentials", {"credential": "passkey_only"}) == 1
+    assert _gauge("bbe2_users_credentials", {"credential": "none"}) == 0
+    assert _gauge("bbe2_passkeys") == 1
+
+
+def test_dual_credential_member_counts_in_both_overlapping_buckets(
+    client: TestClient,
+):
+    _seed_password("john.doe@example.com", "s3cret-password")
+    _seed_passkey("john.doe@example.com")
+    try:
+        client.get("/metrics")
+        # Overlapping buckets: counted in both passkey and password.
+        assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 1
+        assert _gauge("bbe2_users_credentials", {"credential": "password"}) == 1
+        # Exclusive buckets: neither *_only fires for a dual-credential member.
+        assert _gauge("bbe2_users_credentials", {"credential": "passkey_only"}) == 0
+        assert _gauge("bbe2_users_credentials", {"credential": "password_only"}) == 0
+    finally:
+        _clear_password("john.doe@example.com")
+
+
+def test_scrape_never_500s_when_db_is_unreachable(client: TestClient):
+    # Point the collector at a bogus DB URL: the scrape must still return 200
+    # (HTTP/latency metrics must never be blinded by a DB hiccup) and simply
+    # omit the membership samples.
+    from bbe2.config import get_settings
+    from bbe2.main import app
+    from tests.conftest import get_fake_settings
+
+    def broken_settings():
+        s = get_fake_settings()
+        s.database_url = "postgresql://nobody@127.0.0.1:1/nope"
+        return s
+
+    app.dependency_overrides[get_settings] = broken_settings
+    try:
+        response = client.get("/metrics")
+        assert response.status_code == 200
+        # HTTP metrics still present; membership samples absent this round.
+        assert "http_request" in response.text
+    finally:
+        app.dependency_overrides[get_settings] = get_fake_settings

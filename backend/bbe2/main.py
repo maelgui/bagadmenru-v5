@@ -12,8 +12,9 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2 import __version__
 from bbe2.api.v1.api import api_router
-from bbe2.config import Environment, get_environment
+from bbe2.config import Environment, get_environment, get_settings
 from bbe2.logging_config import setup_logging
+from bbe2.metrics import register_membership_gauges
 from bbe2.scheduler import scheduler
 from bbe2.services.email import EmailSendError
 from bbe2.utils.correlation import (
@@ -163,6 +164,18 @@ app.include_router(api_router, prefix="/api/v1")
 Instrumentator(excluded_handlers=["/metrics"]).instrument(app).expose(
     app, include_in_schema=False
 )
+
+
+# Point-in-time membership/credential gauges (users with a passkey, push
+# subscriptions, ...) are computed at scrape time by a custom collector. It
+# resolves settings through a getter that honours dependency_overrides, so the
+# test client scrapes its throwaway SQLite while production reads get_settings.
+def _resolve_settings():
+    getter = app.dependency_overrides.get(get_settings, get_settings)
+    return getter()
+
+
+register_membership_gauges(_resolve_settings)
 
 
 @app.exception_handler(EmailSendError)
