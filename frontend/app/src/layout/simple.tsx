@@ -30,10 +30,8 @@ export default function SimpleLayout({ children }: PropsWithChildren) {
           alt="Logo du Bagad Men Ru"
           className="relative m-auto max-h-[26rem] w-auto drop-shadow-lg"
         />
-        <p className="relative max-w-sm text-lg leading-relaxed text-primary-foreground/80">
-          Depuis 1995, la musique bretonne à Montfort-sur-Meu.
-          <br />
-          L&apos;espace des sonneurs et sonneuses du bagad.
+        <p className="relative max-w-sm text-sm leading-relaxed text-primary-foreground/60">
+          {"L'espace membre du bagad."}
         </p>
       </div>
 
