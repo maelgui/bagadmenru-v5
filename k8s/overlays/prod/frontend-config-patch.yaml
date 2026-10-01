@@ -5,3 +5,7 @@ metadata:
 data:
   VITE_BBE2_API_URL: "https://prod.bagadmenru.bzh"
   VITE_ENVIRONMENT: "production"
+  # Prod rollout of the silent post-login passkey upgrade, after the beta
+  # bake-in. Both root causes of the orphaned-passkey saga are fixed and
+  # deployed (starlette session-cookie race #1314, UP=0 attestation #1320).
+  VITE_FEATURE_SILENT_PASSKEY_UPGRADE: "true"
