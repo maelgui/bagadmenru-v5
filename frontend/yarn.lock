@@ -1787,10 +1787,10 @@
     "@tailwindcss/oxide" "4.3.3"
     tailwindcss "4.3.3"
 
-"@tanstack/eslint-plugin-query@^5.103.3":
-  version "5.103.3"
-  resolved "https://registry.yarnpkg.com/@tanstack/eslint-plugin-query/-/eslint-plugin-query-5.103.3.tgz#f8e6219a3314eb9aa20c9bb8c598f8992980833d"
-  integrity sha512-r1G6W26V2FPL4f9mwMNjppxkr6mhVccEZuX8JX5fYZsxWLvNvtgGSXt+EA/3zWwSHHUgDGmd/pH9J7xY4buntA==
+"@tanstack/eslint-plugin-query@^5.104.0":
+  version "5.104.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/eslint-plugin-query/-/eslint-plugin-query-5.104.0.tgz#dcb7da29058390c8ca9ffcf9d50f021009e346a4"
+  integrity sha512-WHStlNTKraESaAjeuZ0zJr+t3ZigZgAJ/FQX1sdLGSF+U0vXlHgcAoPqm27VixMRyXaFHCx9xBJiUmPNcxMpjQ==
   dependencies:
     "@typescript-eslint/utils" "^8.70.1"
 
@@ -1801,41 +1801,41 @@
   dependencies:
     remove-accents "0.5.0"
 
-"@tanstack/query-core@5.103.3":
-  version "5.103.3"
-  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.103.3.tgz#07d33e9af49d5e7cc2b8b55c1aaf9907e213715d"
-  integrity sha512-w6gJ5Alt+s55Wuok6/aURtR3AufW3PuNjnM0b3RC1xUz3MVA0EC9j7U3texGftvtOTYWiPVvQzCZjv3Cvzwc/g==
+"@tanstack/query-core@5.104.0":
+  version "5.104.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.104.0.tgz#31e432c573b9ed383d9a9fb2ed9ba7871fcfbd17"
+  integrity sha512-JrC2r/JQlXt7khBSdUpsgxNvybzOg+aITa+ARRMlP2AFo93Y8vIqz077rp+e61mJetSZ0T6AJbwW1JHer1vrPQ==
 
-"@tanstack/query-devtools@5.103.3":
-  version "5.103.3"
-  resolved "https://registry.yarnpkg.com/@tanstack/query-devtools/-/query-devtools-5.103.3.tgz#28325ff021a3bb3c8483fd32f5296d9a33b88112"
-  integrity sha512-a1hKnE/yFXAV6xaep+sfe2w1MArEsumBWs1iia7H6TwwvofpovGkYaWtb7+Nyt7SuMfFbW2Hngbd/m83BbMsaQ==
+"@tanstack/query-devtools@5.104.0":
+  version "5.104.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-devtools/-/query-devtools-5.104.0.tgz#4aa4ac81974d7e9da4e556e640d84fb7ca1b18fe"
+  integrity sha512-snKyFLVFC5LuNoyUTpyqCD2Z8cRlCWrAeO3xub0nGi81IMz8YAUWq2Z+XdpGSGT7bCxqVdOHUjyiA3CtDuBjfQ==
   dependencies:
     "@kobalte/core" "^0.13.14"
     "@solid-primitives/keyed" "^1.5.3"
     "@solid-primitives/resize-observer" "^2.2.0"
     "@solid-primitives/storage" "^1.3.11"
     "@tanstack/match-sorter-utils" "^9.1.2"
-    "@tanstack/query-core" "5.103.3"
+    "@tanstack/query-core" "5.104.0"
     clsx "^2.1.1"
     goober "^2.1.19"
     solid-js "^1.9.15"
     solid-transition-group "^0.2.3"
     superjson "^2.2.6"
 
-"@tanstack/react-query-devtools@^5.103.3":
-  version "5.103.3"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-query-devtools/-/react-query-devtools-5.103.3.tgz#2399c2b545ed1e87f318cc995e4be815e9d48a52"
-  integrity sha512-EtW7wukuj9UWsuH0o3L5Xd/aUyNmZ7FI3B4yrIa+ksnk5c9lyIV9DRJGjJ1w8Zw3+TYkX9n4JQPt2RRvtNPZoQ==
+"@tanstack/react-query-devtools@^5.104.0":
+  version "5.104.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query-devtools/-/react-query-devtools-5.104.0.tgz#7f6ea9a41c8df33d70aaa2c31b1fcab75ac8fe7c"
+  integrity sha512-E3AfuGqrdyaamuRV3u8RFWQlkZxk7OQa9MJ3XLF9SEHFRHyTUnlHcAQ0hEpDYxNsNFKYrheiRpDKlYaG4vkt7g==
   dependencies:
-    "@tanstack/query-devtools" "5.103.3"
+    "@tanstack/query-devtools" "5.104.0"
 
-"@tanstack/react-query@^5.103.3":
-  version "5.103.3"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.103.3.tgz#2b10c9cb0e71f4e1b249a8504d6fe54ebd78480a"
-  integrity sha512-QJMF0QUwJaFm6rrYAq1mlYyMsdiqd9w6gAsFSy+F+8g6/8pQrRy9u3a2yQGpSAmMO4DAZmRHwFZ8UulLaJkBmg==
+"@tanstack/react-query@^5.104.0":
+  version "5.104.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.104.0.tgz#5ddb71742d8ccdaf42aa3e42d1c4dd2148d5569e"
+  integrity sha512-e1TZmDCQnWIfiDVryIHeA6Idj+Lfx1hORLOhXS/l5wcgvtVD4yYqbTDl378sGQKIi2cSgb0TEMC9cKK8GGoJEw==
   dependencies:
-    "@tanstack/query-core" "5.103.3"
+    "@tanstack/query-core" "5.104.0"
 
 "@testing-library/dom@^10.4.1", "@testing-library/dom@^10.4.2":
   version "10.4.2"
