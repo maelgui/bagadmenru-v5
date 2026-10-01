@@ -181,8 +181,7 @@ function AuthPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-3xl">Connexion</h1>
-      <p className="mb-8 text-muted-foreground">Connectez-vous à votre compte</p>
+      <h1 className="mb-8 text-3xl">Connexion</h1>
       <form onSubmit={handleSubmit(onSubmit)}>
         <fieldset disabled={isSubmitting}>
           <FieldGroup>
