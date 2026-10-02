@@ -27,3 +27,14 @@ export function upcomingResponsesQuery(eventsApi: EventsApi) {
     queryFn: async () => await eventsApi.listResponsesApiV1ResponsesGet({ dateGte: today }),
   });
 }
+
+/**
+ * RSVP state-change log, most recent first. Restricted to holders of
+ * view:response_history (staff/admin); used by the désinscriptions page.
+ */
+export function responseChangesQuery(eventsApi: EventsApi) {
+  return queryOptions({
+    queryKey: ['responses', 'changes'],
+    queryFn: async () => await eventsApi.listResponseChangesApiV1ResponsesChangesGet(),
+  });
+}

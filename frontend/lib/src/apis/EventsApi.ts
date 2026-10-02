@@ -20,6 +20,7 @@ import type {
   HTTPValidationError,
   Res,
   Response,
+  ResponseChange,
   ResponseCreate,
 } from '../models/index';
 import {
@@ -33,6 +34,8 @@ import {
     ResToJSON,
     ResponseFromJSON,
     ResponseToJSON,
+    ResponseChangeFromJSON,
+    ResponseChangeToJSON,
     ResponseCreateFromJSON,
     ResponseCreateToJSON,
 } from '../models/index';
@@ -69,6 +72,12 @@ export interface ListEventsApiV1EventsGetRequest {
     dateLt?: Date | null;
     isInDoodle?: boolean | null;
     ordering?: string;
+}
+
+export interface ListResponseChangesApiV1ResponsesChangesGetRequest {
+    dateGte?: Date | null;
+    dateLt?: Date | null;
+    userId?: string | null;
 }
 
 export interface ListResponsesApiV1ResponsesGetRequest {
@@ -468,6 +477,52 @@ export class EventsApi extends runtime.BaseAPI {
      */
     async listEventsApiV1EventsGet(requestParameters: ListEventsApiV1EventsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Event>> {
         const response = await this.listEventsApiV1EventsGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * List Response Changes
+     */
+    async listResponseChangesApiV1ResponsesChangesGetRaw(requestParameters: ListResponseChangesApiV1ResponsesChangesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ResponseChange>>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['dateGte'] != null) {
+            queryParameters['date__gte'] = (requestParameters['dateGte'] as any).toISOString();
+        }
+
+        if (requestParameters['dateLt'] != null) {
+            queryParameters['date__lt'] = (requestParameters['dateLt'] as any).toISOString();
+        }
+
+        if (requestParameters['userId'] != null) {
+            queryParameters['user_id'] = requestParameters['userId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/responses/changes`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ResponseChangeFromJSON));
+    }
+
+    /**
+     * List Response Changes
+     */
+    async listResponseChangesApiV1ResponsesChangesGet(requestParameters: ListResponseChangesApiV1ResponsesChangesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ResponseChange>> {
+        const response = await this.listResponseChangesApiV1ResponsesChangesGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

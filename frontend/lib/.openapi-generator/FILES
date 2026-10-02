@@ -64,6 +64,8 @@ src/models/RecoveryGrant.ts
 src/models/Res.ts
 src/models/ResetPasswordRequest.ts
 src/models/Response.ts
+src/models/ResponseChange.ts
+src/models/ResponseChangeUser.ts
 src/models/ResponseCreate.ts
 src/models/Role.ts
 src/models/SeasonRanking.ts

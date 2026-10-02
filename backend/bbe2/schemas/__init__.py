@@ -38,5 +38,5 @@ from .push import (
     PushSubscriptionResponse,
     VapidPublicKeyResponse,
 )
-from .response import Response, ResponseCreate
+from .response import Response, ResponseChange, ResponseChangeUser, ResponseCreate
 from .utils import GetUploadUrlResponse

@@ -11,6 +11,7 @@ from bbe2.crud import CRUDEvent
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
 from bbe2.metrics import EVENT_RESPONSES
 from bbe2.models.action_token import ActionTokenValue
+from bbe2.services.events import apply_response
 from bbe2.services.notifications import notify_new_event
 from bbe2.utils.auth import (
     Action,
@@ -256,6 +257,32 @@ async def list_responses(
     return responses
 
 
+@responses_router.get(
+    "/changes",
+    response_model=list[schemas.ResponseChange],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.RESPONSE_HISTORY))],
+)
+async def list_response_changes(
+    session: SessionDep,
+    date__gte: Optional[datetime] = None,
+    date__lt: Optional[datetime] = None,
+    user_id: Optional[str] = None,
+):
+    q = select(models.ResponseChangeDB).order_by(
+        models.ResponseChangeDB.changed_at.desc()
+    )
+    if user_id:
+        q = q.filter(models.ResponseChangeDB.user_id == user_id)
+    if date__gte:
+        date__gte = date__gte.replace(hour=0, minute=0, second=0, microsecond=0)
+        q = q.filter(
+            models.ResponseChangeDB.event.has(models.EventDB.date >= date__gte)
+        )
+    if date__lt:
+        q = q.filter(models.ResponseChangeDB.event.has(models.EventDB.date < date__lt))
+    return session.scalars(q).all()
+
+
 @events_router.put(
     "/{event_id}/responses",
     response_model=schemas.Response,
@@ -273,25 +300,7 @@ async def create_response(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
 
-    db_response = session.get(
-        models.ResponseDB,
-        (
-            event_id,
-            identifier,
-        ),
-    )
-
-    if db_response:
-        db_response.value = response.value
-    else:
-        db_response = models.ResponseDB(
-            event_id=event_id,
-            user_id=identifier,
-            date=datetime.now(),
-            **response.model_dump(),
-        )
-        session.add(db_response)
-
+    db_response = apply_response(session, identifier, event_id, response.value)
     session.commit()
     EVENT_RESPONSES.labels(source="app", value="yes" if response.value else "no").inc()
 
@@ -346,13 +355,12 @@ async def create_response_by_token(
         dict, Depends(ActionTokenAuthorization(ActionTokenValue.CreateResponseByToken))
     ],
 ):
-    db_object = models.ResponseDB(
-        event_id=token_payload["event_id"],
-        user_id=token_payload["user_id"],
-        date=datetime.now(),
-        **response.model_dump(),
+    db_object = apply_response(
+        session,
+        token_payload["user_id"],
+        token_payload["event_id"],
+        response.value,
     )
-    session.merge(db_object)
     session.commit()
     EVENT_RESPONSES.labels(source="link", value="yes" if response.value else "no").inc()
     return db_object

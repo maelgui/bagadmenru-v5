@@ -1,4 +1,6 @@
-import { CalendarDays, ChevronDown, ListChecks, TableCellsMerge } from 'lucide-react';
+import {
+  CalendarDays, ChevronDown, ListChecks, TableCellsMerge, UserMinus,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -6,10 +8,14 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePermissions } from '../../../config/client';
 
 export default function DisplaySelector() {
+  const { can } = usePermissions();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button />}>
@@ -31,6 +37,17 @@ export default function DisplaySelector() {
             Doodle
           </DropdownMenuItem>
         </DropdownMenuGroup>
+        {can('view', 'response_history') ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem render={<Link to="/events/desinscriptions" />}>
+                <UserMinus />
+                Désinscriptions
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
