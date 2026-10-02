@@ -134,9 +134,9 @@ class MembershipStateCollector(Collector):
     emitted, so nothing identifies a member (RGPD-safe, Prometheus-friendly).
 
     ``settings_getter`` resolves the settings (hence the DB URL) lazily on every
-    scrape rather than capturing them at registration time. ``main.py`` passes a
-    getter that honours FastAPI's ``dependency_overrides`` so the test client
-    scrapes its throwaway SQLite; in production it is plain ``get_settings``.
+    scrape rather than capturing them at registration time. In production it is
+    plain ``get_settings`` (like background jobs resolve settings outside a
+    request); tests inject a getter pointing at their throwaway SQLite.
 
     The whole ``collect()`` is defensive: a scrape must never 500 the endpoint
     (that would blind the HTTP/latency metrics too), so a DB hiccup yields no
