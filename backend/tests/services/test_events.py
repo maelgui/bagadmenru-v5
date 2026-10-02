@@ -8,7 +8,7 @@ from bbe2 import models
 from bbe2.database import get_engine
 from bbe2.models.base import Base
 from bbe2.schemas import Costume
-from bbe2.services.events import count_unanswered_events
+from bbe2.services.events import apply_response, count_unanswered_events
 
 DATABASE_URL = "sqlite:///tests_services_events.sqlite?check_same_thread=false"
 USER_ID = "a8e2d3249e9d997e"
@@ -104,3 +104,109 @@ def test_other_users_responses_do_not_count():
         session.commit()
 
         assert count_unanswered_events(session, USER_ID) == 1
+
+
+def _changes(session):
+    return (
+        session.query(models.ResponseChangeDB)
+        .order_by(models.ResponseChangeDB.id)
+        .all()
+    )
+
+
+def test_apply_response_logs_first_answer():
+    with _session() as session:
+        session.add(_user(USER_ID))
+        session.add(_event(1, days_from_now=5))
+        session.commit()
+
+        apply_response(session, USER_ID, 1, True, now=datetime(2026, 1, 1, 12, 0))
+        session.commit()
+
+        changes = _changes(session)
+        assert len(changes) == 1
+        assert changes[0].from_value is None
+        assert changes[0].to_value is True
+
+
+def test_apply_response_no_log_when_value_unchanged():
+    with _session() as session:
+        session.add(_user(USER_ID))
+        session.add(_event(1, days_from_now=5))
+        session.commit()
+
+        base = datetime(2026, 1, 1, 12, 0)
+        apply_response(session, USER_ID, 1, True, now=base)
+        apply_response(session, USER_ID, 1, True, now=base + timedelta(hours=1))
+        session.commit()
+
+        assert len(_changes(session)) == 1
+
+
+def test_apply_response_present_to_absent_logs_a_change():
+    with _session() as session:
+        session.add(_user(USER_ID))
+        session.add(_event(1, days_from_now=5))
+        session.commit()
+
+        base = datetime(2026, 1, 1, 12, 0)
+        apply_response(session, USER_ID, 1, True, now=base)
+        apply_response(session, USER_ID, 1, False, now=base + timedelta(hours=2))
+        session.commit()
+
+        changes = _changes(session)
+        assert len(changes) == 2
+        assert changes[1].from_value is True
+        assert changes[1].to_value is False
+
+
+def test_cooldown_coalesces_rapid_flip_into_latest_value():
+    with _session() as session:
+        session.add(_user(USER_ID))
+        session.add(_event(1, days_from_now=5))
+        session.commit()
+
+        base = datetime(2026, 1, 1, 12, 0)
+        apply_response(session, USER_ID, 1, True, now=base)
+        apply_response(session, USER_ID, 1, False, now=base + timedelta(minutes=1))
+        session.commit()
+
+        changes = _changes(session)
+        assert len(changes) == 1
+        assert changes[0].from_value is None
+        assert changes[0].to_value is False
+        assert changes[0].changed_at == base + timedelta(minutes=1)
+
+
+def test_cooldown_full_roundtrip_leaves_no_trace():
+    with _session() as session:
+        session.add(_user(USER_ID))
+        session.add(_event(1, days_from_now=5))
+        session.commit()
+
+        base = datetime(2026, 1, 1, 12, 0)
+        apply_response(session, USER_ID, 1, True, now=base)
+        apply_response(session, USER_ID, 1, False, now=base + timedelta(hours=1))
+        apply_response(
+            session, USER_ID, 1, True, now=base + timedelta(hours=1, minutes=1)
+        )
+        session.commit()
+
+        changes = _changes(session)
+        assert len(changes) == 1
+        assert changes[0].from_value is None
+        assert changes[0].to_value is True
+
+
+def test_change_outside_cooldown_creates_new_row():
+    with _session() as session:
+        session.add(_user(USER_ID))
+        session.add(_event(1, days_from_now=5))
+        session.commit()
+
+        base = datetime(2026, 1, 1, 12, 0)
+        apply_response(session, USER_ID, 1, True, now=base)
+        apply_response(session, USER_ID, 1, False, now=base + timedelta(minutes=6))
+        session.commit()
+
+        assert len(_changes(session)) == 2

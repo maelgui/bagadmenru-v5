@@ -24,6 +24,10 @@ class Resource(Enum):
     # roles as viewing events (every member who can see events can subscribe).
     CALENDAR = "calendar"
     RESPONSE = "response"
+    # Audit trail of RSVP state changes (e.g. a member switching from present to
+    # absent). Separate from RESPONSE so viewing the log can be granted (to
+    # staff) without implying the ability to answer on others' behalf.
+    RESPONSE_HISTORY = "response_history"
 
     FILE = "file"
 
@@ -79,6 +83,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.DELETE.value, Resource.EVENT.value),
         (Action.VIEW.value, Resource.RESPONSE.value),
         (Action.CREATE.value, Resource.RESPONSE.value),
+        (Action.VIEW.value, Resource.RESPONSE_HISTORY.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.CREATE.value, Resource.PROFILE.value),
         (Action.EDIT.value, Resource.PROFILE.value),

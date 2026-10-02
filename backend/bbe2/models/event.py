@@ -40,3 +40,21 @@ class ResponseDB(Base):
     event: Mapped["EventDB"] = relationship(back_populates="responses")
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
     user: Mapped["UserDB"] = relationship()
+
+
+class ResponseChangeDB(Base):
+    __tablename__ = "response_changes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_value: Mapped[Optional[bool]] = mapped_column(nullable=True)
+    to_value: Mapped[bool]
+    changed_at: Mapped[datetime] = mapped_column(index=True)
+
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("events.id", ondelete="CASCADE"), index=True
+    )
+    event: Mapped["EventDB"] = relationship()
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    user: Mapped["UserDB"] = relationship()

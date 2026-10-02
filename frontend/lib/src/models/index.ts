@@ -50,6 +50,8 @@ export * from './RecoveryGrant';
 export * from './Res';
 export * from './ResetPasswordRequest';
 export * from './Response';
+export * from './ResponseChange';
+export * from './ResponseChangeUser';
 export * from './ResponseCreate';
 export * from './Role';
 export * from './SeasonRanking';

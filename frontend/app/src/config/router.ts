@@ -45,6 +45,10 @@ export default createBrowserRouter([
                 lazy: lazyPage(async () => await import('../pages/events/calendar')),
               },
               {
+                path: '/events/desinscriptions',
+                lazy: lazyPage(async () => await import('../pages/events/desinscriptions')),
+              },
+              {
                 path: '/events/add',
                 lazy: lazyPage(async () => await import('../pages/events/add')),
               },

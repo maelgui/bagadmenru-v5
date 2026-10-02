@@ -3,7 +3,7 @@
 from .action_token import ActionTokenDB
 from .api_key import ApiKeyDB
 from .base import Base
-from .event import EventDB, ResponseDB
+from .event import EventDB, ResponseChangeDB, ResponseDB
 from .file import FileOrFolderDB
 from .helloasso import HelloAssoMembershipDB
 from .passkey import PasskeyDB
