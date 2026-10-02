@@ -82,6 +82,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.CREATE.value, Resource.PROFILE.value),
         (Action.EDIT.value, Resource.PROFILE.value),
+        (Action.DELETE.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
         (Action.CREATE.value, Resource.FILE.value),
         (Action.EDIT.value, Resource.FILE.value),
