@@ -475,7 +475,7 @@ export class FilesApi extends runtime.BaseAPI {
         const canConsumeForm = runtime.canConsumeForm(consumes);
 
         let formParams: { append(param: string, value: any): any };
-        let useForm = false;
+        let useForm = true;
         if (useForm) {
             formParams = new FormData();
         } else {
