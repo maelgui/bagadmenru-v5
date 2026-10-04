@@ -16,10 +16,6 @@ from tests.api.v1.test_auth import (  # noqa: F401  (reset_sender is a fixture)
 )
 
 
-def _gauge(name: str, labels: dict[str, str] | None = None) -> float:
-    return REGISTRY.get_sample_value(name, labels or {}) or 0.0
-
-
 def _seed_passkey(email: str) -> None:
     """Attach one passkey to the user with the given email.
 
@@ -228,45 +224,70 @@ def test_login_link_funnel_counts_requested_and_used(client: TestClient, reset_s
 
 # --- Membership / credential gauges (scrape-time state, not flow) -----------
 #
-# Unlike the counters above, these are computed by the custom collector at
-# scrape time from the DB. Scraping /metrics triggers collect(); we then read
-# the freshly-set gauge samples from the registry. The seeded user (john.doe)
-# starts passwordless with no passkey, so the base fixture is a known state.
+# Unlike the counters above, these are computed by the custom collector from
+# the DB. They are unit-tested directly: a MembershipStateCollector is pointed
+# at the test SQLite (via get_fake_settings) and registered on a throwaway
+# registry, so collect() runs against the seeded DB without going through the
+# /metrics endpoint or FastAPI's dependency injection. The seeded user
+# (john.doe) starts passwordless with no passkey, a known base state.
+
+
+def _collect_gauge(name: str, labels: dict[str, str] | None = None) -> float:
+    """Run the collector against the test DB and read one gauge sample."""
+    from prometheus_client import CollectorRegistry
+
+    from bbe2.metrics import MembershipStateCollector
+    from tests.conftest import get_fake_settings
+
+    registry = CollectorRegistry()
+    registry.register(MembershipStateCollector(get_fake_settings))
+    return registry.get_sample_value(name, labels or {}) or 0.0
+
+
+def _collector_metric_names() -> set[str]:
+    from prometheus_client import CollectorRegistry
+
+    from bbe2.metrics import MembershipStateCollector
+    from tests.conftest import get_fake_settings
+
+    registry = CollectorRegistry()
+    collector = MembershipStateCollector(get_fake_settings)
+    registry.register(collector)
+    return {family.name for family in collector.collect()}
 
 
 def test_membership_gauges_are_exposed(client: TestClient):
-    # Trigger a scrape so the collector runs against the test DB.
-    body = client.get("/metrics").text
-    assert "bbe2_users" in body
-    assert "bbe2_users_credentials" in body
-    assert "bbe2_passkeys" in body
-    assert "bbe2_push_subscriptions" in body
+    names = _collector_metric_names()
+    assert "bbe2_users" in names
+    assert "bbe2_users_credentials" in names
+    assert "bbe2_passkeys" in names
+    assert "bbe2_push_subscriptions" in names
 
 
 def test_users_gauge_counts_active_member(client: TestClient):
-    client.get("/metrics")
     # The single seeded member is active.
-    assert _gauge("bbe2_users", {"state": "active"}) == 1
-    assert _gauge("bbe2_users", {"state": "inactive"}) == 0
+    assert _collect_gauge("bbe2_users", {"state": "active"}) == 1
+    assert _collect_gauge("bbe2_users", {"state": "inactive"}) == 0
 
 
 def test_credential_buckets_reflect_passwordless_seed(client: TestClient):
     # Seed state: john.doe has no password and no passkey -> "none".
-    client.get("/metrics")
-    assert _gauge("bbe2_users_credentials", {"credential": "none"}) == 1
-    assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 0
-    assert _gauge("bbe2_users_credentials", {"credential": "password"}) == 0
-    assert _gauge("bbe2_passkeys") == 0
+    assert _collect_gauge("bbe2_users_credentials", {"credential": "none"}) == 1
+    assert _collect_gauge("bbe2_users_credentials", {"credential": "passkey"}) == 0
+    assert _collect_gauge("bbe2_users_credentials", {"credential": "password"}) == 0
+    assert _collect_gauge("bbe2_passkeys") == 0
 
 
 def test_credential_buckets_count_password_only(client: TestClient):
     _seed_password("john.doe@example.com", "s3cret-password")
     try:
-        client.get("/metrics")
-        assert _gauge("bbe2_users_credentials", {"credential": "password"}) == 1
-        assert _gauge("bbe2_users_credentials", {"credential": "password_only"}) == 1
-        assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 0
-        assert _gauge("bbe2_users_credentials", {"credential": "none"}) == 0
+        assert _collect_gauge("bbe2_users_credentials", {"credential": "password"}) == 1
+        assert (
+            _collect_gauge("bbe2_users_credentials", {"credential": "password_only"})
+            == 1
+        )
+        assert _collect_gauge("bbe2_users_credentials", {"credential": "passkey"}) == 0
+        assert _collect_gauge("bbe2_users_credentials", {"credential": "none"}) == 0
     finally:
         _clear_password("john.doe@example.com")
 
@@ -274,11 +295,10 @@ def test_credential_buckets_count_password_only(client: TestClient):
 def test_credential_buckets_count_passkey_only(client: TestClient):
     # Passwordless seed + a passkey -> passkey_only, and bbe2_passkeys counts it.
     _seed_passkey("john.doe@example.com")
-    client.get("/metrics")
-    assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 1
-    assert _gauge("bbe2_users_credentials", {"credential": "passkey_only"}) == 1
-    assert _gauge("bbe2_users_credentials", {"credential": "none"}) == 0
-    assert _gauge("bbe2_passkeys") == 1
+    assert _collect_gauge("bbe2_users_credentials", {"credential": "passkey"}) == 1
+    assert _collect_gauge("bbe2_users_credentials", {"credential": "passkey_only"}) == 1
+    assert _collect_gauge("bbe2_users_credentials", {"credential": "none"}) == 0
+    assert _collect_gauge("bbe2_passkeys") == 1
 
 
 def test_dual_credential_member_counts_in_both_overlapping_buckets(
@@ -287,23 +307,29 @@ def test_dual_credential_member_counts_in_both_overlapping_buckets(
     _seed_password("john.doe@example.com", "s3cret-password")
     _seed_passkey("john.doe@example.com")
     try:
-        client.get("/metrics")
         # Overlapping buckets: counted in both passkey and password.
-        assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 1
-        assert _gauge("bbe2_users_credentials", {"credential": "password"}) == 1
+        assert _collect_gauge("bbe2_users_credentials", {"credential": "passkey"}) == 1
+        assert _collect_gauge("bbe2_users_credentials", {"credential": "password"}) == 1
         # Exclusive buckets: neither *_only fires for a dual-credential member.
-        assert _gauge("bbe2_users_credentials", {"credential": "passkey_only"}) == 0
-        assert _gauge("bbe2_users_credentials", {"credential": "password_only"}) == 0
+        assert (
+            _collect_gauge("bbe2_users_credentials", {"credential": "passkey_only"})
+            == 0
+        )
+        assert (
+            _collect_gauge("bbe2_users_credentials", {"credential": "password_only"})
+            == 0
+        )
     finally:
         _clear_password("john.doe@example.com")
 
 
 def test_scrape_never_500s_when_db_is_unreachable(client: TestClient):
-    # Point the collector at a bogus DB URL: the scrape must still return 200
-    # (HTTP/latency metrics must never be blinded by a DB hiccup) and simply
-    # omit the membership samples.
-    from bbe2.config import get_settings
-    from bbe2.main import app
+    # A DB hiccup at scrape time must never 500 the endpoint (that would blind
+    # the HTTP/latency metrics too): collect() yields no membership samples but
+    # the /metrics endpoint still returns 200 with the default HTTP metrics.
+    from prometheus_client import CollectorRegistry
+
+    from bbe2.metrics import MembershipStateCollector
     from tests.conftest import get_fake_settings
 
     def broken_settings():
@@ -311,11 +337,13 @@ def test_scrape_never_500s_when_db_is_unreachable(client: TestClient):
         s.database_url = "postgresql://nobody@127.0.0.1:1/nope"
         return s
 
-    app.dependency_overrides[get_settings] = broken_settings
-    try:
-        response = client.get("/metrics")
-        assert response.status_code == 200
-        # HTTP metrics still present; membership samples absent this round.
-        assert "http_request" in response.text
-    finally:
-        app.dependency_overrides[get_settings] = get_fake_settings
+    registry = CollectorRegistry()
+    collector = MembershipStateCollector(broken_settings)
+    registry.register(collector)
+    # Collecting against an unreachable DB yields nothing, without raising.
+    assert list(collector.collect()) == []
+
+    # And the live endpoint stays up (its default HTTP metrics are unaffected).
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "http_request" in response.text
