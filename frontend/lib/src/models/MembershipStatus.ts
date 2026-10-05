@@ -20,7 +20,7 @@
 export const MembershipStatus = {
     Active: 'active',
     Expired: 'expired',
-    None: 'none'
+    None: 'none',
 } as const;
 export type MembershipStatus = typeof MembershipStatus[keyof typeof MembershipStatus];
 

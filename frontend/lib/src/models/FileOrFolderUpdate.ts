@@ -21,14 +21,10 @@ import { mapValues } from '../runtime';
 export interface FileOrFolderUpdate {
     /**
      * 
-     * @type {string}
-     * @memberof FileOrFolderUpdate
      */
     name: string;
     /**
      * 
-     * @type {number}
-     * @memberof FileOrFolderUpdate
      */
     parentId: number;
 }
@@ -38,7 +34,7 @@ export interface FileOrFolderUpdate {
  */
 export function instanceOfFileOrFolderUpdate(value: object): value is FileOrFolderUpdate {
     if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('parentId' in value) || value['parentId'] === undefined) return false;
+    if ((!('parentId' in (value as Record<string, any>)) && !('parent_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['parentId'] === undefined && (value as Record<string, any>)['parent_id'] === undefined)) return false;
     return true;
 }
 

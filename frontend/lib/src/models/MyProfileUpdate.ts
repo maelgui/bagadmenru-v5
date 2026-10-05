@@ -21,32 +21,22 @@ import { mapValues } from '../runtime';
 export interface MyProfileUpdate {
     /**
      * 
-     * @type {string}
-     * @memberof MyProfileUpdate
      */
     firstName: string;
     /**
      * 
-     * @type {string}
-     * @memberof MyProfileUpdate
      */
     lastName: string;
     /**
      * 
-     * @type {string}
-     * @memberof MyProfileUpdate
      */
     pictureKey?: string | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof MyProfileUpdate
      */
     receivesEmails: boolean;
     /**
      * 
-     * @type {boolean}
-     * @memberof MyProfileUpdate
      */
     receivesPush: boolean;
 }
@@ -55,10 +45,10 @@ export interface MyProfileUpdate {
  * Check if a given object implements the MyProfileUpdate interface.
  */
 export function instanceOfMyProfileUpdate(value: object): value is MyProfileUpdate {
-    if (!('firstName' in value) || value['firstName'] === undefined) return false;
-    if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('receivesEmails' in value) || value['receivesEmails'] === undefined) return false;
-    if (!('receivesPush' in value) || value['receivesPush'] === undefined) return false;
+    if ((!('firstName' in (value as Record<string, any>)) && !('first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['firstName'] === undefined && (value as Record<string, any>)['first_name'] === undefined)) return false;
+    if ((!('lastName' in (value as Record<string, any>)) && !('last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['lastName'] === undefined && (value as Record<string, any>)['last_name'] === undefined)) return false;
+    if ((!('receivesEmails' in (value as Record<string, any>)) && !('receives_emails' in (value as Record<string, any>))) || ((value as Record<string, any>)['receivesEmails'] === undefined && (value as Record<string, any>)['receives_emails'] === undefined)) return false;
+    if ((!('receivesPush' in (value as Record<string, any>)) && !('receives_push' in (value as Record<string, any>))) || ((value as Record<string, any>)['receivesPush'] === undefined && (value as Record<string, any>)['receives_push'] === undefined)) return false;
     return true;
 }
 
@@ -74,7 +64,7 @@ export function MyProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boo
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
+        'pictureKey': json['picture_key'] === undefined ? undefined : json['picture_key'] === null ? null : json['picture_key'],
         'receivesEmails': json['receives_emails'],
         'receivesPush': json['receives_push'],
     };

@@ -21,20 +21,14 @@ import { mapValues } from '../runtime';
 export interface ResponseChangeUser {
     /**
      * 
-     * @type {string}
-     * @memberof ResponseChangeUser
      */
     id: string;
     /**
      * 
-     * @type {string}
-     * @memberof ResponseChangeUser
      */
     firstName: string;
     /**
      * 
-     * @type {string}
-     * @memberof ResponseChangeUser
      */
     lastName: string;
 }
@@ -44,8 +38,8 @@ export interface ResponseChangeUser {
  */
 export function instanceOfResponseChangeUser(value: object): value is ResponseChangeUser {
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('firstName' in value) || value['firstName'] === undefined) return false;
-    if (!('lastName' in value) || value['lastName'] === undefined) return false;
+    if ((!('firstName' in (value as Record<string, any>)) && !('first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['firstName'] === undefined && (value as Record<string, any>)['first_name'] === undefined)) return false;
+    if ((!('lastName' in (value as Record<string, any>)) && !('last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['lastName'] === undefined && (value as Record<string, any>)['last_name'] === undefined)) return false;
     return true;
 }
 

@@ -21,14 +21,10 @@ import { mapValues } from '../runtime';
 export interface GetUploadUrlResponse {
     /**
      * 
-     * @type {string}
-     * @memberof GetUploadUrlResponse
      */
     url: string;
     /**
      * 
-     * @type {string}
-     * @memberof GetUploadUrlResponse
      */
     key: string;
 }

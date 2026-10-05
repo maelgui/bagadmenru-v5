@@ -12,112 +12,186 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  ApiKey,
-  ApiKeyCreate,
-  ApiKeyCreated,
-  GetUploadUrlResponse,
-  GlobalStats,
-  Group,
-  GroupCreate,
-  GroupUpdate,
-  HTTPValidationError,
-  MembershipInfo,
-  MyProfileUpdate,
-  MyStats,
-  Profile,
-  ProfileCreate,
-  ProfileUpdate,
-  Role,
-  UserRankings,
-} from '../models/index';
 import {
+    type ApiKey,
     ApiKeyFromJSON,
     ApiKeyToJSON,
+} from '../models/ApiKey';
+import {
+    type ApiKeyCreate,
     ApiKeyCreateFromJSON,
     ApiKeyCreateToJSON,
+} from '../models/ApiKeyCreate';
+import {
+    type ApiKeyCreated,
     ApiKeyCreatedFromJSON,
     ApiKeyCreatedToJSON,
+} from '../models/ApiKeyCreated';
+import {
+    type GetUploadUrlResponse,
     GetUploadUrlResponseFromJSON,
     GetUploadUrlResponseToJSON,
+} from '../models/GetUploadUrlResponse';
+import {
+    type GlobalStats,
     GlobalStatsFromJSON,
     GlobalStatsToJSON,
+} from '../models/GlobalStats';
+import {
+    type Group,
     GroupFromJSON,
     GroupToJSON,
+} from '../models/Group';
+import {
+    type GroupCreate,
     GroupCreateFromJSON,
     GroupCreateToJSON,
+} from '../models/GroupCreate';
+import {
+    type GroupUpdate,
     GroupUpdateFromJSON,
     GroupUpdateToJSON,
+} from '../models/GroupUpdate';
+import {
+    type HTTPValidationError,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+} from '../models/HTTPValidationError';
+import {
+    type MembershipInfo,
     MembershipInfoFromJSON,
     MembershipInfoToJSON,
+} from '../models/MembershipInfo';
+import {
+    type MyProfileUpdate,
     MyProfileUpdateFromJSON,
     MyProfileUpdateToJSON,
+} from '../models/MyProfileUpdate';
+import {
+    type MyStats,
     MyStatsFromJSON,
     MyStatsToJSON,
+} from '../models/MyStats';
+import {
+    type Profile,
     ProfileFromJSON,
     ProfileToJSON,
+} from '../models/Profile';
+import {
+    type ProfileCreate,
     ProfileCreateFromJSON,
     ProfileCreateToJSON,
+} from '../models/ProfileCreate';
+import {
+    type ProfileUpdate,
     ProfileUpdateFromJSON,
     ProfileUpdateToJSON,
+} from '../models/ProfileUpdate';
+import {
+    type Role,
     RoleFromJSON,
     RoleToJSON,
+} from '../models/Role';
+import {
+    type UserRankings,
     UserRankingsFromJSON,
     UserRankingsToJSON,
-} from '../models/index';
+} from '../models/UserRankings';
 
 export interface CreateGroupApiV1GroupsPostRequest {
+    /**
+     * 
+     */
     groupCreate: GroupCreate;
 }
 
 export interface CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest {
+    /**
+     * 
+     */
     apiKeyCreate: ApiKeyCreate;
 }
 
 export interface CreateProfileApiV1ProfilesPostRequest {
+    /**
+     * 
+     */
     profileCreate: ProfileCreate;
 }
 
 export interface DeleteProfileApiV1ProfilesProfileIdDeleteRequest {
+    /**
+     * 
+     */
     profileId: string;
 }
 
 export interface GetGroupApiV1GroupsGroupIdGetRequest {
+    /**
+     * 
+     */
     groupId: number;
 }
 
 export interface GetProfileApiV1ProfilesProfileIdGetRequest {
+    /**
+     * 
+     */
     profileId: string;
 }
 
 export interface GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest {
+    /**
+     * 
+     */
     profileId: string;
 }
 
 export interface RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest {
+    /**
+     * 
+     */
     keyHash: string;
 }
 
 export interface UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest {
+    /**
+     * 
+     */
     profileId: string;
+    /**
+     * 
+     */
     token: string;
 }
 
 export interface UpdateGroupApiV1GroupsGroupIdPutRequest {
+    /**
+     * 
+     */
     groupId: number;
+    /**
+     * 
+     */
     groupUpdate: GroupUpdate;
 }
 
 export interface UpdateMyProfileApiV1ProfilesMePutRequest {
+    /**
+     * 
+     */
     myProfileUpdate: MyProfileUpdate;
 }
 
 export interface UpdateProfileApiV1ProfilesProfileIdPutRequest {
+    /**
+     * 
+     */
     profileId: string;
+    /**
+     * 
+     */
     profileUpdate: ProfileUpdate;
 }
 
@@ -127,9 +201,9 @@ export interface UpdateProfileApiV1ProfilesProfileIdPutRequest {
 export class ProfilesApi extends runtime.BaseAPI {
 
     /**
-     * Create Group
+     * Creates request options for createGroupApiV1GroupsPost without sending the request
      */
-    async createGroupApiV1GroupsPostRaw(requestParameters: CreateGroupApiV1GroupsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+    async createGroupApiV1GroupsPostRequestOpts(requestParameters: CreateGroupApiV1GroupsPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['groupCreate'] == null) {
             throw new runtime.RequiredError(
                 'groupCreate',
@@ -151,13 +225,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/groups/`,
+
+        let urlPath = `/api/v1/groups/`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: GroupCreateToJSON(requestParameters['groupCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create Group
+     */
+    async createGroupApiV1GroupsPostRaw(requestParameters: CreateGroupApiV1GroupsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+        const requestOptions = await this.createGroupApiV1GroupsPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => GroupFromJSON(jsonValue));
     }
@@ -171,10 +256,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Mint a new API key for the current member.  The raw secret is returned exactly once, in this response; only its hash is stored, so it can never be retrieved again. Every requested permission must be one the member actually holds -- a key can never widen its owner\'s rights.
-     * Create My Api Key
+     * Creates request options for createMyApiKeyApiV1ProfilesMeApiKeysPost without sending the request
      */
-    async createMyApiKeyApiV1ProfilesMeApiKeysPostRaw(requestParameters: CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiKeyCreated>> {
+    async createMyApiKeyApiV1ProfilesMeApiKeysPostRequestOpts(requestParameters: CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['apiKeyCreate'] == null) {
             throw new runtime.RequiredError(
                 'apiKeyCreate',
@@ -196,13 +280,25 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me/api-keys`,
+
+        let urlPath = `/api/v1/profiles/me/api-keys`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: ApiKeyCreateToJSON(requestParameters['apiKeyCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Mint a new API key for the current member.  The raw secret is returned exactly once, in this response; only its hash is stored, so it can never be retrieved again. Every requested permission must be one the member actually holds -- a key can never widen its owner\'s rights.
+     * Create My Api Key
+     */
+    async createMyApiKeyApiV1ProfilesMeApiKeysPostRaw(requestParameters: CreateMyApiKeyApiV1ProfilesMeApiKeysPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiKeyCreated>> {
+        const requestOptions = await this.createMyApiKeyApiV1ProfilesMeApiKeysPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ApiKeyCreatedFromJSON(jsonValue));
     }
@@ -217,9 +313,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Create Profile
+     * Creates request options for createProfileApiV1ProfilesPost without sending the request
      */
-    async createProfileApiV1ProfilesPostRaw(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+    async createProfileApiV1ProfilesPostRequestOpts(requestParameters: CreateProfileApiV1ProfilesPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['profileCreate'] == null) {
             throw new runtime.RequiredError(
                 'profileCreate',
@@ -241,13 +337,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/`,
+
+        let urlPath = `/api/v1/profiles/`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: ProfileCreateToJSON(requestParameters['profileCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create Profile
+     */
+    async createProfileApiV1ProfilesPostRaw(requestParameters: CreateProfileApiV1ProfilesPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+        const requestOptions = await this.createProfileApiV1ProfilesPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
     }
@@ -261,9 +368,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Delete Profile
+     * Creates request options for deleteProfileApiV1ProfilesProfileIdDelete without sending the request
      */
-    async deleteProfileApiV1ProfilesProfileIdDeleteRaw(requestParameters: DeleteProfileApiV1ProfilesProfileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async deleteProfileApiV1ProfilesProfileIdDeleteRequestOpts(requestParameters: DeleteProfileApiV1ProfilesProfileIdDeleteRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['profileId'] == null) {
             throw new runtime.RequiredError(
                 'profileId',
@@ -283,12 +390,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/{profile_id}`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+
+        let urlPath = `/api/v1/profiles/{profile_id}`;
+        urlPath = urlPath.replace('{profile_id}', encodeURIComponent(String(requestParameters['profileId'])));
+
+        return {
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Delete Profile
+     */
+    async deleteProfileApiV1ProfilesProfileIdDeleteRaw(requestParameters: DeleteProfileApiV1ProfilesProfileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.deleteProfileApiV1ProfilesProfileIdDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -301,9 +420,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get Global Stats
+     * Creates request options for getGlobalStatsApiV1StatsGet without sending the request
      */
-    async getGlobalStatsApiV1StatsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GlobalStats>> {
+    async getGlobalStatsApiV1StatsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -316,12 +435,23 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/stats/`,
+
+        let urlPath = `/api/v1/stats/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get Global Stats
+     */
+    async getGlobalStatsApiV1StatsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GlobalStats>> {
+        const requestOptions = await this.getGlobalStatsApiV1StatsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => GlobalStatsFromJSON(jsonValue));
     }
@@ -335,9 +465,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get Group
+     * Creates request options for getGroupApiV1GroupsGroupIdGet without sending the request
      */
-    async getGroupApiV1GroupsGroupIdGetRaw(requestParameters: GetGroupApiV1GroupsGroupIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+    async getGroupApiV1GroupsGroupIdGetRequestOpts(requestParameters: GetGroupApiV1GroupsGroupIdGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['groupId'] == null) {
             throw new runtime.RequiredError(
                 'groupId',
@@ -357,12 +487,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/groups/{group_id}`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters['groupId']))),
+
+        let urlPath = `/api/v1/groups/{group_id}`;
+        urlPath = urlPath.replace('{group_id}', encodeURIComponent(String(requestParameters['groupId'])));
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get Group
+     */
+    async getGroupApiV1GroupsGroupIdGetRaw(requestParameters: GetGroupApiV1GroupsGroupIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+        const requestOptions = await this.getGroupApiV1GroupsGroupIdGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => GroupFromJSON(jsonValue));
     }
@@ -376,10 +518,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Return the current user\'s membership status and history.
-     * Get My Membership
+     * Creates request options for getMyMembershipApiV1ProfilesMeMembershipGet without sending the request
      */
-    async getMyMembershipApiV1ProfilesMeMembershipGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MembershipInfo>> {
+    async getMyMembershipApiV1ProfilesMeMembershipGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -392,12 +533,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me/membership`,
+
+        let urlPath = `/api/v1/profiles/me/membership`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Return the current user\'s membership status and history.
+     * Get My Membership
+     */
+    async getMyMembershipApiV1ProfilesMeMembershipGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MembershipInfo>> {
+        const requestOptions = await this.getMyMembershipApiV1ProfilesMeMembershipGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => MembershipInfoFromJSON(jsonValue));
     }
@@ -412,10 +565,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns all \'action:resource\' permission strings for the current user.
-     * Get My Permissions
+     * Creates request options for getMyPermissionsApiV1ProfilesMePermissionsGet without sending the request
      */
-    async getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
+    async getMyPermissionsApiV1ProfilesMePermissionsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -428,12 +580,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me/permissions`,
+
+        let urlPath = `/api/v1/profiles/me/permissions`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Returns all \'action:resource\' permission strings for the current user.
+     * Get My Permissions
+     */
+    async getMyPermissionsApiV1ProfilesMePermissionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
+        const requestOptions = await this.getMyPermissionsApiV1ProfilesMePermissionsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse<any>(response);
     }
@@ -448,9 +612,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get My Profile
+     * Creates request options for getMyProfileApiV1ProfilesMeGet without sending the request
      */
-    async getMyProfileApiV1ProfilesMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+    async getMyProfileApiV1ProfilesMeGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -463,12 +627,23 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me`,
+
+        let urlPath = `/api/v1/profiles/me`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get My Profile
+     */
+    async getMyProfileApiV1ProfilesMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+        const requestOptions = await this.getMyProfileApiV1ProfilesMeGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
     }
@@ -482,9 +657,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get My Roles
+     * Creates request options for getMyRolesApiV1ProfilesMeRolesGet without sending the request
      */
-    async getMyRolesApiV1ProfilesMeRolesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
+    async getMyRolesApiV1ProfilesMeRolesGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -497,12 +672,23 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me/roles`,
+
+        let urlPath = `/api/v1/profiles/me/roles`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get My Roles
+     */
+    async getMyRolesApiV1ProfilesMeRolesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string | null>>> {
+        const requestOptions = await this.getMyRolesApiV1ProfilesMeRolesGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse<any>(response);
     }
@@ -516,9 +702,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get My Stats
+     * Creates request options for getMyStatsApiV1StatsMeGet without sending the request
      */
-    async getMyStatsApiV1StatsMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MyStats>> {
+    async getMyStatsApiV1StatsMeGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -531,12 +717,23 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/stats/me`,
+
+        let urlPath = `/api/v1/stats/me`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get My Stats
+     */
+    async getMyStatsApiV1StatsMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MyStats>> {
+        const requestOptions = await this.getMyStatsApiV1StatsMeGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => MyStatsFromJSON(jsonValue));
     }
@@ -550,9 +747,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get Profile
+     * Creates request options for getProfileApiV1ProfilesProfileIdGet without sending the request
      */
-    async getProfileApiV1ProfilesProfileIdGetRaw(requestParameters: GetProfileApiV1ProfilesProfileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+    async getProfileApiV1ProfilesProfileIdGetRequestOpts(requestParameters: GetProfileApiV1ProfilesProfileIdGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['profileId'] == null) {
             throw new runtime.RequiredError(
                 'profileId',
@@ -572,12 +769,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/{profile_id}`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+
+        let urlPath = `/api/v1/profiles/{profile_id}`;
+        urlPath = urlPath.replace('{profile_id}', encodeURIComponent(String(requestParameters['profileId'])));
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get Profile
+     */
+    async getProfileApiV1ProfilesProfileIdGetRaw(requestParameters: GetProfileApiV1ProfilesProfileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+        const requestOptions = await this.getProfileApiV1ProfilesProfileIdGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
     }
@@ -591,10 +800,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Return a member\'s membership status and history (staff/admin only).
-     * Get Profile Membership
+     * Creates request options for getProfileMembershipApiV1ProfilesProfileIdMembershipGet without sending the request
      */
-    async getProfileMembershipApiV1ProfilesProfileIdMembershipGetRaw(requestParameters: GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MembershipInfo>> {
+    async getProfileMembershipApiV1ProfilesProfileIdMembershipGetRequestOpts(requestParameters: GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['profileId'] == null) {
             throw new runtime.RequiredError(
                 'profileId',
@@ -614,12 +822,25 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/{profile_id}/membership`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+
+        let urlPath = `/api/v1/profiles/{profile_id}/membership`;
+        urlPath = urlPath.replace('{profile_id}', encodeURIComponent(String(requestParameters['profileId'])));
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Return a member\'s membership status and history (staff/admin only).
+     * Get Profile Membership
+     */
+    async getProfileMembershipApiV1ProfilesProfileIdMembershipGetRaw(requestParameters: GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MembershipInfo>> {
+        const requestOptions = await this.getProfileMembershipApiV1ProfilesProfileIdMembershipGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => MembershipInfoFromJSON(jsonValue));
     }
@@ -634,10 +855,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Rank active members by how they engage with events, per season.  For each season (plus an all-time window) members are ranked on three metrics, in order of the values we want to encourage:  * **Reactivity** — median delay between an event being published and the   member answering it (yes or no). Answering quickly lets the bagad commit   to organisers, so this is the primary metric. * **Response rate** — share of the season\'s answerable events the member   responded to. Per-season only (a cross-season rate is meaningless), so   it is omitted from the all-time window. * **Positive responses** — absolute count of \"yes\" answers, i.e. turnouts.   Secondary, but tracked because outings keep the group alive.  Only members with at least :data:`MIN_POSITIVE_RESPONSES` positive responses all-time appear, to avoid ranking one-off participants.
-     * Get User Rankings
+     * Creates request options for getUserRankingsApiV1StatsRankingsGet without sending the request
      */
-    async getUserRankingsApiV1StatsRankingsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserRankings>> {
+    async getUserRankingsApiV1StatsRankingsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -650,12 +870,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/stats/rankings`,
+
+        let urlPath = `/api/v1/stats/rankings`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Rank active members by how they engage with events, per season.  For each season (plus an all-time window) members are ranked on three metrics, in order of the values we want to encourage:  * **Reactivity** — median delay between an event being published and the   member answering it (yes or no). Answering quickly lets the bagad commit   to organisers, so this is the primary metric. * **Response rate** — share of the season\'s answerable events the member   responded to. Per-season only (a cross-season rate is meaningless), so   it is omitted from the all-time window. * **Positive responses** — absolute count of \"yes\" answers, i.e. turnouts.   Secondary, but tracked because outings keep the group alive.  Only members with at least :data:`MIN_POSITIVE_RESPONSES` positive responses all-time appear, to avoid ranking one-off participants.
+     * Get User Rankings
+     */
+    async getUserRankingsApiV1StatsRankingsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserRankings>> {
+        const requestOptions = await this.getUserRankingsApiV1StatsRankingsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => UserRankingsFromJSON(jsonValue));
     }
@@ -670,9 +902,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * List Groups
+     * Creates request options for listGroupsApiV1GroupsGet without sending the request
      */
-    async listGroupsApiV1GroupsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Group>>> {
+    async listGroupsApiV1GroupsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -685,12 +917,23 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/groups/`,
+
+        let urlPath = `/api/v1/groups/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List Groups
+     */
+    async listGroupsApiV1GroupsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Group>>> {
+        const requestOptions = await this.listGroupsApiV1GroupsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(GroupFromJSON));
     }
@@ -704,10 +947,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * List the current member\'s API keys (never exposes the raw secret).
-     * List My Api Keys
+     * Creates request options for listMyApiKeysApiV1ProfilesMeApiKeysGet without sending the request
      */
-    async listMyApiKeysApiV1ProfilesMeApiKeysGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ApiKey>>> {
+    async listMyApiKeysApiV1ProfilesMeApiKeysGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -720,12 +962,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me/api-keys`,
+
+        let urlPath = `/api/v1/profiles/me/api-keys`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List the current member\'s API keys (never exposes the raw secret).
+     * List My Api Keys
+     */
+    async listMyApiKeysApiV1ProfilesMeApiKeysGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ApiKey>>> {
+        const requestOptions = await this.listMyApiKeysApiV1ProfilesMeApiKeysGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ApiKeyFromJSON));
     }
@@ -740,9 +994,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * List Profiles
+     * Creates request options for listProfilesApiV1ProfilesGet without sending the request
      */
-    async listProfilesApiV1ProfilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
+    async listProfilesApiV1ProfilesGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -755,12 +1009,23 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/`,
+
+        let urlPath = `/api/v1/profiles/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List Profiles
+     */
+    async listProfilesApiV1ProfilesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Profile>>> {
+        const requestOptions = await this.listProfilesApiV1ProfilesGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProfileFromJSON));
     }
@@ -774,9 +1039,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * List Roles
+     * Creates request options for listRolesApiV1RolesGet without sending the request
      */
-    async listRolesApiV1RolesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Role>>> {
+    async listRolesApiV1RolesGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -789,12 +1054,23 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/roles/`,
+
+        let urlPath = `/api/v1/roles/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List Roles
+     */
+    async listRolesApiV1RolesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Role>>> {
+        const requestOptions = await this.listRolesApiV1RolesGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(RoleFromJSON));
     }
@@ -808,10 +1084,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Revoke one of the current member\'s API keys.
-     * Revoke My Api Key
+     * Creates request options for revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDelete without sending the request
      */
-    async revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRaw(requestParameters: RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequestOpts(requestParameters: RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['keyHash'] == null) {
             throw new runtime.RequiredError(
                 'keyHash',
@@ -831,12 +1106,25 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me/api-keys/{key_hash}`.replace(`{${"key_hash"}}`, encodeURIComponent(String(requestParameters['keyHash']))),
+
+        let urlPath = `/api/v1/profiles/me/api-keys/{key_hash}`;
+        urlPath = urlPath.replace('{key_hash}', encodeURIComponent(String(requestParameters['keyHash'])));
+
+        return {
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Revoke one of the current member\'s API keys.
+     * Revoke My Api Key
+     */
+    async revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRaw(requestParameters: RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -850,9 +1138,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Unsubscribe
+     * Creates request options for unsubscribeApiV1ProfilesProfileIdUnsubscribePost without sending the request
      */
-    async unsubscribeApiV1ProfilesProfileIdUnsubscribePostRaw(requestParameters: UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async unsubscribeApiV1ProfilesProfileIdUnsubscribePostRequestOpts(requestParameters: UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['profileId'] == null) {
             throw new runtime.RequiredError(
                 'profileId',
@@ -875,12 +1163,24 @@ export class ProfilesApi extends runtime.BaseAPI {
             headerParameters['token'] = String(requestParameters['token']);
         }
 
-        const response = await this.request({
-            path: `/api/v1/profiles/{profile_id}/unsubscribe`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+
+        let urlPath = `/api/v1/profiles/{profile_id}/unsubscribe`;
+        urlPath = urlPath.replace('{profile_id}', encodeURIComponent(String(requestParameters['profileId'])));
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Unsubscribe
+     */
+    async unsubscribeApiV1ProfilesProfileIdUnsubscribePostRaw(requestParameters: UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.unsubscribeApiV1ProfilesProfileIdUnsubscribePostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<any>(response);
@@ -898,9 +1198,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update Group
+     * Creates request options for updateGroupApiV1GroupsGroupIdPut without sending the request
      */
-    async updateGroupApiV1GroupsGroupIdPutRaw(requestParameters: UpdateGroupApiV1GroupsGroupIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+    async updateGroupApiV1GroupsGroupIdPutRequestOpts(requestParameters: UpdateGroupApiV1GroupsGroupIdPutRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['groupId'] == null) {
             throw new runtime.RequiredError(
                 'groupId',
@@ -929,13 +1229,25 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/groups/{group_id}`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters['groupId']))),
+
+        let urlPath = `/api/v1/groups/{group_id}`;
+        urlPath = urlPath.replace('{group_id}', encodeURIComponent(String(requestParameters['groupId'])));
+
+        return {
+            path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: GroupUpdateToJSON(requestParameters['groupUpdate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Update Group
+     */
+    async updateGroupApiV1GroupsGroupIdPutRaw(requestParameters: UpdateGroupApiV1GroupsGroupIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Group>> {
+        const requestOptions = await this.updateGroupApiV1GroupsGroupIdPutRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => GroupFromJSON(jsonValue));
     }
@@ -949,9 +1261,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update My Profile
+     * Creates request options for updateMyProfileApiV1ProfilesMePut without sending the request
      */
-    async updateMyProfileApiV1ProfilesMePutRaw(requestParameters: UpdateMyProfileApiV1ProfilesMePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+    async updateMyProfileApiV1ProfilesMePutRequestOpts(requestParameters: UpdateMyProfileApiV1ProfilesMePutRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['myProfileUpdate'] == null) {
             throw new runtime.RequiredError(
                 'myProfileUpdate',
@@ -973,13 +1285,24 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me`,
+
+        let urlPath = `/api/v1/profiles/me`;
+
+        return {
+            path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: MyProfileUpdateToJSON(requestParameters['myProfileUpdate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Update My Profile
+     */
+    async updateMyProfileApiV1ProfilesMePutRaw(requestParameters: UpdateMyProfileApiV1ProfilesMePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+        const requestOptions = await this.updateMyProfileApiV1ProfilesMePutRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
     }
@@ -993,9 +1316,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update Profile
+     * Creates request options for updateProfileApiV1ProfilesProfileIdPut without sending the request
      */
-    async updateProfileApiV1ProfilesProfileIdPutRaw(requestParameters: UpdateProfileApiV1ProfilesProfileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+    async updateProfileApiV1ProfilesProfileIdPutRequestOpts(requestParameters: UpdateProfileApiV1ProfilesProfileIdPutRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['profileId'] == null) {
             throw new runtime.RequiredError(
                 'profileId',
@@ -1024,13 +1347,25 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/{profile_id}`.replace(`{${"profile_id"}}`, encodeURIComponent(String(requestParameters['profileId']))),
+
+        let urlPath = `/api/v1/profiles/{profile_id}`;
+        urlPath = urlPath.replace('{profile_id}', encodeURIComponent(String(requestParameters['profileId'])));
+
+        return {
+            path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: ProfileUpdateToJSON(requestParameters['profileUpdate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Update Profile
+     */
+    async updateProfileApiV1ProfilesProfileIdPutRaw(requestParameters: UpdateProfileApiV1ProfilesProfileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Profile>> {
+        const requestOptions = await this.updateProfileApiV1ProfilesProfileIdPutRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ProfileFromJSON(jsonValue));
     }
@@ -1044,9 +1379,9 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Upload Avatar
+     * Creates request options for uploadAvatarApiV1ProfilesMeAvatarPost without sending the request
      */
-    async uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetUploadUrlResponse>> {
+    async uploadAvatarApiV1ProfilesMeAvatarPostRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -1059,12 +1394,23 @@ export class ProfilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/profiles/me/avatar`,
+
+        let urlPath = `/api/v1/profiles/me/avatar`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Upload Avatar
+     */
+    async uploadAvatarApiV1ProfilesMeAvatarPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetUploadUrlResponse>> {
+        const requestOptions = await this.uploadAvatarApiV1ProfilesMeAvatarPostRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => GetUploadUrlResponseFromJSON(jsonValue));
     }

@@ -12,49 +12,76 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  HTTPValidationError,
-  InvitationAccept,
-  InvitationCreate,
-  InvitationCreated,
-  InvitationInfo,
-  OtpRequest,
-  Token,
-} from '../models/index';
 import {
+    type HTTPValidationError,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+} from '../models/HTTPValidationError';
+import {
+    type InvitationAccept,
     InvitationAcceptFromJSON,
     InvitationAcceptToJSON,
+} from '../models/InvitationAccept';
+import {
+    type InvitationCreate,
     InvitationCreateFromJSON,
     InvitationCreateToJSON,
+} from '../models/InvitationCreate';
+import {
+    type InvitationCreated,
     InvitationCreatedFromJSON,
     InvitationCreatedToJSON,
+} from '../models/InvitationCreated';
+import {
+    type InvitationInfo,
     InvitationInfoFromJSON,
     InvitationInfoToJSON,
+} from '../models/InvitationInfo';
+import {
+    type OtpRequest,
     OtpRequestFromJSON,
     OtpRequestToJSON,
+} from '../models/OtpRequest';
+import {
+    type Token,
     TokenFromJSON,
     TokenToJSON,
-} from '../models/index';
+} from '../models/Token';
 
 export interface AcceptInvitationApiV1InvitationsTokenAcceptPostRequest {
+    /**
+     * 
+     */
     token: string;
+    /**
+     * 
+     */
     invitationAccept: InvitationAccept;
 }
 
 export interface CreateInvitationApiV1InvitationsPostRequest {
+    /**
+     * 
+     */
     invitationCreate: InvitationCreate;
 }
 
 export interface GetInvitationApiV1InvitationsTokenGetRequest {
+    /**
+     * 
+     */
     token: string;
 }
 
 export interface RequestOtpApiV1InvitationsTokenOtpPostRequest {
+    /**
+     * 
+     */
     token: string;
+    /**
+     * 
+     */
     otpRequest: OtpRequest;
 }
 
@@ -64,10 +91,9 @@ export interface RequestOtpApiV1InvitationsTokenOtpPostRequest {
 export class InvitationsApi extends runtime.BaseAPI {
 
     /**
-     * Public: create the member account from the invitation and sign them in.  OTP is required unless the invitation email was backend-proven and the submitted email is unchanged. The account gets its instrument plus the default groups only (never a privileged role). On success the new member is signed in as an *additive* multi-account session (no other account is logged out) and becomes the active account - no password is set and no email is sent, the account is passkey-first.
-     * Accept Invitation
+     * Creates request options for acceptInvitationApiV1InvitationsTokenAcceptPost without sending the request
      */
-    async acceptInvitationApiV1InvitationsTokenAcceptPostRaw(requestParameters: AcceptInvitationApiV1InvitationsTokenAcceptPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
+    async acceptInvitationApiV1InvitationsTokenAcceptPostRequestOpts(requestParameters: AcceptInvitationApiV1InvitationsTokenAcceptPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['token'] == null) {
             throw new runtime.RequiredError(
                 'token',
@@ -88,13 +114,26 @@ export class InvitationsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/api/v1/invitations/{token}/accept`.replace(`{${"token"}}`, encodeURIComponent(String(requestParameters['token']))),
+
+        let urlPath = `/api/v1/invitations/{token}/accept`;
+        urlPath = urlPath.replace('{token}', encodeURIComponent(String(requestParameters['token'])));
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: InvitationAcceptToJSON(requestParameters['invitationAccept']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Public: create the member account from the invitation and sign them in.  OTP is required unless the invitation email was backend-proven and the submitted email is unchanged. The account gets its instrument plus the default groups only (never a privileged role). On success the new member is signed in as an *additive* multi-account session (no other account is logged out) and becomes the active account - no password is set and no email is sent, the account is passkey-first.
+     * Accept Invitation
+     */
+    async acceptInvitationApiV1InvitationsTokenAcceptPostRaw(requestParameters: AcceptInvitationApiV1InvitationsTokenAcceptPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
+        const requestOptions = await this.acceptInvitationApiV1InvitationsTokenAcceptPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TokenFromJSON(jsonValue));
     }
@@ -109,10 +148,9 @@ export class InvitationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Generate an invitation and (for the email channel) send it.
-     * Create Invitation
+     * Creates request options for createInvitationApiV1InvitationsPost without sending the request
      */
-    async createInvitationApiV1InvitationsPostRaw(requestParameters: CreateInvitationApiV1InvitationsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvitationCreated>> {
+    async createInvitationApiV1InvitationsPostRequestOpts(requestParameters: CreateInvitationApiV1InvitationsPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['invitationCreate'] == null) {
             throw new runtime.RequiredError(
                 'invitationCreate',
@@ -134,13 +172,25 @@ export class InvitationsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/invitations`,
+
+        let urlPath = `/api/v1/invitations`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: InvitationCreateToJSON(requestParameters['invitationCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Generate an invitation and (for the email channel) send it.
+     * Create Invitation
+     */
+    async createInvitationApiV1InvitationsPostRaw(requestParameters: CreateInvitationApiV1InvitationsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvitationCreated>> {
+        const requestOptions = await this.createInvitationApiV1InvitationsPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => InvitationCreatedFromJSON(jsonValue));
     }
@@ -155,10 +205,9 @@ export class InvitationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Public: return prefill data for the signup form (does not consume).
-     * Get Invitation
+     * Creates request options for getInvitationApiV1InvitationsTokenGet without sending the request
      */
-    async getInvitationApiV1InvitationsTokenGetRaw(requestParameters: GetInvitationApiV1InvitationsTokenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvitationInfo>> {
+    async getInvitationApiV1InvitationsTokenGetRequestOpts(requestParameters: GetInvitationApiV1InvitationsTokenGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['token'] == null) {
             throw new runtime.RequiredError(
                 'token',
@@ -170,12 +219,25 @@ export class InvitationsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/api/v1/invitations/{token}`.replace(`{${"token"}}`, encodeURIComponent(String(requestParameters['token']))),
+
+        let urlPath = `/api/v1/invitations/{token}`;
+        urlPath = urlPath.replace('{token}', encodeURIComponent(String(requestParameters['token'])));
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Public: return prefill data for the signup form (does not consume).
+     * Get Invitation
+     */
+    async getInvitationApiV1InvitationsTokenGetRaw(requestParameters: GetInvitationApiV1InvitationsTokenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvitationInfo>> {
+        const requestOptions = await this.getInvitationApiV1InvitationsTokenGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => InvitationInfoFromJSON(jsonValue));
     }
@@ -190,10 +252,9 @@ export class InvitationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Public: send a one-time code to the address the invitee entered.  A fresh code supersedes any previous one for this invitation, so only the latest is valid.
-     * Request Otp
+     * Creates request options for requestOtpApiV1InvitationsTokenOtpPost without sending the request
      */
-    async requestOtpApiV1InvitationsTokenOtpPostRaw(requestParameters: RequestOtpApiV1InvitationsTokenOtpPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async requestOtpApiV1InvitationsTokenOtpPostRequestOpts(requestParameters: RequestOtpApiV1InvitationsTokenOtpPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['token'] == null) {
             throw new runtime.RequiredError(
                 'token',
@@ -214,13 +275,26 @@ export class InvitationsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/api/v1/invitations/{token}/otp`.replace(`{${"token"}}`, encodeURIComponent(String(requestParameters['token']))),
+
+        let urlPath = `/api/v1/invitations/{token}/otp`;
+        urlPath = urlPath.replace('{token}', encodeURIComponent(String(requestParameters['token'])));
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: OtpRequestToJSON(requestParameters['otpRequest']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Public: send a one-time code to the address the invitee entered.  A fresh code supersedes any previous one for this invitation, so only the latest is valid.
+     * Request Otp
+     */
+    async requestOtpApiV1InvitationsTokenOtpPostRaw(requestParameters: RequestOtpApiV1InvitationsTokenOtpPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.requestOtpApiV1InvitationsTokenOtpPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }

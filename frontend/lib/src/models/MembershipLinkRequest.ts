@@ -21,8 +21,6 @@ import { mapValues } from '../runtime';
 export interface MembershipLinkRequest {
     /**
      * 
-     * @type {string}
-     * @memberof MembershipLinkRequest
      */
     userId: string;
 }
@@ -31,7 +29,7 @@ export interface MembershipLinkRequest {
  * Check if a given object implements the MembershipLinkRequest interface.
  */
 export function instanceOfMembershipLinkRequest(value: object): value is MembershipLinkRequest {
-    if (!('userId' in value) || value['userId'] === undefined) return false;
+    if ((!('userId' in (value as Record<string, any>)) && !('user_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['userId'] === undefined && (value as Record<string, any>)['user_id'] === undefined)) return false;
     return true;
 }
 

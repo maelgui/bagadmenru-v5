@@ -36,14 +36,10 @@ import {
 export interface UserRankingItem {
     /**
      * 
-     * @type {Profile}
-     * @memberof UserRankingItem
      */
     user: Profile;
     /**
      * 
-     * @type {RankingInfo}
-     * @memberof UserRankingItem
      */
     ranks: RankingInfo;
 }

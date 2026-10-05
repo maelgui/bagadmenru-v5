@@ -35,20 +35,14 @@ import {
 export interface InvitationCreate {
     /**
      * 
-     * @type {InvitationChannel}
-     * @memberof InvitationCreate
      */
     channel?: InvitationChannel;
     /**
      * 
-     * @type {string}
-     * @memberof InvitationCreate
      */
     email?: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof InvitationCreate
      */
     firstName?: string | null;
 }
@@ -73,8 +67,8 @@ export function InvitationCreateFromJSONTyped(json: any, ignoreDiscriminator: bo
     return {
         
         'channel': json['channel'] == null ? undefined : InvitationChannelFromJSON(json['channel']),
-        'email': json['email'] == null ? undefined : json['email'],
-        'firstName': json['first_name'] == null ? undefined : json['first_name'],
+        'email': json['email'] === undefined ? undefined : json['email'] === null ? null : json['email'],
+        'firstName': json['first_name'] === undefined ? undefined : json['first_name'] === null ? null : json['first_name'],
     };
 }
 

@@ -20,7 +20,7 @@
 export const Costume = {
     Polo: 'POLO',
     Costume: 'COSTUME',
-    None: 'NONE'
+    None: 'NONE',
 } as const;
 export type Costume = typeof Costume[keyof typeof Costume];
 

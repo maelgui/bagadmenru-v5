@@ -12,15 +12,12 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  InboxEmail,
-} from '../models/index';
 import {
+    type InboxEmail,
     InboxEmailFromJSON,
     InboxEmailToJSON,
-} from '../models/index';
+} from '../models/InboxEmail';
 
 /**
  * 
@@ -28,9 +25,9 @@ import {
 export class UtilsApi extends runtime.BaseAPI {
 
     /**
-     * Get Emails
+     * Creates request options for getEmailsApiV1UtilsEmailsGet without sending the request
      */
-    async getEmailsApiV1UtilsEmailsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<InboxEmail>>> {
+    async getEmailsApiV1UtilsEmailsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -43,12 +40,23 @@ export class UtilsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/utils/emails`,
+
+        let urlPath = `/api/v1/utils/emails`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get Emails
+     */
+    async getEmailsApiV1UtilsEmailsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<InboxEmail>>> {
+        const requestOptions = await this.getEmailsApiV1UtilsEmailsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(InboxEmailFromJSON));
     }

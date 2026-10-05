@@ -25,38 +25,26 @@ import { mapValues } from '../runtime';
 export interface RankingInfo {
     /**
      * 
-     * @type {string}
-     * @memberof RankingInfo
      */
     medianResponseTime: string | null;
     /**
      * 
-     * @type {number}
-     * @memberof RankingInfo
      */
     medianResponseTimeRank: number | null;
     /**
      * 
-     * @type {number}
-     * @memberof RankingInfo
      */
     responseRate: number | null;
     /**
      * 
-     * @type {number}
-     * @memberof RankingInfo
      */
     responseRateRank: number | null;
     /**
      * 
-     * @type {number}
-     * @memberof RankingInfo
      */
     nPositiveResponses: number;
     /**
      * 
-     * @type {number}
-     * @memberof RankingInfo
      */
     nPositiveResponsesRank: number;
 }
@@ -65,12 +53,12 @@ export interface RankingInfo {
  * Check if a given object implements the RankingInfo interface.
  */
 export function instanceOfRankingInfo(value: object): value is RankingInfo {
-    if (!('medianResponseTime' in value) || value['medianResponseTime'] === undefined) return false;
-    if (!('medianResponseTimeRank' in value) || value['medianResponseTimeRank'] === undefined) return false;
-    if (!('responseRate' in value) || value['responseRate'] === undefined) return false;
-    if (!('responseRateRank' in value) || value['responseRateRank'] === undefined) return false;
-    if (!('nPositiveResponses' in value) || value['nPositiveResponses'] === undefined) return false;
-    if (!('nPositiveResponsesRank' in value) || value['nPositiveResponsesRank'] === undefined) return false;
+    if ((!('medianResponseTime' in (value as Record<string, any>)) && !('median_response_time' in (value as Record<string, any>))) || ((value as Record<string, any>)['medianResponseTime'] === undefined && (value as Record<string, any>)['median_response_time'] === undefined)) return false;
+    if ((!('medianResponseTimeRank' in (value as Record<string, any>)) && !('median_response_time_rank' in (value as Record<string, any>))) || ((value as Record<string, any>)['medianResponseTimeRank'] === undefined && (value as Record<string, any>)['median_response_time_rank'] === undefined)) return false;
+    if ((!('responseRate' in (value as Record<string, any>)) && !('response_rate' in (value as Record<string, any>))) || ((value as Record<string, any>)['responseRate'] === undefined && (value as Record<string, any>)['response_rate'] === undefined)) return false;
+    if ((!('responseRateRank' in (value as Record<string, any>)) && !('response_rate_rank' in (value as Record<string, any>))) || ((value as Record<string, any>)['responseRateRank'] === undefined && (value as Record<string, any>)['response_rate_rank'] === undefined)) return false;
+    if ((!('nPositiveResponses' in (value as Record<string, any>)) && !('n_positive_responses' in (value as Record<string, any>))) || ((value as Record<string, any>)['nPositiveResponses'] === undefined && (value as Record<string, any>)['n_positive_responses'] === undefined)) return false;
+    if ((!('nPositiveResponsesRank' in (value as Record<string, any>)) && !('n_positive_responses_rank' in (value as Record<string, any>))) || ((value as Record<string, any>)['nPositiveResponsesRank'] === undefined && (value as Record<string, any>)['n_positive_responses_rank'] === undefined)) return false;
     return true;
 }
 

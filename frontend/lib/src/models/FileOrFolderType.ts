@@ -19,7 +19,7 @@
  */
 export const FileOrFolderType = {
     Dir: 'DIR',
-    File: 'FILE'
+    File: 'FILE',
 } as const;
 export type FileOrFolderType = typeof FileOrFolderType[keyof typeof FileOrFolderType];
 

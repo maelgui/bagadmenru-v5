@@ -12,62 +12,106 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  FileOrFolder,
-  FileOrFolderType,
-  FileOrFolderUpdate,
-  FolderCreate,
-  HTTPValidationError,
-} from '../models/index';
 import {
+    type FileOrFolder,
     FileOrFolderFromJSON,
     FileOrFolderToJSON,
+} from '../models/FileOrFolder';
+import {
+    type FileOrFolderType,
     FileOrFolderTypeFromJSON,
     FileOrFolderTypeToJSON,
+} from '../models/FileOrFolderType';
+import {
+    type FileOrFolderUpdate,
     FileOrFolderUpdateFromJSON,
     FileOrFolderUpdateToJSON,
+} from '../models/FileOrFolderUpdate';
+import {
+    type FolderCreate,
     FolderCreateFromJSON,
     FolderCreateToJSON,
+} from '../models/FolderCreate';
+import {
+    type HTTPValidationError,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
-} from '../models/index';
+} from '../models/HTTPValidationError';
 
 export interface CreateFolderApiV1FilesFolderIdPostRequest {
+    /**
+     * 
+     */
     folderId: number;
+    /**
+     * 
+     */
     folderCreate: FolderCreate;
 }
 
 export interface DeleteFileApiV1FilesFileIdDeleteRequest {
+    /**
+     * 
+     */
     fileId: number;
 }
 
 export interface GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest {
+    /**
+     * 
+     */
     fileId: number;
 }
 
 export interface GetFileApiV1FilesFileIdGetRequest {
+    /**
+     * 
+     */
     fileId: number;
 }
 
 export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
+    /**
+     * 
+     */
     folderId: number;
 }
 
 export interface ListFilesApiV1FilesGetRequest {
+    /**
+     * 
+     */
     t?: FileOrFolderType | null;
+    /**
+     * 
+     */
     limit?: number;
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
+    /**
+     * 
+     */
     fileId: number;
+    /**
+     * 
+     */
     fileOrFolderUpdate: FileOrFolderUpdate;
 }
 
 export interface UploadFileApiV1FilesFolderIdUploadPostRequest {
+    /**
+     * 
+     */
     folderId: number;
+    /**
+     * 
+     */
     file: Blob;
+    /**
+     * 
+     */
     force?: boolean;
 }
 
@@ -77,10 +121,9 @@ export interface UploadFileApiV1FilesFolderIdUploadPostRequest {
 export class FilesApi extends runtime.BaseAPI {
 
     /**
-     * Create a new folder.
-     * Create Folder
+     * Creates request options for createFolderApiV1FilesFolderIdPost without sending the request
      */
-    async createFolderApiV1FilesFolderIdPostRaw(requestParameters: CreateFolderApiV1FilesFolderIdPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async createFolderApiV1FilesFolderIdPostRequestOpts(requestParameters: CreateFolderApiV1FilesFolderIdPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['folderId'] == null) {
             throw new runtime.RequiredError(
                 'folderId',
@@ -109,13 +152,26 @@ export class FilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/files/{folder_id}`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters['folderId']))),
+
+        let urlPath = `/api/v1/files/{folder_id}`;
+        urlPath = urlPath.replace('{folder_id}', encodeURIComponent(String(requestParameters['folderId'])));
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: FolderCreateToJSON(requestParameters['folderCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create a new folder.
+     * Create Folder
+     */
+    async createFolderApiV1FilesFolderIdPostRaw(requestParameters: CreateFolderApiV1FilesFolderIdPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+        const requestOptions = await this.createFolderApiV1FilesFolderIdPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }
@@ -130,10 +186,9 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Delete an existing file or folder.
-     * Delete File
+     * Creates request options for deleteFileApiV1FilesFileIdDelete without sending the request
      */
-    async deleteFileApiV1FilesFileIdDeleteRaw(requestParameters: DeleteFileApiV1FilesFileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async deleteFileApiV1FilesFileIdDeleteRequestOpts(requestParameters: DeleteFileApiV1FilesFileIdDeleteRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['fileId'] == null) {
             throw new runtime.RequiredError(
                 'fileId',
@@ -153,12 +208,25 @@ export class FilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
+
+        let urlPath = `/api/v1/files/{file_id}`;
+        urlPath = urlPath.replace('{file_id}', encodeURIComponent(String(requestParameters['fileId'])));
+
+        return {
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Delete an existing file or folder.
+     * Delete File
+     */
+    async deleteFileApiV1FilesFileIdDeleteRaw(requestParameters: DeleteFileApiV1FilesFileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.deleteFileApiV1FilesFileIdDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -172,10 +240,9 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get breadcrumb for a file.
-     * Get Breadcrumb
+     * Creates request options for getBreadcrumbApiV1FilesFileIdBreadcrumbGet without sending the request
      */
-    async getBreadcrumbApiV1FilesFileIdBreadcrumbGetRaw(requestParameters: GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+    async getBreadcrumbApiV1FilesFileIdBreadcrumbGetRequestOpts(requestParameters: GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['fileId'] == null) {
             throw new runtime.RequiredError(
                 'fileId',
@@ -195,12 +262,25 @@ export class FilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/files/{file_id}/breadcrumb`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
+
+        let urlPath = `/api/v1/files/{file_id}/breadcrumb`;
+        urlPath = urlPath.replace('{file_id}', encodeURIComponent(String(requestParameters['fileId'])));
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get breadcrumb for a file.
+     * Get Breadcrumb
+     */
+    async getBreadcrumbApiV1FilesFileIdBreadcrumbGetRaw(requestParameters: GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+        const requestOptions = await this.getBreadcrumbApiV1FilesFileIdBreadcrumbGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(FileOrFolderFromJSON));
     }
@@ -215,10 +295,9 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get a file or folder by id.
-     * Get File
+     * Creates request options for getFileApiV1FilesFileIdGet without sending the request
      */
-    async getFileApiV1FilesFileIdGetRaw(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async getFileApiV1FilesFileIdGetRequestOpts(requestParameters: GetFileApiV1FilesFileIdGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['fileId'] == null) {
             throw new runtime.RequiredError(
                 'fileId',
@@ -238,12 +317,25 @@ export class FilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
+
+        let urlPath = `/api/v1/files/{file_id}`;
+        urlPath = urlPath.replace('{file_id}', encodeURIComponent(String(requestParameters['fileId'])));
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get a file or folder by id.
+     * Get File
+     */
+    async getFileApiV1FilesFileIdGetRaw(requestParameters: GetFileApiV1FilesFileIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+        const requestOptions = await this.getFileApiV1FilesFileIdGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }
@@ -258,10 +350,9 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get root folder entity.
-     * Get Root
+     * Creates request options for getRootApiV1FilesRootGet without sending the request
      */
-    async getRootApiV1FilesRootGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async getRootApiV1FilesRootGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -274,12 +365,24 @@ export class FilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/files/root`,
+
+        let urlPath = `/api/v1/files/root`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get root folder entity.
+     * Get Root
+     */
+    async getRootApiV1FilesRootGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+        const requestOptions = await this.getRootApiV1FilesRootGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }
@@ -294,10 +397,9 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get all chidren of a folder.
-     * List Children
+     * Creates request options for listChildrenApiV1FilesFolderIdChildrenGet without sending the request
      */
-    async listChildrenApiV1FilesFolderIdChildrenGetRaw(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+    async listChildrenApiV1FilesFolderIdChildrenGetRequestOpts(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['folderId'] == null) {
             throw new runtime.RequiredError(
                 'folderId',
@@ -317,12 +419,25 @@ export class FilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/files/{folder_id}/children`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters['folderId']))),
+
+        let urlPath = `/api/v1/files/{folder_id}/children`;
+        urlPath = urlPath.replace('{folder_id}', encodeURIComponent(String(requestParameters['folderId'])));
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get all chidren of a folder.
+     * List Children
+     */
+    async listChildrenApiV1FilesFolderIdChildrenGetRaw(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+        const requestOptions = await this.listChildrenApiV1FilesFolderIdChildrenGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(FileOrFolderFromJSON));
     }
@@ -337,10 +452,9 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * List recent files.
-     * List Files
+     * Creates request options for listFilesApiV1FilesGet without sending the request
      */
-    async listFilesApiV1FilesGetRaw(requestParameters: ListFilesApiV1FilesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+    async listFilesApiV1FilesGetRequestOpts(requestParameters: ListFilesApiV1FilesGetRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         if (requestParameters['t'] != null) {
@@ -361,12 +475,24 @@ export class FilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/files/`,
+
+        let urlPath = `/api/v1/files/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List recent files.
+     * List Files
+     */
+    async listFilesApiV1FilesGetRaw(requestParameters: ListFilesApiV1FilesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileOrFolder>>> {
+        const requestOptions = await this.listFilesApiV1FilesGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(FileOrFolderFromJSON));
     }
@@ -381,10 +507,9 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update an existing file or folder
-     * Update File
+     * Creates request options for updateFileApiV1FilesFileIdPut without sending the request
      */
-    async updateFileApiV1FilesFileIdPutRaw(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async updateFileApiV1FilesFileIdPutRequestOpts(requestParameters: UpdateFileApiV1FilesFileIdPutRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['fileId'] == null) {
             throw new runtime.RequiredError(
                 'fileId',
@@ -413,13 +538,26 @@ export class FilesApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
+
+        let urlPath = `/api/v1/files/{file_id}`;
+        urlPath = urlPath.replace('{file_id}', encodeURIComponent(String(requestParameters['fileId'])));
+
+        return {
+            path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: FileOrFolderUpdateToJSON(requestParameters['fileOrFolderUpdate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Update an existing file or folder
+     * Update File
+     */
+    async updateFileApiV1FilesFileIdPutRaw(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+        const requestOptions = await this.updateFileApiV1FilesFileIdPutRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }
@@ -434,10 +572,9 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Upload a file.
-     * Upload File
+     * Creates request options for uploadFileApiV1FilesFolderIdUploadPost without sending the request
      */
-    async uploadFileApiV1FilesFolderIdUploadPostRaw(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async uploadFileApiV1FilesFolderIdUploadPostRequestOpts(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['folderId'] == null) {
             throw new runtime.RequiredError(
                 'folderId',
@@ -475,7 +612,9 @@ export class FilesApi extends runtime.BaseAPI {
         const canConsumeForm = runtime.canConsumeForm(consumes);
 
         let formParams: { append(param: string, value: any): any };
-        let useForm = true;
+        let useForm = false;
+        // use FormData to transmit files using content-type "multipart/form-data"
+        useForm = canConsumeForm;
         if (useForm) {
             formParams = new FormData();
         } else {
@@ -486,13 +625,26 @@ export class FilesApi extends runtime.BaseAPI {
             formParams.append('file', requestParameters['file'] as any);
         }
 
-        const response = await this.request({
-            path: `/api/v1/files/{folder_id}/upload`.replace(`{${"folder_id"}}`, encodeURIComponent(String(requestParameters['folderId']))),
+
+        let urlPath = `/api/v1/files/{folder_id}/upload`;
+        urlPath = urlPath.replace('{folder_id}', encodeURIComponent(String(requestParameters['folderId'])));
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: formParams,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Upload a file.
+     * Upload File
+     */
+    async uploadFileApiV1FilesFolderIdUploadPostRaw(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+        const requestOptions = await this.uploadFileApiV1FilesFolderIdUploadPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
     }

@@ -21,8 +21,6 @@ import { mapValues } from '../runtime';
 export interface VersionResponse {
     /**
      * 
-     * @type {string}
-     * @memberof VersionResponse
      */
     version: string;
 }

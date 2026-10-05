@@ -36,26 +36,18 @@ import {
 export interface MembershipInfo {
     /**
      * 
-     * @type {MembershipStatus}
-     * @memberof MembershipInfo
      */
     status: MembershipStatus;
     /**
      * 
-     * @type {string}
-     * @memberof MembershipInfo
      */
     currentSeason: string;
     /**
      * 
-     * @type {string}
-     * @memberof MembershipInfo
      */
     activeSeason?: string | null;
     /**
      * 
-     * @type {Array<MembershipHistoryItem>}
-     * @memberof MembershipInfo
      */
     history: Array<MembershipHistoryItem>;
 }
@@ -67,7 +59,7 @@ export interface MembershipInfo {
  */
 export function instanceOfMembershipInfo(value: object): value is MembershipInfo {
     if (!('status' in value) || value['status'] === undefined) return false;
-    if (!('currentSeason' in value) || value['currentSeason'] === undefined) return false;
+    if ((!('currentSeason' in (value as Record<string, any>)) && !('current_season' in (value as Record<string, any>))) || ((value as Record<string, any>)['currentSeason'] === undefined && (value as Record<string, any>)['current_season'] === undefined)) return false;
     if (!('history' in value) || value['history'] === undefined) return false;
     return true;
 }
@@ -84,7 +76,7 @@ export function MembershipInfoFromJSONTyped(json: any, ignoreDiscriminator: bool
         
         'status': MembershipStatusFromJSON(json['status']),
         'currentSeason': json['current_season'],
-        'activeSeason': json['active_season'] == null ? undefined : json['active_season'],
+        'activeSeason': json['active_season'] === undefined ? undefined : json['active_season'] === null ? null : json['active_season'],
         'history': ((json['history'] as Array<any>).map(MembershipHistoryItemFromJSON)),
     };
 }

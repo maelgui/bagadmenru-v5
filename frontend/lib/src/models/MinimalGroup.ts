@@ -21,26 +21,18 @@ import { mapValues } from '../runtime';
 export interface MinimalGroup {
     /**
      * 
-     * @type {string}
-     * @memberof MinimalGroup
      */
     name: string;
     /**
      * 
-     * @type {string}
-     * @memberof MinimalGroup
      */
     color?: string;
     /**
      * 
-     * @type {number}
-     * @memberof MinimalGroup
      */
     id: number;
     /**
      * 
-     * @type {boolean}
-     * @memberof MinimalGroup
      */
     isInstrument?: boolean;
 }

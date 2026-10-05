@@ -21,8 +21,6 @@ import { mapValues } from '../runtime';
 export interface FolderCreate {
     /**
      * 
-     * @type {string}
-     * @memberof FolderCreate
      */
     name: string;
 }

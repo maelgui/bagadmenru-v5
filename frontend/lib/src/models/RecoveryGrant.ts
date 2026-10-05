@@ -27,8 +27,6 @@ import { mapValues } from '../runtime';
 export interface RecoveryGrant {
     /**
      * 
-     * @type {string}
-     * @memberof RecoveryGrant
      */
     grantId: string;
 }
@@ -37,7 +35,7 @@ export interface RecoveryGrant {
  * Check if a given object implements the RecoveryGrant interface.
  */
 export function instanceOfRecoveryGrant(value: object): value is RecoveryGrant {
-    if (!('grantId' in value) || value['grantId'] === undefined) return false;
+    if ((!('grantId' in (value as Record<string, any>)) && !('grant_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['grantId'] === undefined && (value as Record<string, any>)['grant_id'] === undefined)) return false;
     return true;
 }
 

@@ -19,7 +19,7 @@
  */
 export const LoginType = {
     Password: 'password',
-    Passkey: 'passkey'
+    Passkey: 'passkey',
 } as const;
 export type LoginType = typeof LoginType[keyof typeof LoginType];
 

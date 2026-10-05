@@ -21,50 +21,34 @@ import { mapValues } from '../runtime';
 export interface ProfileCreate {
     /**
      * 
-     * @type {string}
-     * @memberof ProfileCreate
      */
     firstName: string;
     /**
      * 
-     * @type {string}
-     * @memberof ProfileCreate
      */
     lastName: string;
     /**
      * 
-     * @type {string}
-     * @memberof ProfileCreate
      */
     pictureKey?: string | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof ProfileCreate
      */
     receivesEmails?: boolean;
     /**
      * 
-     * @type {boolean}
-     * @memberof ProfileCreate
      */
     receivesPush?: boolean;
     /**
      * 
-     * @type {number}
-     * @memberof ProfileCreate
      */
     instrumentId: number;
     /**
      * 
-     * @type {Array<number>}
-     * @memberof ProfileCreate
      */
     groupIds: Array<number>;
     /**
      * 
-     * @type {string}
-     * @memberof ProfileCreate
      */
     email: string;
 }
@@ -73,10 +57,10 @@ export interface ProfileCreate {
  * Check if a given object implements the ProfileCreate interface.
  */
 export function instanceOfProfileCreate(value: object): value is ProfileCreate {
-    if (!('firstName' in value) || value['firstName'] === undefined) return false;
-    if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
-    if (!('groupIds' in value) || value['groupIds'] === undefined) return false;
+    if ((!('firstName' in (value as Record<string, any>)) && !('first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['firstName'] === undefined && (value as Record<string, any>)['first_name'] === undefined)) return false;
+    if ((!('lastName' in (value as Record<string, any>)) && !('last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['lastName'] === undefined && (value as Record<string, any>)['last_name'] === undefined)) return false;
+    if ((!('instrumentId' in (value as Record<string, any>)) && !('instrument_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['instrumentId'] === undefined && (value as Record<string, any>)['instrument_id'] === undefined)) return false;
+    if ((!('groupIds' in (value as Record<string, any>)) && !('group_ids' in (value as Record<string, any>))) || ((value as Record<string, any>)['groupIds'] === undefined && (value as Record<string, any>)['group_ids'] === undefined)) return false;
     if (!('email' in value) || value['email'] === undefined) return false;
     return true;
 }
@@ -93,7 +77,7 @@ export function ProfileCreateFromJSONTyped(json: any, ignoreDiscriminator: boole
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
+        'pictureKey': json['picture_key'] === undefined ? undefined : json['picture_key'] === null ? null : json['picture_key'],
         'receivesEmails': json['receives_emails'] == null ? undefined : json['receives_emails'],
         'receivesPush': json['receives_push'] == null ? undefined : json['receives_push'],
         'instrumentId': json['instrument_id'],

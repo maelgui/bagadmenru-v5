@@ -21,26 +21,18 @@ import { mapValues } from '../runtime';
 export interface GlobalStats {
     /**
      * 
-     * @type {number}
-     * @memberof GlobalStats
      */
     nResponses: number;
     /**
      * 
-     * @type {number}
-     * @memberof GlobalStats
      */
     nEvents: number;
     /**
      * 
-     * @type {string}
-     * @memberof GlobalStats
      */
     avgResponseTime: string | null;
     /**
      * 
-     * @type {number}
-     * @memberof GlobalStats
      */
     nUpcomingEvent: number;
 }
@@ -49,10 +41,10 @@ export interface GlobalStats {
  * Check if a given object implements the GlobalStats interface.
  */
 export function instanceOfGlobalStats(value: object): value is GlobalStats {
-    if (!('nResponses' in value) || value['nResponses'] === undefined) return false;
-    if (!('nEvents' in value) || value['nEvents'] === undefined) return false;
-    if (!('avgResponseTime' in value) || value['avgResponseTime'] === undefined) return false;
-    if (!('nUpcomingEvent' in value) || value['nUpcomingEvent'] === undefined) return false;
+    if ((!('nResponses' in (value as Record<string, any>)) && !('n_responses' in (value as Record<string, any>))) || ((value as Record<string, any>)['nResponses'] === undefined && (value as Record<string, any>)['n_responses'] === undefined)) return false;
+    if ((!('nEvents' in (value as Record<string, any>)) && !('n_events' in (value as Record<string, any>))) || ((value as Record<string, any>)['nEvents'] === undefined && (value as Record<string, any>)['n_events'] === undefined)) return false;
+    if ((!('avgResponseTime' in (value as Record<string, any>)) && !('avg_response_time' in (value as Record<string, any>))) || ((value as Record<string, any>)['avgResponseTime'] === undefined && (value as Record<string, any>)['avg_response_time'] === undefined)) return false;
+    if ((!('nUpcomingEvent' in (value as Record<string, any>)) && !('n_upcoming_event' in (value as Record<string, any>))) || ((value as Record<string, any>)['nUpcomingEvent'] === undefined && (value as Record<string, any>)['n_upcoming_event'] === undefined)) return false;
     return true;
 }
 

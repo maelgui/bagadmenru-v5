@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 /**
  * A membership row not yet attached to a member.
  * @export
@@ -21,86 +21,58 @@ import { mapValues } from '../runtime';
 export interface UnlinkedMembership {
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     id: string;
     /**
      * 
-     * @type {number}
-     * @memberof UnlinkedMembership
      */
     helloassoOrderId: number;
     /**
      * 
-     * @type {number}
-     * @memberof UnlinkedMembership
      */
     helloassoItemId: number;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     payerEmail: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     payerFirstName: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     payerLastName: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     adherentFirstName: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     adherentLastName: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     adherentEmail: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     tierName: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     tierDescription: string | null;
     /**
      * 
-     * @type {number}
-     * @memberof UnlinkedMembership
      */
     amount: number;
     /**
      * 
-     * @type {Date}
-     * @memberof UnlinkedMembership
      */
     orderDate: Date;
     /**
      * 
-     * @type {string}
-     * @memberof UnlinkedMembership
      */
     state: string;
 }
@@ -110,18 +82,18 @@ export interface UnlinkedMembership {
  */
 export function instanceOfUnlinkedMembership(value: object): value is UnlinkedMembership {
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('helloassoOrderId' in value) || value['helloassoOrderId'] === undefined) return false;
-    if (!('helloassoItemId' in value) || value['helloassoItemId'] === undefined) return false;
-    if (!('payerEmail' in value) || value['payerEmail'] === undefined) return false;
-    if (!('payerFirstName' in value) || value['payerFirstName'] === undefined) return false;
-    if (!('payerLastName' in value) || value['payerLastName'] === undefined) return false;
-    if (!('adherentFirstName' in value) || value['adherentFirstName'] === undefined) return false;
-    if (!('adherentLastName' in value) || value['adherentLastName'] === undefined) return false;
-    if (!('adherentEmail' in value) || value['adherentEmail'] === undefined) return false;
-    if (!('tierName' in value) || value['tierName'] === undefined) return false;
-    if (!('tierDescription' in value) || value['tierDescription'] === undefined) return false;
+    if ((!('helloassoOrderId' in (value as Record<string, any>)) && !('helloasso_order_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['helloassoOrderId'] === undefined && (value as Record<string, any>)['helloasso_order_id'] === undefined)) return false;
+    if ((!('helloassoItemId' in (value as Record<string, any>)) && !('helloasso_item_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['helloassoItemId'] === undefined && (value as Record<string, any>)['helloasso_item_id'] === undefined)) return false;
+    if ((!('payerEmail' in (value as Record<string, any>)) && !('payer_email' in (value as Record<string, any>))) || ((value as Record<string, any>)['payerEmail'] === undefined && (value as Record<string, any>)['payer_email'] === undefined)) return false;
+    if ((!('payerFirstName' in (value as Record<string, any>)) && !('payer_first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['payerFirstName'] === undefined && (value as Record<string, any>)['payer_first_name'] === undefined)) return false;
+    if ((!('payerLastName' in (value as Record<string, any>)) && !('payer_last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['payerLastName'] === undefined && (value as Record<string, any>)['payer_last_name'] === undefined)) return false;
+    if ((!('adherentFirstName' in (value as Record<string, any>)) && !('adherent_first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['adherentFirstName'] === undefined && (value as Record<string, any>)['adherent_first_name'] === undefined)) return false;
+    if ((!('adherentLastName' in (value as Record<string, any>)) && !('adherent_last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['adherentLastName'] === undefined && (value as Record<string, any>)['adherent_last_name'] === undefined)) return false;
+    if ((!('adherentEmail' in (value as Record<string, any>)) && !('adherent_email' in (value as Record<string, any>))) || ((value as Record<string, any>)['adherentEmail'] === undefined && (value as Record<string, any>)['adherent_email'] === undefined)) return false;
+    if ((!('tierName' in (value as Record<string, any>)) && !('tier_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['tierName'] === undefined && (value as Record<string, any>)['tier_name'] === undefined)) return false;
+    if ((!('tierDescription' in (value as Record<string, any>)) && !('tier_description' in (value as Record<string, any>))) || ((value as Record<string, any>)['tierDescription'] === undefined && (value as Record<string, any>)['tier_description'] === undefined)) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
-    if (!('orderDate' in value) || value['orderDate'] === undefined) return false;
+    if ((!('orderDate' in (value as Record<string, any>)) && !('order_date' in (value as Record<string, any>))) || ((value as Record<string, any>)['orderDate'] === undefined && (value as Record<string, any>)['order_date'] === undefined)) return false;
     if (!('state' in value) || value['state'] === undefined) return false;
     return true;
 }
@@ -148,7 +120,7 @@ export function UnlinkedMembershipFromJSONTyped(json: any, ignoreDiscriminator: 
         'tierName': json['tier_name'],
         'tierDescription': json['tier_description'],
         'amount': json['amount'],
-        'orderDate': (new Date(json['order_date'])),
+        'orderDate': (json['order_date'] == null ? json['order_date'] : parseDateTime(json['order_date'])),
         'state': json['state'],
     };
 }
@@ -176,7 +148,7 @@ export function UnlinkedMembershipToJSONTyped(value?: UnlinkedMembership | null,
         'tier_name': value['tierName'],
         'tier_description': value['tierDescription'],
         'amount': value['amount'],
-        'order_date': ((value['orderDate']).toISOString()),
+        'order_date': value['orderDate'] == null ? value['orderDate'] : serializeDateTime(value['orderDate']),
         'state': value['state'],
     };
 }

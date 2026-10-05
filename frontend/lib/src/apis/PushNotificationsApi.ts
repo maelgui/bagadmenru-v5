@@ -12,38 +12,55 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  HTTPValidationError,
-  PushDevice,
-  PushSubscriptionCreate,
-  PushSubscriptionResponse,
-  VapidPublicKeyResponse,
-} from '../models/index';
 import {
+    type HTTPValidationError,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+} from '../models/HTTPValidationError';
+import {
+    type PushDevice,
     PushDeviceFromJSON,
     PushDeviceToJSON,
+} from '../models/PushDevice';
+import {
+    type PushSubscriptionCreate,
     PushSubscriptionCreateFromJSON,
     PushSubscriptionCreateToJSON,
+} from '../models/PushSubscriptionCreate';
+import {
+    type PushSubscriptionResponse,
     PushSubscriptionResponseFromJSON,
     PushSubscriptionResponseToJSON,
+} from '../models/PushSubscriptionResponse';
+import {
+    type VapidPublicKeyResponse,
     VapidPublicKeyResponseFromJSON,
     VapidPublicKeyResponseToJSON,
-} from '../models/index';
+} from '../models/VapidPublicKeyResponse';
 
 export interface DeleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequest {
+    /**
+     * 
+     */
     subscriptionId: string;
 }
 
 export interface SubscribeApiV1PushSubscribePostRequest {
+    /**
+     * 
+     */
     pushSubscriptionCreate: PushSubscriptionCreate;
+    /**
+     * 
+     */
     userAgent?: string | null;
 }
 
 export interface UnsubscribeApiV1PushUnsubscribeDeleteRequest {
+    /**
+     * 
+     */
     pushSubscriptionCreate: PushSubscriptionCreate;
 }
 
@@ -53,10 +70,9 @@ export interface UnsubscribeApiV1PushUnsubscribeDeleteRequest {
 export class PushNotificationsApi extends runtime.BaseAPI {
 
     /**
-     * Revoke one of the current user\'s devices by id.  Used from the device list to remove a device other than the current browser (which uses /unsubscribe with its own endpoint).
-     * Delete Subscription
+     * Creates request options for deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDelete without sending the request
      */
-    async deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRaw(requestParameters: DeleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequestOpts(requestParameters: DeleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['subscriptionId'] == null) {
             throw new runtime.RequiredError(
                 'subscriptionId',
@@ -76,12 +92,25 @@ export class PushNotificationsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/push/subscriptions/{subscription_id}`.replace(`{${"subscription_id"}}`, encodeURIComponent(String(requestParameters['subscriptionId']))),
+
+        let urlPath = `/api/v1/push/subscriptions/{subscription_id}`;
+        urlPath = urlPath.replace('{subscription_id}', encodeURIComponent(String(requestParameters['subscriptionId'])));
+
+        return {
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Revoke one of the current user\'s devices by id.  Used from the device list to remove a device other than the current browser (which uses /unsubscribe with its own endpoint).
+     * Delete Subscription
+     */
+    async deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRaw(requestParameters: DeleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.deleteSubscriptionApiV1PushSubscriptionsSubscriptionIdDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -95,20 +124,31 @@ export class PushNotificationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Return the VAPID public key for the frontend to subscribe.
-     * Get Vapid Public Key
+     * Creates request options for getVapidPublicKeyApiV1PushVapidPublicKeyGet without sending the request
      */
-    async getVapidPublicKeyApiV1PushVapidPublicKeyGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VapidPublicKeyResponse>> {
+    async getVapidPublicKeyApiV1PushVapidPublicKeyGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/api/v1/push/vapid-public-key`,
+
+        let urlPath = `/api/v1/push/vapid-public-key`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Return the VAPID public key for the frontend to subscribe.
+     * Get Vapid Public Key
+     */
+    async getVapidPublicKeyApiV1PushVapidPublicKeyGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VapidPublicKeyResponse>> {
+        const requestOptions = await this.getVapidPublicKeyApiV1PushVapidPublicKeyGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => VapidPublicKeyResponseFromJSON(jsonValue));
     }
@@ -123,10 +163,9 @@ export class PushNotificationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * List the current user\'s push-subscribed devices.  Encryption keys are never returned. Ordered most recently used first, falling back to creation time for devices that never received a push.
-     * List Subscriptions
+     * Creates request options for listSubscriptionsApiV1PushSubscriptionsGet without sending the request
      */
-    async listSubscriptionsApiV1PushSubscriptionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PushDevice>>> {
+    async listSubscriptionsApiV1PushSubscriptionsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -139,12 +178,24 @@ export class PushNotificationsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/push/subscriptions`,
+
+        let urlPath = `/api/v1/push/subscriptions`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List the current user\'s push-subscribed devices.  Encryption keys are never returned. Ordered most recently used first, falling back to creation time for devices that never received a push.
+     * List Subscriptions
+     */
+    async listSubscriptionsApiV1PushSubscriptionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PushDevice>>> {
+        const requestOptions = await this.listSubscriptionsApiV1PushSubscriptionsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PushDeviceFromJSON));
     }
@@ -159,10 +210,9 @@ export class PushNotificationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Register a push subscription for the current user.  A user can have multiple subscriptions (one per device/browser). Each device/browser generates a unique push endpoint URL. If the same endpoint already exists (same browser re-subscribing), we update the keys instead of creating a duplicate.
-     * Subscribe
+     * Creates request options for subscribeApiV1PushSubscribePost without sending the request
      */
-    async subscribeApiV1PushSubscribePostRaw(requestParameters: SubscribeApiV1PushSubscribePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PushSubscriptionResponse>> {
+    async subscribeApiV1PushSubscribePostRequestOpts(requestParameters: SubscribeApiV1PushSubscribePostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['pushSubscriptionCreate'] == null) {
             throw new runtime.RequiredError(
                 'pushSubscriptionCreate',
@@ -188,13 +238,25 @@ export class PushNotificationsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/push/subscribe`,
+
+        let urlPath = `/api/v1/push/subscribe`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: PushSubscriptionCreateToJSON(requestParameters['pushSubscriptionCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Register a push subscription for the current user.  A user can have multiple subscriptions (one per device/browser). Each device/browser generates a unique push endpoint URL. If the same endpoint already exists (same browser re-subscribing), we update the keys instead of creating a duplicate.
+     * Subscribe
+     */
+    async subscribeApiV1PushSubscribePostRaw(requestParameters: SubscribeApiV1PushSubscribePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PushSubscriptionResponse>> {
+        const requestOptions = await this.subscribeApiV1PushSubscribePostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => PushSubscriptionResponseFromJSON(jsonValue));
     }
@@ -209,10 +271,9 @@ export class PushNotificationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Send a test push notification to the current user.
-     * Test Push
+     * Creates request options for testPushApiV1PushTestPost without sending the request
      */
-    async testPushApiV1PushTestPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async testPushApiV1PushTestPostRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -225,12 +286,24 @@ export class PushNotificationsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/push/test`,
+
+        let urlPath = `/api/v1/push/test`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Send a test push notification to the current user.
+     * Test Push
+     */
+    async testPushApiV1PushTestPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.testPushApiV1PushTestPostRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<any>(response);
@@ -249,10 +322,9 @@ export class PushNotificationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Remove a push subscription for the current user.
-     * Unsubscribe
+     * Creates request options for unsubscribeApiV1PushUnsubscribeDelete without sending the request
      */
-    async unsubscribeApiV1PushUnsubscribeDeleteRaw(requestParameters: UnsubscribeApiV1PushUnsubscribeDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async unsubscribeApiV1PushUnsubscribeDeleteRequestOpts(requestParameters: UnsubscribeApiV1PushUnsubscribeDeleteRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['pushSubscriptionCreate'] == null) {
             throw new runtime.RequiredError(
                 'pushSubscriptionCreate',
@@ -274,13 +346,25 @@ export class PushNotificationsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/push/unsubscribe`,
+
+        let urlPath = `/api/v1/push/unsubscribe`;
+
+        return {
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
             body: PushSubscriptionCreateToJSON(requestParameters['pushSubscriptionCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Remove a push subscription for the current user.
+     * Unsubscribe
+     */
+    async unsubscribeApiV1PushUnsubscribeDeleteRaw(requestParameters: UnsubscribeApiV1PushUnsubscribeDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.unsubscribeApiV1PushUnsubscribeDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }

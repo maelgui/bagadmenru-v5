@@ -21,14 +21,10 @@ import { mapValues } from '../runtime';
 export interface PushSubscriptionResponse {
     /**
      * 
-     * @type {string}
-     * @memberof PushSubscriptionResponse
      */
     id: string;
     /**
      * 
-     * @type {string}
-     * @memberof PushSubscriptionResponse
      */
     endpoint: string;
 }

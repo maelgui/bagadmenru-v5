@@ -26,14 +26,10 @@ import { mapValues } from '../runtime';
 export interface LogoutRequest {
     /**
      * 
-     * @type {string}
-     * @memberof LogoutRequest
      */
     accountId?: string | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof LogoutRequest
      */
     all?: boolean;
 }
@@ -55,7 +51,7 @@ export function LogoutRequestFromJSONTyped(json: any, ignoreDiscriminator: boole
     }
     return {
         
-        'accountId': json['account_id'] == null ? undefined : json['account_id'],
+        'accountId': json['account_id'] === undefined ? undefined : json['account_id'] === null ? null : json['account_id'],
         'all': json['all'] == null ? undefined : json['all'],
     };
 }

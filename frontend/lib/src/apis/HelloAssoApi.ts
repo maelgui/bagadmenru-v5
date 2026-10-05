@@ -12,33 +12,49 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  HTTPValidationError,
-  MembershipLinkRequest,
-  UnlinkedMembership,
-} from '../models/index';
 import {
+    type HTTPValidationError,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+} from '../models/HTTPValidationError';
+import {
+    type MembershipLinkRequest,
     MembershipLinkRequestFromJSON,
     MembershipLinkRequestToJSON,
+} from '../models/MembershipLinkRequest';
+import {
+    type UnlinkedMembership,
     UnlinkedMembershipFromJSON,
     UnlinkedMembershipToJSON,
-} from '../models/index';
+} from '../models/UnlinkedMembership';
 
 export interface DeleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRequest {
+    /**
+     * 
+     */
     membershipId: string;
 }
 
 export interface HelloassoWebhookApiV1HelloassoWebhookPostRequest {
+    /**
+     * 
+     */
     token?: string | null;
+    /**
+     * 
+     */
     xHaSignature?: string | null;
 }
 
 export interface LinkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRequest {
+    /**
+     * 
+     */
     membershipId: string;
+    /**
+     * 
+     */
     membershipLinkRequest: MembershipLinkRequest;
 }
 
@@ -48,10 +64,9 @@ export interface LinkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRequest {
 export class HelloAssoApi extends runtime.BaseAPI {
 
     /**
-     * Delete a membership record (e.g. a duplicate or erroneous order).
-     * Delete Membership
+     * Creates request options for deleteMembershipApiV1HelloassoOrdersMembershipIdDelete without sending the request
      */
-    async deleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRaw(requestParameters: DeleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async deleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRequestOpts(requestParameters: DeleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['membershipId'] == null) {
             throw new runtime.RequiredError(
                 'membershipId',
@@ -71,12 +86,25 @@ export class HelloAssoApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/helloasso/orders/{membership_id}`.replace(`{${"membership_id"}}`, encodeURIComponent(String(requestParameters['membershipId']))),
+
+        let urlPath = `/api/v1/helloasso/orders/{membership_id}`;
+        urlPath = urlPath.replace('{membership_id}', encodeURIComponent(String(requestParameters['membershipId'])));
+
+        return {
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Delete a membership record (e.g. a duplicate or erroneous order).
+     * Delete Membership
+     */
+    async deleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRaw(requestParameters: DeleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.deleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -90,10 +118,9 @@ export class HelloAssoApi extends runtime.BaseAPI {
     }
 
     /**
-     * Receive a HelloAsso notification and persist membership items.  Always returns 200 for authentic, well-formed notifications (even when there is nothing to store), because any non-200 makes HelloAsso retry the delivery for up to 27 hours.
-     * Helloasso Webhook
+     * Creates request options for helloassoWebhookApiV1HelloassoWebhookPost without sending the request
      */
-    async helloassoWebhookApiV1HelloassoWebhookPostRaw(requestParameters: HelloassoWebhookApiV1HelloassoWebhookPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async helloassoWebhookApiV1HelloassoWebhookPostRequestOpts(requestParameters: HelloassoWebhookApiV1HelloassoWebhookPostRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         if (requestParameters['token'] != null) {
@@ -106,12 +133,24 @@ export class HelloAssoApi extends runtime.BaseAPI {
             headerParameters['x-ha-signature'] = String(requestParameters['xHaSignature']);
         }
 
-        const response = await this.request({
-            path: `/api/v1/helloasso/webhook`,
+
+        let urlPath = `/api/v1/helloasso/webhook`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Receive a HelloAsso notification and persist membership items.  Always returns 200 for authentic, well-formed notifications (even when there is nothing to store), because any non-200 makes HelloAsso retry the delivery for up to 27 hours.
+     * Helloasso Webhook
+     */
+    async helloassoWebhookApiV1HelloassoWebhookPostRaw(requestParameters: HelloassoWebhookApiV1HelloassoWebhookPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.helloassoWebhookApiV1HelloassoWebhookPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<any>(response);
@@ -130,10 +169,9 @@ export class HelloAssoApi extends runtime.BaseAPI {
     }
 
     /**
-     * Attach an unlinked membership row to a member.
-     * Link Membership
+     * Creates request options for linkMembershipApiV1HelloassoOrdersMembershipIdLinkPost without sending the request
      */
-    async linkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRaw(requestParameters: LinkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UnlinkedMembership>> {
+    async linkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRequestOpts(requestParameters: LinkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['membershipId'] == null) {
             throw new runtime.RequiredError(
                 'membershipId',
@@ -162,13 +200,26 @@ export class HelloAssoApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/helloasso/orders/{membership_id}/link`.replace(`{${"membership_id"}}`, encodeURIComponent(String(requestParameters['membershipId']))),
+
+        let urlPath = `/api/v1/helloasso/orders/{membership_id}/link`;
+        urlPath = urlPath.replace('{membership_id}', encodeURIComponent(String(requestParameters['membershipId'])));
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: MembershipLinkRequestToJSON(requestParameters['membershipLinkRequest']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Attach an unlinked membership row to a member.
+     * Link Membership
+     */
+    async linkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRaw(requestParameters: LinkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UnlinkedMembership>> {
+        const requestOptions = await this.linkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => UnlinkedMembershipFromJSON(jsonValue));
     }
@@ -183,10 +234,9 @@ export class HelloAssoApi extends runtime.BaseAPI {
     }
 
     /**
-     * List membership rows not yet attached to a member (admin reconciliation).
-     * List Unlinked Memberships
+     * Creates request options for listUnlinkedMembershipsApiV1HelloassoOrdersUnlinkedGet without sending the request
      */
-    async listUnlinkedMembershipsApiV1HelloassoOrdersUnlinkedGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<UnlinkedMembership>>> {
+    async listUnlinkedMembershipsApiV1HelloassoOrdersUnlinkedGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -199,12 +249,24 @@ export class HelloAssoApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/helloasso/orders/unlinked`,
+
+        let urlPath = `/api/v1/helloasso/orders/unlinked`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List membership rows not yet attached to a member (admin reconciliation).
+     * List Unlinked Memberships
+     */
+    async listUnlinkedMembershipsApiV1HelloassoOrdersUnlinkedGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<UnlinkedMembership>>> {
+        const requestOptions = await this.listUnlinkedMembershipsApiV1HelloassoOrdersUnlinkedGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(UnlinkedMembershipFromJSON));
     }

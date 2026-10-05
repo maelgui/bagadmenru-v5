@@ -12,15 +12,12 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  PublicInstrument,
-} from '../models/index';
 import {
+    type PublicInstrument,
     PublicInstrumentFromJSON,
     PublicInstrumentToJSON,
-} from '../models/index';
+} from '../models/PublicInstrument';
 
 /**
  * 
@@ -28,20 +25,31 @@ import {
 export class InstrumentsApi extends runtime.BaseAPI {
 
     /**
-     * Public: the instrument groups a member can be assigned to.  Returns only the ``PublicInstrument`` fields (id/name/color) and only groups flagged ``is_instrument``, ordered by name - safe to expose unauthenticated. The response schema is a dedicated, closed shape (not a shared group schema) so this public surface cannot be widened by accident.
-     * List Instruments
+     * Creates request options for listInstrumentsApiV1InstrumentsGet without sending the request
      */
-    async listInstrumentsApiV1InstrumentsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PublicInstrument>>> {
+    async listInstrumentsApiV1InstrumentsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/api/v1/instruments`,
+
+        let urlPath = `/api/v1/instruments`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Public: the instrument groups a member can be assigned to.  Returns only the ``PublicInstrument`` fields (id/name/color) and only groups flagged ``is_instrument``, ordered by name - safe to expose unauthenticated. The response schema is a dedicated, closed shape (not a shared group schema) so this public surface cannot be widened by accident.
+     * List Instruments
+     */
+    async listInstrumentsApiV1InstrumentsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PublicInstrument>>> {
+        const requestOptions = await this.listInstrumentsApiV1InstrumentsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PublicInstrumentFromJSON));
     }

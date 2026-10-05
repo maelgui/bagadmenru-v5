@@ -12,82 +12,154 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  Event,
-  EventCreate,
-  HTTPValidationError,
-  Res,
-  Response,
-  ResponseChange,
-  ResponseCreate,
-} from '../models/index';
 import {
+    type Event,
     EventFromJSON,
     EventToJSON,
+} from '../models/Event';
+import {
+    type EventCreate,
     EventCreateFromJSON,
     EventCreateToJSON,
+} from '../models/EventCreate';
+import {
+    type HTTPValidationError,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+} from '../models/HTTPValidationError';
+import {
+    type Res,
     ResFromJSON,
     ResToJSON,
+} from '../models/Res';
+import {
+    type Response,
     ResponseFromJSON,
     ResponseToJSON,
+} from '../models/Response';
+import {
+    type ResponseChange,
     ResponseChangeFromJSON,
     ResponseChangeToJSON,
+} from '../models/ResponseChange';
+import {
+    type ResponseCreate,
     ResponseCreateFromJSON,
     ResponseCreateToJSON,
-} from '../models/index';
+} from '../models/ResponseCreate';
 
 export interface CreateEventApiV1EventsPostRequest {
+    /**
+     * 
+     */
     eventCreate: EventCreate;
 }
 
 export interface CreateResponseApiV1EventsEventIdResponsesPutRequest {
+    /**
+     * 
+     */
     eventId: number;
+    /**
+     * 
+     */
     responseCreate: ResponseCreate;
 }
 
 export interface CreateResponseByTokenApiV1ResponsesLinkSavePutRequest {
+    /**
+     * 
+     */
     token: string;
+    /**
+     * 
+     */
     responseCreate: ResponseCreate;
 }
 
 export interface DeleteEventApiV1EventsEventIdDeleteRequest {
+    /**
+     * 
+     */
     eventId: number;
 }
 
 export interface GetEventApiV1EventsEventIdGetRequest {
+    /**
+     * 
+     */
     eventId: number;
 }
 
 export interface GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest {
+    /**
+     * 
+     */
     token: string;
 }
 
 export interface ListEventsApiV1EventsGetRequest {
+    /**
+     * 
+     */
     limit?: number;
+    /**
+     * 
+     */
     dateGte?: Date | null;
+    /**
+     * 
+     */
     dateLt?: Date | null;
+    /**
+     * 
+     */
     isInDoodle?: boolean | null;
+    /**
+     * 
+     */
     ordering?: string;
 }
 
 export interface ListResponseChangesApiV1ResponsesChangesGetRequest {
+    /**
+     * 
+     */
     dateGte?: Date | null;
+    /**
+     * 
+     */
     dateLt?: Date | null;
+    /**
+     * 
+     */
     userId?: string | null;
 }
 
 export interface ListResponsesApiV1ResponsesGetRequest {
+    /**
+     * 
+     */
     dateGte?: Date | null;
+    /**
+     * 
+     */
     dateLt?: Date | null;
+    /**
+     * 
+     */
     userId?: string | null;
 }
 
 export interface UpdateEventApiV1EventsEventIdPutRequest {
+    /**
+     * 
+     */
     eventId: number;
+    /**
+     * 
+     */
     eventCreate: EventCreate;
 }
 
@@ -97,9 +169,9 @@ export interface UpdateEventApiV1EventsEventIdPutRequest {
 export class EventsApi extends runtime.BaseAPI {
 
     /**
-     * Create Event
+     * Creates request options for createEventApiV1EventsPost without sending the request
      */
-    async createEventApiV1EventsPostRaw(requestParameters: CreateEventApiV1EventsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
+    async createEventApiV1EventsPostRequestOpts(requestParameters: CreateEventApiV1EventsPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['eventCreate'] == null) {
             throw new runtime.RequiredError(
                 'eventCreate',
@@ -121,13 +193,24 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/events/`,
+
+        let urlPath = `/api/v1/events/`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: EventCreateToJSON(requestParameters['eventCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create Event
+     */
+    async createEventApiV1EventsPostRaw(requestParameters: CreateEventApiV1EventsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
+        const requestOptions = await this.createEventApiV1EventsPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => EventFromJSON(jsonValue));
     }
@@ -141,9 +224,9 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Create Response
+     * Creates request options for createResponseApiV1EventsEventIdResponsesPut without sending the request
      */
-    async createResponseApiV1EventsEventIdResponsesPutRaw(requestParameters: CreateResponseApiV1EventsEventIdResponsesPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Response>> {
+    async createResponseApiV1EventsEventIdResponsesPutRequestOpts(requestParameters: CreateResponseApiV1EventsEventIdResponsesPutRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['eventId'] == null) {
             throw new runtime.RequiredError(
                 'eventId',
@@ -172,13 +255,25 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/events/{event_id}/responses`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
+
+        let urlPath = `/api/v1/events/{event_id}/responses`;
+        urlPath = urlPath.replace('{event_id}', encodeURIComponent(String(requestParameters['eventId'])));
+
+        return {
+            path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: ResponseCreateToJSON(requestParameters['responseCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create Response
+     */
+    async createResponseApiV1EventsEventIdResponsesPutRaw(requestParameters: CreateResponseApiV1EventsEventIdResponsesPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Response>> {
+        const requestOptions = await this.createResponseApiV1EventsEventIdResponsesPutRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ResponseFromJSON(jsonValue));
     }
@@ -192,9 +287,9 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Create Response By Token
+     * Creates request options for createResponseByTokenApiV1ResponsesLinkSavePut without sending the request
      */
-    async createResponseByTokenApiV1ResponsesLinkSavePutRaw(requestParameters: CreateResponseByTokenApiV1ResponsesLinkSavePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Response>> {
+    async createResponseByTokenApiV1ResponsesLinkSavePutRequestOpts(requestParameters: CreateResponseByTokenApiV1ResponsesLinkSavePutRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['token'] == null) {
             throw new runtime.RequiredError(
                 'token',
@@ -219,13 +314,24 @@ export class EventsApi extends runtime.BaseAPI {
             headerParameters['token'] = String(requestParameters['token']);
         }
 
-        const response = await this.request({
-            path: `/api/v1/responses/link/save`,
+
+        let urlPath = `/api/v1/responses/link/save`;
+
+        return {
+            path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: ResponseCreateToJSON(requestParameters['responseCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create Response By Token
+     */
+    async createResponseByTokenApiV1ResponsesLinkSavePutRaw(requestParameters: CreateResponseByTokenApiV1ResponsesLinkSavePutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Response>> {
+        const requestOptions = await this.createResponseByTokenApiV1ResponsesLinkSavePutRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ResponseFromJSON(jsonValue));
     }
@@ -239,9 +345,9 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Delete Event
+     * Creates request options for deleteEventApiV1EventsEventIdDelete without sending the request
      */
-    async deleteEventApiV1EventsEventIdDeleteRaw(requestParameters: DeleteEventApiV1EventsEventIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async deleteEventApiV1EventsEventIdDeleteRequestOpts(requestParameters: DeleteEventApiV1EventsEventIdDeleteRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['eventId'] == null) {
             throw new runtime.RequiredError(
                 'eventId',
@@ -261,12 +367,24 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
+
+        let urlPath = `/api/v1/events/{event_id}`;
+        urlPath = urlPath.replace('{event_id}', encodeURIComponent(String(requestParameters['eventId'])));
+
+        return {
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Delete Event
+     */
+    async deleteEventApiV1EventsEventIdDeleteRaw(requestParameters: DeleteEventApiV1EventsEventIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.deleteEventApiV1EventsEventIdDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -279,19 +397,30 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Export Ics
+     * Creates request options for exportIcsApiV1EventsExportIcsGet without sending the request
      */
-    async exportIcsApiV1EventsExportIcsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async exportIcsApiV1EventsExportIcsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/api/v1/events/export/ics`,
+
+        let urlPath = `/api/v1/events/export/ics`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Export Ics
+     */
+    async exportIcsApiV1EventsExportIcsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.exportIcsApiV1EventsExportIcsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<any>(response);
@@ -309,10 +438,9 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Authenticated ICS feed for the current member.  Reached either from a browser session (cookie/JWT) or from an API key whose ``authorized_permissions`` include ``view:calendar`` -- the key is read from the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar app can subscribe by URL. Authentication is handled upstream in ``credentials``; this endpoint requires the fine-grained ``view:calendar`` permission (distinct from ``view:event``) so a calendar key is scoped to the feed alone and cannot list events.  Each event title is prefixed with the member\'s participation status (present/absent/unanswered) so their responses are visible directly in the subscribed calendar; the public feed stays neutral.
-     * Export Ics Me
+     * Creates request options for exportIcsMeApiV1EventsExportIcsMeGet without sending the request
      */
-    async exportIcsMeApiV1EventsExportIcsMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async exportIcsMeApiV1EventsExportIcsMeGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -325,12 +453,24 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/events/export/ics/me`,
+
+        let urlPath = `/api/v1/events/export/ics/me`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Authenticated ICS feed for the current member.  Reached either from a browser session (cookie/JWT) or from an API key whose ``authorized_permissions`` include ``view:calendar`` -- the key is read from the ``X-API-Key`` header or the ``api_key`` query parameter so a calendar app can subscribe by URL. Authentication is handled upstream in ``credentials``; this endpoint requires the fine-grained ``view:calendar`` permission (distinct from ``view:event``) so a calendar key is scoped to the feed alone and cannot list events.  Each event title is prefixed with the member\'s participation status (present/absent/unanswered) so their responses are visible directly in the subscribed calendar; the public feed stays neutral.
+     * Export Ics Me
+     */
+    async exportIcsMeApiV1EventsExportIcsMeGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.exportIcsMeApiV1EventsExportIcsMeGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<any>(response);
@@ -349,9 +489,9 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get Event
+     * Creates request options for getEventApiV1EventsEventIdGet without sending the request
      */
-    async getEventApiV1EventsEventIdGetRaw(requestParameters: GetEventApiV1EventsEventIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
+    async getEventApiV1EventsEventIdGetRequestOpts(requestParameters: GetEventApiV1EventsEventIdGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['eventId'] == null) {
             throw new runtime.RequiredError(
                 'eventId',
@@ -371,12 +511,24 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
+
+        let urlPath = `/api/v1/events/{event_id}`;
+        urlPath = urlPath.replace('{event_id}', encodeURIComponent(String(requestParameters['eventId'])));
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get Event
+     */
+    async getEventApiV1EventsEventIdGetRaw(requestParameters: GetEventApiV1EventsEventIdGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
+        const requestOptions = await this.getEventApiV1EventsEventIdGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => EventFromJSON(jsonValue));
     }
@@ -390,9 +542,9 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get Response By Token
+     * Creates request options for getResponseByTokenApiV1ResponsesLinkPrepareGet without sending the request
      */
-    async getResponseByTokenApiV1ResponsesLinkPrepareGetRaw(requestParameters: GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Res>> {
+    async getResponseByTokenApiV1ResponsesLinkPrepareGetRequestOpts(requestParameters: GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['token'] == null) {
             throw new runtime.RequiredError(
                 'token',
@@ -408,12 +560,23 @@ export class EventsApi extends runtime.BaseAPI {
             headerParameters['token'] = String(requestParameters['token']);
         }
 
-        const response = await this.request({
-            path: `/api/v1/responses/link/prepare`,
+
+        let urlPath = `/api/v1/responses/link/prepare`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get Response By Token
+     */
+    async getResponseByTokenApiV1ResponsesLinkPrepareGetRaw(requestParameters: GetResponseByTokenApiV1ResponsesLinkPrepareGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Res>> {
+        const requestOptions = await this.getResponseByTokenApiV1ResponsesLinkPrepareGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ResFromJSON(jsonValue));
     }
@@ -427,9 +590,9 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * List Events
+     * Creates request options for listEventsApiV1EventsGet without sending the request
      */
-    async listEventsApiV1EventsGetRaw(requestParameters: ListEventsApiV1EventsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Event>>> {
+    async listEventsApiV1EventsGetRequestOpts(requestParameters: ListEventsApiV1EventsGetRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         if (requestParameters['limit'] != null) {
@@ -437,11 +600,11 @@ export class EventsApi extends runtime.BaseAPI {
         }
 
         if (requestParameters['dateGte'] != null) {
-            queryParameters['date__gte'] = (requestParameters['dateGte'] as any).toISOString();
+            queryParameters['date__gte'] = runtime.serializeDateTime(requestParameters['dateGte'] as any);
         }
 
         if (requestParameters['dateLt'] != null) {
-            queryParameters['date__lt'] = (requestParameters['dateLt'] as any).toISOString();
+            queryParameters['date__lt'] = runtime.serializeDateTime(requestParameters['dateLt'] as any);
         }
 
         if (requestParameters['isInDoodle'] != null) {
@@ -462,12 +625,23 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/events/`,
+
+        let urlPath = `/api/v1/events/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List Events
+     */
+    async listEventsApiV1EventsGetRaw(requestParameters: ListEventsApiV1EventsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Event>>> {
+        const requestOptions = await this.listEventsApiV1EventsGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(EventFromJSON));
     }
@@ -481,17 +655,17 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * List Response Changes
+     * Creates request options for listResponseChangesApiV1ResponsesChangesGet without sending the request
      */
-    async listResponseChangesApiV1ResponsesChangesGetRaw(requestParameters: ListResponseChangesApiV1ResponsesChangesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ResponseChange>>> {
+    async listResponseChangesApiV1ResponsesChangesGetRequestOpts(requestParameters: ListResponseChangesApiV1ResponsesChangesGetRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         if (requestParameters['dateGte'] != null) {
-            queryParameters['date__gte'] = (requestParameters['dateGte'] as any).toISOString();
+            queryParameters['date__gte'] = runtime.serializeDateTime(requestParameters['dateGte'] as any);
         }
 
         if (requestParameters['dateLt'] != null) {
-            queryParameters['date__lt'] = (requestParameters['dateLt'] as any).toISOString();
+            queryParameters['date__lt'] = runtime.serializeDateTime(requestParameters['dateLt'] as any);
         }
 
         if (requestParameters['userId'] != null) {
@@ -508,12 +682,23 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/responses/changes`,
+
+        let urlPath = `/api/v1/responses/changes`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List Response Changes
+     */
+    async listResponseChangesApiV1ResponsesChangesGetRaw(requestParameters: ListResponseChangesApiV1ResponsesChangesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ResponseChange>>> {
+        const requestOptions = await this.listResponseChangesApiV1ResponsesChangesGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ResponseChangeFromJSON));
     }
@@ -527,17 +712,17 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * List Responses
+     * Creates request options for listResponsesApiV1ResponsesGet without sending the request
      */
-    async listResponsesApiV1ResponsesGetRaw(requestParameters: ListResponsesApiV1ResponsesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Response>>> {
+    async listResponsesApiV1ResponsesGetRequestOpts(requestParameters: ListResponsesApiV1ResponsesGetRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         if (requestParameters['dateGte'] != null) {
-            queryParameters['date__gte'] = (requestParameters['dateGte'] as any).toISOString();
+            queryParameters['date__gte'] = runtime.serializeDateTime(requestParameters['dateGte'] as any);
         }
 
         if (requestParameters['dateLt'] != null) {
-            queryParameters['date__lt'] = (requestParameters['dateLt'] as any).toISOString();
+            queryParameters['date__lt'] = runtime.serializeDateTime(requestParameters['dateLt'] as any);
         }
 
         if (requestParameters['userId'] != null) {
@@ -554,12 +739,23 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/responses/`,
+
+        let urlPath = `/api/v1/responses/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List Responses
+     */
+    async listResponsesApiV1ResponsesGetRaw(requestParameters: ListResponsesApiV1ResponsesGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Response>>> {
+        const requestOptions = await this.listResponsesApiV1ResponsesGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ResponseFromJSON));
     }
@@ -573,9 +769,9 @@ export class EventsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update Event
+     * Creates request options for updateEventApiV1EventsEventIdPut without sending the request
      */
-    async updateEventApiV1EventsEventIdPutRaw(requestParameters: UpdateEventApiV1EventsEventIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
+    async updateEventApiV1EventsEventIdPutRequestOpts(requestParameters: UpdateEventApiV1EventsEventIdPutRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['eventId'] == null) {
             throw new runtime.RequiredError(
                 'eventId',
@@ -604,13 +800,25 @@ export class EventsApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/events/{event_id}`.replace(`{${"event_id"}}`, encodeURIComponent(String(requestParameters['eventId']))),
+
+        let urlPath = `/api/v1/events/{event_id}`;
+        urlPath = urlPath.replace('{event_id}', encodeURIComponent(String(requestParameters['eventId'])));
+
+        return {
+            path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: EventCreateToJSON(requestParameters['eventCreate']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Update Event
+     */
+    async updateEventApiV1EventsEventIdPutRaw(requestParameters: UpdateEventApiV1EventsEventIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Event>> {
+        const requestOptions = await this.updateEventApiV1EventsEventIdPutRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => EventFromJSON(jsonValue));
     }
