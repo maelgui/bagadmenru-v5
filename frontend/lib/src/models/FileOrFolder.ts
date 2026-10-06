@@ -59,6 +59,24 @@ export interface FileOrFolder {
     fileKey?: string | null;
     /**
      * 
+     * @type {string}
+     * @memberof FileOrFolder
+     */
+    sourceFormat?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof FileOrFolder
+     */
+    processingStatus?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof FileOrFolder
+     */
+    processingFailureReason?: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof FileOrFolder
      */
@@ -106,6 +124,9 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'id': json['id'],
         'parentId': json['parent_id'] == null ? undefined : json['parent_id'],
         'fileKey': json['file_key'] == null ? undefined : json['file_key'],
+        'sourceFormat': json['source_format'] == null ? undefined : json['source_format'],
+        'processingStatus': json['processing_status'] == null ? undefined : json['processing_status'],
+        'processingFailureReason': json['processing_failure_reason'] == null ? undefined : json['processing_failure_reason'],
         'childCount': json['child_count'] == null ? undefined : json['child_count'],
         'fileUrl': json['fileUrl'],
         'downloadUrl': json['downloadUrl'],
@@ -128,6 +149,9 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'id': value['id'],
         'parent_id': value['parentId'],
         'file_key': value['fileKey'],
+        'source_format': value['sourceFormat'],
+        'processing_status': value['processingStatus'],
+        'processing_failure_reason': value['processingFailureReason'],
         'child_count': value['childCount'],
         'fileUrl': value['fileUrl'],
         'downloadUrl': value['downloadUrl'],

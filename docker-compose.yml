@@ -47,6 +47,11 @@ services:
     environment:
       - MP_WEBROOT=_mail
 
+  musescore:
+    build: renderers/musescore
+    environment:
+      - MSCORE_TIMEOUT=${MSCORE_TIMEOUT:-110}
+
   backend-init:
     build: backend
     command: ["sh", "-c", "alembic upgrade head && bbe2 seed-e2e"]
@@ -105,6 +110,8 @@ services:
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_CLAIMS_EMAIL=mailto:contact@bagadmenru.bzh
       - HELLOASSO_WEBHOOK_TOKEN=${HELLOASSO_WEBHOOK_TOKEN:-}
+      - MUSESCORE_RENDERER_URL=http://musescore:8080
+      - SCORE_RENDER_TIMEOUT_SECONDS=${MSCORE_TIMEOUT:-110}
     depends_on:
       - backend-init
       - db

@@ -1,4 +1,4 @@
-import { type LucideIcon, Download, EllipsisVertical, File, FileArchive, FileAudio, FileImage, FileMusic, FileText, FileVideo, Folder, Pencil, Trash2 } from 'lucide-react';
+import { type LucideIcon, Download, EllipsisVertical, File, FileArchive, FileAudio, FileImage, FileMusic, FileText, FileVideo, Folder, FolderArchive, Pencil, Trash2 } from 'lucide-react';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
 import { createElement, type MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -38,6 +38,7 @@ interface FileAspect {
 }
 
 const folderAspect: FileAspect = { icon: Folder, color: 'text-primary' };
+const containerAspect: FileAspect = { icon: FolderArchive, color: 'text-primary' };
 const defaultAspect: FileAspect = { icon: File, color: 'text-muted-foreground' };
 
 const scoreAspect: FileAspect = { icon: FileMusic, color: 'text-file-score' };
@@ -74,6 +75,9 @@ function getAspect(file: FileOrFolder): FileAspect {
   if (file.type === FileOrFolderType.Dir) {
     return folderAspect;
   }
+  if (file.type === FileOrFolderType.Container) {
+    return containerAspect;
+  }
   const extension = file.name.toLowerCase().split('.').pop();
   return extension ? (fileAspectByExtension.get(extension) ?? defaultAspect) : defaultAspect;
 }
@@ -83,7 +87,23 @@ function folderCountLabel(count: number): string {
   return `${count} élément${count > 1 ? 's' : ''}`;
 }
 
+const processingLabels = new Map<string, string>([
+  ['pending', 'Conversion en attente'],
+  ['processing', 'Conversion en cours'],
+  ['failed', 'Échec de la conversion'],
+]);
+
 function FolderCount({ file }: { file: FileOrFolder }) {
+  if (file.type === FileOrFolderType.Container) {
+    const status = file.processingStatus ?? undefined;
+    if (status && status !== 'completed') {
+      return <ItemDescription>{processingLabels.get(status) ?? status}</ItemDescription>;
+    }
+    if (file.childCount != null) {
+      return <ItemDescription>{folderCountLabel(file.childCount)}</ItemDescription>;
+    }
+    return null;
+  }
   if (file.type !== FileOrFolderType.Dir || file.childCount == null) {
     return null;
   }
@@ -123,12 +143,10 @@ export default function FileItem({
   const aspect = getAspect(file);
   const icon = createElement(aspect.icon, { 'aria-hidden': true, className: aspect.color });
   const isFile = file.type === FileOrFolderType.File;
+  const isContainer = file.type === FileOrFolderType.Container;
 
-  // Each action only renders when its capability is actually available: the
-  // caller passes renameFn/deleteFn only when the user holds the matching
-  // permission (edit:file / delete:file). With no action at all, the whole
-  // menu trigger disappears.
-  const showDownload = isFile && !!file.downloadUrl;
+  const showDownload = (isFile || isContainer) && !!file.downloadUrl;
+  const downloadLabel = isContainer ? 'Télécharger la source' : 'Télécharger';
   const hasActions = !noAction && (showDownload || renameFn !== undefined || deleteFn !== undefined);
 
   return (
@@ -168,7 +186,7 @@ export default function FileItem({
                       )}
                     >
                       <Download />
-                      Télécharger
+                      {downloadLabel}
                     </DropdownMenuItem>
                   ) : null}
                   {renameFn ? (

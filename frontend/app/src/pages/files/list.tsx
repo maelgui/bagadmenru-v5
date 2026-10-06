@@ -1,213 +1,32 @@
-import { AlertCircle, CloudUpload, FolderPlus, Trash2 } from 'lucide-react';
+import { AlertCircle, CloudUpload, FolderPlus } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useParams } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient, usePermissions } from '../../config/client';
 import FileItem, { FileItemSkeleton } from './components/file-item';
+import { ContainerStatus } from './components/container-view';
+import CreateFolderDialog from './components/dialogs/create-folder-dialog';
+import DeleteFileDialog from './components/dialogs/delete-file-dialog';
+import RenameDialog from './components/dialogs/rename-dialog';
+import UploadProgressDialog from './components/dialogs/upload-progress-dialog';
 
-function DeleteFileDialog({
-  file, isPending, onConfirm, onClose,
-}: {
-  file?: FileOrFolder;
-  isPending: boolean;
-  onConfirm: (fileId: number) => void;
-  onClose: () => void;
-}) {
-  return (
-    <AlertDialog open={file !== undefined} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogMedia><AlertCircle className="text-destructive" /></AlertDialogMedia>
-          <AlertDialogTitle>Supprimer un fichier</AlertDialogTitle>
-          <AlertDialogDescription>Vous vous apprêtez à supprimer le fichier <strong>{file?.name}</strong>. Êtes-vous sûr de vouloir supprimer ce fichier ?</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={file === undefined}
-            pending={isPending}
-            onClick={() => { if (file) onConfirm(file.id); }}
-          >
-            {!isPending && <Trash2 data-icon="inline-start" />}
-            Supprimer
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
+const CONVERSION_POLL_INTERVAL_MS = 2000;
 
-function NameDialog({
-  open, title, description, label, submitLabel, initialValue = '', isPending, onSubmit, onClose,
-}: {
-  open: boolean;
-  title: string;
-  description: string;
-  label: string;
-  submitLabel: string;
-  initialValue?: string;
-  isPending: boolean;
-  onSubmit: (name: string) => void;
-  onClose: () => void;
-}) {
-  const [name, setName] = useState(initialValue);
-  const trimmed = name.trim();
-  const submit = () => { if (trimmed) onSubmit(trimmed); };
-
-  return (
-    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>{title}</DialogTitle><DialogDescription>{description}</DialogDescription></DialogHeader>
-        <Field>
-          <FieldLabel htmlFor="name">{label}</FieldLabel>
-          <Input
-            id="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter') submit(); }}
-          />
-        </Field>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
-          <Button disabled={!trimmed || isPending} onClick={submit}>
-            {isPending ? <Spinner data-icon="inline-start" /> : null}
-            {submitLabel}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/**
- * Splits a file name into its base name and extension.
- * The extension includes the leading dot (e.g. `.pdf`). A leading dot with no
- * further dot (dotfiles like `.gitignore`) is treated as having no extension.
- */
-function splitFileName(fileName: string): { base: string; extension: string } {
-  const dotIndex = fileName.lastIndexOf('.');
-  if (dotIndex <= 0 || dotIndex === fileName.length - 1) {
-    return { base: fileName, extension: '' };
-  }
-  return { base: fileName.slice(0, dotIndex), extension: fileName.slice(dotIndex) };
-}
-
-function RenameDialog({
-  file, isPending, onSubmit, onClose,
-}: {
-  file: FileOrFolder;
-  isPending: boolean;
-  onSubmit: (name: string) => void;
-  onClose: () => void;
-}) {
-  const { base, extension } = splitFileName(file.name);
-  const hasExtension = extension !== '';
-
-  // When the extension is hidden, we only edit the base name and re-append the
-  // extension on submit. When "renameFullName" is checked, we edit the full name.
-  const [baseName, setBaseName] = useState(base);
-  const [fullName, setFullName] = useState(file.name);
-  const [renameFullName, setRenameFullName] = useState(!hasExtension);
-
-  const editingFull = renameFullName || !hasExtension;
-  const finalName = editingFull ? fullName.trim() : `${baseName.trim()}${extension}`;
-  const canSubmit = editingFull ? fullName.trim() !== '' : baseName.trim() !== '';
-  const submit = () => { if (canSubmit) onSubmit(finalName); };
-
-  return (
-    <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Renommer</DialogTitle>
-          <DialogDescription>Choisissez un nouveau nom pour ce fichier.</DialogDescription>
-        </DialogHeader>
-        <Field>
-          <FieldLabel htmlFor="rename-input">Nouveau nom</FieldLabel>
-          {editingFull ? (
-            <Input
-              id="rename-input"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              onKeyDown={(event) => { if (event.key === 'Enter') submit(); }}
-            />
-          ) : (
-            <div className="flex items-center gap-1">
-              <Input
-                id="rename-input"
-                className="flex-1"
-                value={baseName}
-                onChange={(event) => setBaseName(event.target.value)}
-                onKeyDown={(event) => { if (event.key === 'Enter') submit(); }}
-              />
-              <span className="text-muted-foreground text-sm select-none">{extension}</span>
-            </div>
-          )}
-        </Field>
-        {hasExtension ? (
-          <Field orientation="horizontal">
-            <Checkbox
-              id="rename-full-name"
-              checked={renameFullName}
-              onCheckedChange={(checked) => {
-                const next = checked;
-                setRenameFullName(next);
-                // Keep both inputs in sync when toggling so the user never loses their edits.
-                if (next) setFullName(`${baseName.trim()}${extension}`);
-                else {
-                  const parts = splitFileName(fullName.trim());
-                  setBaseName(parts.base);
-                }
-              }}
-            />
-            <FieldLabel htmlFor="rename-full-name" className="font-normal">
-              Renommer le fichier entièrement (extension comprise)
-            </FieldLabel>
-          </Field>
-        ) : null}
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
-          <Button disabled={!canSubmit || isPending} onClick={submit}>
-            {isPending ? <Spinner data-icon="inline-start" /> : null}
-            Renommer
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+function isConverting(node?: FileOrFolder): boolean {
+  return node?.type === FileOrFolderType.Container
+    && node.processingStatus != null
+    && node.processingStatus !== 'completed'
+    && node.processingStatus !== 'failed';
 }
 
 function useFolder(folderId?: string) {
@@ -219,7 +38,9 @@ function useFolder(folderId?: string) {
         ? await filesApi.getRootApiV1FilesRootGet()
         : await filesApi.getFileApiV1FilesFileIdGet({ fileId: parseInt(folderId, 10) })
     ),
+    refetchInterval: (query) => (isConverting(query.state.data) ? CONVERSION_POLL_INTERVAL_MS : false),
   });
+  const converting = isConverting(folder);
   const { data: children, status } = useQuery({
     queryKey: ['files', 'children', folder?.id],
     queryFn: async () => {
@@ -227,10 +48,11 @@ function useFolder(folderId?: string) {
       return await filesApi.listChildrenApiV1FilesFolderIdChildrenGet({ folderId: folder.id });
     },
     select: (data) => ({
-      folders: data.filter((value) => value.type === FileOrFolderType.Dir),
+      folders: data.filter((value) => value.type === FileOrFolderType.Dir || value.type === FileOrFolderType.Container),
       files: data.filter((value) => value.type === FileOrFolderType.File),
     }),
     enabled: !!folder?.id,
+    refetchInterval: converting ? CONVERSION_POLL_INTERVAL_MS : false,
   });
   const { data: breadcrumb } = useQuery({
     queryKey: ['files', 'breadcrumb', folder?.id],
@@ -326,7 +148,14 @@ function FolderBody({
         </Empty>
       ) : null}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {content.folders.map((file) => <FileItem key={file.id} file={file} deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} />)}
+        {content.folders.map((file) => (
+          <FileItem
+            key={file.id}
+            file={file}
+            deleteFn={onDelete && (() => onDelete(file))}
+            renameFn={onRename && file.type !== FileOrFolderType.Container ? () => onRename(file) : undefined}
+          />
+        ))}
       </div>
       <div className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {content.files.map((file) => <FileItem key={file.id} file={file} big deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} />)}
@@ -335,14 +164,59 @@ function FolderBody({
   );
 }
 
+function FilesHeader({
+  folder, folderId, breadcrumb, canCreate, uploadInputProps, onCreateFolder,
+}: {
+  folder?: FileOrFolder;
+  folderId?: string;
+  breadcrumb?: FileOrFolder[];
+  canCreate: boolean;
+  uploadInputProps: React.InputHTMLAttributes<HTMLInputElement>;
+  onCreateFolder: () => void;
+}) {
+  let actions: React.ReactElement[] = [];
+  if (folder?.type !== FileOrFolderType.Container && canCreate) {
+    actions = [
+      <label key="upload-file" className={cn(buttonVariants({ variant: 'outline' }), 'cursor-pointer')}>
+        <CloudUpload data-icon="inline-start" />
+        Ajouter un fichier
+        <input {...uploadInputProps} className="sr-only" />
+      </label>,
+      <Header.Action key="add-folder" type="button" onClick={onCreateFolder}>
+        <FolderPlus data-icon="inline-start" />
+        Créer un dossier
+      </Header.Action>,
+    ];
+  }
+  return (
+    <Header
+      title="Fichiers"
+      subtitle={folder?.name ?? <Skeleton className="h-4 w-32" />}
+      breadcrumb={buildBreadcrumb(folderId, breadcrumb)}
+      actions={actions}
+    />
+  );
+}
+
+function effectivePermissions(
+  can: (action: string, resource: string) => boolean,
+  isContainer: boolean,
+) {
+  return {
+    canWriteHere: can('create', 'file') && !isContainer,
+    canDeleteHere: can('delete', 'file') && !isContainer,
+    canRenameHere: can('edit', 'file') && !isContainer,
+  };
+}
+
 export default function ListFilesPage() {
   const { can } = usePermissions();
-  const canCreate = can('create', 'file');
-  const canEdit = can('edit', 'file');
-  const canDelete = can('delete', 'file');
   const params = useParams();
   const { folder, children, status, breadcrumb } = useFolder(params.folderId);
   const { createFolder, uploadFiles, deleteFile, renameFile } = useFileMutations(folder?.id);
+
+  const isContainer = folder?.type === FileOrFolderType.Container;
+  const { canWriteHere, canDeleteHere, canRenameHere } = effectivePermissions(can, isContainer);
 
   const [fileToDelete, setFileToDelete] = useState<FileOrFolder | undefined>(undefined);
   const [fileToRename, setFileToRename] = useState<FileOrFolder | undefined>(undefined);
@@ -352,38 +226,33 @@ export default function ListFilesPage() {
     onDrop: (acceptedFiles) => uploadFiles.mutate(acceptedFiles),
     noClick: true,
     noKeyboard: true,
-    // Uploading requires create:file; without it, drag-and-drop must be inert
-    // (the header upload button is already hidden).
-    noDrag: !canCreate,
+    noDrag: !canWriteHere,
   });
+
+  const containerStatus = folder?.type === FileOrFolderType.Container
+    ? <ContainerStatus container={folder} />
+    : null;
 
   return (
     <>
-      <Header
-        title="Fichiers"
-        subtitle={folder?.name ?? <Skeleton className="h-4 w-32" />}
-        breadcrumb={buildBreadcrumb(params.folderId, breadcrumb)}
-        actions={canCreate ? [
-          <label key="upload-file" className={cn(buttonVariants({ variant: 'outline' }), 'cursor-pointer')}>
-            <CloudUpload data-icon="inline-start" />
-            Ajouter un fichier
-            <input {...getInputProps()} className="sr-only" />
-          </label>,
-          <Header.Action key="add-folder" type="button" onClick={() => setCreatingFolder(true)}>
-            <FolderPlus data-icon="inline-start" />
-            Créer un dossier
-          </Header.Action>,
-        ] : []}
+      <FilesHeader
+        folder={folder}
+        folderId={params.folderId}
+        breadcrumb={breadcrumb}
+        canCreate={canWriteHere}
+        uploadInputProps={getInputProps()}
+        onCreateFolder={() => setCreatingFolder(true)}
       />
       <Container>
+        {containerStatus}
         <div {...getRootProps({ className: 'relative' })}>
           <FolderBody
             status={status}
             content={children}
             isDragActive={isDragActive}
-            canCreate={canCreate}
-            onDelete={canDelete ? setFileToDelete : undefined}
-            onRename={canEdit ? setFileToRename : undefined}
+            canCreate={canWriteHere}
+            onDelete={canDeleteHere ? setFileToDelete : undefined}
+            onRename={canRenameHere ? setFileToRename : undefined}
           />
         </div>
       </Container>
@@ -394,7 +263,6 @@ export default function ListFilesPage() {
         onConfirm={(fileId) => deleteFile.mutate(fileId, { onSettled: () => setFileToDelete(undefined) })}
         onClose={() => setFileToDelete(undefined)}
       />
-
       {fileToRename ? (
         <RenameDialog
           file={fileToRename}
@@ -403,28 +271,14 @@ export default function ListFilesPage() {
           onClose={() => setFileToRename(undefined)}
         />
       ) : null}
-
-      {creatingFolder ? (
-        <NameDialog
-          open
-          title="Créer un dossier"
-          description={`Le dossier sera créé dans « ${folder?.name ?? ''} ».`}
-          label="Nom du dossier"
-          submitLabel="Créer"
-          isPending={createFolder.isPending}
-          onSubmit={(name) => createFolder.mutate(name, { onSettled: () => setCreatingFolder(false) })}
-          onClose={() => setCreatingFolder(false)}
-        />
-      ) : null}
-
-      <Dialog open={uploadFiles.isPending}>
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><CloudUpload />Envoi des fichiers...</DialogTitle>
-            <DialogDescription>Les fichiers sélectionnés sont en cours d&apos;envoi.</DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      <CreateFolderDialog
+        open={creatingFolder}
+        folderName={folder?.name}
+        isPending={createFolder.isPending}
+        onSubmit={(name) => createFolder.mutate(name, { onSettled: () => setCreatingFolder(false) })}
+        onClose={() => setCreatingFolder(false)}
+      />
+      <UploadProgressDialog open={uploadFiles.isPending} />
     </>
   );
 }
