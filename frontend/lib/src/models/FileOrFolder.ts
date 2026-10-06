@@ -29,52 +29,36 @@ import {
 export interface FileOrFolder {
     /**
      * 
-     * @type {string}
-     * @memberof FileOrFolder
      */
     name: string;
     /**
      * 
-     * @type {FileOrFolderType}
-     * @memberof FileOrFolder
      */
     type: FileOrFolderType;
     /**
      * 
-     * @type {number}
-     * @memberof FileOrFolder
      */
     id: number;
     /**
      * 
-     * @type {number}
-     * @memberof FileOrFolder
      */
     parentId?: number | null;
     /**
      * 
-     * @type {string}
-     * @memberof FileOrFolder
      */
     fileKey?: string | null;
     /**
      * 
-     * @type {number}
-     * @memberof FileOrFolder
      */
     childCount?: number | null;
     /**
      * 
-     * @type {string}
-     * @memberof FileOrFolder
      */
-    fileUrl: string | null;
+    readonly fileUrl: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof FileOrFolder
      */
-    downloadUrl: string | null;
+    readonly downloadUrl: string | null;
 }
 
 
@@ -104,9 +88,9 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'name': json['name'],
         'type': FileOrFolderTypeFromJSON(json['type']),
         'id': json['id'],
-        'parentId': json['parent_id'] == null ? undefined : json['parent_id'],
-        'fileKey': json['file_key'] == null ? undefined : json['file_key'],
-        'childCount': json['child_count'] == null ? undefined : json['child_count'],
+        'parentId': json['parent_id'] === undefined ? undefined : json['parent_id'] === null ? null : json['parent_id'],
+        'fileKey': json['file_key'] === undefined ? undefined : json['file_key'] === null ? null : json['file_key'],
+        'childCount': json['child_count'] === undefined ? undefined : json['child_count'] === null ? null : json['child_count'],
         'fileUrl': json['fileUrl'],
         'downloadUrl': json['downloadUrl'],
     };
@@ -116,7 +100,7 @@ export function FileOrFolderToJSON(json: any): FileOrFolder {
     return FileOrFolderToJSONTyped(json, false);
 }
 
-export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscriminator: boolean = false): any {
+export function FileOrFolderToJSONTyped(value?: Omit<FileOrFolder, 'fileUrl'|'downloadUrl'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -129,8 +113,6 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'parent_id': value['parentId'],
         'file_key': value['fileKey'],
         'child_count': value['childCount'],
-        'fileUrl': value['fileUrl'],
-        'downloadUrl': value['downloadUrl'],
     };
 }
 

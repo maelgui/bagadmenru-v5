@@ -34,26 +34,18 @@ import {
 export interface InvitationCreated {
     /**
      * 
-     * @type {string}
-     * @memberof InvitationCreated
      */
     token: string;
     /**
      * 
-     * @type {string}
-     * @memberof InvitationCreated
      */
     url: string;
     /**
      * 
-     * @type {InvitationChannel}
-     * @memberof InvitationCreated
      */
     channel: InvitationChannel;
     /**
      * 
-     * @type {number}
-     * @memberof InvitationCreated
      */
     expiresIn: number;
 }
@@ -67,7 +59,7 @@ export function instanceOfInvitationCreated(value: object): value is InvitationC
     if (!('token' in value) || value['token'] === undefined) return false;
     if (!('url' in value) || value['url'] === undefined) return false;
     if (!('channel' in value) || value['channel'] === undefined) return false;
-    if (!('expiresIn' in value) || value['expiresIn'] === undefined) return false;
+    if ((!('expiresIn' in (value as Record<string, any>)) && !('expires_in' in (value as Record<string, any>))) || ((value as Record<string, any>)['expiresIn'] === undefined && (value as Record<string, any>)['expires_in'] === undefined)) return false;
     return true;
 }
 

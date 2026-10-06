@@ -25,8 +25,6 @@ import { mapValues } from '../runtime';
 export interface SetPassword {
     /**
      * 
-     * @type {string}
-     * @memberof SetPassword
      */
     password: string;
 }

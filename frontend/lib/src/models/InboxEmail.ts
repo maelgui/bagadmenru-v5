@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 /**
  * An email from the inbox (headers only).
  * @export
@@ -21,20 +21,14 @@ import { mapValues } from '../runtime';
 export interface InboxEmail {
     /**
      * 
-     * @type {string}
-     * @memberof InboxEmail
      */
     subject: string;
     /**
      * 
-     * @type {Date}
-     * @memberof InboxEmail
      */
     datetime: Date;
     /**
      * 
-     * @type {string}
-     * @memberof InboxEmail
      */
     from?: string | null;
 }
@@ -59,8 +53,8 @@ export function InboxEmailFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     return {
         
         'subject': json['subject'],
-        'datetime': (new Date(json['datetime'])),
-        'from': json['from'] == null ? undefined : json['from'],
+        'datetime': (json['datetime'] == null ? json['datetime'] : parseDateTime(json['datetime'])),
+        'from': json['from'] === undefined ? undefined : json['from'] === null ? null : json['from'],
     };
 }
 
@@ -76,7 +70,7 @@ export function InboxEmailToJSONTyped(value?: InboxEmail | null, ignoreDiscrimin
     return {
         
         'subject': value['subject'],
-        'datetime': ((value['datetime']).toISOString()),
+        'datetime': value['datetime'] == null ? value['datetime'] : serializeDateTime(value['datetime']),
         'from': value['from'],
     };
 }

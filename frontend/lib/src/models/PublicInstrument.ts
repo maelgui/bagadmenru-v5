@@ -27,20 +27,14 @@ import { mapValues } from '../runtime';
 export interface PublicInstrument {
     /**
      * 
-     * @type {number}
-     * @memberof PublicInstrument
      */
     id: number;
     /**
      * 
-     * @type {string}
-     * @memberof PublicInstrument
      */
     name: string;
     /**
      * 
-     * @type {string}
-     * @memberof PublicInstrument
      */
     color: string;
 }

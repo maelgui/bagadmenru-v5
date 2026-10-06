@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 import type { Event } from './Event';
 import {
     EventFromJSON,
@@ -36,38 +36,26 @@ import {
 export interface ResponseChange {
     /**
      * 
-     * @type {number}
-     * @memberof ResponseChange
      */
     id: number;
     /**
      * 
-     * @type {boolean}
-     * @memberof ResponseChange
      */
     fromValue: boolean | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof ResponseChange
      */
     toValue: boolean;
     /**
      * 
-     * @type {Date}
-     * @memberof ResponseChange
      */
     changedAt: Date;
     /**
      * 
-     * @type {Event}
-     * @memberof ResponseChange
      */
     event: Event;
     /**
      * 
-     * @type {ResponseChangeUser}
-     * @memberof ResponseChange
      */
     user: ResponseChangeUser;
 }
@@ -77,9 +65,9 @@ export interface ResponseChange {
  */
 export function instanceOfResponseChange(value: object): value is ResponseChange {
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('fromValue' in value) || value['fromValue'] === undefined) return false;
-    if (!('toValue' in value) || value['toValue'] === undefined) return false;
-    if (!('changedAt' in value) || value['changedAt'] === undefined) return false;
+    if ((!('fromValue' in (value as Record<string, any>)) && !('from_value' in (value as Record<string, any>))) || ((value as Record<string, any>)['fromValue'] === undefined && (value as Record<string, any>)['from_value'] === undefined)) return false;
+    if ((!('toValue' in (value as Record<string, any>)) && !('to_value' in (value as Record<string, any>))) || ((value as Record<string, any>)['toValue'] === undefined && (value as Record<string, any>)['to_value'] === undefined)) return false;
+    if ((!('changedAt' in (value as Record<string, any>)) && !('changed_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['changedAt'] === undefined && (value as Record<string, any>)['changed_at'] === undefined)) return false;
     if (!('event' in value) || value['event'] === undefined) return false;
     if (!('user' in value) || value['user'] === undefined) return false;
     return true;
@@ -98,7 +86,7 @@ export function ResponseChangeFromJSONTyped(json: any, ignoreDiscriminator: bool
         'id': json['id'],
         'fromValue': json['from_value'],
         'toValue': json['to_value'],
-        'changedAt': (new Date(json['changed_at'])),
+        'changedAt': (json['changed_at'] == null ? json['changed_at'] : parseDateTime(json['changed_at'])),
         'event': EventFromJSON(json['event']),
         'user': ResponseChangeUserFromJSON(json['user']),
     };
@@ -118,7 +106,7 @@ export function ResponseChangeToJSONTyped(value?: ResponseChange | null, ignoreD
         'id': value['id'],
         'from_value': value['fromValue'],
         'to_value': value['toValue'],
-        'changed_at': ((value['changedAt']).toISOString()),
+        'changed_at': value['changedAt'] == null ? value['changedAt'] : serializeDateTime(value['changedAt']),
         'event': EventToJSON(value['event']),
         'user': ResponseChangeUserToJSON(value['user']),
     };

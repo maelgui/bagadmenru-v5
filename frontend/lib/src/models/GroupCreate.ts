@@ -21,32 +21,22 @@ import { mapValues } from '../runtime';
 export interface GroupCreate {
     /**
      * 
-     * @type {string}
-     * @memberof GroupCreate
      */
     name: string;
     /**
      * 
-     * @type {string}
-     * @memberof GroupCreate
      */
     color?: string;
     /**
      * 
-     * @type {string}
-     * @memberof GroupCreate
      */
     mailingList: string | null;
     /**
      * 
-     * @type {Array<string>}
-     * @memberof GroupCreate
      */
     roleIds: Array<string>;
     /**
      * 
-     * @type {boolean}
-     * @memberof GroupCreate
      */
     isInstrument?: boolean;
 }
@@ -56,8 +46,8 @@ export interface GroupCreate {
  */
 export function instanceOfGroupCreate(value: object): value is GroupCreate {
     if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('mailingList' in value) || value['mailingList'] === undefined) return false;
-    if (!('roleIds' in value) || value['roleIds'] === undefined) return false;
+    if ((!('mailingList' in (value as Record<string, any>)) && !('mailing_list' in (value as Record<string, any>))) || ((value as Record<string, any>)['mailingList'] === undefined && (value as Record<string, any>)['mailing_list'] === undefined)) return false;
+    if ((!('roleIds' in (value as Record<string, any>)) && !('role_ids' in (value as Record<string, any>))) || ((value as Record<string, any>)['roleIds'] === undefined && (value as Record<string, any>)['role_ids'] === undefined)) return false;
     return true;
 }
 

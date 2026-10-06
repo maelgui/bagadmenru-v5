@@ -21,20 +21,14 @@ import { mapValues } from '../runtime';
 export interface PushSubscriptionCreate {
     /**
      * 
-     * @type {string}
-     * @memberof PushSubscriptionCreate
      */
     endpoint: string;
     /**
      * 
-     * @type {string}
-     * @memberof PushSubscriptionCreate
      */
     p256dh: string;
     /**
      * 
-     * @type {string}
-     * @memberof PushSubscriptionCreate
      */
     auth: string;
 }

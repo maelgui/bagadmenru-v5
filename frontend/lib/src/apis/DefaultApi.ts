@@ -12,18 +12,17 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  HealthResponse,
-  VersionResponse,
-} from '../models/index';
 import {
+    type HealthResponse,
     HealthResponseFromJSON,
     HealthResponseToJSON,
+} from '../models/HealthResponse';
+import {
+    type VersionResponse,
     VersionResponseFromJSON,
     VersionResponseToJSON,
-} from '../models/index';
+} from '../models/VersionResponse';
 
 /**
  * 
@@ -31,19 +30,30 @@ import {
 export class DefaultApi extends runtime.BaseAPI {
 
     /**
-     * Health
+     * Creates request options for healthApiV1HealthGet without sending the request
      */
-    async healthApiV1HealthGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<HealthResponse>> {
+    async healthApiV1HealthGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/api/v1/health`,
+
+        let urlPath = `/api/v1/health`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Health
+     */
+    async healthApiV1HealthGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<HealthResponse>> {
+        const requestOptions = await this.healthApiV1HealthGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => HealthResponseFromJSON(jsonValue));
     }
@@ -57,19 +67,30 @@ export class DefaultApi extends runtime.BaseAPI {
     }
 
     /**
-     * Hello
+     * Creates request options for helloGet without sending the request
      */
-    async helloGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<HealthResponse>> {
+    async helloGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/`,
+
+        let urlPath = `/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Hello
+     */
+    async helloGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<HealthResponse>> {
+        const requestOptions = await this.helloGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => HealthResponseFromJSON(jsonValue));
     }
@@ -83,19 +104,30 @@ export class DefaultApi extends runtime.BaseAPI {
     }
 
     /**
-     * Version
+     * Creates request options for versionApiV1VersionGet without sending the request
      */
-    async versionApiV1VersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VersionResponse>> {
+    async versionApiV1VersionGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/api/v1/version`,
+
+        let urlPath = `/api/v1/version`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Version
+     */
+    async versionApiV1VersionGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VersionResponse>> {
+        const requestOptions = await this.versionApiV1VersionGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => VersionResponseFromJSON(jsonValue));
     }

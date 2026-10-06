@@ -12,75 +12,116 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  HTTPValidationError,
-  LoginCode,
-  LoginData,
-  LogoutRequest,
-  Passkey,
-  PasskeySignal,
-  RecoveryGrant,
-  ResetPasswordRequest,
-  SessionInfo,
-  SetPassword,
-  Token,
-} from '../models/index';
 import {
+    type HTTPValidationError,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+} from '../models/HTTPValidationError';
+import {
+    type LoginCode,
     LoginCodeFromJSON,
     LoginCodeToJSON,
+} from '../models/LoginCode';
+import {
+    type LoginData,
     LoginDataFromJSON,
     LoginDataToJSON,
+} from '../models/LoginData';
+import {
+    type LogoutRequest,
     LogoutRequestFromJSON,
     LogoutRequestToJSON,
+} from '../models/LogoutRequest';
+import {
+    type Passkey,
     PasskeyFromJSON,
     PasskeyToJSON,
+} from '../models/Passkey';
+import {
+    type PasskeySignal,
     PasskeySignalFromJSON,
     PasskeySignalToJSON,
+} from '../models/PasskeySignal';
+import {
+    type RecoveryGrant,
     RecoveryGrantFromJSON,
     RecoveryGrantToJSON,
+} from '../models/RecoveryGrant';
+import {
+    type ResetPasswordRequest,
     ResetPasswordRequestFromJSON,
     ResetPasswordRequestToJSON,
+} from '../models/ResetPasswordRequest';
+import {
+    type SessionInfo,
     SessionInfoFromJSON,
     SessionInfoToJSON,
+} from '../models/SessionInfo';
+import {
+    type SetPassword,
     SetPasswordFromJSON,
     SetPasswordToJSON,
+} from '../models/SetPassword';
+import {
+    type Token,
     TokenFromJSON,
     TokenToJSON,
-} from '../models/index';
+} from '../models/Token';
 
 export interface DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest {
+    /**
+     * 
+     */
     credentialId: string;
 }
 
 export interface LoginWithCodeApiV1AuthLoginCodePostRequest {
+    /**
+     * 
+     */
     loginCode: LoginCode;
 }
 
 export interface LogoutApiV1AuthLogoutPostRequest {
-    logoutRequest?: LogoutRequest;
+    /**
+     * 
+     */
+    logoutRequest?: LogoutRequest | null;
 }
 
 export interface PreregisterPasskeyApiV1WebauthnPreregisterGetRequest {
+    /**
+     * 
+     */
     flow?: PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum;
 }
 
 export interface ProcessLoginApiV1AuthLoginPostRequest {
+    /**
+     * 
+     */
     loginData: LoginData;
 }
 
 export interface RegisterPasskeyApiV1WebauthnRegisterPostRequest {
-    requestBody: { [key: string]: any; };
+    /**
+     * 
+     */
+    requestBody: { [key: string]: any | null; };
 }
 
 export interface ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest {
+    /**
+     * 
+     */
     resetPasswordRequest: ResetPasswordRequest;
 }
 
 export interface SetPasswordApiV1AuthSetPasswordPostRequest {
+    /**
+     * 
+     */
     setPassword: SetPassword;
 }
 
@@ -90,10 +131,9 @@ export interface SetPasswordApiV1AuthSetPasswordPostRequest {
 export class AuthenticationApi extends runtime.BaseAPI {
 
     /**
-     * Delete a passkey and return the Signal API payload.  The response lists the credentials still valid for this user so the client can call ``PublicKeyCredential.signalAllAcceptedCredentials()``: the passkey provider then deletes its local copy of the removed key immediately, instead of keeping an orphan that would be suggested at the next login and fail.
-     * Delete Passkey
+     * Creates request options for deletePasskeyApiV1WebauthnCredentialIdDelete without sending the request
      */
-    async deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PasskeySignal>> {
+    async deletePasskeyApiV1WebauthnCredentialIdDeleteRequestOpts(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['credentialId'] == null) {
             throw new runtime.RequiredError(
                 'credentialId',
@@ -113,12 +153,25 @@ export class AuthenticationApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/webauthn/{credential_id}`.replace(`{${"credential_id"}}`, encodeURIComponent(String(requestParameters['credentialId']))),
+
+        let urlPath = `/api/v1/webauthn/{credential_id}`;
+        urlPath = urlPath.replace('{credential_id}', encodeURIComponent(String(requestParameters['credentialId'])));
+
+        return {
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Delete a passkey and return the Signal API payload.  The response lists the credentials still valid for this user so the client can call ``PublicKeyCredential.signalAllAcceptedCredentials()``: the passkey provider then deletes its local copy of the removed key immediately, instead of keeping an orphan that would be suggested at the next login and fail.
+     * Delete Passkey
+     */
+    async deletePasskeyApiV1WebauthnCredentialIdDeleteRaw(requestParameters: DeletePasskeyApiV1WebauthnCredentialIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PasskeySignal>> {
+        const requestOptions = await this.deletePasskeyApiV1WebauthnCredentialIdDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => PasskeySignalFromJSON(jsonValue));
     }
@@ -133,9 +186,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * List Passkeys
+     * Creates request options for listPasskeysApiV1WebauthnGet without sending the request
      */
-    async listPasskeysApiV1WebauthnGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Passkey>>> {
+    async listPasskeysApiV1WebauthnGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -148,12 +201,23 @@ export class AuthenticationApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/webauthn/`,
+
+        let urlPath = `/api/v1/webauthn/`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * List Passkeys
+     */
+    async listPasskeysApiV1WebauthnGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Passkey>>> {
+        const requestOptions = await this.listPasskeysApiV1WebauthnGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PasskeyFromJSON));
     }
@@ -167,20 +231,31 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Return all accounts currently signed in this browser (multi-account).  Public endpoint (no auth dependency): it only reflects the cookies the caller already holds and never reveals anything about accounts whose signed session cookie is not present.
-     * List Sessions
+     * Creates request options for listSessionsApiV1AuthSessionsGet without sending the request
      */
-    async listSessionsApiV1AuthSessionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SessionInfo>>> {
+    async listSessionsApiV1AuthSessionsGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/api/v1/auth/sessions`,
+
+        let urlPath = `/api/v1/auth/sessions`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Return all accounts currently signed in this browser (multi-account).  Public endpoint (no auth dependency): it only reflects the cookies the caller already holds and never reveals anything about accounts whose signed session cookie is not present.
+     * List Sessions
+     */
+    async listSessionsApiV1AuthSessionsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SessionInfo>>> {
+        const requestOptions = await this.listSessionsApiV1AuthSessionsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SessionInfoFromJSON));
     }
@@ -195,10 +270,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Sign the member in from an emailed recovery grant (grant id + code).  Single consumption endpoint of the recovery email, for every account type. The grant id publicly identifies the request; the 6-digit code is the secret (RFC 8628\'s device_code/user_code split). The email offers it two ways: the code to type into the page that requested it — the primary path, keeping the session (and the passkey ceremony that may follow) in a real browser instead of an email app\'s WebView — and a link that is this same call with both fields prefilled in its URL (verification_uri_complete pattern). Also the landing of the welcome email sent when staff creates a member by hand.  Proving control of the email is a full authentication (same reasoning as the invitation-accept flow), so the member lands signed in (additive session cookies, becomes the active account) and the client offers how to secure the next sign-in: a passkey, or a new password for accounts that had one.  Guessing is bounded by the attempt counter (then the grant is revoked) and the grant\'s short lifetime. Every failure returns the same 403 so the endpoint reveals nothing about account existence, pending recoveries, or grant-id validity (decoy grant ids answer identically).
-     * Login With Code
+     * Creates request options for loginWithCodeApiV1AuthLoginCodePost without sending the request
      */
-    async loginWithCodeApiV1AuthLoginCodePostRaw(requestParameters: LoginWithCodeApiV1AuthLoginCodePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
+    async loginWithCodeApiV1AuthLoginCodePostRequestOpts(requestParameters: LoginWithCodeApiV1AuthLoginCodePostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['loginCode'] == null) {
             throw new runtime.RequiredError(
                 'loginCode',
@@ -212,13 +286,25 @@ export class AuthenticationApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/api/v1/auth/login_code`,
+
+        let urlPath = `/api/v1/auth/login_code`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: LoginCodeToJSON(requestParameters['loginCode']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Sign the member in from an emailed recovery grant (grant id + code).  Single consumption endpoint of the recovery email, for every account type. The grant id publicly identifies the request; the 6-digit code is the secret (RFC 8628\'s device_code/user_code split). The email offers it two ways: the code to type into the page that requested it — the primary path, keeping the session (and the passkey ceremony that may follow) in a real browser instead of an email app\'s WebView — and a link that is this same call with both fields prefilled in its URL (verification_uri_complete pattern). Also the landing of the welcome email sent when staff creates a member by hand.  Proving control of the email is a full authentication (same reasoning as the invitation-accept flow), so the member lands signed in (additive session cookies, becomes the active account) and the client offers how to secure the next sign-in: a passkey, or a new password for accounts that had one.  Guessing is bounded by the attempt counter (then the grant is revoked) and the grant\'s short lifetime. Every failure returns the same 403 so the endpoint reveals nothing about account existence, pending recoveries, or grant-id validity (decoy grant ids answer identically).
+     * Login With Code
+     */
+    async loginWithCodeApiV1AuthLoginCodePostRaw(requestParameters: LoginWithCodeApiV1AuthLoginCodePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
+        const requestOptions = await this.loginWithCodeApiV1AuthLoginCodePostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TokenFromJSON(jsonValue));
     }
@@ -233,23 +319,34 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Sign out of a single account and return the remaining sessions.  Deletes only the targeted account\'s session cookie (``account_id`` in the body, defaulting to the active account). Other accounts stay signed in. When no sessions remain the ``active_account`` selector is cleared too. The legacy single-session ``access_token`` cookie is also cleared when it is the thing being logged out, for backward compatibility.  When ``all`` is true, every account signed in this browser is signed out at once (``account_id`` is ignored) and an empty list is returned. This only clears cookies in the current browser; sessions on other devices are not revoked (tokens are stateless and carry no server-side session record).
-     * Logout
+     * Creates request options for logoutApiV1AuthLogoutPost without sending the request
      */
-    async logoutApiV1AuthLogoutPostRaw(requestParameters: LogoutApiV1AuthLogoutPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SessionInfo>>> {
+    async logoutApiV1AuthLogoutPostRequestOpts(requestParameters: LogoutApiV1AuthLogoutPostRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/api/v1/auth/logout`,
+
+        let urlPath = `/api/v1/auth/logout`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: LogoutRequestToJSON(requestParameters['logoutRequest']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Sign out of a single account and return the remaining sessions.  Deletes only the targeted account\'s session cookie (``account_id`` in the body, defaulting to the active account). Other accounts stay signed in. When no sessions remain the ``active_account`` selector is cleared too. The legacy single-session ``access_token`` cookie is also cleared when it is the thing being logged out, for backward compatibility.  When ``all`` is true, every account signed in this browser is signed out at once (``account_id`` is ignored) and an empty list is returned. This only clears cookies in the current browser; sessions on other devices are not revoked (tokens are stateless and carry no server-side session record).
+     * Logout
+     */
+    async logoutApiV1AuthLogoutPostRaw(requestParameters: LogoutApiV1AuthLogoutPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SessionInfo>>> {
+        const requestOptions = await this.logoutApiV1AuthLogoutPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SessionInfoFromJSON));
     }
@@ -264,19 +361,30 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Prepare Login
+     * Creates request options for prepareLoginApiV1AuthLoginGet without sending the request
      */
-    async prepareLoginApiV1AuthLoginGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async prepareLoginApiV1AuthLoginGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const response = await this.request({
-            path: `/api/v1/auth/login`,
+
+        let urlPath = `/api/v1/auth/login`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Prepare Login
+     */
+    async prepareLoginApiV1AuthLoginGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.prepareLoginApiV1AuthLoginGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<any>(response);
@@ -294,9 +402,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Preregister Passkey
+     * Creates request options for preregisterPasskeyApiV1WebauthnPreregisterGet without sending the request
      */
-    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+    async preregisterPasskeyApiV1WebauthnPreregisterGetRequestOpts(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         if (requestParameters['flow'] != null) {
@@ -313,12 +421,23 @@ export class AuthenticationApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/webauthn/preregister`,
+
+        let urlPath = `/api/v1/webauthn/preregister`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Preregister Passkey
+     */
+    async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const requestOptions = await this.preregisterPasskeyApiV1WebauthnPreregisterGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<any>(response);
@@ -336,9 +455,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Process Login
+     * Creates request options for processLoginApiV1AuthLoginPost without sending the request
      */
-    async processLoginApiV1AuthLoginPostRaw(requestParameters: ProcessLoginApiV1AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
+    async processLoginApiV1AuthLoginPostRequestOpts(requestParameters: ProcessLoginApiV1AuthLoginPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['loginData'] == null) {
             throw new runtime.RequiredError(
                 'loginData',
@@ -352,13 +471,24 @@ export class AuthenticationApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/api/v1/auth/login`,
+
+        let urlPath = `/api/v1/auth/login`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: LoginDataToJSON(requestParameters['loginData']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Process Login
+     */
+    async processLoginApiV1AuthLoginPostRaw(requestParameters: ProcessLoginApiV1AuthLoginPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Token>> {
+        const requestOptions = await this.processLoginApiV1AuthLoginPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TokenFromJSON(jsonValue));
     }
@@ -372,9 +502,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Register Passkey
+     * Creates request options for registerPasskeyApiV1WebauthnRegisterPost without sending the request
      */
-    async registerPasskeyApiV1WebauthnRegisterPostRaw(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+    async registerPasskeyApiV1WebauthnRegisterPostRequestOpts(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['requestBody'] == null) {
             throw new runtime.RequiredError(
                 'requestBody',
@@ -396,13 +526,24 @@ export class AuthenticationApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/webauthn/register`,
+
+        let urlPath = `/api/v1/webauthn/register`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: requestParameters['requestBody'],
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Register Passkey
+     */
+    async registerPasskeyApiV1WebauthnRegisterPostRaw(requestParameters: RegisterPasskeyApiV1WebauthnRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const requestOptions = await this.registerPasskeyApiV1WebauthnRegisterPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<string>(response);
@@ -420,9 +561,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Reset Password Request
+     * Creates request options for resetPasswordRequestApiV1AuthResetPasswordRequestPost without sending the request
      */
-    async resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RecoveryGrant>> {
+    async resetPasswordRequestApiV1AuthResetPasswordRequestPostRequestOpts(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['resetPasswordRequest'] == null) {
             throw new runtime.RequiredError(
                 'resetPasswordRequest',
@@ -436,13 +577,24 @@ export class AuthenticationApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        const response = await this.request({
-            path: `/api/v1/auth/reset_password_request`,
+
+        let urlPath = `/api/v1/auth/reset_password_request`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: ResetPasswordRequestToJSON(requestParameters['resetPasswordRequest']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Reset Password Request
+     */
+    async resetPasswordRequestApiV1AuthResetPasswordRequestPostRaw(requestParameters: ResetPasswordRequestApiV1AuthResetPasswordRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RecoveryGrant>> {
+        const requestOptions = await this.resetPasswordRequestApiV1AuthResetPasswordRequestPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => RecoveryGrantFromJSON(jsonValue));
     }
@@ -456,10 +608,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Set (or replace) the signed-in member\'s password.  Recovery successor of the old ``POST /auth/reset``: proving control of the email (code or link) already signed the member in, so setting a new password is now an authenticated action instead of a token-bearing one. Deliberately does not require the current password — the flow exists precisely because it was forgotten. The trust boundary is kept at \"proved email control recently\" by requiring a FRESH session (see ``SET_PASSWORD_MAX_SESSION_AGE``): without it, any live session (they last 90 days and cannot be revoked) could quietly take over the account with a password of its own. Also usable later from the account-security settings for members who want a fallback password, behind a fresh re-authentication.
-     * Set Password
+     * Creates request options for setPasswordApiV1AuthSetPasswordPost without sending the request
      */
-    async setPasswordApiV1AuthSetPasswordPostRaw(requestParameters: SetPasswordApiV1AuthSetPasswordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+    async setPasswordApiV1AuthSetPasswordPostRequestOpts(requestParameters: SetPasswordApiV1AuthSetPasswordPostRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['setPassword'] == null) {
             throw new runtime.RequiredError(
                 'setPassword',
@@ -481,13 +632,25 @@ export class AuthenticationApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/auth/set_password`,
+
+        let urlPath = `/api/v1/auth/set_password`;
+
+        return {
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: SetPasswordToJSON(requestParameters['setPassword']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Set (or replace) the signed-in member\'s password.  Recovery successor of the old ``POST /auth/reset``: proving control of the email (code or link) already signed the member in, so setting a new password is now an authenticated action instead of a token-bearing one. Deliberately does not require the current password — the flow exists precisely because it was forgotten. The trust boundary is kept at \"proved email control recently\" by requiring a FRESH session (see ``SET_PASSWORD_MAX_SESSION_AGE``): without it, any live session (they last 90 days and cannot be revoked) could quietly take over the account with a password of its own. Also usable later from the account-security settings for members who want a fallback password, behind a fresh re-authentication.
+     * Set Password
+     */
+    async setPasswordApiV1AuthSetPasswordPostRaw(requestParameters: SetPasswordApiV1AuthSetPasswordPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const requestOptions = await this.setPasswordApiV1AuthSetPasswordPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
             return new runtime.JSONApiResponse<string>(response);
@@ -506,10 +669,9 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
     /**
-     * Forward-auth gate for the Mailpit UI (beta).  Reachable through Traefik\'s ``forwardAuth`` middleware, which replays the caller\'s cookies here before serving the internal Mailpit service. A 204 means the browser holds a valid session whose role grants ``VIEW:EMAIL`` (staff/admin); the ``Authorization`` dependency raises 401/403 otherwise. The body is empty on purpose: only the status code matters to Traefik.
-     * Verify Email Access
+     * Creates request options for verifyEmailAccessApiV1AuthVerifyGet without sending the request
      */
-    async verifyEmailAccessApiV1AuthVerifyGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async verifyEmailAccessApiV1AuthVerifyGetRequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -522,12 +684,24 @@ export class AuthenticationApi extends runtime.BaseAPI {
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
-        const response = await this.request({
-            path: `/api/v1/auth/verify`,
+
+        let urlPath = `/api/v1/auth/verify`;
+
+        return {
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Forward-auth gate for the Mailpit UI (beta).  Reachable through Traefik\'s ``forwardAuth`` middleware, which replays the caller\'s cookies here before serving the internal Mailpit service. A 204 means the browser holds a valid session whose role grants ``VIEW:EMAIL`` (staff/admin); the ``Authorization`` dependency raises 401/403 otherwise. The body is empty on purpose: only the status code matters to Traefik.
+     * Verify Email Access
+     */
+    async verifyEmailAccessApiV1AuthVerifyGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.verifyEmailAccessApiV1AuthVerifyGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -547,6 +721,6 @@ export class AuthenticationApi extends runtime.BaseAPI {
  */
 export const PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum = {
     Explicit: 'explicit',
-    Silent: 'silent'
+    Silent: 'silent',
 } as const;
 export type PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum = typeof PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum[keyof typeof PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum];

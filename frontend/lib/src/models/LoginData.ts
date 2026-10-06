@@ -29,26 +29,18 @@ import {
 export interface LoginData {
     /**
      * 
-     * @type {LoginType}
-     * @memberof LoginData
      */
     type: LoginType;
     /**
      * 
-     * @type {string}
-     * @memberof LoginData
      */
     email?: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof LoginData
      */
     password?: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof LoginData
      */
     passkey?: string | null;
 }
@@ -74,9 +66,9 @@ export function LoginDataFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return {
         
         'type': LoginTypeFromJSON(json['type']),
-        'email': json['email'] == null ? undefined : json['email'],
-        'password': json['password'] == null ? undefined : json['password'],
-        'passkey': json['passkey'] == null ? undefined : json['passkey'],
+        'email': json['email'] === undefined ? undefined : json['email'] === null ? null : json['email'],
+        'password': json['password'] === undefined ? undefined : json['password'] === null ? null : json['password'],
+        'passkey': json['passkey'] === undefined ? undefined : json['passkey'] === null ? null : json['passkey'],
     };
 }
 

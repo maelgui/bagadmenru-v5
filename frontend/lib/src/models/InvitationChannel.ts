@@ -19,7 +19,7 @@
  */
 export const InvitationChannel = {
     Link: 'link',
-    Email: 'email'
+    Email: 'email',
 } as const;
 export type InvitationChannel = typeof InvitationChannel[keyof typeof InvitationChannel];
 

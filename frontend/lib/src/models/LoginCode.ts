@@ -25,20 +25,14 @@ import { mapValues } from '../runtime';
 export interface LoginCode {
     /**
      * 
-     * @type {string}
-     * @memberof LoginCode
      */
     grantId: string;
     /**
      * 
-     * @type {string}
-     * @memberof LoginCode
      */
     code: string;
     /**
      * 
-     * @type {string}
-     * @memberof LoginCode
      */
     via?: LoginCodeViaEnum;
 }
@@ -49,7 +43,7 @@ export interface LoginCode {
  */
 export const LoginCodeViaEnum = {
     Code: 'code',
-    Link: 'link'
+    Link: 'link',
 } as const;
 export type LoginCodeViaEnum = typeof LoginCodeViaEnum[keyof typeof LoginCodeViaEnum];
 
@@ -58,7 +52,7 @@ export type LoginCodeViaEnum = typeof LoginCodeViaEnum[keyof typeof LoginCodeVia
  * Check if a given object implements the LoginCode interface.
  */
 export function instanceOfLoginCode(value: object): value is LoginCode {
-    if (!('grantId' in value) || value['grantId'] === undefined) return false;
+    if ((!('grantId' in (value as Record<string, any>)) && !('grant_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['grantId'] === undefined && (value as Record<string, any>)['grant_id'] === undefined)) return false;
     if (!('code' in value) || value['code'] === undefined) return false;
     return true;
 }

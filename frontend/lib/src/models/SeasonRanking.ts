@@ -32,14 +32,10 @@ import {
 export interface SeasonRanking {
     /**
      * 
-     * @type {number}
-     * @memberof SeasonRanking
      */
     season: number | null;
     /**
      * 
-     * @type {Array<UserRankingItem>}
-     * @memberof SeasonRanking
      */
     items: Array<UserRankingItem>;
 }

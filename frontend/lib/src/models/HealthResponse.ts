@@ -21,8 +21,6 @@ import { mapValues } from '../runtime';
 export interface HealthResponse {
     /**
      * 
-     * @type {string}
-     * @memberof HealthResponse
      */
     status: string;
 }

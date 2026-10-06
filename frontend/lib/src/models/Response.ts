@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 /**
  * 
  * @export
@@ -21,26 +21,18 @@ import { mapValues } from '../runtime';
 export interface Response {
     /**
      * 
-     * @type {boolean}
-     * @memberof Response
      */
     value: boolean;
     /**
      * 
-     * @type {string}
-     * @memberof Response
      */
     userId: string;
     /**
      * 
-     * @type {number}
-     * @memberof Response
      */
     eventId: number;
     /**
      * 
-     * @type {Date}
-     * @memberof Response
      */
     date: Date | null;
 }
@@ -50,8 +42,8 @@ export interface Response {
  */
 export function instanceOfResponse(value: object): value is Response {
     if (!('value' in value) || value['value'] === undefined) return false;
-    if (!('userId' in value) || value['userId'] === undefined) return false;
-    if (!('eventId' in value) || value['eventId'] === undefined) return false;
+    if ((!('userId' in (value as Record<string, any>)) && !('user_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['userId'] === undefined && (value as Record<string, any>)['user_id'] === undefined)) return false;
+    if ((!('eventId' in (value as Record<string, any>)) && !('event_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['eventId'] === undefined && (value as Record<string, any>)['event_id'] === undefined)) return false;
     if (!('date' in value) || value['date'] === undefined) return false;
     return true;
 }
@@ -69,7 +61,7 @@ export function ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'value': json['value'],
         'userId': json['user_id'],
         'eventId': json['event_id'],
-        'date': (json['date'] == null ? null : new Date(json['date'])),
+        'date': (json['date'] == null ? null : parseDateTime(json['date'])),
     };
 }
 
@@ -87,7 +79,7 @@ export function ResponseToJSONTyped(value?: Response | null, ignoreDiscriminator
         'value': value['value'],
         'user_id': value['userId'],
         'event_id': value['eventId'],
-        'date': (value['date'] == null ? null : (value['date'] as any).toISOString()),
+        'date': value['date'] == null ? value['date'] : serializeDateTime(value['date']),
     };
 }
 

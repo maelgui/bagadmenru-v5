@@ -161,7 +161,7 @@ export default function FileItem({
                     <DropdownMenuItem
                       render={(
                         <a
-                          href={file.downloadUrl ?? undefined}
+                          href={file.downloadUrl}
                           download={file.name}
                           rel="noopener noreferrer"
                         />

@@ -21,8 +21,6 @@ import { mapValues } from '../runtime';
 export interface VapidPublicKeyResponse {
     /**
      * 
-     * @type {string}
-     * @memberof VapidPublicKeyResponse
      */
     publicKey: string;
 }
@@ -31,7 +29,7 @@ export interface VapidPublicKeyResponse {
  * Check if a given object implements the VapidPublicKeyResponse interface.
  */
 export function instanceOfVapidPublicKeyResponse(value: object): value is VapidPublicKeyResponse {
-    if (!('publicKey' in value) || value['publicKey'] === undefined) return false;
+    if ((!('publicKey' in (value as Record<string, any>)) && !('public_key' in (value as Record<string, any>))) || ((value as Record<string, any>)['publicKey'] === undefined && (value as Record<string, any>)['public_key'] === undefined)) return false;
     return true;
 }
 

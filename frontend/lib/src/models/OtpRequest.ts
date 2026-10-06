@@ -21,8 +21,6 @@ import { mapValues } from '../runtime';
 export interface OtpRequest {
     /**
      * 
-     * @type {string}
-     * @memberof OtpRequest
      */
     email: string;
 }

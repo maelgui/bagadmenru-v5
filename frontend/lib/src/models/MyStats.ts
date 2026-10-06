@@ -21,26 +21,18 @@ import { mapValues } from '../runtime';
 export interface MyStats {
     /**
      * 
-     * @type {number}
-     * @memberof MyStats
      */
     nResponses: number;
     /**
      * 
-     * @type {number}
-     * @memberof MyStats
      */
     nPositiveResponses: number | null;
     /**
      * 
-     * @type {string}
-     * @memberof MyStats
      */
     avgResponseTime: string | null;
     /**
      * 
-     * @type {number}
-     * @memberof MyStats
      */
     nUpcommingResponses: number;
 }
@@ -49,10 +41,10 @@ export interface MyStats {
  * Check if a given object implements the MyStats interface.
  */
 export function instanceOfMyStats(value: object): value is MyStats {
-    if (!('nResponses' in value) || value['nResponses'] === undefined) return false;
-    if (!('nPositiveResponses' in value) || value['nPositiveResponses'] === undefined) return false;
-    if (!('avgResponseTime' in value) || value['avgResponseTime'] === undefined) return false;
-    if (!('nUpcommingResponses' in value) || value['nUpcommingResponses'] === undefined) return false;
+    if ((!('nResponses' in (value as Record<string, any>)) && !('n_responses' in (value as Record<string, any>))) || ((value as Record<string, any>)['nResponses'] === undefined && (value as Record<string, any>)['n_responses'] === undefined)) return false;
+    if ((!('nPositiveResponses' in (value as Record<string, any>)) && !('n_positive_responses' in (value as Record<string, any>))) || ((value as Record<string, any>)['nPositiveResponses'] === undefined && (value as Record<string, any>)['n_positive_responses'] === undefined)) return false;
+    if ((!('avgResponseTime' in (value as Record<string, any>)) && !('avg_response_time' in (value as Record<string, any>))) || ((value as Record<string, any>)['avgResponseTime'] === undefined && (value as Record<string, any>)['avg_response_time'] === undefined)) return false;
+    if ((!('nUpcommingResponses' in (value as Record<string, any>)) && !('n_upcomming_responses' in (value as Record<string, any>))) || ((value as Record<string, any>)['nUpcommingResponses'] === undefined && (value as Record<string, any>)['n_upcomming_responses'] === undefined)) return false;
     return true;
 }
 

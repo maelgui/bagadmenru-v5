@@ -36,44 +36,30 @@ import {
 export interface Group {
     /**
      * 
-     * @type {string}
-     * @memberof Group
      */
     name: string;
     /**
      * 
-     * @type {string}
-     * @memberof Group
      */
     color?: string;
     /**
      * 
-     * @type {number}
-     * @memberof Group
      */
     id: number;
     /**
      * 
-     * @type {boolean}
-     * @memberof Group
      */
     isInstrument?: boolean;
     /**
      * 
-     * @type {string}
-     * @memberof Group
      */
     mailingList: string | null;
     /**
      * 
-     * @type {Array<Role>}
-     * @memberof Group
      */
     roles: Array<Role>;
     /**
      * 
-     * @type {Array<Profile>}
-     * @memberof Group
      */
     members: Array<Profile>;
 }
@@ -84,7 +70,7 @@ export interface Group {
 export function instanceOfGroup(value: object): value is Group {
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('mailingList' in value) || value['mailingList'] === undefined) return false;
+    if ((!('mailingList' in (value as Record<string, any>)) && !('mailing_list' in (value as Record<string, any>))) || ((value as Record<string, any>)['mailingList'] === undefined && (value as Record<string, any>)['mailing_list'] === undefined)) return false;
     if (!('roles' in value) || value['roles'] === undefined) return false;
     if (!('members' in value) || value['members'] === undefined) return false;
     return true;

@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 import type { Costume } from './Costume';
 import {
     CostumeFromJSON,
@@ -29,38 +29,26 @@ import {
 export interface EventCreate {
     /**
      * 
-     * @type {string}
-     * @memberof EventCreate
      */
     title: string;
     /**
      * 
-     * @type {string}
-     * @memberof EventCreate
      */
     description: string;
     /**
      * 
-     * @type {Date}
-     * @memberof EventCreate
      */
     date: Date;
     /**
      * 
-     * @type {Costume}
-     * @memberof EventCreate
      */
     costume: Costume;
     /**
      * 
-     * @type {string}
-     * @memberof EventCreate
      */
     category: string;
     /**
      * 
-     * @type {boolean}
-     * @memberof EventCreate
      */
     isInDoodle: boolean;
 }
@@ -76,7 +64,7 @@ export function instanceOfEventCreate(value: object): value is EventCreate {
     if (!('date' in value) || value['date'] === undefined) return false;
     if (!('costume' in value) || value['costume'] === undefined) return false;
     if (!('category' in value) || value['category'] === undefined) return false;
-    if (!('isInDoodle' in value) || value['isInDoodle'] === undefined) return false;
+    if ((!('isInDoodle' in (value as Record<string, any>)) && !('is_in_doodle' in (value as Record<string, any>))) || ((value as Record<string, any>)['isInDoodle'] === undefined && (value as Record<string, any>)['is_in_doodle'] === undefined)) return false;
     return true;
 }
 
@@ -92,7 +80,7 @@ export function EventCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
         'title': json['title'],
         'description': json['description'],
-        'date': (new Date(json['date'])),
+        'date': (json['date'] == null ? json['date'] : parseDate(json['date'])),
         'costume': CostumeFromJSON(json['costume']),
         'category': json['category'],
         'isInDoodle': json['is_in_doodle'],
@@ -112,7 +100,7 @@ export function EventCreateToJSONTyped(value?: EventCreate | null, ignoreDiscrim
         
         'title': value['title'],
         'description': value['description'],
-        'date': ((value['date']).toISOString().substring(0,10)),
+        'date': value['date'] == null ? value['date'] : serializeDate(value['date']),
         'costume': CostumeToJSON(value['costume']),
         'category': value['category'],
         'is_in_doodle': value['isInDoodle'],

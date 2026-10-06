@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 /**
  * One membership record, as ingested from HelloAsso.
  * @export
@@ -21,56 +21,38 @@ import { mapValues } from '../runtime';
 export interface MembershipHistoryItem {
     /**
      * 
-     * @type {string}
-     * @memberof MembershipHistoryItem
      */
     id: string;
     /**
      * 
-     * @type {string}
-     * @memberof MembershipHistoryItem
      */
     tierName: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof MembershipHistoryItem
      */
     tierDescription: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof MembershipHistoryItem
      */
     adherentFirstName: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof MembershipHistoryItem
      */
     adherentLastName: string | null;
     /**
      * 
-     * @type {number}
-     * @memberof MembershipHistoryItem
      */
     amount: number;
     /**
      * 
-     * @type {Date}
-     * @memberof MembershipHistoryItem
      */
     orderDate: Date;
     /**
      * 
-     * @type {string}
-     * @memberof MembershipHistoryItem
      */
     state: string;
     /**
      * 
-     * @type {string}
-     * @memberof MembershipHistoryItem
      */
     season: string;
 }
@@ -80,12 +62,12 @@ export interface MembershipHistoryItem {
  */
 export function instanceOfMembershipHistoryItem(value: object): value is MembershipHistoryItem {
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('tierName' in value) || value['tierName'] === undefined) return false;
-    if (!('tierDescription' in value) || value['tierDescription'] === undefined) return false;
-    if (!('adherentFirstName' in value) || value['adherentFirstName'] === undefined) return false;
-    if (!('adherentLastName' in value) || value['adherentLastName'] === undefined) return false;
+    if ((!('tierName' in (value as Record<string, any>)) && !('tier_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['tierName'] === undefined && (value as Record<string, any>)['tier_name'] === undefined)) return false;
+    if ((!('tierDescription' in (value as Record<string, any>)) && !('tier_description' in (value as Record<string, any>))) || ((value as Record<string, any>)['tierDescription'] === undefined && (value as Record<string, any>)['tier_description'] === undefined)) return false;
+    if ((!('adherentFirstName' in (value as Record<string, any>)) && !('adherent_first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['adherentFirstName'] === undefined && (value as Record<string, any>)['adherent_first_name'] === undefined)) return false;
+    if ((!('adherentLastName' in (value as Record<string, any>)) && !('adherent_last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['adherentLastName'] === undefined && (value as Record<string, any>)['adherent_last_name'] === undefined)) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
-    if (!('orderDate' in value) || value['orderDate'] === undefined) return false;
+    if ((!('orderDate' in (value as Record<string, any>)) && !('order_date' in (value as Record<string, any>))) || ((value as Record<string, any>)['orderDate'] === undefined && (value as Record<string, any>)['order_date'] === undefined)) return false;
     if (!('state' in value) || value['state'] === undefined) return false;
     if (!('season' in value) || value['season'] === undefined) return false;
     return true;
@@ -107,7 +89,7 @@ export function MembershipHistoryItemFromJSONTyped(json: any, ignoreDiscriminato
         'adherentFirstName': json['adherent_first_name'],
         'adherentLastName': json['adherent_last_name'],
         'amount': json['amount'],
-        'orderDate': (new Date(json['order_date'])),
+        'orderDate': (json['order_date'] == null ? json['order_date'] : parseDateTime(json['order_date'])),
         'state': json['state'],
         'season': json['season'],
     };
@@ -130,7 +112,7 @@ export function MembershipHistoryItemToJSONTyped(value?: MembershipHistoryItem |
         'adherent_first_name': value['adherentFirstName'],
         'adherent_last_name': value['adherentLastName'],
         'amount': value['amount'],
-        'order_date': ((value['orderDate']).toISOString()),
+        'order_date': value['orderDate'] == null ? value['orderDate'] : serializeDateTime(value['orderDate']),
         'state': value['state'],
         'season': value['season'],
     };

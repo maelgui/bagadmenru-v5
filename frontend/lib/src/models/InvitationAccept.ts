@@ -25,32 +25,22 @@ import { mapValues } from '../runtime';
 export interface InvitationAccept {
     /**
      * 
-     * @type {string}
-     * @memberof InvitationAccept
      */
     firstName: string;
     /**
      * 
-     * @type {string}
-     * @memberof InvitationAccept
      */
     lastName: string;
     /**
      * 
-     * @type {string}
-     * @memberof InvitationAccept
      */
     email: string;
     /**
      * 
-     * @type {number}
-     * @memberof InvitationAccept
      */
     instrumentId: number;
     /**
      * 
-     * @type {string}
-     * @memberof InvitationAccept
      */
     code?: string | null;
 }
@@ -59,10 +49,10 @@ export interface InvitationAccept {
  * Check if a given object implements the InvitationAccept interface.
  */
 export function instanceOfInvitationAccept(value: object): value is InvitationAccept {
-    if (!('firstName' in value) || value['firstName'] === undefined) return false;
-    if (!('lastName' in value) || value['lastName'] === undefined) return false;
+    if ((!('firstName' in (value as Record<string, any>)) && !('first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['firstName'] === undefined && (value as Record<string, any>)['first_name'] === undefined)) return false;
+    if ((!('lastName' in (value as Record<string, any>)) && !('last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['lastName'] === undefined && (value as Record<string, any>)['last_name'] === undefined)) return false;
     if (!('email' in value) || value['email'] === undefined) return false;
-    if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
+    if ((!('instrumentId' in (value as Record<string, any>)) && !('instrument_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['instrumentId'] === undefined && (value as Record<string, any>)['instrument_id'] === undefined)) return false;
     return true;
 }
 
@@ -80,7 +70,7 @@ export function InvitationAcceptFromJSONTyped(json: any, ignoreDiscriminator: bo
         'lastName': json['last_name'],
         'email': json['email'],
         'instrumentId': json['instrument_id'],
-        'code': json['code'] == null ? undefined : json['code'],
+        'code': json['code'] === undefined ? undefined : json['code'] === null ? null : json['code'],
     };
 }
 

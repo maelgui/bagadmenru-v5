@@ -29,20 +29,14 @@ import { mapValues } from '../runtime';
 export interface PasskeySignal {
     /**
      * 
-     * @type {string}
-     * @memberof PasskeySignal
      */
     rpId: string;
     /**
      * 
-     * @type {string}
-     * @memberof PasskeySignal
      */
     userHandle: string;
     /**
      * 
-     * @type {Array<string>}
-     * @memberof PasskeySignal
      */
     remainingCredentialIds: Array<string>;
 }
@@ -51,9 +45,9 @@ export interface PasskeySignal {
  * Check if a given object implements the PasskeySignal interface.
  */
 export function instanceOfPasskeySignal(value: object): value is PasskeySignal {
-    if (!('rpId' in value) || value['rpId'] === undefined) return false;
-    if (!('userHandle' in value) || value['userHandle'] === undefined) return false;
-    if (!('remainingCredentialIds' in value) || value['remainingCredentialIds'] === undefined) return false;
+    if ((!('rpId' in (value as Record<string, any>)) && !('rp_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['rpId'] === undefined && (value as Record<string, any>)['rp_id'] === undefined)) return false;
+    if ((!('userHandle' in (value as Record<string, any>)) && !('user_handle' in (value as Record<string, any>))) || ((value as Record<string, any>)['userHandle'] === undefined && (value as Record<string, any>)['user_handle'] === undefined)) return false;
+    if ((!('remainingCredentialIds' in (value as Record<string, any>)) && !('remaining_credential_ids' in (value as Record<string, any>))) || ((value as Record<string, any>)['remainingCredentialIds'] === undefined && (value as Record<string, any>)['remaining_credential_ids'] === undefined)) return false;
     return true;
 }
 

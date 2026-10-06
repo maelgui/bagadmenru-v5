@@ -29,8 +29,6 @@ import {
 export interface UserRankings {
     /**
      * 
-     * @type {Array<SeasonRanking>}
-     * @memberof UserRankings
      */
     seasons: Array<SeasonRanking>;
 }

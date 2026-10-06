@@ -21,44 +21,30 @@ import { mapValues } from '../runtime';
 export interface ProfileUpdate {
     /**
      * 
-     * @type {string}
-     * @memberof ProfileUpdate
      */
     firstName: string;
     /**
      * 
-     * @type {string}
-     * @memberof ProfileUpdate
      */
     lastName: string;
     /**
      * 
-     * @type {string}
-     * @memberof ProfileUpdate
      */
     pictureKey?: string | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof ProfileUpdate
      */
     receivesEmails: boolean;
     /**
      * 
-     * @type {boolean}
-     * @memberof ProfileUpdate
      */
     receivesPush: boolean;
     /**
      * 
-     * @type {number}
-     * @memberof ProfileUpdate
      */
     instrumentId: number;
     /**
      * 
-     * @type {Array<number>}
-     * @memberof ProfileUpdate
      */
     groupIds: Array<number>;
 }
@@ -67,12 +53,12 @@ export interface ProfileUpdate {
  * Check if a given object implements the ProfileUpdate interface.
  */
 export function instanceOfProfileUpdate(value: object): value is ProfileUpdate {
-    if (!('firstName' in value) || value['firstName'] === undefined) return false;
-    if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('receivesEmails' in value) || value['receivesEmails'] === undefined) return false;
-    if (!('receivesPush' in value) || value['receivesPush'] === undefined) return false;
-    if (!('instrumentId' in value) || value['instrumentId'] === undefined) return false;
-    if (!('groupIds' in value) || value['groupIds'] === undefined) return false;
+    if ((!('firstName' in (value as Record<string, any>)) && !('first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['firstName'] === undefined && (value as Record<string, any>)['first_name'] === undefined)) return false;
+    if ((!('lastName' in (value as Record<string, any>)) && !('last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['lastName'] === undefined && (value as Record<string, any>)['last_name'] === undefined)) return false;
+    if ((!('receivesEmails' in (value as Record<string, any>)) && !('receives_emails' in (value as Record<string, any>))) || ((value as Record<string, any>)['receivesEmails'] === undefined && (value as Record<string, any>)['receives_emails'] === undefined)) return false;
+    if ((!('receivesPush' in (value as Record<string, any>)) && !('receives_push' in (value as Record<string, any>))) || ((value as Record<string, any>)['receivesPush'] === undefined && (value as Record<string, any>)['receives_push'] === undefined)) return false;
+    if ((!('instrumentId' in (value as Record<string, any>)) && !('instrument_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['instrumentId'] === undefined && (value as Record<string, any>)['instrument_id'] === undefined)) return false;
+    if ((!('groupIds' in (value as Record<string, any>)) && !('group_ids' in (value as Record<string, any>))) || ((value as Record<string, any>)['groupIds'] === undefined && (value as Record<string, any>)['group_ids'] === undefined)) return false;
     return true;
 }
 
@@ -88,7 +74,7 @@ export function ProfileUpdateFromJSONTyped(json: any, ignoreDiscriminator: boole
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
+        'pictureKey': json['picture_key'] === undefined ? undefined : json['picture_key'] === null ? null : json['picture_key'],
         'receivesEmails': json['receives_emails'],
         'receivesPush': json['receives_push'],
         'instrumentId': json['instrument_id'],

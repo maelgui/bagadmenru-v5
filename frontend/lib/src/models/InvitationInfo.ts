@@ -25,14 +25,10 @@ import { mapValues } from '../runtime';
 export interface InvitationInfo {
     /**
      * 
-     * @type {string}
-     * @memberof InvitationInfo
      */
     email?: string | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof InvitationInfo
      */
     emailLocked?: boolean;
 }
@@ -54,7 +50,7 @@ export function InvitationInfoFromJSONTyped(json: any, ignoreDiscriminator: bool
     }
     return {
         
-        'email': json['email'] == null ? undefined : json['email'],
+        'email': json['email'] === undefined ? undefined : json['email'] === null ? null : json['email'],
         'emailLocked': json['email_locked'] == null ? undefined : json['email_locked'],
     };
 }

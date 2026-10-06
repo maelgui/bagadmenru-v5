@@ -36,88 +36,60 @@ import {
 export interface Profile {
     /**
      * 
-     * @type {string}
-     * @memberof Profile
      */
     firstName: string;
     /**
      * 
-     * @type {string}
-     * @memberof Profile
      */
     lastName: string;
     /**
      * 
-     * @type {string}
-     * @memberof Profile
      */
     pictureKey?: string | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof Profile
      */
     receivesEmails: boolean;
     /**
      * 
-     * @type {boolean}
-     * @memberof Profile
      */
     receivesPush: boolean;
     /**
      * 
-     * @type {string}
-     * @memberof Profile
      */
     email: string;
     /**
      * 
-     * @type {string}
-     * @memberof Profile
      */
     id: string;
     /**
      * 
-     * @type {Array<MinimalGroup>}
-     * @memberof Profile
      */
     groups: Array<MinimalGroup>;
     /**
      * 
-     * @type {MinimalGroup}
-     * @memberof Profile
      */
     instrument?: MinimalGroup | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof Profile
      */
     isActive: boolean;
     /**
      * 
-     * @type {MembershipStatus}
-     * @memberof Profile
      */
     membershipStatus?: MembershipStatus | null;
     /**
      * 
-     * @type {string}
-     * @memberof Profile
      */
     membershipActiveSeason?: string | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof Profile
      */
     hasPassword?: boolean | null;
     /**
      * 
-     * @type {string}
-     * @memberof Profile
      */
-    pictureUrl: string | null;
+    readonly pictureUrl: string | null;
 }
 
 
@@ -126,15 +98,15 @@ export interface Profile {
  * Check if a given object implements the Profile interface.
  */
 export function instanceOfProfile(value: object): value is Profile {
-    if (!('firstName' in value) || value['firstName'] === undefined) return false;
-    if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('receivesEmails' in value) || value['receivesEmails'] === undefined) return false;
-    if (!('receivesPush' in value) || value['receivesPush'] === undefined) return false;
+    if ((!('firstName' in (value as Record<string, any>)) && !('first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['firstName'] === undefined && (value as Record<string, any>)['first_name'] === undefined)) return false;
+    if ((!('lastName' in (value as Record<string, any>)) && !('last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['lastName'] === undefined && (value as Record<string, any>)['last_name'] === undefined)) return false;
+    if ((!('receivesEmails' in (value as Record<string, any>)) && !('receives_emails' in (value as Record<string, any>))) || ((value as Record<string, any>)['receivesEmails'] === undefined && (value as Record<string, any>)['receives_emails'] === undefined)) return false;
+    if ((!('receivesPush' in (value as Record<string, any>)) && !('receives_push' in (value as Record<string, any>))) || ((value as Record<string, any>)['receivesPush'] === undefined && (value as Record<string, any>)['receives_push'] === undefined)) return false;
     if (!('email' in value) || value['email'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('groups' in value) || value['groups'] === undefined) return false;
-    if (!('isActive' in value) || value['isActive'] === undefined) return false;
-    if (!('pictureUrl' in value) || value['pictureUrl'] === undefined) return false;
+    if ((!('isActive' in (value as Record<string, any>)) && !('is_active' in (value as Record<string, any>))) || ((value as Record<string, any>)['isActive'] === undefined && (value as Record<string, any>)['is_active'] === undefined)) return false;
+    if ((!('pictureUrl' in (value as Record<string, any>)) && !('picture_url' in (value as Record<string, any>))) || ((value as Record<string, any>)['pictureUrl'] === undefined && (value as Record<string, any>)['picture_url'] === undefined)) return false;
     return true;
 }
 
@@ -150,17 +122,17 @@ export function ProfileFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'pictureKey': json['picture_key'] == null ? undefined : json['picture_key'],
+        'pictureKey': json['picture_key'] === undefined ? undefined : json['picture_key'] === null ? null : json['picture_key'],
         'receivesEmails': json['receives_emails'],
         'receivesPush': json['receives_push'],
         'email': json['email'],
         'id': json['id'],
         'groups': ((json['groups'] as Array<any>).map(MinimalGroupFromJSON)),
-        'instrument': json['instrument'] == null ? undefined : MinimalGroupFromJSON(json['instrument']),
+        'instrument': json['instrument'] === undefined ? undefined : json['instrument'] === null ? null : MinimalGroupFromJSON(json['instrument']),
         'isActive': json['is_active'],
-        'membershipStatus': json['membership_status'] == null ? undefined : MembershipStatusFromJSON(json['membership_status']),
-        'membershipActiveSeason': json['membership_active_season'] == null ? undefined : json['membership_active_season'],
-        'hasPassword': json['has_password'] == null ? undefined : json['has_password'],
+        'membershipStatus': json['membership_status'] === undefined ? undefined : json['membership_status'] === null ? null : MembershipStatusFromJSON(json['membership_status']),
+        'membershipActiveSeason': json['membership_active_season'] === undefined ? undefined : json['membership_active_season'] === null ? null : json['membership_active_season'],
+        'hasPassword': json['has_password'] === undefined ? undefined : json['has_password'] === null ? null : json['has_password'],
         'pictureUrl': json['picture_url'],
     };
 }
@@ -169,7 +141,7 @@ export function ProfileToJSON(json: any): Profile {
     return ProfileToJSONTyped(json, false);
 }
 
-export function ProfileToJSONTyped(value?: Profile | null, ignoreDiscriminator: boolean = false): any {
+export function ProfileToJSONTyped(value?: Omit<Profile, 'pictureUrl'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -189,7 +161,6 @@ export function ProfileToJSONTyped(value?: Profile | null, ignoreDiscriminator: 
         'membership_status': MembershipStatusToJSON(value['membershipStatus']),
         'membership_active_season': value['membershipActiveSeason'],
         'has_password': value['hasPassword'],
-        'picture_url': value['pictureUrl'],
     };
 }
 

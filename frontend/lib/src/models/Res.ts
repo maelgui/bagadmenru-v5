@@ -43,20 +43,14 @@ import {
 export interface Res {
     /**
      * 
-     * @type {Event}
-     * @memberof Res
      */
     event: Event;
     /**
      * 
-     * @type {MyProfileUpdate}
-     * @memberof Res
      */
     user: MyProfileUpdate;
     /**
      * 
-     * @type {Response}
-     * @memberof Res
      */
     response?: Response | null;
 }
@@ -82,7 +76,7 @@ export function ResFromJSONTyped(json: any, ignoreDiscriminator: boolean): Res {
         
         'event': EventFromJSON(json['event']),
         'user': MyProfileUpdateFromJSON(json['user']),
-        'response': json['response'] == null ? undefined : ResponseFromJSON(json['response']),
+        'response': json['response'] === undefined ? undefined : json['response'] === null ? null : ResponseFromJSON(json['response']),
     };
 }
 

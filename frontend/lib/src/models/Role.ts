@@ -21,14 +21,10 @@ import { mapValues } from '../runtime';
 export interface Role {
     /**
      * 
-     * @type {string}
-     * @memberof Role
      */
     id: string;
     /**
      * 
-     * @type {string}
-     * @memberof Role
      */
     description: string;
 }

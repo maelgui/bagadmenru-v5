@@ -21,32 +21,22 @@ import { mapValues } from '../runtime';
 export interface SessionInfo {
     /**
      * 
-     * @type {string}
-     * @memberof SessionInfo
      */
     id: string;
     /**
      * 
-     * @type {string}
-     * @memberof SessionInfo
      */
     firstName: string;
     /**
      * 
-     * @type {string}
-     * @memberof SessionInfo
      */
     lastName: string;
     /**
      * 
-     * @type {string}
-     * @memberof SessionInfo
      */
     email?: string | null;
     /**
      * 
-     * @type {boolean}
-     * @memberof SessionInfo
      */
     active: boolean;
 }
@@ -56,8 +46,8 @@ export interface SessionInfo {
  */
 export function instanceOfSessionInfo(value: object): value is SessionInfo {
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('firstName' in value) || value['firstName'] === undefined) return false;
-    if (!('lastName' in value) || value['lastName'] === undefined) return false;
+    if ((!('firstName' in (value as Record<string, any>)) && !('first_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['firstName'] === undefined && (value as Record<string, any>)['first_name'] === undefined)) return false;
+    if ((!('lastName' in (value as Record<string, any>)) && !('last_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['lastName'] === undefined && (value as Record<string, any>)['last_name'] === undefined)) return false;
     if (!('active' in value) || value['active'] === undefined) return false;
     return true;
 }
@@ -75,7 +65,7 @@ export function SessionInfoFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'id': json['id'],
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'email': json['email'] == null ? undefined : json['email'],
+        'email': json['email'] === undefined ? undefined : json['email'] === null ? null : json['email'],
         'active': json['active'],
     };
 }

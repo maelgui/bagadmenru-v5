@@ -21,32 +21,22 @@ import { mapValues } from '../runtime';
 export interface GroupUpdate {
     /**
      * 
-     * @type {string}
-     * @memberof GroupUpdate
      */
     name: string;
     /**
      * 
-     * @type {string}
-     * @memberof GroupUpdate
      */
     color?: string;
     /**
      * 
-     * @type {string}
-     * @memberof GroupUpdate
      */
     mailingList: string | null;
     /**
      * 
-     * @type {Array<string>}
-     * @memberof GroupUpdate
      */
     roleIds: Array<string>;
     /**
      * 
-     * @type {boolean}
-     * @memberof GroupUpdate
      */
     isInstrument?: boolean;
 }
@@ -56,8 +46,8 @@ export interface GroupUpdate {
  */
 export function instanceOfGroupUpdate(value: object): value is GroupUpdate {
     if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('mailingList' in value) || value['mailingList'] === undefined) return false;
-    if (!('roleIds' in value) || value['roleIds'] === undefined) return false;
+    if ((!('mailingList' in (value as Record<string, any>)) && !('mailing_list' in (value as Record<string, any>))) || ((value as Record<string, any>)['mailingList'] === undefined && (value as Record<string, any>)['mailing_list'] === undefined)) return false;
+    if ((!('roleIds' in (value as Record<string, any>)) && !('role_ids' in (value as Record<string, any>))) || ((value as Record<string, any>)['roleIds'] === undefined && (value as Record<string, any>)['role_ids'] === undefined)) return false;
     return true;
 }
 

@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 import type { CredentialDeviceType } from './CredentialDeviceType';
 import {
     CredentialDeviceTypeFromJSON,
@@ -29,62 +29,42 @@ import {
 export interface Passkey {
     /**
      * 
-     * @type {string}
-     * @memberof Passkey
      */
     credentialId: string;
     /**
      * 
-     * @type {number}
-     * @memberof Passkey
      */
     signCount: number;
     /**
      * 
-     * @type {string}
-     * @memberof Passkey
      */
     transports: string;
     /**
      * 
-     * @type {CredentialDeviceType}
-     * @memberof Passkey
      */
     deviceType: CredentialDeviceType;
     /**
      * 
-     * @type {boolean}
-     * @memberof Passkey
      */
     backUp: boolean;
     /**
      * 
-     * @type {string}
-     * @memberof Passkey
      */
     aaguid: string;
     /**
      * 
-     * @type {Date}
-     * @memberof Passkey
      */
     lastUseAt?: Date | null;
     /**
      * 
-     * @type {string}
-     * @memberof Passkey
      */
     lastUseIp?: string | null;
     /**
      * 
-     * @type {string}
-     * @memberof Passkey
      */
     lastUseUa?: string | null;
     /**
      * 
-     * @type {Date}
-     * @memberof Passkey
      */
     createdAt: Date;
 }
@@ -95,13 +75,13 @@ export interface Passkey {
  * Check if a given object implements the Passkey interface.
  */
 export function instanceOfPasskey(value: object): value is Passkey {
-    if (!('credentialId' in value) || value['credentialId'] === undefined) return false;
-    if (!('signCount' in value) || value['signCount'] === undefined) return false;
+    if ((!('credentialId' in (value as Record<string, any>)) && !('credential_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['credentialId'] === undefined && (value as Record<string, any>)['credential_id'] === undefined)) return false;
+    if ((!('signCount' in (value as Record<string, any>)) && !('sign_count' in (value as Record<string, any>))) || ((value as Record<string, any>)['signCount'] === undefined && (value as Record<string, any>)['sign_count'] === undefined)) return false;
     if (!('transports' in value) || value['transports'] === undefined) return false;
-    if (!('deviceType' in value) || value['deviceType'] === undefined) return false;
-    if (!('backUp' in value) || value['backUp'] === undefined) return false;
+    if ((!('deviceType' in (value as Record<string, any>)) && !('device_type' in (value as Record<string, any>))) || ((value as Record<string, any>)['deviceType'] === undefined && (value as Record<string, any>)['device_type'] === undefined)) return false;
+    if ((!('backUp' in (value as Record<string, any>)) && !('back_up' in (value as Record<string, any>))) || ((value as Record<string, any>)['backUp'] === undefined && (value as Record<string, any>)['back_up'] === undefined)) return false;
     if (!('aaguid' in value) || value['aaguid'] === undefined) return false;
-    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if ((!('createdAt' in (value as Record<string, any>)) && !('created_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['createdAt'] === undefined && (value as Record<string, any>)['created_at'] === undefined)) return false;
     return true;
 }
 
@@ -121,10 +101,10 @@ export function PasskeyFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'deviceType': CredentialDeviceTypeFromJSON(json['device_type']),
         'backUp': json['back_up'],
         'aaguid': json['aaguid'],
-        'lastUseAt': json['last_use_at'] == null ? undefined : (new Date(json['last_use_at'])),
-        'lastUseIp': json['last_use_ip'] == null ? undefined : json['last_use_ip'],
-        'lastUseUa': json['last_use_ua'] == null ? undefined : json['last_use_ua'],
-        'createdAt': (new Date(json['created_at'])),
+        'lastUseAt': json['last_use_at'] === undefined ? undefined : json['last_use_at'] === null ? null : (parseDateTime(json['last_use_at'])),
+        'lastUseIp': json['last_use_ip'] === undefined ? undefined : json['last_use_ip'] === null ? null : json['last_use_ip'],
+        'lastUseUa': json['last_use_ua'] === undefined ? undefined : json['last_use_ua'] === null ? null : json['last_use_ua'],
+        'createdAt': (json['created_at'] == null ? json['created_at'] : parseDateTime(json['created_at'])),
     };
 }
 
@@ -145,10 +125,10 @@ export function PasskeyToJSONTyped(value?: Passkey | null, ignoreDiscriminator: 
         'device_type': CredentialDeviceTypeToJSON(value['deviceType']),
         'back_up': value['backUp'],
         'aaguid': value['aaguid'],
-        'last_use_at': value['lastUseAt'] == null ? undefined : ((value['lastUseAt'] as any).toISOString()),
+        'last_use_at': value['lastUseAt'] == null ? value['lastUseAt'] : serializeDateTime(value['lastUseAt']),
         'last_use_ip': value['lastUseIp'],
         'last_use_ua': value['lastUseUa'],
-        'created_at': ((value['createdAt']).toISOString()),
+        'created_at': value['createdAt'] == null ? value['createdAt'] : serializeDateTime(value['createdAt']),
     };
 }
 

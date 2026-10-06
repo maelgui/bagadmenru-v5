@@ -25,7 +25,7 @@
  */
 export const CredentialDeviceType = {
     SingleDevice: 'single_device',
-    MultiDevice: 'multi_device'
+    MultiDevice: 'multi_device',
 } as const;
 export type CredentialDeviceType = typeof CredentialDeviceType[keyof typeof CredentialDeviceType];
 
