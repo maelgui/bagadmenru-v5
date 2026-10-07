@@ -19,6 +19,12 @@ data:
   VAPID_CLAIMS_EMAIL: "mailto:contact@bagadmenru.bzh"
   AWS_RESPONSE_CHECKSUM_VALIDATION: "when_required"
   AWS_REQUEST_CHECKSUM_CALCULATION: "when_required"
+  # Score renderer sidecars, reached in-cluster by service name. A format is
+  # active only when its renderer URL is set, so these two lines are what
+  # enable mscz and .ds conversion in deployed environments.
+  MUSESCORE_RENDERER_URL: "http://musescore:8080"
+  DRUMSCORE_RENDERER_URL: "http://drumscore:8080"
+  SCORE_RENDER_TIMEOUT_SECONDS: "110"
   # These are overridden per environment
   DOMAIN: "PLACEHOLDER"
   FRONTEND_BASE_URL: "PLACEHOLDER"

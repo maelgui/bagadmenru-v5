@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drumscore
+  labels:
+    app: drumscore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drumscore
+  template:
+    metadata:
+      labels:
+        app: drumscore
+    spec:
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: drumscore
+          image: ghcr.io/maelgui/bagadmenru-v5/drumscore:MUST_BE_SET
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DSE_TIMEOUT
+              value: "110"
+            # Studio Edition licence: the entrypoint writes it into the Java
+            # Preferences at boot, unlocking the createPDF CLI. Without these
+            # the renderer starts but produces no PDF.
+            - name: DSE_LICENSE_VERSION
+              valueFrom:
+                secretKeyRef:
+                  name: drumscore-license
+                  key: DSE_LICENSE_VERSION
+            - name: DSE_LICENSE_CONTENT
+              valueFrom:
+                secretKeyRef:
+                  name: drumscore-license
+                  key: DSE_LICENSE_CONTENT
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
