@@ -39,12 +39,13 @@ RUN wget -q \
     && test -x "${DSE_BIN}"
 
 RUN python3 -m venv "$VIRTUAL_ENV"
-COPY requirements.txt /app/requirements.txt
+COPY drumscore/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 WORKDIR /app
-COPY server.py /app/server.py
-COPY entrypoint.sh /app/entrypoint.sh
+COPY contract.py /app/contract.py
+COPY drumscore/server.py /app/server.py
+COPY drumscore/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8080

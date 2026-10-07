@@ -48,12 +48,16 @@ services:
       - MP_WEBROOT=_mail
 
   musescore:
-    build: renderers/musescore
+    build:
+      context: renderers
+      dockerfile: musescore/Dockerfile
     environment:
       - MSCORE_TIMEOUT=${MSCORE_TIMEOUT:-110}
 
   drumscore:
-    build: renderers/drumscore
+    build:
+      context: renderers
+      dockerfile: drumscore/Dockerfile
     environment:
       - DSE_TIMEOUT=${MSCORE_TIMEOUT:-110}
       # Studio Edition licence, read from an untracked .env (never committed).
