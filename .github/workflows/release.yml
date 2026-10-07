@@ -199,10 +199,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
+      # One matrix entry per published image. backend/frontend keep the build
+      # context at their own directory (Dockerfile at the root of it); the
+      # renderers share a single context (renderers/) with one Dockerfile per
+      # sidecar, so context and dockerfile are set explicitly rather than
+      # derived from the image name.
       matrix:
         include:
           - image_name: backend
+            context: backend
+            build_args: APP_VERSION=v${{ github.run_number }}
           - image_name: frontend
+            context: frontend
+            build_args: APP_VERSION=v${{ github.run_number }}
+          - image_name: musescore
+            context: renderers
+            dockerfile: renderers/musescore/Dockerfile
+          - image_name: drumscore
+            context: renderers
+            dockerfile: renderers/drumscore/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -220,13 +235,16 @@ jobs:
       - name: Build and push ${{ matrix.image_name }}
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: ${{ matrix.image_name }}
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile || format('{0}/Dockerfile', matrix.context) }}
           push: true
           tags: |
             ${{ env.REPO }}/${{ matrix.image_name }}:${{ github.sha }}
             ${{ env.REPO }}/${{ matrix.image_name }}:latest
-          build-args: |
-            APP_VERSION=v${{ github.run_number }}
+          # Set only for images that declare an APP_VERSION ARG (backend,
+          # frontend); empty for the renderers so buildx emits no
+          # "UndefinedVar" warning.
+          build-args: ${{ matrix.build_args }}
           cache-from: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache
           cache-to: type=registry,ref=${{ env.REPO }}/${{ matrix.image_name }}:buildcache,mode=max
           sbom: false
