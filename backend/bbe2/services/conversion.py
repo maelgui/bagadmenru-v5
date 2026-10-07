@@ -18,14 +18,27 @@ STATUS_PROCESSING = "processing"
 STATUS_COMPLETED = "completed"
 STATUS_FAILED = "failed"
 
-SUPPORTED_FORMATS = {"mscz"}
+
+def _renderer_urls(settings: Settings) -> dict[str, str]:
+    """URL of the renderer backing each supported source format.
+
+    A format is supported iff its renderer URL is configured; an unset URL
+    disables that format. ``ds`` requires a licensed Drum Score Editor
+    installation, so its URL is left unset until the licence's server use is
+    cleared.
+    """
+    candidates = {
+        "mscz": settings.musescore_renderer_url,
+        "ds": settings.drumscore_renderer_url,
+    }
+    return {fmt: str(url) for fmt, url in candidates.items() if url}
 
 
-def source_format_for(filename: str) -> str | None:
+def source_format_for(filename: str, settings: Settings) -> str | None:
     extension = filename.lower().rsplit(".", 1)
     if len(extension) != 2:
         return None
-    return extension[1] if extension[1] in SUPPORTED_FORMATS else None
+    return extension[1] if extension[1] in _renderer_urls(settings) else None
 
 
 class RendererError(Exception):
@@ -36,9 +49,7 @@ class ConversionService:
     def __init__(self, settings: Settings, s3: S3Helper):
         self.settings = settings
         self.s3 = s3
-        self.renderers = {
-            "mscz": settings.musescore_renderer_url,
-        }
+        self.renderers = _renderer_urls(settings)
         self.timeout_seconds = (
             settings.score_render_timeout_seconds
             + settings.score_render_client_margin_seconds

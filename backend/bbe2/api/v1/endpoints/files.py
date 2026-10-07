@@ -182,7 +182,7 @@ async def upload_file(
             detail="Cannot upload into a container",
         )
 
-    src_format = source_format_for(file.filename or "")
+    src_format = source_format_for(file.filename or "", settings)
 
     existing = file_crud.find_one_by(
         and_(
