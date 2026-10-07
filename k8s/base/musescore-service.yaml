@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: musescore
+spec:
+  selector:
+    app: musescore
+  ports:
+    - port: 8080
+      targetPort: 8080

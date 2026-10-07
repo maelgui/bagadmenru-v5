@@ -303,7 +303,9 @@ jobs:
         run: |
           kustomize edit set image \
             ghcr.io/maelgui/bagadmenru-v5/backend=${{ env.REPO }}/backend:${{ github.sha }} \
-            ghcr.io/maelgui/bagadmenru-v5/frontend=${{ env.REPO }}/frontend:${{ github.sha }}
+            ghcr.io/maelgui/bagadmenru-v5/frontend=${{ env.REPO }}/frontend:${{ github.sha }} \
+            ghcr.io/maelgui/bagadmenru-v5/musescore=${{ env.REPO }}/musescore:${{ github.sha }} \
+            ghcr.io/maelgui/bagadmenru-v5/drumscore=${{ env.REPO }}/drumscore:${{ github.sha }}
 
       - name: Deploy to beta
         run: kubectl apply -k k8s/overlays/beta
@@ -312,6 +314,8 @@ jobs:
         run: |
           kubectl rollout status deployment/backend -n bagadmenru-beta --timeout=120s
           kubectl rollout status deployment/frontend -n bagadmenru-beta --timeout=120s
+          kubectl rollout status deployment/musescore -n bagadmenru-beta --timeout=120s
+          kubectl rollout status deployment/drumscore -n bagadmenru-beta --timeout=120s
 
       - name: Verify migrations applied
         run: |
@@ -439,7 +443,9 @@ jobs:
         run: |
           kustomize edit set image \
             ghcr.io/maelgui/bagadmenru-v5/backend=${{ env.REPO }}/backend:${{ github.sha }} \
-            ghcr.io/maelgui/bagadmenru-v5/frontend=${{ env.REPO }}/frontend:${{ github.sha }}
+            ghcr.io/maelgui/bagadmenru-v5/frontend=${{ env.REPO }}/frontend:${{ github.sha }} \
+            ghcr.io/maelgui/bagadmenru-v5/musescore=${{ env.REPO }}/musescore:${{ github.sha }} \
+            ghcr.io/maelgui/bagadmenru-v5/drumscore=${{ env.REPO }}/drumscore:${{ github.sha }}
 
       - name: Deploy to production
         run: kubectl apply -k k8s/overlays/prod
@@ -448,6 +454,8 @@ jobs:
         run: |
           kubectl rollout status deployment/backend -n bagadmenru-prod --timeout=180s
           kubectl rollout status deployment/frontend -n bagadmenru-prod --timeout=180s
+          kubectl rollout status deployment/musescore -n bagadmenru-prod --timeout=180s
+          kubectl rollout status deployment/drumscore -n bagadmenru-prod --timeout=180s
 
       - name: Verify migrations applied
         run: |

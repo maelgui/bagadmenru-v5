@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: musescore
+  labels:
+    app: musescore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: musescore
+  template:
+    metadata:
+      labels:
+        app: musescore
+    spec:
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: musescore
+          image: ghcr.io/maelgui/bagadmenru-v5/musescore:MUST_BE_SET
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MSCORE_TIMEOUT
+              value: "110"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"

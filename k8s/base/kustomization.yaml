@@ -11,5 +11,9 @@ resources:
   - frontend-config.yaml
   - frontend-deployment.yaml
   - frontend-service.yaml
+  - musescore-deployment.yaml
+  - musescore-service.yaml
+  - drumscore-deployment.yaml
+  - drumscore-service.yaml
   - ingress.yaml
 
