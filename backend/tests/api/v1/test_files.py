@@ -3,8 +3,10 @@ from unittest.mock import ANY, MagicMock, patch
 
 from fastapi.testclient import TestClient
 
+from bbe2.config import get_settings
+from bbe2.main import app
 from bbe2.schemas import FileOrFolderType
-from tests.conftest import DATABASE_URL
+from tests.conftest import DATABASE_URL, get_fake_settings
 
 
 def test_get_root(client: TestClient):
@@ -169,6 +171,50 @@ def test_upload_plain_file_stays_file(
     assert body["type"] == "FILE"
     assert body["source_format"] is None
     assert body["processing_status"] is None
+
+
+@patch("bbe2.api.v1.endpoints.files.ConversionService")
+@patch("bbe2.utils.s3.S3Helper.upload_file")
+def test_upload_ds_stays_file_without_renderer(
+    mock_upload_file: MagicMock, mock_service: MagicMock, client: TestClient
+):
+    response = client.post(
+        "/api/v1/files/1/upload",
+        files={"file": ("Kas a barh.ds", b"fake-ds")},
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["type"] == "FILE"
+    assert body["source_format"] is None
+    assert body["processing_status"] is None
+    mock_service.return_value.generate.assert_not_called()
+
+
+@patch("bbe2.api.v1.endpoints.files.ConversionService")
+@patch("bbe2.utils.s3.S3Helper.upload_file")
+def test_upload_ds_creates_container_with_renderer(
+    mock_upload_file: MagicMock, mock_service: MagicMock, client: TestClient
+):
+    def settings_with_drumscore():
+        settings = get_fake_settings()
+        settings.drumscore_renderer_url = "http://drumscore:8080"
+        return settings
+
+    app.dependency_overrides[get_settings] = settings_with_drumscore
+    try:
+        response = client.post(
+            "/api/v1/files/1/upload",
+            files={"file": ("Kas a barh.ds", b"fake-ds")},
+        )
+    finally:
+        app.dependency_overrides[get_settings] = get_fake_settings
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["type"] == "CONTAINER"
+    assert body["source_format"] == "ds"
+    assert body["processing_status"] == "pending"
+    mock_service.return_value.generate.assert_called_once_with(body["id"])
 
 
 def _make_container(client: TestClient) -> int:

@@ -55,11 +55,12 @@ RUN mkdir -p /opt/musescore \
     && rm /opt/musescore/MuseScore.AppImage
 
 RUN python3 -m venv "$VIRTUAL_ENV"
-COPY requirements.txt /app/requirements.txt
+COPY musescore/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 WORKDIR /app
-COPY server.py /app/server.py
+COPY contract.py /app/contract.py
+COPY musescore/server.py /app/server.py
 
 ENV QT_QPA_PLATFORM=offscreen
 

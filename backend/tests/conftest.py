@@ -89,6 +89,7 @@ def get_fake_settings():
             "s3_bucket_name": "testbucket",
             "token_secret_key": "fakesecretkey",
             "jwt_secret_key": "myjwtsecretkey",
+            "musescore_renderer_url": "http://musescore:8080",
         }
     )
 

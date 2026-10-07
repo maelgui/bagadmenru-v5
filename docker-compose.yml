@@ -48,9 +48,22 @@ services:
       - MP_WEBROOT=_mail
 
   musescore:
-    build: renderers/musescore
+    build:
+      context: renderers
+      dockerfile: musescore/Dockerfile
     environment:
       - MSCORE_TIMEOUT=${MSCORE_TIMEOUT:-110}
+
+  drumscore:
+    build:
+      context: renderers
+      dockerfile: drumscore/Dockerfile
+    environment:
+      - DSE_TIMEOUT=${MSCORE_TIMEOUT:-110}
+      # Studio Edition licence, read from an untracked .env (never committed).
+      # Without it the renderer starts but createPDF produces no PDF.
+      - DSE_LICENSE_VERSION=${DSE_LICENSE_VERSION:-}
+      - DSE_LICENSE_CONTENT=${DSE_LICENSE_CONTENT:-}
 
   backend-init:
     build: backend
@@ -111,6 +124,7 @@ services:
       - VAPID_CLAIMS_EMAIL=mailto:contact@bagadmenru.bzh
       - HELLOASSO_WEBHOOK_TOKEN=${HELLOASSO_WEBHOOK_TOKEN:-}
       - MUSESCORE_RENDERER_URL=http://musescore:8080
+      - DRUMSCORE_RENDERER_URL=http://drumscore:8080
       - SCORE_RENDER_TIMEOUT_SECONDS=${MSCORE_TIMEOUT:-110}
     depends_on:
       - backend-init
