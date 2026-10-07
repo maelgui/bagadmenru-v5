@@ -1,23 +1,22 @@
-import base64
 import os
 import subprocess
-import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, Form, HTTPException, UploadFile
+from fastapi import HTTPException
 
-app = FastAPI(title="DrumScore renderer")
+from contract import build_app
 
 DSE_BIN = os.environ.get("DSE_BIN", "DrumScoreEditor")
 DSE_TIMEOUT = int(os.environ.get("DSE_TIMEOUT", "110"))
 
 
-@app.get("/health")
-def health() -> dict:
-    return {"status": "ok"}
+def _render(source_bytes: bytes, base_name: str, workdir: Path) -> list[Path]:
+    indir = workdir / "in"
+    outdir = workdir / "out"
+    indir.mkdir()
+    outdir.mkdir()
+    (indir / f"{base_name}.ds").write_bytes(source_bytes)
 
-
-def _run_job(indir: Path, outdir: Path) -> list[Path]:
     result = subprocess.run(
         ["xvfb-run", "-a", DSE_BIN, "createPDF", str(indir), str(outdir)],
         capture_output=True,
@@ -33,23 +32,4 @@ def _run_job(indir: Path, outdir: Path) -> list[Path]:
     return pdfs
 
 
-@app.post("/convert")
-async def convert(file: UploadFile, base_name: str = Form(...)) -> dict:
-    with tempfile.TemporaryDirectory() as tmp:
-        indir = Path(tmp) / "in"
-        outdir = Path(tmp) / "out"
-        indir.mkdir()
-        outdir.mkdir()
-        (indir / f"{base_name}.ds").write_bytes(await file.read())
-
-        pdfs = _run_job(indir, outdir)
-
-        return {
-            "pdfs": [
-                {
-                    "name": p.name,
-                    "content_b64": base64.b64encode(p.read_bytes()).decode("ascii"),
-                }
-                for p in pdfs
-            ]
-        }
+app = build_app("DrumScore renderer", _render)
