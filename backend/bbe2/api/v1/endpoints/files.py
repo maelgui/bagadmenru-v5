@@ -3,14 +3,25 @@
 import uuid
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    UploadFile,
+    status,
+)
 from sqlalchemy import and_, func
+from sqlalchemy.orm import aliased
 
 from bbe2 import models, schemas
+from bbe2.config import Settings
 from bbe2.crud import CRUDFile
-from bbe2.dependencies import S3Dep, SessionDep, get_s3_helper
+from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, get_s3_helper
 from bbe2.schemas.file import FileOrFolderType
+from bbe2.services.conversion import ConversionService, source_format_for
 from bbe2.utils.auth import Action, Authorization, Resource
+from bbe2.utils.s3 import S3Helper
 
 router = APIRouter(prefix="/files")
 
@@ -126,31 +137,24 @@ async def list_children(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
 
-    children = db_file.children
-
-    # Compute the direct child count for each sub-folder in a single aggregate
-    # query, then attach it so it is serialized into FileOrFolder.child_count.
-    folder_ids = [
-        child.id for child in children if child.type == FileOrFolderType.DIRECTORY
-    ]
-    counts: dict[int, int] = {}
-    if folder_ids:
-        rows = (
-            session.query(
-                models.FileOrFolderDB.parent_id,
-                func.count(models.FileOrFolderDB.id),  # pylint: disable=not-callable
-            )
-            .filter(models.FileOrFolderDB.parent_id.in_(folder_ids))
-            .group_by(models.FileOrFolderDB.parent_id)
-            .all()
+    grandchild = aliased(models.FileOrFolderDB)
+    rows = (
+        session.query(
+            models.FileOrFolderDB,
+            func.count(grandchild.id),  # pylint: disable=not-callable
         )
-        counts = {parent_id: count for parent_id, count in rows}
+        .outerjoin(grandchild, grandchild.parent_id == models.FileOrFolderDB.id)
+        .filter(models.FileOrFolderDB.parent_id == folder_id)
+        .group_by(models.FileOrFolderDB.id)
+        .order_by(models.FileOrFolderDB.id)
+        .all()
+    )
 
     result = []
-    for child in children:
+    for child, grandchild_count in rows:
         item = schemas.FileOrFolder.model_validate(child)
-        if child.type == FileOrFolderType.DIRECTORY:
-            item.child_count = counts.get(child.id, 0)
+        if child.type in (FileOrFolderType.DIRECTORY, FileOrFolderType.CONTAINER):
+            item.child_count = grandchild_count
         result.append(item)
     return result
 
@@ -166,32 +170,106 @@ async def upload_file(
     file: UploadFile,
     file_crud: Annotated[CRUDFile, Depends()],
     s3: S3Dep,
+    settings: SettingsDep,
+    background_tasks: BackgroundTasks,
     force: bool = False,
 ):
     """Upload a file."""
-    db_file = file_crud.find_one_by(
+    folder = file_crud.find_one_by(models.FileOrFolderDB.id == folder_id)
+    if folder and folder.type == FileOrFolderType.CONTAINER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot upload into a container",
+        )
+
+    src_format = source_format_for(file.filename or "")
+
+    existing = file_crud.find_one_by(
         and_(
             models.FileOrFolderDB.name == file.filename,
             models.FileOrFolderDB.parent_id == folder_id,
         )
     )
-    if db_file:
+
+    if existing:
         if not force:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="File already exists"
             )
-        else:
-            s3.delete_object(db_file.file_key)
-            file_crud.delete(db_file.id)
+        if existing.type == FileOrFolderType.CONTAINER and src_format:
+            return _reupload_container(
+                existing, file, file_crud, s3, settings, background_tasks
+            )
+        _delete_node_s3(existing, s3)
+        file_crud.delete(existing.id)
 
     filename = "files/" + str(uuid.uuid4())
     s3.upload_file(file.file, filename, content_type=file.content_type)
-    return file_crud.create(
-        type=FileOrFolderType.FILE,
+
+    created = file_crud.create(
+        type=FileOrFolderType.CONTAINER if src_format else FileOrFolderType.FILE,
         name=file.filename,
         file_key=filename,
         parent_id=folder_id,
+        source_format=src_format,
+        processing_status="pending" if src_format else None,
     )
+
+    if src_format:
+        _enqueue_generation(created.id, settings, s3, background_tasks)
+
+    return created
+
+
+def _reupload_container(
+    container: models.FileOrFolderDB,
+    file: UploadFile,
+    file_crud: CRUDFile,
+    s3: S3Helper,
+    settings: Settings,
+    background_tasks: BackgroundTasks,
+) -> models.FileOrFolderDB:
+    new_key = "files/" + str(uuid.uuid4())
+    s3.upload_file(file.file, new_key, content_type=file.content_type)
+
+    old_keys = [child.file_key for child in container.children if child.file_key]
+    if container.file_key:
+        old_keys.append(container.file_key)
+    for child in list(container.children):
+        file_crud.delete(child.id)
+
+    container.file_key = new_key
+    container.processing_status = "pending"
+    container.processing_failure_reason = None
+    file_crud.db_session.flush()
+    file_crud.db_session.refresh(container)
+
+    for key in old_keys:
+        s3.delete_object(key)
+
+    _enqueue_generation(container.id, settings, s3, background_tasks)
+    return container
+
+
+def _enqueue_generation(
+    container_id: int,
+    settings: Settings,
+    s3: S3Helper,
+    background_tasks: BackgroundTasks,
+) -> None:
+    service = ConversionService(settings, s3)
+    background_tasks.add_task(service.generate, container_id)
+
+
+def _delete_node_s3(node: models.FileOrFolderDB, s3: S3Helper) -> None:
+    if node.type == FileOrFolderType.CONTAINER:
+        for child in node.children:
+            if child.file_key:
+                s3.delete_object(child.file_key)
+        if node.file_key:
+            s3.delete_object(node.file_key)
+    elif node.type == FileOrFolderType.FILE and node.file_key:
+        s3.delete_object(node.file_key)
 
 
 @router.post(
@@ -206,6 +284,12 @@ async def create_folder(
     file_crud: Annotated[CRUDFile, Depends()],
 ):
     """Create a new folder."""
+    parent = file_crud.find_one_by(models.FileOrFolderDB.id == folder_id)
+    if parent and parent.type == FileOrFolderType.CONTAINER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot create a folder inside a container",
+        )
     return file_crud.create(
         parent_id=folder_id, type=FileOrFolderType.DIRECTORY, **new_folder.model_dump()
     )
@@ -227,8 +311,20 @@ async def update_file(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
+    if _parent_is_container(db_file, file_crud):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Container content cannot be modified individually",
+        )
     db_file = file_crud.update(db_file, file)
     return db_file
+
+
+def _parent_is_container(node: models.FileOrFolderDB, file_crud: CRUDFile) -> bool:
+    if node.parent_id is None:
+        return False
+    parent = file_crud.find_one_by(models.FileOrFolderDB.id == node.parent_id)
+    return parent is not None and parent.type == FileOrFolderType.CONTAINER
 
 
 @router.delete(
@@ -247,6 +343,10 @@ async def delete_file(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
-    if db_file.type == FileOrFolderType.FILE:
-        s3.delete_object(db_file.file_key)
+    if _parent_is_container(db_file, file_crud):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Container content cannot be deleted individually",
+        )
+    _delete_node_s3(db_file, s3)
     file_crud.delete(file_id)

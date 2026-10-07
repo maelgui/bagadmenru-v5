@@ -1,6 +1,7 @@
 """Filesystem ORM models."""
 
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -27,6 +28,16 @@ class FileOrFolderDB(Base):
 
     parent_id: Mapped[int] = mapped_column(
         ForeignKey("files.id", ondelete="cascade"), nullable=True
+    )
+
+    source_format: Mapped[Optional[str]] = mapped_column(
+        String(8), nullable=True, default=None
+    )
+    processing_status: Mapped[Optional[str]] = mapped_column(
+        String(16), nullable=True, default=None
+    )
+    processing_failure_reason: Mapped[Optional[str]] = mapped_column(
+        String(512), nullable=True, default=None
     )
 
     __table_args__ = (

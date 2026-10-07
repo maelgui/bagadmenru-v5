@@ -13,6 +13,7 @@ from bbe2.utils.s3 import (
 class FileOrFolderType(Enum):
     DIRECTORY = "DIR"
     FILE = "FILE"
+    CONTAINER = "CONTAINER"
 
 
 class _FileOrFolderBase(BaseModel):
@@ -36,6 +37,9 @@ class FileOrFolder(_FileOrFolderBase):
     id: int
     parent_id: Optional[int] = None
     file_key: Optional[str] = None
+    source_format: Optional[str] = None
+    processing_status: Optional[str] = None
+    processing_failure_reason: Optional[str] = None
     # Number of direct children. Populated only when listing a folder's
     # children; None elsewhere (e.g. single-item lookups).
     child_count: Optional[int] = None

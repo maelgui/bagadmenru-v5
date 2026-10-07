@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     relying_party_id: str = "prod.bagadmenru.bzh"
     relying_party_name: str = "Bagad Men Ru"
 
+    musescore_renderer_url: Optional[AnyHttpUrl] = None
+    score_render_timeout_seconds: int = 110
+    score_render_client_margin_seconds: int = 30
+
     vapid_private_key: Optional[str] = None
     vapid_public_key: Optional[str] = None
     vapid_claims_email: Optional[str] = None
