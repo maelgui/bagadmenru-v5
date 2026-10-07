@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     score_render_timeout_seconds: int = 110
     score_render_client_margin_seconds: int = 30
 
+    # Drum Score Editor (.ds) rendering, enabled by setting this URL. Left unset
+    # until the Studio Edition licence's server use is cleared: the sidecar's
+    # CLI PDF export only runs on a licensed installation.
+    drumscore_renderer_url: Optional[AnyHttpUrl] = None
+
     vapid_private_key: Optional[str] = None
     vapid_public_key: Optional[str] = None
     vapid_claims_email: Optional[str] = None
