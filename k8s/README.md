@@ -91,6 +91,18 @@ kubectl create secret generic postgres-secrets \
   --dry-run=client -o yaml | kubeseal --format yaml >> k8s/overlays/beta/sealed-secrets.yaml
 ```
 
+The DrumScore Studio licence is sealed the same way, scoped per namespace, into
+`drumscore-license` (the `drumscore` deployment reads it via `secretKeyRef`).
+Repeat for `bagadmenru-prod`:
+
+```bash
+kubectl create secret generic drumscore-license \
+  --namespace=bagadmenru-beta \
+  --from-literal=DSE_LICENSE_VERSION='...' \
+  --from-literal=DSE_LICENSE_CONTENT='...' \
+  --dry-run=client -o yaml | kubeseal --format yaml >> k8s/overlays/beta/sealed-secrets.yaml
+```
+
 ## GHCR Image Pull Secret
 
 ```bash
