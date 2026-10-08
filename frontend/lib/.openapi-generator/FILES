@@ -21,6 +21,7 @@ src/models/Costume.ts
 src/models/CredentialDeviceType.ts
 src/models/Event.ts
 src/models/EventCreate.ts
+src/models/FileAuthor.ts
 src/models/FileOrFolder.ts
 src/models/FileOrFolderType.ts
 src/models/FileOrFolderUpdate.ts

@@ -21,6 +21,19 @@ class _FileOrFolderBase(BaseModel):
     name: str
 
 
+class FileAuthor(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    first_name: str
+    last_name: str
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+
+
 class FolderCreate(_FileOrFolderBase):
     pass
 
@@ -45,6 +58,10 @@ class FileOrFolder(_FileOrFolderBase):
     # children; None elsewhere (e.g. single-item lookups).
     child_count: Optional[int] = None
     uploaded_at: Optional[datetime] = None
+    uploader: Optional[FileAuthor] = None
+    modified_at: Optional[datetime] = None
+    modifier: Optional[FileAuthor] = None
+    size: Optional[int] = None
 
     @computed_field  # type: ignore[misc]
     @property

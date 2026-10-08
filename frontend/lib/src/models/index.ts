@@ -7,6 +7,7 @@ export * from './Costume';
 export * from './CredentialDeviceType';
 export * from './Event';
 export * from './EventCreate';
+export * from './FileAuthor';
 export * from './FileOrFolder';
 export * from './FileOrFolderType';
 export * from './FileOrFolderUpdate';

@@ -31,6 +31,10 @@ def test_get_file(client: TestClient):
         "processing_status": None,
         "processing_failure_reason": None,
         "uploaded_at": ANY,
+        "uploader": None,
+        "modified_at": None,
+        "modifier": None,
+        "size": None,
     }
 
 
@@ -51,6 +55,10 @@ def test_get_children(client: TestClient):
             "processing_status": None,
             "processing_failure_reason": None,
             "uploaded_at": ANY,
+            "uploader": None,
+            "modified_at": None,
+            "modifier": None,
+            "size": None,
         },
         {
             "id": 3,
@@ -65,6 +73,10 @@ def test_get_children(client: TestClient):
             "processing_status": None,
             "processing_failure_reason": None,
             "uploaded_at": ANY,
+            "uploader": None,
+            "modified_at": None,
+            "modifier": None,
+            "size": None,
         },
     ]
 
@@ -111,7 +123,58 @@ def test_upload_file(mock_upload_file: MagicMock, client: TestClient):
         "processing_status": None,
         "processing_failure_reason": None,
         "uploaded_at": ANY,
+        "uploader": ANY,
+        "modified_at": None,
+        "modifier": None,
+        "size": ANY,
     }
+
+
+@patch("bbe2.utils.s3.S3Helper.delete_object")
+@patch("bbe2.utils.s3.S3Helper.upload_file")
+def test_upload_file_records_uploader_and_size(
+    mock_upload_file: MagicMock, mock_delete: MagicMock, client: TestClient
+):
+    response = client.post(
+        "/api/v1/files/1/upload",
+        files={"file": ("notes.txt", b"hello world")},
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["uploader"]["name"] == "john doe"
+    assert body["size"] == len(b"hello world")
+    assert body["modified_at"] is None
+
+
+@patch("bbe2.utils.s3.S3Helper.delete_object")
+@patch("bbe2.utils.s3.S3Helper.upload_file")
+def test_force_reupload_file_updates_in_place(
+    mock_upload_file: MagicMock, mock_delete: MagicMock, client: TestClient
+):
+    first = client.post(
+        "/api/v1/files/1/upload",
+        files={"file": ("notes.txt", b"v1")},
+    )
+    assert first.status_code == 201
+    original = first.json()
+
+    second = client.post(
+        "/api/v1/files/1/upload?force=true",
+        files={"file": ("notes.txt", b"v2-longer")},
+    )
+    assert second.status_code == 201
+    updated = second.json()
+
+    # Same entity (id preserved), new content (file_key rotated to bust the
+    # immutable cache), modification stamped, original upload metadata kept.
+    assert updated["id"] == original["id"]
+    assert updated["file_key"] != original["file_key"]
+    assert updated["size"] == len(b"v2-longer")
+    assert updated["uploaded_at"] == original["uploaded_at"]
+    assert updated["modified_at"] is not None
+    assert updated["modifier"]["name"] == "john doe"
+    # The previous S3 object is cleaned up.
+    mock_delete.assert_called_once_with(original["file_key"])
 
 
 def test_edit_file(client: TestClient):
@@ -136,6 +199,10 @@ def test_edit_file(client: TestClient):
         "processing_status": None,
         "processing_failure_reason": None,
         "uploaded_at": ANY,
+        "uploader": None,
+        "modified_at": ANY,
+        "modifier": ANY,
+        "size": None,
     }
 
 
