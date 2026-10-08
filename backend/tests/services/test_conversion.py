@@ -16,6 +16,10 @@ def _pdf(name: str) -> dict:
     return {"name": name, "content_b64": base64.b64encode(b"%PDF-1.4").decode("ascii")}
 
 
+def _mp3(name: str) -> dict:
+    return {"name": name, "content_b64": base64.b64encode(b"ID3\x03").decode("ascii")}
+
+
 @pytest.fixture()
 def session():
     engine = get_engine(DATABASE_URL)
@@ -59,7 +63,7 @@ def test_duplicate_part_names_are_disambiguated(session):
     ) as mock_post:
         mock_post.return_value = MagicMock(
             status_code=200,
-            json=lambda: {"pdfs": [_pdf("Partie.pdf"), _pdf("Partie.pdf")]},
+            json=lambda: {"outputs": [_pdf("Partie.pdf"), _pdf("Partie.pdf")]},
         )
         service._run(container_id)
 
@@ -90,7 +94,7 @@ def test_stale_run_discards_results_when_source_changed(session):
     ) as mock_post:
         mock_post.return_value = MagicMock(
             status_code=200,
-            json=lambda: {"pdfs": [_pdf("Partie.pdf")]},
+            json=lambda: {"outputs": [_pdf("Partie.pdf")]},
         )
         service._run(container_id)
 
@@ -101,3 +105,32 @@ def test_stale_run_discards_results_when_source_changed(session):
     )
     assert children == []
     service.s3.delete_object.assert_called()
+
+
+def test_pdf_and_mp3_outputs_uploaded_with_correct_content_types(session):
+    container_id = _make_container(session)
+    service = _service()
+    with patch.object(service, "_download", return_value=b"<score/>"), patch(
+        "bbe2.services.conversion.httpx.post"
+    ) as mock_post:
+        mock_post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"outputs": [_pdf("Suite.pdf"), _mp3("Suite.mp3")]},
+        )
+        service._run(container_id)
+
+    children = (
+        session.query(models.FileOrFolderDB)
+        .filter(models.FileOrFolderDB.parent_id == container_id)
+        .order_by(models.FileOrFolderDB.id)
+        .all()
+    )
+    assert [c.name for c in children] == ["Suite.pdf", "Suite.mp3"]
+
+    content_types = {
+        call.kwargs["content_type"] for call in service.s3.upload_file.call_args_list
+    }
+    assert content_types == {"application/pdf", "audio/mpeg"}
+
+    container = session.get(models.FileOrFolderDB, container_id)
+    assert container.processing_status == "completed"

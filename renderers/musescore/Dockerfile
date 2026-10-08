@@ -25,6 +25,8 @@ RUN apt-get update \
         libnss3 \
         libasound2t64 \
         libpulse0 \
+        libjack0 \
+        libpipewire-0.3-0t64 \
         libxcb-cursor0 \
         libxkbcommon0 \
         libxcb-icccm4 \
