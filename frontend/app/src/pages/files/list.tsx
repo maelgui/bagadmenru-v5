@@ -17,6 +17,7 @@ import FileItem, { FileItemSkeleton } from './components/file-item';
 import { ContainerStatus } from './components/container-view';
 import CreateFolderDialog from './components/dialogs/create-folder-dialog';
 import DeleteFileDialog from './components/dialogs/delete-file-dialog';
+import FileDetailsDialog from './components/dialogs/file-details-dialog';
 import RenameDialog from './components/dialogs/rename-dialog';
 import UploadProgressDialog from './components/dialogs/upload-progress-dialog';
 
@@ -109,7 +110,7 @@ function buildBreadcrumb(folderId: string | undefined, breadcrumb?: FileOrFolder
 }
 
 function FolderBody({
-  status, content, isDragActive, canCreate, onDelete, onRename,
+  status, content, isDragActive, canCreate, onDelete, onRename, onDetails,
 }: {
   status: 'pending' | 'error' | 'success';
   content?: { folders: FileOrFolder[]; files: FileOrFolder[] };
@@ -117,6 +118,7 @@ function FolderBody({
   canCreate: boolean;
   onDelete?: (file: FileOrFolder) => void;
   onRename?: (file: FileOrFolder) => void;
+  onDetails: (file: FileOrFolder) => void;
 }) {
   if (status === 'pending') {
     return (
@@ -154,11 +156,12 @@ function FolderBody({
             file={file}
             deleteFn={onDelete && (() => onDelete(file))}
             renameFn={onRename && file.type !== FileOrFolderType.Container ? () => onRename(file) : undefined}
+            detailsFn={() => onDetails(file)}
           />
         ))}
       </div>
       <div className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {content.files.map((file) => <FileItem key={file.id} file={file} big deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} />)}
+        {content.files.map((file) => <FileItem key={file.id} file={file} big deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} detailsFn={() => onDetails(file)} />)}
       </div>
     </>
   );
@@ -220,6 +223,7 @@ export default function ListFilesPage() {
 
   const [fileToDelete, setFileToDelete] = useState<FileOrFolder | undefined>(undefined);
   const [fileToRename, setFileToRename] = useState<FileOrFolder | undefined>(undefined);
+  const [fileToShow, setFileToShow] = useState<FileOrFolder | undefined>(undefined);
   const [creatingFolder, setCreatingFolder] = useState(false);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -253,6 +257,7 @@ export default function ListFilesPage() {
             canCreate={canWriteHere}
             onDelete={canDeleteHere ? setFileToDelete : undefined}
             onRename={canRenameHere ? setFileToRename : undefined}
+            onDetails={setFileToShow}
           />
         </div>
       </Container>
@@ -262,6 +267,10 @@ export default function ListFilesPage() {
         isPending={deleteFile.isPending}
         onConfirm={(fileId) => deleteFile.mutate(fileId, { onSettled: () => setFileToDelete(undefined) })}
         onClose={() => setFileToDelete(undefined)}
+      />
+      <FileDetailsDialog
+        file={fileToShow}
+        onClose={() => setFileToShow(undefined)}
       />
       {fileToRename ? (
         <RenameDialog

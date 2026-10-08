@@ -83,6 +83,12 @@ export interface FileOrFolder {
     childCount?: number | null;
     /**
      * 
+     * @type {Date}
+     * @memberof FileOrFolder
+     */
+    uploadedAt?: Date | null;
+    /**
+     * 
      * @type {string}
      * @memberof FileOrFolder
      */
@@ -128,6 +134,7 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'processingStatus': json['processing_status'] == null ? undefined : json['processing_status'],
         'processingFailureReason': json['processing_failure_reason'] == null ? undefined : json['processing_failure_reason'],
         'childCount': json['child_count'] == null ? undefined : json['child_count'],
+        'uploadedAt': json['uploaded_at'] == null ? undefined : (new Date(json['uploaded_at'])),
         'fileUrl': json['fileUrl'],
         'downloadUrl': json['downloadUrl'],
     };
@@ -153,6 +160,7 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'processing_status': value['processingStatus'],
         'processing_failure_reason': value['processingFailureReason'],
         'child_count': value['childCount'],
+        'uploaded_at': value['uploadedAt'] == null ? undefined : ((value['uploadedAt'] as any).toISOString()),
         'fileUrl': value['fileUrl'],
         'downloadUrl': value['downloadUrl'],
     };

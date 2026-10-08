@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import ClassVar, Optional
 
@@ -43,6 +44,7 @@ class FileOrFolder(_FileOrFolderBase):
     # Number of direct children. Populated only when listing a folder's
     # children; None elsewhere (e.g. single-item lookups).
     child_count: Optional[int] = None
+    uploaded_at: Optional[datetime] = None
 
     @computed_field  # type: ignore[misc]
     @property
