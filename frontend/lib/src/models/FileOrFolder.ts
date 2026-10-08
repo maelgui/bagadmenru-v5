@@ -20,6 +20,13 @@ import {
     FileOrFolderTypeToJSON,
     FileOrFolderTypeToJSONTyped,
 } from './FileOrFolderType';
+import type { FileAuthor } from './FileAuthor';
+import {
+    FileAuthorFromJSON,
+    FileAuthorFromJSONTyped,
+    FileAuthorToJSON,
+    FileAuthorToJSONTyped,
+} from './FileAuthor';
 
 /**
  * 
@@ -89,6 +96,30 @@ export interface FileOrFolder {
     uploadedAt?: Date | null;
     /**
      * 
+     * @type {FileAuthor}
+     * @memberof FileOrFolder
+     */
+    uploader?: FileAuthor | null;
+    /**
+     * 
+     * @type {Date}
+     * @memberof FileOrFolder
+     */
+    modifiedAt?: Date | null;
+    /**
+     * 
+     * @type {FileAuthor}
+     * @memberof FileOrFolder
+     */
+    modifier?: FileAuthor | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof FileOrFolder
+     */
+    size?: number | null;
+    /**
+     * 
      * @type {string}
      * @memberof FileOrFolder
      */
@@ -135,6 +166,10 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'processingFailureReason': json['processing_failure_reason'] == null ? undefined : json['processing_failure_reason'],
         'childCount': json['child_count'] == null ? undefined : json['child_count'],
         'uploadedAt': json['uploaded_at'] == null ? undefined : (new Date(json['uploaded_at'])),
+        'uploader': json['uploader'] == null ? undefined : FileAuthorFromJSON(json['uploader']),
+        'modifiedAt': json['modified_at'] == null ? undefined : (new Date(json['modified_at'])),
+        'modifier': json['modifier'] == null ? undefined : FileAuthorFromJSON(json['modifier']),
+        'size': json['size'] == null ? undefined : json['size'],
         'fileUrl': json['fileUrl'],
         'downloadUrl': json['downloadUrl'],
     };
@@ -161,6 +196,10 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'processing_failure_reason': value['processingFailureReason'],
         'child_count': value['childCount'],
         'uploaded_at': value['uploadedAt'] == null ? undefined : ((value['uploadedAt'] as any).toISOString()),
+        'uploader': FileAuthorToJSON(value['uploader']),
+        'modified_at': value['modifiedAt'] == null ? undefined : ((value['modifiedAt'] as any).toISOString()),
+        'modifier': FileAuthorToJSON(value['modifier']),
+        'size': value['size'],
         'fileUrl': value['fileUrl'],
         'downloadUrl': value['downloadUrl'],
     };

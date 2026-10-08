@@ -1,6 +1,7 @@
 """File system API."""
 
 import uuid
+from datetime import datetime, timezone
 from typing import Annotated, Optional
 
 from fastapi import (
@@ -20,7 +21,7 @@ from bbe2.crud import CRUDFile
 from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, get_s3_helper
 from bbe2.schemas.file import FileOrFolderType
 from bbe2.services.conversion import ConversionService, source_format_for
-from bbe2.utils.auth import Action, Authorization, Resource
+from bbe2.utils.auth import Action, Authorization, JwtPayload, Resource
 from bbe2.utils.s3 import S3Helper
 
 router = APIRouter(prefix="/files")
@@ -161,7 +162,6 @@ async def list_children(
 
 @router.post(
     "/{folder_id}/upload",
-    dependencies=[Depends(Authorization(Action.CREATE, Resource.FILE))],
     response_model=schemas.FileOrFolder,
     status_code=status.HTTP_201_CREATED,
 )
@@ -172,6 +172,9 @@ async def upload_file(
     s3: S3Dep,
     settings: SettingsDep,
     background_tasks: BackgroundTasks,
+    payload: Annotated[
+        JwtPayload, Depends(Authorization(Action.CREATE, Resource.FILE))
+    ],
     force: bool = False,
 ):
     """Upload a file."""
@@ -198,8 +201,10 @@ async def upload_file(
             )
         if existing.type == FileOrFolderType.CONTAINER and src_format:
             return _reupload_container(
-                existing, file, file_crud, s3, settings, background_tasks
+                existing, file, file_crud, s3, settings, background_tasks, payload.sub
             )
+        if existing.type == FileOrFolderType.FILE and not src_format:
+            return _reupload_file(existing, file, file_crud, s3, payload.sub)
         _delete_node_s3(existing, s3)
         file_crud.delete(existing.id)
 
@@ -213,12 +218,45 @@ async def upload_file(
         parent_id=folder_id,
         source_format=src_format,
         processing_status="pending" if src_format else None,
+        uploaded_by=payload.sub,
+        size=_upload_size(file),
     )
 
     if src_format:
         _enqueue_generation(created.id, settings, s3, background_tasks)
 
     return created
+
+
+def _upload_size(file: UploadFile) -> Optional[int]:
+    pos = file.file.tell()
+    file.file.seek(0, 2)
+    size = file.file.tell()
+    file.file.seek(pos)
+    return size
+
+
+def _reupload_file(
+    existing: models.FileOrFolderDB,
+    file: UploadFile,
+    file_crud: CRUDFile,
+    s3: S3Helper,
+    user_id: str,
+) -> models.FileOrFolderDB:
+    old_key = existing.file_key
+    new_key = "files/" + str(uuid.uuid4())
+    s3.upload_file(file.file, new_key, content_type=file.content_type)
+
+    existing.file_key = new_key
+    existing.size = _upload_size(file)
+    existing.modified_at = datetime.now(timezone.utc)
+    existing.modified_by = user_id
+    file_crud.db_session.flush()
+    file_crud.db_session.refresh(existing)
+
+    if old_key:
+        s3.delete_object(old_key)
+    return existing
 
 
 def _reupload_container(
@@ -228,6 +266,7 @@ def _reupload_container(
     s3: S3Helper,
     settings: Settings,
     background_tasks: BackgroundTasks,
+    user_id: str,
 ) -> models.FileOrFolderDB:
     new_key = "files/" + str(uuid.uuid4())
     s3.upload_file(file.file, new_key, content_type=file.content_type)
@@ -239,8 +278,11 @@ def _reupload_container(
         file_crud.delete(child.id)
 
     container.file_key = new_key
+    container.size = _upload_size(file)
     container.processing_status = "pending"
     container.processing_failure_reason = None
+    container.modified_at = datetime.now(timezone.utc)
+    container.modified_by = user_id
     file_crud.db_session.flush()
     file_crud.db_session.refresh(container)
 
@@ -297,13 +339,13 @@ async def create_folder(
 
 @router.put(
     "/{file_id}",
-    dependencies=[Depends(Authorization(Action.EDIT, Resource.FILE))],
     response_model=schemas.FileOrFolder,
 )
 async def update_file(
     file_id: int,
     file: schemas.FileOrFolderUpdate,
     file_crud: Annotated[CRUDFile, Depends()],
+    payload: Annotated[JwtPayload, Depends(Authorization(Action.EDIT, Resource.FILE))],
 ):
     """Update an existing file or folder"""
     db_file = file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
@@ -317,6 +359,10 @@ async def update_file(
             detail="Container content cannot be modified individually",
         )
     db_file = file_crud.update(db_file, file)
+    db_file.modified_at = datetime.now(timezone.utc)
+    db_file.modified_by = payload.sub
+    file_crud.db_session.flush()
+    file_crud.db_session.refresh(db_file)
     return db_file
 
 
