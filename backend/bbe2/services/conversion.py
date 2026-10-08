@@ -34,6 +34,20 @@ def _renderer_urls(settings: Settings) -> dict[str, str]:
     return {fmt: str(url) for fmt, url in candidates.items() if url}
 
 
+CONTENT_TYPES = {
+    "pdf": "application/pdf",
+    "mp3": "audio/mpeg",
+}
+DEFAULT_CONTENT_TYPE = "application/octet-stream"
+
+
+def content_type_for(name: str) -> str:
+    extension = name.lower().rsplit(".", 1)
+    if len(extension) != 2:
+        return DEFAULT_CONTENT_TYPE
+    return CONTENT_TYPES.get(extension[1], DEFAULT_CONTENT_TYPE)
+
+
 def source_format_for(filename: str, settings: Settings) -> str | None:
     extension = filename.lower().rsplit(".", 1)
     if len(extension) != 2:
@@ -75,14 +89,16 @@ class ConversionService:
             base_name = container.name.rsplit(".", 1)[0]
 
         source_bytes = self._download(source_key)
-        pdfs = self._render(source_bytes, source_format, base_name)
+        outputs = self._render(source_bytes, source_format, base_name)
 
         uploaded: list[tuple[str, str]] = []
         try:
-            for display_name, pdf_bytes in pdfs:
+            for display_name, output_bytes in outputs:
                 key = "files/" + str(uuid.uuid4())
                 self.s3.upload_file(
-                    io.BytesIO(pdf_bytes), key, content_type="application/pdf"
+                    io.BytesIO(output_bytes),
+                    key,
+                    content_type=content_type_for(display_name),
                 )
                 uploaded.append((display_name, key))
         except Exception:
@@ -169,7 +185,9 @@ class ConversionService:
             raise RendererError(f"Renderer error {response.status_code}")
 
         payload = response.json()
-        pdfs = payload.get("pdfs", [])
-        if not pdfs:
-            raise RendererError("Renderer returned no PDF")
-        return [(item["name"], base64.b64decode(item["content_b64"])) for item in pdfs]
+        outputs = payload.get("outputs", [])
+        if not outputs:
+            raise RendererError("Renderer returned no output")
+        return [
+            (item["name"], base64.b64decode(item["content_b64"])) for item in outputs
+        ]
