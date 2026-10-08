@@ -32,10 +32,10 @@ function isConverting(node?: FileOrFolder): boolean {
     && node.processingStatus !== 'failed';
 }
 
-function useFolder(folderId?: string) {
+export function useFolder(folderId?: string) {
   const { filesApi } = useApiClient();
   const { data: folder } = useQuery({
-    queryKey: ['files', folderId ?? 'root'],
+    queryKey: ['files', folderId === undefined ? 'root' : parseInt(folderId, 10)],
     queryFn: async () => (
       folderId === undefined
         ? await filesApi.getRootApiV1FilesRootGet()
@@ -45,7 +45,7 @@ function useFolder(folderId?: string) {
   });
   const converting = isConverting(folder);
   const { data: children, status } = useQuery({
-    queryKey: ['files', 'children', folder?.id],
+    queryKey: ['files', folder?.id, 'children', folder?.processingStatus],
     queryFn: async () => {
       if (!folder?.id) throw new Error('Invalid id');
       return await filesApi.listChildrenApiV1FilesFolderIdChildrenGet({ folderId: folder.id });
@@ -58,7 +58,7 @@ function useFolder(folderId?: string) {
     refetchInterval: converting ? CONVERSION_POLL_INTERVAL_MS : false,
   });
   const { data: breadcrumb } = useQuery({
-    queryKey: ['files', 'breadcrumb', folder?.id],
+    queryKey: ['files', folder?.id, 'breadcrumb'],
     queryFn: async () => {
       if (!folder?.id) throw new Error('Invalid id');
       return await filesApi.getBreadcrumbApiV1FilesFileIdBreadcrumbGet({ fileId: folder.id });
@@ -70,7 +70,7 @@ function useFolder(folderId?: string) {
 
 function useFileMutations(folderId?: number) {
   const { filesApi } = useApiClient();
-  const invalidateChildren = async () => await queryClient.invalidateQueries({ queryKey: ['files', 'children', folderId] });
+  const invalidateChildren = async () => await queryClient.invalidateQueries({ queryKey: ['files', folderId] });
 
   const createFolder = useMutation({
     mutationFn: async (name: string) => {
@@ -212,7 +212,7 @@ export default function ListFilesPage() {
   const { folder, children, status, breadcrumb } = useFolder(params.folderId);
   const { createFolder, deleteFile, renameFile } = useFileMutations(folder?.id);
 
-  const invalidateChildren = async () => await queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id] });
+  const invalidateChildren = async () => await queryClient.invalidateQueries({ queryKey: ['files', folder?.id] });
   const upload = useBatchUpload(folder?.id, invalidateChildren);
 
   const allDone = upload.active && upload.items.length > 0

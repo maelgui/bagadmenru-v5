@@ -398,6 +398,62 @@ def test_reupload_container_with_force_regenerates(
     assert children == []
 
 
+@patch("bbe2.utils.s3.S3Helper.delete_object")
+@patch("bbe2.utils.s3.S3Helper.upload_file")
+def test_reupload_container_commits_new_source_before_generate(
+    mock_upload_file: MagicMock,
+    mock_delete: MagicMock,
+    client: TestClient,
+):
+    from sqlalchemy.orm import sessionmaker
+
+    from bbe2 import models as m
+    from bbe2.database import get_engine
+
+    container_id = _make_container(client)
+    engine = get_engine(DATABASE_URL)
+    session = sessionmaker(bind=engine)()
+    session.add(
+        m.FileOrFolderDB(
+            type=FileOrFolderType.FILE,
+            name="Suite.pdf",
+            file_key="files/old-pdf",
+            parent_id=container_id,
+        )
+    )
+    container = session.get(m.FileOrFolderDB, container_id)
+    old_key = container.file_key
+    session.commit()
+    session.close()
+
+    seen: dict = {}
+
+    def capture(cid: int) -> None:
+        probe = sessionmaker(bind=engine)()
+        node = probe.get(m.FileOrFolderDB, cid)
+        children = (
+            probe.query(m.FileOrFolderDB)
+            .filter(m.FileOrFolderDB.parent_id == cid)
+            .all()
+        )
+        seen["file_key"] = node.file_key
+        seen["processing_status"] = node.processing_status
+        seen["child_count"] = len(children)
+        probe.close()
+
+    with patch("bbe2.api.v1.endpoints.files.ConversionService") as mock_service:
+        mock_service.return_value.generate.side_effect = capture
+        response = client.post(
+            "/api/v1/files/1/upload?force=true",
+            files={"file": ("Suite.mscz", b"new-bytes")},
+        )
+
+    assert response.status_code == 201
+    assert seen["processing_status"] == "pending"
+    assert seen["file_key"] != old_key
+    assert seen["child_count"] == 0
+
+
 def test_create_folder_in_container_is_forbidden(client: TestClient):
     container_id = _make_container(client)
     response = client.post(f"/api/v1/files/{container_id}", json={"name": "sub"})
