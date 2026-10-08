@@ -278,7 +278,7 @@ def _reupload_container(
     container.processing_failure_reason = None
     container.modified_at = datetime.now(timezone.utc)
     container.modified_by = user_id
-    file_crud.db_session.flush()
+    file_crud.db_session.commit()
     file_crud.db_session.refresh(container)
 
     for key in old_keys:
