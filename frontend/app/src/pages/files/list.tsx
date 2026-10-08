@@ -1,7 +1,7 @@
 import { AlertCircle, CloudUpload, FolderPlus } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useParams } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -20,8 +20,10 @@ import DeleteFileDialog from './components/dialogs/delete-file-dialog';
 import FileDetailsDialog from './components/dialogs/file-details-dialog';
 import RenameDialog from './components/dialogs/rename-dialog';
 import UploadProgressDialog from './components/dialogs/upload-progress-dialog';
+import { useBatchUpload } from './use-batch-upload';
 
 const CONVERSION_POLL_INTERVAL_MS = 2000;
+const AUTOCLOSE_DELAY_MS = 1000;
 
 function isConverting(node?: FileOrFolder): boolean {
   return node?.type === FileOrFolderType.Container
@@ -77,14 +79,6 @@ function useFileMutations(folderId?: number) {
     },
     onSettled: invalidateChildren,
   });
-  const uploadFiles = useMutation({
-    mutationFn: async (acceptedFiles: File[]) => {
-      if (!folderId) return await Promise.reject(new Error('Dossier introuvable'));
-      return await Promise.all(acceptedFiles.map(async (file) => await filesApi.uploadFileApiV1FilesFolderIdUploadPost({ folderId, file })));
-    },
-    onSettled: invalidateChildren,
-    onSuccess: (data) => toast.add({ title: `${data.length} fichier(s) envoyé(s) avec succès.`, type: 'success' }),
-  });
   const deleteFile = useMutation({
     mutationFn: async (fileId: number) => await filesApi.deleteFileApiV1FilesFileIdDelete({ fileId }),
     onSettled: invalidateChildren,
@@ -97,7 +91,7 @@ function useFileMutations(folderId?: number) {
     onSettled: invalidateChildren,
   });
 
-  return { createFolder, uploadFiles, deleteFile, renameFile };
+  return { createFolder, deleteFile, renameFile };
 }
 
 function buildBreadcrumb(folderId: string | undefined, breadcrumb?: FileOrFolder[]) {
@@ -216,7 +210,22 @@ export default function ListFilesPage() {
   const { can } = usePermissions();
   const params = useParams();
   const { folder, children, status, breadcrumb } = useFolder(params.folderId);
-  const { createFolder, uploadFiles, deleteFile, renameFile } = useFileMutations(folder?.id);
+  const { createFolder, deleteFile, renameFile } = useFileMutations(folder?.id);
+
+  const invalidateChildren = async () => await queryClient.invalidateQueries({ queryKey: ['files', 'children', folder?.id] });
+  const upload = useBatchUpload(folder?.id, invalidateChildren);
+
+  const allDone = upload.active && upload.items.length > 0
+    && upload.items.every((item) => item.status === 'done');
+  useEffect(() => {
+    if (!allDone) return undefined;
+    const count = upload.items.length;
+    const timer = setTimeout(() => {
+      upload.close();
+      toast.add({ title: `${count} fichier(s) envoyé(s) avec succès.`, type: 'success' });
+    }, AUTOCLOSE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [allDone, upload]);
 
   const isContainer = folder?.type === FileOrFolderType.Container;
   const { canWriteHere, canDeleteHere, canRenameHere } = effectivePermissions(can, isContainer);
@@ -227,7 +236,7 @@ export default function ListFilesPage() {
   const [creatingFolder, setCreatingFolder] = useState(false);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => uploadFiles.mutate(acceptedFiles),
+    onDrop: (acceptedFiles) => { void upload.start(acceptedFiles); },
     noClick: true,
     noKeyboard: true,
     noDrag: !canWriteHere,
@@ -287,7 +296,12 @@ export default function ListFilesPage() {
         onSubmit={(name) => createFolder.mutate(name, { onSettled: () => setCreatingFolder(false) })}
         onClose={() => setCreatingFolder(false)}
       />
-      <UploadProgressDialog open={uploadFiles.isPending} />
+      <UploadProgressDialog
+        open={upload.active}
+        items={upload.items}
+        onResolveConflict={(id, overwrite) => { void upload.resolveConflict(id, overwrite); }}
+        onClose={upload.close}
+      />
     </>
   );
 }
