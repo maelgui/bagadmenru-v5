@@ -30,6 +30,7 @@ def test_get_file(client: TestClient):
         "source_format": None,
         "processing_status": None,
         "processing_failure_reason": None,
+        "uploaded_at": ANY,
     }
 
 
@@ -49,6 +50,7 @@ def test_get_children(client: TestClient):
             "source_format": None,
             "processing_status": None,
             "processing_failure_reason": None,
+            "uploaded_at": ANY,
         },
         {
             "id": 3,
@@ -62,6 +64,7 @@ def test_get_children(client: TestClient):
             "source_format": None,
             "processing_status": None,
             "processing_failure_reason": None,
+            "uploaded_at": ANY,
         },
     ]
 
@@ -107,6 +110,7 @@ def test_upload_file(mock_upload_file: MagicMock, client: TestClient):
         "source_format": None,
         "processing_status": None,
         "processing_failure_reason": None,
+        "uploaded_at": ANY,
     }
 
 
@@ -131,6 +135,7 @@ def test_edit_file(client: TestClient):
         "source_format": None,
         "processing_status": None,
         "processing_failure_reason": None,
+        "uploaded_at": ANY,
     }
 
 

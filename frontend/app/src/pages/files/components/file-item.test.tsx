@@ -71,4 +71,19 @@ describe('FileItem action menu permission gating', () => {
     expect(screen.queryByRole('menuitem', { name: 'Renommer...' })).toBeNull();
     expect(screen.queryByRole('menuitem', { name: 'Supprimer...' })).toBeNull();
   });
+
+  it('shows the details entry and calls back when a details callback is provided', () => {
+    const detailsFn = vi.fn();
+    renderItem(<FileItem file={makeFolder()} detailsFn={detailsFn} />);
+    openMenu('Partitions');
+    const item = screen.getByRole('menuitem', { name: 'Détails...' });
+    fireEvent.click(item);
+    expect(detailsFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the details entry when no details callback is provided', () => {
+    renderItem(<FileItem file={makeFolder()} renameFn={vi.fn()} />);
+    openMenu('Partitions');
+    expect(screen.queryByRole('menuitem', { name: 'Détails...' })).toBeNull();
+  });
 });

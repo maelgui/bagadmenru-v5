@@ -1,4 +1,4 @@
-import { type LucideIcon, Download, EllipsisVertical, File, FileArchive, FileAudio, FileImage, FileMusic, FileText, FileVideo, Folder, FolderArchive, Pencil, Trash2 } from 'lucide-react';
+import { type LucideIcon, Download, EllipsisVertical, File, FileArchive, FileAudio, FileImage, FileMusic, FileText, FileVideo, Folder, FolderArchive, Info, Pencil, Trash2 } from 'lucide-react';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
 import { createElement, type MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -28,6 +28,7 @@ interface FileItemProps {
   big?: boolean
   deleteFn?: () => void
   renameFn?: () => void
+  detailsFn?: () => void
   noAction?: boolean
   variant?: 'default' | 'outline' | 'muted'
 }
@@ -135,8 +136,67 @@ function FileItemLink({
   );
 }
 
+function FileItemMenu({
+  file, isOpen, setIsOpen, showDownload, downloadLabel, deleteFn, renameFn, detailsFn,
+}: {
+  file: FileOrFolder;
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  showDownload: boolean;
+  downloadLabel: string;
+  deleteFn?: () => void;
+  renameFn?: () => void;
+  detailsFn?: () => void;
+}) {
+  const primaryActions = [
+    showDownload && (
+      <DropdownMenuItem
+        key="download"
+        render={<a href={file.downloadUrl ?? undefined} download={file.name} rel="noopener noreferrer" />}
+      >
+        <Download />
+        {downloadLabel}
+      </DropdownMenuItem>
+    ),
+    detailsFn && (
+      <DropdownMenuItem key="details" onClick={detailsFn}>
+        <Info />
+        Détails...
+      </DropdownMenuItem>
+    ),
+    renameFn && (
+      <DropdownMenuItem key="rename" onClick={renameFn}>
+        <Pencil />
+        Renommer...
+      </DropdownMenuItem>
+    ),
+  ].filter(Boolean);
+
+  return (
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger
+        render={<Button type="button" variant="ghost" size="icon-xs" className="relative shrink-0" aria-label={`Actions pour ${file.name}`} />}
+      >
+        <EllipsisVertical />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {primaryActions.length ? <DropdownMenuGroup>{primaryActions}</DropdownMenuGroup> : null}
+        {primaryActions.length && deleteFn ? <DropdownMenuSeparator /> : null}
+        {deleteFn ? (
+          <DropdownMenuGroup>
+            <DropdownMenuItem variant="destructive" onClick={deleteFn}>
+              <Trash2 />
+              Supprimer...
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function FileItem({
-  file, big = false, deleteFn = undefined, renameFn = undefined, noAction = false, variant = 'outline',
+  file, big = false, deleteFn = undefined, renameFn = undefined, detailsFn = undefined, noAction = false, variant = 'outline',
 }: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const bind = useLongPress(() => setIsOpen(true), { detect: LongPressEventType.Touch });
@@ -147,7 +207,7 @@ export default function FileItem({
 
   const showDownload = (isFile || isContainer) && !!file.downloadUrl;
   const downloadLabel = isContainer ? 'Télécharger la source' : 'Télécharger';
-  const hasActions = !noAction && (showDownload || renameFn !== undefined || deleteFn !== undefined);
+  const hasActions = !noAction && (showDownload || renameFn !== undefined || deleteFn !== undefined || detailsFn !== undefined);
 
   return (
     <Item variant={variant} className="relative transition-colors hover:bg-muted">
@@ -166,48 +226,16 @@ export default function FileItem({
       </ItemContent>
       {hasActions ? (
         <ItemActions>
-          <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger
-              render={<Button type="button" variant="ghost" size="icon-xs" className="relative shrink-0" aria-label={`Actions pour ${file.name}`} />}
-            >
-              <EllipsisVertical />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {showDownload || renameFn ? (
-                <DropdownMenuGroup>
-                  {showDownload ? (
-                    <DropdownMenuItem
-                      render={(
-                        <a
-                          href={file.downloadUrl ?? undefined}
-                          download={file.name}
-                          rel="noopener noreferrer"
-                        />
-                      )}
-                    >
-                      <Download />
-                      {downloadLabel}
-                    </DropdownMenuItem>
-                  ) : null}
-                  {renameFn ? (
-                    <DropdownMenuItem onClick={renameFn}>
-                      <Pencil />
-                      Renommer...
-                    </DropdownMenuItem>
-                  ) : null}
-                </DropdownMenuGroup>
-              ) : null}
-              {(showDownload || renameFn) && deleteFn ? <DropdownMenuSeparator /> : null}
-              {deleteFn ? (
-                <DropdownMenuGroup>
-                  <DropdownMenuItem variant="destructive" onClick={deleteFn}>
-                    <Trash2 />
-                    Supprimer...
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <FileItemMenu
+            file={file}
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            showDownload={showDownload}
+            downloadLabel={downloadLabel}
+            deleteFn={deleteFn}
+            renameFn={renameFn}
+            detailsFn={detailsFn}
+          />
         </ItemActions>
       ) : null}
     </Item>
