@@ -24,16 +24,23 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Drum Score Editor ships a Linux .deb (jpackage bundle carrying its own Java
-# runtime). The download server rejects hotlinking unless a browser User-Agent
-# and the product page Referer are sent. We extract the package data only
-# (dpkg-deb -x): the .deb postinst runs xdg-desktop-menu which fails in a
-# headless image, so a normal apt/dpkg install exits non-zero even though the
-# binary installs fine. Extraction skips the maintainer scripts entirely.
-RUN wget -q \
-        --header="User-Agent: Mozilla/5.0 (X11; Linux x86_64)" \
-        --header="Referer: https://www.drummingondemand.com/drum-score-editor/" \
+# runtime). The upstream download server (o2switch) resets connections from
+# GitHub Actions runner IPs, so the frozen v3.6.6 package is mirrored as a
+# GitHub release asset. We extract the package data only (dpkg-deb -x): the
+# .deb postinst runs xdg-desktop-menu which fails in a headless image, so a
+# normal apt/dpkg install exits non-zero even though the binary installs fine.
+# Extraction skips the maintainer scripts entirely.
+ARG DSE_DEB_URL=https://github.com/maelgui/bagadmenru-v5/releases/download/dse-3.6.6/dse-3.6.6.deb
+ARG DSE_DEB_SHA256=8ebe7a2f022aada42a4636d4606902a31f7d49872b11a83fb9c43d3827965a32
+RUN wget \
+        --tries=5 \
+        --timeout=60 \
+        --waitretry=15 \
+        --retry-connrefused \
+        --continue \
         -O /tmp/dse.deb \
-        "https://www.drummingondemand.com/_dsedl.php?os=tux" \
+        "${DSE_DEB_URL}" \
+    && echo "${DSE_DEB_SHA256}  /tmp/dse.deb" | sha256sum -c - \
     && dpkg-deb -x /tmp/dse.deb / \
     && rm /tmp/dse.deb \
     && test -x "${DSE_BIN}"
