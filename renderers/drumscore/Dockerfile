@@ -29,11 +29,17 @@ RUN apt-get update \
 # (dpkg-deb -x): the .deb postinst runs xdg-desktop-menu which fails in a
 # headless image, so a normal apt/dpkg install exits non-zero even though the
 # binary installs fine. Extraction skips the maintainer scripts entirely.
-RUN wget -q \
+RUN wget \
         --header="User-Agent: Mozilla/5.0 (X11; Linux x86_64)" \
         --header="Referer: https://www.drummingondemand.com/drum-score-editor/" \
+        --tries=5 \
+        --timeout=60 \
+        --waitretry=15 \
+        --retry-connrefused \
+        --continue \
         -O /tmp/dse.deb \
         "https://www.drummingondemand.com/_dsedl.php?os=tux" \
+    && dpkg-deb -I /tmp/dse.deb >/dev/null \
     && dpkg-deb -x /tmp/dse.deb / \
     && rm /tmp/dse.deb \
     && test -x "${DSE_BIN}"
