@@ -17,6 +17,7 @@ RUN apt-get update \
         libfreetype6 \
         fontconfig \
         fonts-dejavu \
+        fonts-liberation \
         libxext6 \
         libxrender1 \
         libxtst6 \
@@ -48,6 +49,14 @@ RUN wget \
 RUN python3 -m venv "$VIRTUAL_ENV"
 COPY drumscore/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Make fc-match resolve the generic serif/sans aliases to the Times-metric
+# Liberation family instead of DejaVu, so DSE's logical fonts render with the
+# intended letterforms (see fonts-local.conf). This must land at
+# /etc/fonts/local.conf (fontconfig's final-override slot); a file under
+# conf.d/ is outranked by the distro's 60-latin.conf serif binding.
+COPY drumscore/fonts-local.conf /etc/fonts/local.conf
+RUN fc-cache -f
 
 WORKDIR /app
 COPY contract.py /app/contract.py
