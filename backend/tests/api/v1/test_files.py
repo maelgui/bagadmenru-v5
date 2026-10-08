@@ -177,6 +177,28 @@ def test_force_reupload_file_updates_in_place(
     mock_delete.assert_called_once_with(original["file_key"])
 
 
+@patch("bbe2.utils.s3.S3Helper.delete_object")
+@patch("bbe2.utils.s3.S3Helper.upload_file")
+def test_upload_reads_size_before_s3_consumes_the_stream(
+    mock_upload_file: MagicMock, mock_delete: MagicMock, client: TestClient
+):
+    # The real S3Helper.upload_file streams the body to S3, leaving the
+    # UploadFile's underlying buffer consumed/closed. Reproduce that here so the
+    # size must be read *before* the upload, not after.
+    def consume_and_close(file_obj, *_args, **_kwargs):
+        file_obj.read()
+        file_obj.close()
+
+    mock_upload_file.side_effect = consume_and_close
+
+    response = client.post(
+        "/api/v1/files/1/upload",
+        files={"file": ("notes.txt", b"hello world")},
+    )
+    assert response.status_code == 201
+    assert response.json()["size"] == len(b"hello world")
+
+
 def test_edit_file(client: TestClient):
     response = client.put(
         "/api/v1/files/2",

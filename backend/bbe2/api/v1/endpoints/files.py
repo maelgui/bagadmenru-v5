@@ -209,6 +209,7 @@ async def upload_file(
         file_crud.delete(existing.id)
 
     filename = "files/" + str(uuid.uuid4())
+    upload_size = file.size
     s3.upload_file(file.file, filename, content_type=file.content_type)
 
     created = file_crud.create(
@@ -219,21 +220,13 @@ async def upload_file(
         source_format=src_format,
         processing_status="pending" if src_format else None,
         uploaded_by=payload.sub,
-        size=_upload_size(file),
+        size=upload_size,
     )
 
     if src_format:
         _enqueue_generation(created.id, settings, s3, background_tasks)
 
     return created
-
-
-def _upload_size(file: UploadFile) -> Optional[int]:
-    pos = file.file.tell()
-    file.file.seek(0, 2)
-    size = file.file.tell()
-    file.file.seek(pos)
-    return size
 
 
 def _reupload_file(
@@ -245,10 +238,11 @@ def _reupload_file(
 ) -> models.FileOrFolderDB:
     old_key = existing.file_key
     new_key = "files/" + str(uuid.uuid4())
+    upload_size = file.size
     s3.upload_file(file.file, new_key, content_type=file.content_type)
 
     existing.file_key = new_key
-    existing.size = _upload_size(file)
+    existing.size = upload_size
     existing.modified_at = datetime.now(timezone.utc)
     existing.modified_by = user_id
     file_crud.db_session.flush()
@@ -269,6 +263,7 @@ def _reupload_container(
     user_id: str,
 ) -> models.FileOrFolderDB:
     new_key = "files/" + str(uuid.uuid4())
+    upload_size = file.size
     s3.upload_file(file.file, new_key, content_type=file.content_type)
 
     old_keys = [child.file_key for child in container.children if child.file_key]
@@ -278,7 +273,7 @@ def _reupload_container(
         file_crud.delete(child.id)
 
     container.file_key = new_key
-    container.size = _upload_size(file)
+    container.size = upload_size
     container.processing_status = "pending"
     container.processing_failure_reason = None
     container.modified_at = datetime.now(timezone.utc)
