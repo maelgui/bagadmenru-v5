@@ -81,6 +81,20 @@ def test_get_children(client: TestClient):
     ]
 
 
+def test_get_children_sorted_case_insensitively(client: TestClient):
+    # Folders created out of alphabetical order, mixing upper/lower case. The
+    # listing must come back case-insensitively sorted (Alpha, Ananas, banane,
+    # zebra), not in C-collation byte order (uppercase before lowercase).
+    for name in ("zebra", "Alpha", "banane", "Ananas"):
+        assert client.post("/api/v1/files/1", json={"name": name}).status_code == 201
+
+    response = client.get("/api/v1/files/1/children")
+    assert response.status_code == 200
+    names = [item["name"] for item in response.json()]
+    added = [n for n in names if n in {"zebra", "Alpha", "banane", "Ananas"}]
+    assert added == ["Alpha", "Ananas", "banane", "zebra"]
+
+
 def test_get_children_counts_direct_children(client: TestClient):
     # Create two sub-folders inside folder 2 (initially empty).
     client.post("/api/v1/files/2", json={"name": "sub-a"})
