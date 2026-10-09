@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import ClassVar, Optional
 
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict, computed_field, model_validator
 
 from bbe2.utils.s3 import (
     FILE_URL_EXPIRATION_SECONDS,
@@ -38,8 +38,15 @@ class FolderCreate(_FileOrFolderBase):
     pass
 
 
-class FileOrFolderUpdate(_FileOrFolderBase):
-    parent_id: int
+class FileOrFolderUpdate(BaseModel):
+    name: Optional[str] = None
+    parent_id: Optional[int] = None
+
+    @model_validator(mode="after")
+    def at_least_one_field(self) -> "FileOrFolderUpdate":
+        if self.name is None and self.parent_id is None:
+            raise ValueError("name or parent_id is required")
+        return self
 
 
 class FileOrFolder(_FileOrFolderBase):

@@ -29,6 +29,18 @@ class ContainerChildError(Exception):
     pass
 
 
+class InvalidMoveTargetError(Exception):
+    pass
+
+
+class MoveCycleError(Exception):
+    pass
+
+
+class NameCollisionError(Exception):
+    pass
+
+
 class FileService:
     def __init__(
         self,
@@ -92,7 +104,7 @@ class FileService:
 
         return created
 
-    def rename_or_move(
+    def update(
         self,
         file_id: int,
         update: FileOrFolderUpdate,
@@ -103,12 +115,72 @@ class FileService:
             raise FileNotFoundInStoreError()
         if self._parent_is_container(db_file):
             raise ContainerChildError()
-        db_file = self.file_crud.update(db_file, update)
+
+        if update.parent_id is not None:
+            self._assert_valid_move_target(db_file, update.parent_id)
+
+        name = update.name if update.name is not None else db_file.name
+        parent_id = (
+            update.parent_id if update.parent_id is not None else db_file.parent_id
+        )
+        self._assert_no_name_collision(name, parent_id, db_file.id)
+
+        db_file.name = name
+        db_file.parent_id = parent_id
         db_file.modified_at = datetime.now(timezone.utc)
         db_file.modified_by = user_id
         self.file_crud.db_session.flush()
         self.file_crud.db_session.refresh(db_file)
         return db_file
+
+    def _assert_valid_move_target(
+        self,
+        db_file: models.FileOrFolderDB,
+        target_id: int,
+    ) -> None:
+        if db_file.parent_id is None:
+            raise InvalidMoveTargetError()
+        target = self.file_crud.find_one_by(models.FileOrFolderDB.id == target_id)
+        if not target:
+            raise FileNotFoundInStoreError()
+        if target.type != FileOrFolderType.DIRECTORY:
+            raise InvalidMoveTargetError()
+        if db_file.type == FileOrFolderType.DIRECTORY and self._is_descendant_or_self(
+            target, db_file.id
+        ):
+            raise MoveCycleError()
+
+    def _assert_no_name_collision(
+        self,
+        name: str,
+        parent_id: int | None,
+        exclude_id: int,
+    ) -> None:
+        collision = self.file_crud.find_one_by(
+            models.FileOrFolderDB.name == name,
+            models.FileOrFolderDB.parent_id == parent_id,
+            models.FileOrFolderDB.id != exclude_id,
+        )
+        if collision:
+            raise NameCollisionError()
+
+    def _is_descendant_or_self(
+        self,
+        node: models.FileOrFolderDB,
+        ancestor_id: int,
+    ) -> bool:
+        current: models.FileOrFolderDB | None = node
+        while current is not None:
+            if current.id == ancestor_id:
+                return True
+            current = (
+                self.file_crud.find_one_by(
+                    models.FileOrFolderDB.id == current.parent_id
+                )
+                if current.parent_id is not None
+                else None
+            )
+        return False
 
     def delete(self, file_id: int) -> None:
         db_file = self.file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
