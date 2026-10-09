@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<score>
+  <properties>
+    <software name="Drum Score Editor (c) Alan White 2012 - 2025" version="3.6.6">
+      <licence type="Studio Edition"/>
+    </software>
+    <movement-title>Kas a barh</movement-title>
+    <author/>
+    <tune-type>March</tune-type>
+    <version>4</version>
+    <last-updated timestamp="1791146055748" translates-as="Sun Oct 04 22:34:15 CEST 2026"/>
+    <band>Bagad Men Ru</band>
+    <defaults>
+      <zoom>0.8020909812854946</zoom>
+      <font>Serif</font>
+      <font-size>12</font-size>
+      <font-style>0</font-style>
+      <unison line-weight="100" paint-under="false" unison-colour="-39169" unison-opacity="0.33000001311302185" use-colour="true" use-dashes="false" use-line="true"/>
+      <smart-space>true</smart-space>
+      <show-additive-timesigs>false</show-additive-timesigs>
+      <show-side-drum>true</show-side-drum>
+      <show-tenor-drum>true</show-tenor-drum>
+      <roll-tie-below-accent>true</roll-tie-below-accent>
+      <align-accents>true</align-accents>
+      <irregular-groups-below>false</irregular-groups-below>
+      <tie-irregular-groups>true</tie-irregular-groups>
+      <thin-unison-pen>false</thin-unison-pen>
+      <auto-beam primary-subdivision="Progressive">true</auto-beam>
+      <auto-flatten>true</auto-flatten>
+      <layout-policy>AmortizeAcrossBar</layout-policy>
+      <music-format>DrumScoreEditor</music-format>
+      <clef-type>Unpitched</clef-type>
+      <inline-time-sig>true</inline-time-sig>
+      <clef-on-every-line>true</clef-on-every-line>
+      <fill-music-area>false</fill-music-area>
+      <staff-padding>10</staff-padding>
+      <pen0>-16776961</pen0>
+      <pen1>-16711681</pen1>
+      <pen2>-4144960</pen2>
+      <pen3>-14336</pen3>
+      <pen4>-16711936</pen4>
+      <pen5>-20561</pen5>
+      <join-highlights>false</join-highlights>
+      <anacrusis-percent>0.0</anacrusis-percent>
+      <use-font>true</use-font>
+      <smufl-font>Bravura</smufl-font>
+      <music-font-size>16</music-font-size>
+      <stem-length>4.111999988555908</stem-length>
+      <bar-height>5</bar-height>
+      <thin-secondary-beams>false</thin-secondary-beams>
+      <dynamics-relative-size>75%</dynamics-relative-size>
+      <z-rolls>false</z-rolls>
+      <show-roll-stroke-counts>NONE</show-roll-stroke-counts>
+    </defaults>
+    <time-signature bottom="4" top="4" use-common="false"/>
+    <bars-per-part>8</bars-per-part>
+    <beats-per-minute>90</beats-per-minute>
+    <page-format>
+      <page-size height="842.0" width="595.0"/>
+      <orientation>Portrait</orientation>
+      <page-numbers>false</page-numbers>
+      <line-numbers>false</line-numbers>
+      <watermark opacity="0.05000000074505806" show="false" size="64"/>
+    </page-format>
+  </properties>
+  <manuscript editable="true" force-distribution="false" id="generated-single-music-area" lines-visible="true" point-size="16.0">
+    <bounds height="717" page="1" width="537" x="28" y="83"/>
+    <exact-bounds height="715.2317880794706" page="1" width="535.470198675497" x="28.609271523178858" y="83.92052980132453"/>
+    <staff>
+      <bar-line repeat="true" type="double-open">
+        <text-tag align="left" bold="false" font="Serif" font-size="12.0" italic="false" underline="false">Theme A</text-tag>
+        <location xpercent="0.0" y="0.0"/>
+      </bar-line>
+      <note grace-note="flam" hand="right" value="quaver">
+        <location xpercent="0.026947349087683363" y="0.0"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.09767330902888531" y="0.0"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.1263246938339616" y="0.0"/>
+      </note>
+      <note accent="full" hand="right" value="quaver">
+        <location xpercent="0.15497607863903792" y="0.0"/>
+      </note>
+      <note hand="left" value="quaver">
+        <location xpercent="0.21227884824919055" y="0.0"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="2" value="quaver">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <tie group-factor="-1" group-level="1" type="start"/>
+        <location xpercent="0.26958161785934315" y="0.0"/>
+      </note>
+      <note hand="right" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.32688438746949566" y="0.0"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="3" value="crotchet">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <location xpercent="0.3841871570796483" y="0.0"/>
+      </note>
+      <bar-line type="single">
+        <location xpercent="0.5" y="0.0"/>
+      </bar-line>
+      <note accent="full" hand="right" value="semiquaver">
+        <tie group-level="0" type="stop"/>
+        <tie group-level="1" type="stop"/>
+        <tie group-factor="-2" group-level="0" type="start"/>
+        <location xpercent="0.5158104794531927" y="0.0"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.5443903960887995" y="0.0"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.5729703127244063" y="0.0"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.6015502293600132" y="0.0"/>
+      </note>
+      <note hand="left" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.6301301459956199" y="0.0"/>
+      </note>
+      <note hand="left" value="quaver">
+        <location xpercent="0.6872899792668337" y="0.0"/>
+      </note>
+      <note grace-note="flam" hand="right" value="quaver">
+        <location xpercent="0.7310266222069979" y="0.0"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <tie group-factor="3" group-level="0" type="start"/>
+        <tie group-factor="-1" group-level="1" type="start"/>
+        <location xpercent="0.801609645809261" y="0.0"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.8206629235663321" y="0.0"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.8397162013234034" y="0.0"/>
+      </note>
+      <note accent="full" hand="right" value="crotchet">
+        <tie group-level="1" type="stop"/>
+        <location xpercent="0.8587694790804745" y="0.0"/>
+      </note>
+      <bar-line repeat="true" type="double-close">
+        <location location-policy="right" xpercent="1.0" y="0.0"/>
+      </bar-line>
+    </staff>
+    <staff>
+      <bar-line repeat="true" type="double-open">
+        <location xpercent="0.0" y="117.34365578475068"/>
+      </bar-line>
+      <note grace-note="flam" hand="right" value="quaver">
+        <location xpercent="0.026947349087683363" y="117.34365578475068"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="2" value="quaver">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <location xpercent="0.09724609337253642" y="117.34365578475068"/>
+      </note>
+      <note accent="full" hand="right" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.15420272925258535" y="117.34365578475068"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.21115936513263434" y="117.34365578475068"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.23963768307265879" y="117.34365578475068"/>
+      </note>
+      <note accent="full" hand="right" value="semiquaver">
+        <tie group-factor="-2" group-level="0" type="start"/>
+        <location xpercent="0.26811600101268324" y="117.34365578475068"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.2965943189527077" y="117.34365578475068"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.32507263689273214" y="117.34365578475068"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.3535509548327566" y="117.34365578475068"/>
+      </note>
+      <note dot="true" hand="left" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.3820292727727811" y="117.34365578475068"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.4674642265928545" y="117.34365578475068"/>
+      </note>
+      <bar-line type="single">
+        <location xpercent="0.5" y="117.34365578475068"/>
+      </bar-line>
+      <note accent="full" hand="right" value="semiquaver">
+        <location xpercent="0.5158104794531927" y="117.34365578475068"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.5443903960887995" y="117.34365578475068"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.5729703127244063" y="117.34365578475068"/>
+      </note>
+      <note accent="full" hand="left" value="semiquaver">
+        <location xpercent="0.6015502293600132" y="117.34365578475068"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.6301301459956199" y="117.34365578475068"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.6587100626312268" y="117.34365578475068"/>
+      </note>
+      <note accent="full" hand="left" value="quaver">
+        <location xpercent="0.6872899792668337" y="117.34365578475068"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="3" value="crotchet">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <location xpercent="0.7444498125380472" y="117.34365578475068"/>
+      </note>
+      <note hand="right" value="crotchet">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.8587694790804746" y="117.34365578475068"/>
+      </note>
+      <bar-line repeat="true" type="double-close">
+        <location location-policy="right" xpercent="1.0" y="117.34365578475068"/>
+      </bar-line>
+    </staff>
+    <staff>
+      <bar-line repeat="true" type="double-open">
+        <text-tag align="left" bold="false" font="Serif" font-size="12.0" italic="false" underline="false">Theme B</text-tag>
+        <location xpercent="0.0" y="234.68731156950136"/>
+      </bar-line>
+      <note grace-note="flam" hand="right" value="quaver">
+        <location xpercent="0.026947349087683363" y="234.68731156950136"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.09724609337253642" y="234.68731156950136"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.1257244113125609" y="234.68731156950136"/>
+      </note>
+      <note grace-note="flam" hand="right" value="quaver">
+        <location xpercent="0.14086062084778123" y="234.68731156950136"/>
+      </note>
+      <note hand="left" value="quaver">
+        <location xpercent="0.21115936513263434" y="234.68731156950136"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.26811600101268324" y="234.68731156950136"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.2965943189527077" y="234.68731156950136"/>
+      </note>
+      <note grace-note="flam" hand="right" value="quaver">
+        <location xpercent="0.3117305284879281" y="234.68731156950136"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <tie group-factor="-1" group-level="0" type="start"/>
+        <location xpercent="0.3820292727727811" y="234.68731156950136"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.4105075907128055" y="234.68731156950136"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.43898590865283" y="234.68731156950136"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.4674642265928545" y="234.68731156950136"/>
+      </note>
+      <bar-line type="single">
+        <location xpercent="0.5" y="234.68731156950136"/>
+      </bar-line>
+      <note accent="full" hand="right" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.5158104794531927" y="234.68731156950136"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="2" value="quaver">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <location xpercent="0.5729703127244063" y="234.68731156950136"/>
+      </note>
+      <note hand="right" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.6301301459956199" y="234.68731156950136"/>
+      </note>
+      <note hand="left" value="quaver">
+        <location xpercent="0.6872899792668337" y="234.68731156950136"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="3" value="crotchet">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <location xpercent="0.7444498125380472" y="234.68731156950136"/>
+      </note>
+      <note hand="right" value="crotchet">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.8587694790804746" y="234.68731156950136"/>
+      </note>
+      <bar-line repeat="true" type="double-close">
+        <location location-policy="right" xpercent="1.0" y="234.68731156950136"/>
+      </bar-line>
+    </staff>
+    <staff>
+      <bar-line type="single">
+        <location xpercent="0.0" y="352.030967354252"/>
+      </bar-line>
+      <note grace-note="flam" hand="right" value="quaver">
+        <location xpercent="0.016179985095079837" y="352.030967354252"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.08821023912909975" y="352.030967354252"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.11751377098058503" y="352.030967354252"/>
+      </note>
+      <note buzz="true" dot="true" hand="right" roll-strikes="2" value="quaver">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <location xpercent="0.1468173028320703" y="352.030967354252"/>
+      </note>
+      <note accent="full" hand="left" value="semiquaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.23472789838652622" y="352.030967354252"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.2640314302380115" y="352.030967354252"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.2933349620894968" y="352.030967354252"/>
+      </note>
+      <note accent="full" hand="left" value="quaver">
+        <location xpercent="0.322638493940982" y="352.030967354252"/>
+      </note>
+      <note dynamic="p" hand="right" value="semiquaver">
+        <location xpercent="0.38124555764395257" y="352.030967354252"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.41054908949543784" y="352.030967354252"/>
+      </note>
+      <note hand="right" value="quaver">
+        <location xpercent="0.43985262134692316" y="352.030967354252"/>
+      </note>
+      <bar-line type="single">
+        <location xpercent="0.5" y="352.030967354252"/>
+      </bar-line>
+    </staff>
+    <staff>
+      <bar-line repeat="true" type="double-open">
+        <location xpercent="0.0" y="469.3746231390027"/>
+      </bar-line>
+      <note grace-note="flam" hand="left" value="quaver">
+        <location xpercent="0.026947349087683363" y="469.3746231390027"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="2" value="quaver">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <location xpercent="0.09767330902888531" y="469.3746231390027"/>
+      </note>
+      <note hand="right" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.15497607863903792" y="469.3746231390027"/>
+      </note>
+      <note accent="full" hand="left" value="semiquaver">
+        <location xpercent="0.21227884824919055" y="469.3746231390027"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.24093023305426686" y="469.3746231390027"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.26958161785934315" y="469.3746231390027"/>
+      </note>
+      <note accent="full" hand="right" value="semiquaver">
+        <location xpercent="0.29823300266441943" y="469.3746231390027"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.32688438746949566" y="469.3746231390027"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.355535772274572" y="469.3746231390027"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="3" value="crotchet">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <tie group-factor="-1" group-level="1" type="start"/>
+        <location xpercent="0.3841871570796483" y="469.3746231390027"/>
+      </note>
+      <bar-line type="single">
+        <location xpercent="0.5" y="469.3746231390027"/>
+      </bar-line>
+      <note hand="right" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <tie group-level="1" type="stop"/>
+        <location xpercent="0.5158104794531927" y="469.3746231390027"/>
+      </note>
+      <note buzz="true" hand="right" roll-strikes="2" value="quaver">
+        <tie group-factor="0" group-level="0" type="start"/>
+        <location xpercent="0.5729703127244063" y="469.3746231390027"/>
+      </note>
+      <note hand="right" value="quaver">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.6301301459956199" y="469.3746231390027"/>
+      </note>
+      <note grace-note="flam" hand="left" value="quaver">
+        <location xpercent="0.6738667889357843" y="469.3746231390027"/>
+      </note>
+      <note accent="full" hand="right" value="semiquaver">
+        <tie group-factor="-2" group-level="0" type="start"/>
+        <location xpercent="0.7444498125380472" y="469.3746231390027"/>
+      </note>
+      <note hand="left" value="semiquaver">
+        <location xpercent="0.7730297291736541" y="469.3746231390027"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.801609645809261" y="469.3746231390027"/>
+      </note>
+      <note hand="right" value="semiquaver">
+        <location xpercent="0.8301895624448677" y="469.3746231390027"/>
+      </note>
+      <note hand="left" value="crotchet">
+        <tie group-level="0" type="stop"/>
+        <location xpercent="0.8587694790804746" y="469.3746231390027"/>
+      </note>
+      <bar-line repeat="true" type="double-close">
+        <location location-policy="right" xpercent="1.0" y="469.3746231390027"/>
+      </bar-line>
+    </staff>
+  </manuscript>
+  <manuscript editable="false" force-distribution="true" id="generated-time-sig-area" lines-visible="false" point-size="16.0">
+    <bounds height="64" page="1" width="37" x="28" y="28"/>
+    <exact-bounds height="63.000000000000085" page="1" width="35.00000000000003" x="28.999999999999993" y="28.00000000000004"/>
+    <staff>
+      <time-signature bottom="4" top="4" use-common="false">
+        <location xpercent="0.33000001311302185" y="0.0"/>
+      </time-signature>
+    </staff>
+  </manuscript>
+  <text-area id="">
+    <text align="centre">%title</text>
+    <font>Serif</font>
+    <font-size>16</font-size>
+    <style bold="true" italic="false" underline="false"/>
+    <bounds height="43" page="1" width="476" x="59" y="21"/>
+    <exact-bounds height="42.00000000000003" page="1" width="476.0" x="59.000000000000014" y="21.000000000000014"/>
+  </text-area>
+  <text-area id="">
+    <text align="right">%author</text>
+    <font>Serif</font>
+    <font-size>10</font-size>
+    <style bold="false" italic="false" underline="false"/>
+    <bounds height="65" page="1" width="209" x="357" y="28"/>
+    <exact-bounds height="63.000000000000085" page="1" width="207.99999999999986" x="357.0000000000002" y="28.999999999999993"/>
+  </text-area>
+  <text-area id="">
+    <text align="left">%tunetype</text>
+    <font>Serif</font>
+    <font-size>10</font-size>
+    <style bold="false" italic="false" underline="false"/>
+    <bounds height="65" page="1" width="90" x="50" y="28"/>
+    <exact-bounds height="63.000000000000085" page="1" width="89.00000000000009" x="50.00000000000003" y="28.999999999999993"/>
+  </text-area>
+  <text-area id="">
+    <text align="left">%band</text>
+    <font>Serif</font>
+    <font-size>10</font-size>
+    <style bold="false" italic="false" underline="false"/>
+    <bounds height="64" page="1" width="239" x="28" y="778"/>
+    <exact-bounds height="63.000000000000085" page="1" width="238.0" x="28.999999999999993" y="778.0000000000006"/>
+  </text-area>
+  <text-area editable="false" id="generated-last-updated-area">
+    <text align="right">%updated</text>
+    <font>Serif</font>
+    <font-size>10</font-size>
+    <style bold="false" italic="false" underline="false"/>
+    <bounds height="64" page="1" width="90" x="476" y="778"/>
+    <exact-bounds height="63.000000000000085" page="1" width="89.00000000000009" x="476.0" y="778.0000000000006"/>
+  </text-area>
+  <image-list/>
+</score>
