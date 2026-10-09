@@ -1,7 +1,13 @@
 from .api_key import ApiKey, ApiKeyCreate, ApiKeyCreated
 from .auth import JwtPayload, LoginData
 from .event import Costume, Event, EventCreate
-from .file import FileOrFolder, FileOrFolderType, FileOrFolderUpdate, FolderCreate
+from .file import (
+    FileMove,
+    FileOrFolder,
+    FileOrFolderType,
+    FileOrFolderUpdate,
+    FolderCreate,
+)
 from .helloasso import (
     HelloAssoItem,
     HelloAssoNotification,

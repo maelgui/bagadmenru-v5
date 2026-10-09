@@ -8,7 +8,7 @@ from bbe2 import models
 from bbe2.crud import CRUDFile
 from bbe2.dependencies import SettingsDep, get_s3_helper
 from bbe2.schemas import FileOrFolderUpdate
-from bbe2.schemas.file import FileOrFolderType
+from bbe2.schemas.file import FileMove, FileOrFolderType
 from bbe2.services.conversion import ConversionService, source_format_for
 from bbe2.utils.s3 import S3Helper
 
@@ -26,6 +26,18 @@ class ContainerUploadError(Exception):
 
 
 class ContainerChildError(Exception):
+    pass
+
+
+class InvalidMoveTargetError(Exception):
+    pass
+
+
+class MoveCycleError(Exception):
+    pass
+
+
+class NameCollisionError(Exception):
     pass
 
 
@@ -109,6 +121,66 @@ class FileService:
         self.file_crud.db_session.flush()
         self.file_crud.db_session.refresh(db_file)
         return db_file
+
+    def move(
+        self,
+        file_id: int,
+        move: FileMove,
+        user_id: str,
+    ) -> models.FileOrFolderDB:
+        db_file = self.file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
+        if not db_file:
+            raise FileNotFoundInStoreError()
+        if db_file.parent_id is None:
+            raise InvalidMoveTargetError()
+        if self._parent_is_container(db_file):
+            raise ContainerChildError()
+
+        target = self.file_crud.find_one_by(
+            models.FileOrFolderDB.id == move.target_parent_id
+        )
+        if not target:
+            raise FileNotFoundInStoreError()
+        if target.type != FileOrFolderType.DIRECTORY:
+            raise InvalidMoveTargetError()
+
+        if db_file.type == FileOrFolderType.DIRECTORY and self._is_descendant_or_self(
+            target, db_file.id
+        ):
+            raise MoveCycleError()
+
+        collision = self.file_crud.find_one_by(
+            models.FileOrFolderDB.name == db_file.name,
+            models.FileOrFolderDB.parent_id == target.id,
+            models.FileOrFolderDB.id != db_file.id,
+        )
+        if collision:
+            raise NameCollisionError()
+
+        db_file.parent_id = target.id
+        db_file.modified_at = datetime.now(timezone.utc)
+        db_file.modified_by = user_id
+        self.file_crud.db_session.flush()
+        self.file_crud.db_session.refresh(db_file)
+        return db_file
+
+    def _is_descendant_or_self(
+        self,
+        node: models.FileOrFolderDB,
+        ancestor_id: int,
+    ) -> bool:
+        current: models.FileOrFolderDB | None = node
+        while current is not None:
+            if current.id == ancestor_id:
+                return True
+            current = (
+                self.file_crud.find_one_by(
+                    models.FileOrFolderDB.id == current.parent_id
+                )
+                if current.parent_id is not None
+                else None
+            )
+        return False
 
     def delete(self, file_id: int) -> None:
         db_file = self.file_crud.find_one_by(models.FileOrFolderDB.id == file_id)

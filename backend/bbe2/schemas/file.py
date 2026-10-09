@@ -42,6 +42,10 @@ class FileOrFolderUpdate(_FileOrFolderBase):
     parent_id: int
 
 
+class FileMove(BaseModel):
+    target_parent_id: int
+
+
 class FileOrFolder(_FileOrFolderBase):
     model_config = ConfigDict(from_attributes=True)
     # s3_helper must be set in S3Helper and S3HelperDependencies must be used in route

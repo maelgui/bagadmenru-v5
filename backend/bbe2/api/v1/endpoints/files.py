@@ -23,6 +23,9 @@ from bbe2.services.files import (
     FileAlreadyExistsError,
     FileNotFoundInStoreError,
     FileServiceDep,
+    InvalidMoveTargetError,
+    MoveCycleError,
+    NameCollisionError,
 )
 from bbe2.utils.auth import Action, Authorization, JwtPayload, Resource
 
@@ -214,6 +217,45 @@ async def create_folder(
     return file_crud.create(
         parent_id=folder_id, type=FileOrFolderType.DIRECTORY, **new_folder.model_dump()
     )
+
+
+@router.post(
+    "/{file_id}/move",
+    response_model=schemas.FileOrFolder,
+)
+async def move_file(
+    file_id: int,
+    move: schemas.FileMove,
+    file_service: FileServiceDep,
+    payload: Annotated[JwtPayload, Depends(Authorization(Action.EDIT, Resource.FILE))],
+):
+    """Move a file or folder into another folder."""
+    try:
+        return file_service.move(file_id, move, payload.sub)
+    except FileNotFoundInStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        ) from exc
+    except ContainerChildError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Container content cannot be moved individually",
+        ) from exc
+    except InvalidMoveTargetError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid move target",
+        ) from exc
+    except MoveCycleError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot move a folder into itself or one of its descendants",
+        ) from exc
+    except NameCollisionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An item with the same name already exists in the target folder",
+        ) from exc
 
 
 @router.put(
