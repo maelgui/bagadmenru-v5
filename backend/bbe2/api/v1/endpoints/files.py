@@ -23,6 +23,9 @@ from bbe2.services.files import (
     FileAlreadyExistsError,
     FileNotFoundInStoreError,
     FileServiceDep,
+    InvalidMoveTargetError,
+    MoveCycleError,
+    NameCollisionError,
 )
 from bbe2.utils.auth import Action, Authorization, JwtPayload, Resource
 
@@ -216,7 +219,7 @@ async def create_folder(
     )
 
 
-@router.put(
+@router.patch(
     "/{file_id}",
     response_model=schemas.FileOrFolder,
 )
@@ -226,9 +229,9 @@ async def update_file(
     file_service: FileServiceDep,
     payload: Annotated[JwtPayload, Depends(Authorization(Action.EDIT, Resource.FILE))],
 ):
-    """Update an existing file or folder"""
+    """Rename and/or move a file or folder."""
     try:
-        return file_service.rename_or_move(file_id, file, payload.sub)
+        return file_service.update(file_id, file, payload.sub)
     except FileNotFoundInStoreError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
@@ -237,6 +240,21 @@ async def update_file(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Container content cannot be modified individually",
+        ) from exc
+    except InvalidMoveTargetError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid move target",
+        ) from exc
+    except MoveCycleError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot move a folder into itself or one of its descendants",
+        ) from exc
+    except NameCollisionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An item with the same name already exists in the target folder",
         ) from exc
 
 

@@ -24,21 +24,19 @@ export interface FileOrFolderUpdate {
      * @type {string}
      * @memberof FileOrFolderUpdate
      */
-    name: string;
+    name?: string | null;
     /**
      * 
      * @type {number}
      * @memberof FileOrFolderUpdate
      */
-    parentId: number;
+    parentId?: number | null;
 }
 
 /**
  * Check if a given object implements the FileOrFolderUpdate interface.
  */
 export function instanceOfFileOrFolderUpdate(value: object): value is FileOrFolderUpdate {
-    if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('parentId' in value) || value['parentId'] === undefined) return false;
     return true;
 }
 
@@ -52,8 +50,8 @@ export function FileOrFolderUpdateFromJSONTyped(json: any, ignoreDiscriminator: 
     }
     return {
         
-        'name': json['name'],
-        'parentId': json['parent_id'],
+        'name': json['name'] == null ? undefined : json['name'],
+        'parentId': json['parent_id'] == null ? undefined : json['parent_id'],
     };
 }
 

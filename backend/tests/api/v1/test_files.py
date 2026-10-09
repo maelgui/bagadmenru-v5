@@ -213,14 +213,8 @@ def test_upload_reads_size_before_s3_consumes_the_stream(
     assert response.json()["size"] == len(b"hello world")
 
 
-def test_edit_file(client: TestClient):
-    response = client.put(
-        "/api/v1/files/2",
-        json={
-            "name": "Suite 2021",
-            "parent_id": 1,
-        },
-    )
+def test_rename_file(client: TestClient):
+    response = client.patch("/api/v1/files/2", json={"name": "Suite 2021"})
     assert response.status_code == 200
     assert response.json() == {
         "id": 2,
@@ -242,10 +236,81 @@ def test_edit_file(client: TestClient):
     }
 
 
+def test_rename_file_name_collision(client: TestClient):
+    client.post("/api/v1/files/1", json={"name": "taken"})
+    response = client.patch("/api/v1/files/2", json={"name": "taken"})
+    assert response.status_code == 409
+
+
+def test_update_file_requires_a_field(client: TestClient):
+    response = client.patch("/api/v1/files/2", json={})
+    assert response.status_code == 422
+
+
 def test_delete_file(client: TestClient):
     response = client.delete("/api/v1/files/1")
     assert response.status_code == 204
     assert response.content == b""
+
+
+def test_move_file(client: TestClient):
+    response = client.patch("/api/v1/files/3", json={"parent_id": 2})
+    assert response.status_code == 200
+    assert response.json()["parent_id"] == 2
+
+    children = client.get("/api/v1/files/2/children").json()
+    assert [child["id"] for child in children] == [3]
+
+
+def test_rename_and_move_atomically(client: TestClient):
+    client.post("/api/v1/files/2", json={"name": "file2"})
+    response = client.patch("/api/v1/files/3", json={"name": "renamed", "parent_id": 2})
+    assert response.status_code == 200
+    assert response.json()["name"] == "renamed"
+    assert response.json()["parent_id"] == 2
+
+
+def test_move_file_target_not_found(client: TestClient):
+    response = client.patch("/api/v1/files/3", json={"parent_id": 999})
+    assert response.status_code == 404
+
+
+def test_update_file_source_not_found(client: TestClient):
+    response = client.patch("/api/v1/files/999", json={"parent_id": 1})
+    assert response.status_code == 404
+
+
+def test_move_file_into_itself(client: TestClient):
+    response = client.patch("/api/v1/files/2", json={"parent_id": 2})
+    assert response.status_code == 400
+
+
+def test_move_folder_into_descendant(client: TestClient):
+    sub = client.post("/api/v1/files/2", json={"name": "sub"}).json()
+    response = client.patch("/api/v1/files/2", json={"parent_id": sub["id"]})
+    assert response.status_code == 400
+
+
+def test_move_root_is_forbidden(client: TestClient):
+    response = client.patch("/api/v1/files/1", json={"parent_id": 2})
+    assert response.status_code == 400
+
+
+def test_move_target_not_a_folder(client: TestClient):
+    with patch("bbe2.utils.s3.S3Helper.upload_file"):
+        uploaded = client.post(
+            "/api/v1/files/1/upload",
+            files={"file": (files("tests.assets") / "lena.jpg").open("rb")},
+        ).json()
+    response = client.patch("/api/v1/files/2", json={"parent_id": uploaded["id"]})
+    assert response.status_code == 400
+
+
+def test_move_name_collision(client: TestClient):
+    dup_in_2 = client.post("/api/v1/files/2", json={"name": "dup"}).json()
+    client.post("/api/v1/files/3", json={"name": "dup"})
+    response = client.patch(f"/api/v1/files/{dup_in_2['id']}", json={"parent_id": 3})
+    assert response.status_code == 409
 
 
 @patch("bbe2.services.files.ConversionService")
@@ -497,9 +562,9 @@ def test_container_child_cannot_be_modified_or_deleted(
     child_id = child.id
     session.close()
 
-    update = client.put(
+    update = client.patch(
         f"/api/v1/files/{child_id}",
-        json={"name": "renamed.pdf", "parent_id": container_id},
+        json={"name": "renamed.pdf"},
     )
     assert update.status_code == 403
 

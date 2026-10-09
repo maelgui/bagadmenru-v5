@@ -60,7 +60,7 @@ export interface ListFilesApiV1FilesGetRequest {
     limit?: number;
 }
 
-export interface UpdateFileApiV1FilesFileIdPutRequest {
+export interface UpdateFileApiV1FilesFileIdPatchRequest {
     fileId: number;
     fileOrFolderUpdate: FileOrFolderUpdate;
 }
@@ -381,21 +381,21 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update an existing file or folder
+     * Rename and/or move a file or folder.
      * Update File
      */
-    async updateFileApiV1FilesFileIdPutRaw(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+    async updateFileApiV1FilesFileIdPatchRaw(requestParameters: UpdateFileApiV1FilesFileIdPatchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
         if (requestParameters['fileId'] == null) {
             throw new runtime.RequiredError(
                 'fileId',
-                'Required parameter "fileId" was null or undefined when calling updateFileApiV1FilesFileIdPut().'
+                'Required parameter "fileId" was null or undefined when calling updateFileApiV1FilesFileIdPatch().'
             );
         }
 
         if (requestParameters['fileOrFolderUpdate'] == null) {
             throw new runtime.RequiredError(
                 'fileOrFolderUpdate',
-                'Required parameter "fileOrFolderUpdate" was null or undefined when calling updateFileApiV1FilesFileIdPut().'
+                'Required parameter "fileOrFolderUpdate" was null or undefined when calling updateFileApiV1FilesFileIdPatch().'
             );
         }
 
@@ -415,7 +415,7 @@ export class FilesApi extends runtime.BaseAPI {
         }
         const response = await this.request({
             path: `/api/v1/files/{file_id}`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
-            method: 'PUT',
+            method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
             body: FileOrFolderUpdateToJSON(requestParameters['fileOrFolderUpdate']),
@@ -425,11 +425,11 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update an existing file or folder
+     * Rename and/or move a file or folder.
      * Update File
      */
-    async updateFileApiV1FilesFileIdPut(requestParameters: UpdateFileApiV1FilesFileIdPutRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
-        const response = await this.updateFileApiV1FilesFileIdPutRaw(requestParameters, initOverrides);
+    async updateFileApiV1FilesFileIdPatch(requestParameters: UpdateFileApiV1FilesFileIdPatchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
+        const response = await this.updateFileApiV1FilesFileIdPatchRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
