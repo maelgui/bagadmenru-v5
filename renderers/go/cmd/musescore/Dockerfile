@@ -63,6 +63,24 @@ RUN mkdir -p /opt/musescore \
     && ./MuseScore.AppImage --appimage-extract >/dev/null \
     && rm /opt/musescore/MuseScore.AppImage
 
+# Custom Bagad SoundFont. MuseScore registers a SoundFont by its filename stem,
+# so scores that bind tracks to "SFbagad02.2" resolve it only when the file is
+# named SFbagad02.2.sf2 and placed in the user SoundFonts folder; scores bound
+# to MS Basic keep MS Basic. The upstream copy is not fetchable from CI runners,
+# so the frozen file is mirrored as a GitHub release asset.
+ARG SFBAGAD_URL=https://github.com/maelgui/bagadmenru-v5/releases/download/sfbagad-0.2.1/SFbagad02.2.sf2
+ARG SFBAGAD_SHA256=742f2ac139b33d5ebd354718cc5656235f3d5db646f7a54b20956de1834ab55a
+RUN mkdir -p /root/Documents/MuseScore4/SoundFonts \
+    && wget \
+        --tries=5 \
+        --timeout=60 \
+        --waitretry=15 \
+        --retry-connrefused \
+        --continue \
+        -O /root/Documents/MuseScore4/SoundFonts/SFbagad02.2.sf2 \
+        "${SFBAGAD_URL}" \
+    && echo "${SFBAGAD_SHA256}  /root/Documents/MuseScore4/SoundFonts/SFbagad02.2.sf2" | sha256sum -c -
+
 WORKDIR /app
 COPY --from=build /out/musescore-renderer /app/musescore-renderer
 
