@@ -1,7 +1,5 @@
 """File system API."""
 
-import uuid
-from datetime import datetime, timezone
 from typing import Annotated, Optional
 
 from fastapi import (
@@ -12,17 +10,21 @@ from fastapi import (
     UploadFile,
     status,
 )
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
 from bbe2 import models, schemas
-from bbe2.config import Settings
 from bbe2.crud import CRUDFile
-from bbe2.dependencies import S3Dep, SessionDep, SettingsDep, get_s3_helper
+from bbe2.dependencies import SessionDep, get_s3_helper
 from bbe2.schemas.file import FileOrFolderType
-from bbe2.services.conversion import ConversionService, source_format_for
+from bbe2.services.files import (
+    ContainerChildError,
+    ContainerUploadError,
+    FileAlreadyExistsError,
+    FileNotFoundInStoreError,
+    FileServiceDep,
+)
 from bbe2.utils.auth import Action, Authorization, JwtPayload, Resource
-from bbe2.utils.s3 import S3Helper
 
 router = APIRouter(prefix="/files")
 
@@ -168,9 +170,7 @@ async def list_children(
 async def upload_file(
     folder_id: int,
     file: UploadFile,
-    file_crud: Annotated[CRUDFile, Depends()],
-    s3: S3Dep,
-    settings: SettingsDep,
+    file_service: FileServiceDep,
     background_tasks: BackgroundTasks,
     payload: Annotated[
         JwtPayload, Depends(Authorization(Action.CREATE, Resource.FILE))
@@ -178,135 +178,19 @@ async def upload_file(
     force: bool = False,
 ):
     """Upload a file."""
-    folder = file_crud.find_one_by(models.FileOrFolderDB.id == folder_id)
-    if folder and folder.type == FileOrFolderType.CONTAINER:
+    try:
+        return file_service.upload(
+            folder_id, file, payload.sub, background_tasks, force=force
+        )
+    except ContainerUploadError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cannot upload into a container",
-        )
-
-    src_format = source_format_for(file.filename or "", settings)
-
-    existing = file_crud.find_one_by(
-        and_(
-            models.FileOrFolderDB.name == file.filename,
-            models.FileOrFolderDB.parent_id == folder_id,
-        )
-    )
-
-    if existing:
-        if not force:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="File already exists"
-            )
-        if existing.type == FileOrFolderType.CONTAINER and src_format:
-            return _reupload_container(
-                existing, file, file_crud, s3, settings, background_tasks, payload.sub
-            )
-        if existing.type == FileOrFolderType.FILE and not src_format:
-            return _reupload_file(existing, file, file_crud, s3, payload.sub)
-        _delete_node_s3(existing, s3)
-        file_crud.delete(existing.id)
-
-    filename = "files/" + str(uuid.uuid4())
-    upload_size = file.size
-    s3.upload_file(file.file, filename, content_type=file.content_type)
-
-    created = file_crud.create(
-        type=FileOrFolderType.CONTAINER if src_format else FileOrFolderType.FILE,
-        name=file.filename,
-        file_key=filename,
-        parent_id=folder_id,
-        source_format=src_format,
-        processing_status="pending" if src_format else None,
-        uploaded_by=payload.sub,
-        size=upload_size,
-    )
-
-    if src_format:
-        _enqueue_generation(created.id, settings, s3, background_tasks)
-
-    return created
-
-
-def _reupload_file(
-    existing: models.FileOrFolderDB,
-    file: UploadFile,
-    file_crud: CRUDFile,
-    s3: S3Helper,
-    user_id: str,
-) -> models.FileOrFolderDB:
-    old_key = existing.file_key
-    new_key = "files/" + str(uuid.uuid4())
-    upload_size = file.size
-    s3.upload_file(file.file, new_key, content_type=file.content_type)
-
-    existing.file_key = new_key
-    existing.size = upload_size
-    existing.modified_at = datetime.now(timezone.utc)
-    existing.modified_by = user_id
-    file_crud.db_session.flush()
-    file_crud.db_session.refresh(existing)
-
-    if old_key:
-        s3.delete_object(old_key)
-    return existing
-
-
-def _reupload_container(
-    container: models.FileOrFolderDB,
-    file: UploadFile,
-    file_crud: CRUDFile,
-    s3: S3Helper,
-    settings: Settings,
-    background_tasks: BackgroundTasks,
-    user_id: str,
-) -> models.FileOrFolderDB:
-    new_key = "files/" + str(uuid.uuid4())
-    upload_size = file.size
-    s3.upload_file(file.file, new_key, content_type=file.content_type)
-
-    old_keys = [child.file_key for child in container.children if child.file_key]
-    if container.file_key:
-        old_keys.append(container.file_key)
-    for child in list(container.children):
-        file_crud.delete(child.id)
-
-    container.file_key = new_key
-    container.size = upload_size
-    container.processing_status = "pending"
-    container.processing_failure_reason = None
-    container.modified_at = datetime.now(timezone.utc)
-    container.modified_by = user_id
-    file_crud.db_session.commit()
-    file_crud.db_session.refresh(container)
-
-    for key in old_keys:
-        s3.delete_object(key)
-
-    _enqueue_generation(container.id, settings, s3, background_tasks)
-    return container
-
-
-def _enqueue_generation(
-    container_id: int,
-    settings: Settings,
-    s3: S3Helper,
-    background_tasks: BackgroundTasks,
-) -> None:
-    service = ConversionService(settings, s3)
-    background_tasks.add_task(service.generate, container_id)
-
-
-def _delete_node_s3(node: models.FileOrFolderDB, s3: S3Helper) -> None:
-    if node.type == FileOrFolderType.CONTAINER:
-        for child in node.children:
-            if child.file_key:
-                s3.delete_object(child.file_key)
-        if node.file_key:
-            s3.delete_object(node.file_key)
-    elif node.type == FileOrFolderType.FILE and node.file_key:
-        s3.delete_object(node.file_key)
+        ) from exc
+    except FileAlreadyExistsError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="File already exists"
+        ) from exc
 
 
 @router.post(
@@ -339,33 +223,21 @@ async def create_folder(
 async def update_file(
     file_id: int,
     file: schemas.FileOrFolderUpdate,
-    file_crud: Annotated[CRUDFile, Depends()],
+    file_service: FileServiceDep,
     payload: Annotated[JwtPayload, Depends(Authorization(Action.EDIT, Resource.FILE))],
 ):
     """Update an existing file or folder"""
-    db_file = file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
-    if not db_file:
+    try:
+        return file_service.rename_or_move(file_id, file, payload.sub)
+    except FileNotFoundInStoreError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-        )
-    if _parent_is_container(db_file, file_crud):
+        ) from exc
+    except ContainerChildError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Container content cannot be modified individually",
-        )
-    db_file = file_crud.update(db_file, file)
-    db_file.modified_at = datetime.now(timezone.utc)
-    db_file.modified_by = payload.sub
-    file_crud.db_session.flush()
-    file_crud.db_session.refresh(db_file)
-    return db_file
-
-
-def _parent_is_container(node: models.FileOrFolderDB, file_crud: CRUDFile) -> bool:
-    if node.parent_id is None:
-        return False
-    parent = file_crud.find_one_by(models.FileOrFolderDB.id == node.parent_id)
-    return parent is not None and parent.type == FileOrFolderType.CONTAINER
+        ) from exc
 
 
 @router.delete(
@@ -375,19 +247,17 @@ def _parent_is_container(node: models.FileOrFolderDB, file_crud: CRUDFile) -> bo
 )
 async def delete_file(
     file_id: int,
-    file_crud: Annotated[CRUDFile, Depends()],
-    s3: S3Dep,
+    file_service: FileServiceDep,
 ):
     """Delete an existing file or folder."""
-    db_file = file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
-    if not db_file:
+    try:
+        file_service.delete(file_id)
+    except FileNotFoundInStoreError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-        )
-    if _parent_is_container(db_file, file_crud):
+        ) from exc
+    except ContainerChildError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Container content cannot be deleted individually",
-        )
-    _delete_node_s3(db_file, s3)
-    file_crud.delete(file_id)
+        ) from exc
