@@ -234,7 +234,7 @@ def test_delete_file(client: TestClient):
     assert response.content == b""
 
 
-@patch("bbe2.api.v1.endpoints.files.ConversionService")
+@patch("bbe2.services.files.ConversionService")
 @patch("bbe2.utils.s3.S3Helper.upload_file")
 def test_upload_mscz_creates_pending_container(
     mock_upload_file: MagicMock, mock_service: MagicMock, client: TestClient
@@ -251,7 +251,7 @@ def test_upload_mscz_creates_pending_container(
     mock_service.return_value.generate.assert_called_once_with(body["id"])
 
 
-@patch("bbe2.api.v1.endpoints.files.ConversionService")
+@patch("bbe2.services.files.ConversionService")
 @patch("bbe2.utils.s3.S3Helper.upload_file")
 def test_upload_plain_file_stays_file(
     mock_upload_file: MagicMock, mock_service: MagicMock, client: TestClient
@@ -267,7 +267,7 @@ def test_upload_plain_file_stays_file(
     assert body["processing_status"] is None
 
 
-@patch("bbe2.api.v1.endpoints.files.ConversionService")
+@patch("bbe2.services.files.ConversionService")
 @patch("bbe2.utils.s3.S3Helper.upload_file")
 def test_upload_ds_stays_file_without_renderer(
     mock_upload_file: MagicMock, mock_service: MagicMock, client: TestClient
@@ -284,7 +284,7 @@ def test_upload_ds_stays_file_without_renderer(
     mock_service.return_value.generate.assert_not_called()
 
 
-@patch("bbe2.api.v1.endpoints.files.ConversionService")
+@patch("bbe2.services.files.ConversionService")
 @patch("bbe2.utils.s3.S3Helper.upload_file")
 def test_upload_ds_creates_container_with_renderer(
     mock_upload_file: MagicMock, mock_service: MagicMock, client: TestClient
@@ -312,7 +312,7 @@ def test_upload_ds_creates_container_with_renderer(
 
 
 def _make_container(client: TestClient) -> int:
-    with patch("bbe2.api.v1.endpoints.files.ConversionService"), patch(
+    with patch("bbe2.services.files.ConversionService"), patch(
         "bbe2.utils.s3.S3Helper.upload_file"
     ):
         response = client.post(
@@ -334,7 +334,7 @@ def test_upload_into_container_is_forbidden(
     assert response.status_code == 403
 
 
-@patch("bbe2.api.v1.endpoints.files.ConversionService")
+@patch("bbe2.services.files.ConversionService")
 @patch("bbe2.utils.s3.S3Helper.upload_file")
 def test_reupload_container_requires_force(
     mock_upload_file: MagicMock, mock_service: MagicMock, client: TestClient
@@ -349,7 +349,7 @@ def test_reupload_container_requires_force(
 
 
 @patch("bbe2.utils.s3.S3Helper.delete_object")
-@patch("bbe2.api.v1.endpoints.files.ConversionService")
+@patch("bbe2.services.files.ConversionService")
 @patch("bbe2.utils.s3.S3Helper.upload_file")
 def test_reupload_container_with_force_regenerates(
     mock_upload_file: MagicMock,
@@ -441,7 +441,7 @@ def test_reupload_container_commits_new_source_before_generate(
         seen["child_count"] = len(children)
         probe.close()
 
-    with patch("bbe2.api.v1.endpoints.files.ConversionService") as mock_service:
+    with patch("bbe2.services.files.ConversionService") as mock_service:
         mock_service.return_value.generate.side_effect = capture
         response = client.post(
             "/api/v1/files/1/upload?force=true",
