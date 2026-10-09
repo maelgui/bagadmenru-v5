@@ -149,7 +149,7 @@ async def list_children(
         .outerjoin(grandchild, grandchild.parent_id == models.FileOrFolderDB.id)
         .filter(models.FileOrFolderDB.parent_id == folder_id)
         .group_by(models.FileOrFolderDB.id)
-        .order_by(models.FileOrFolderDB.id)
+        .order_by(func.lower(models.FileOrFolderDB.name))
         .all()
     )
 
