@@ -42,4 +42,4 @@ else
   echo "WARNING: no DrumScore licence provided (DSE_LICENSE_VERSION/DSE_LICENSE_CONTENT unset); createPDF will produce no output."
 fi
 
-exec uvicorn server:app --host 0.0.0.0 --port 8080
+exec /app/drumscore-renderer

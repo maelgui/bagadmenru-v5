@@ -50,14 +50,14 @@ services:
   musescore:
     build:
       context: renderers
-      dockerfile: musescore/Dockerfile
+      dockerfile: go/cmd/musescore/Dockerfile
     environment:
       - MSCORE_TIMEOUT=${MSCORE_TIMEOUT:-110}
 
   drumscore:
     build:
       context: renderers
-      dockerfile: drumscore/Dockerfile
+      dockerfile: go/cmd/drumscore/Dockerfile
     environment:
       - DSE_TIMEOUT=${MSCORE_TIMEOUT:-110}
       # Studio Edition licence, read from an untracked .env (never committed).

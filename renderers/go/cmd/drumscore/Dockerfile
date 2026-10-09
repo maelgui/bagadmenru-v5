@@ -1,10 +1,19 @@
 ARG UBUNTU_VERSION=24.04
+ARG GO_VERSION=1.23
+
+# ---- build stage: compile a static Go binary (stdlib only, no go.sum) ----
+FROM golang:${GO_VERSION} AS build
+WORKDIR /src
+COPY go/go.mod ./
+COPY go/renderer ./renderer
+COPY go/cmd/drumscore ./cmd/drumscore
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/drumscore-renderer ./cmd/drumscore
+
+# ---- runtime stage: same harness as the Python image ----
 FROM ubuntu:${UBUNTU_VERSION}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DSE_BIN=/opt/drumscoreeditor/bin/DrumScoreEditor
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH=/opt/venv/bin:$PATH
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -12,8 +21,6 @@ RUN apt-get update \
         wget \
         dpkg \
         xvfb \
-        python3 \
-        python3-venv \
         libfreetype6 \
         fontconfig \
         fonts-dejavu \
@@ -46,22 +53,17 @@ RUN wget \
     && rm /tmp/dse.deb \
     && test -x "${DSE_BIN}"
 
-RUN python3 -m venv "$VIRTUAL_ENV"
-COPY drumscore/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
 # Make fc-match resolve the generic serif/sans aliases to the Times-metric
 # Liberation family instead of DejaVu, so DSE's logical fonts render with the
 # intended letterforms (see fonts-local.conf). This must land at
 # /etc/fonts/local.conf (fontconfig's final-override slot); a file under
 # conf.d/ is outranked by the distro's 60-latin.conf serif binding.
-COPY drumscore/fonts-local.conf /etc/fonts/local.conf
+COPY go/cmd/drumscore/fonts-local.conf /etc/fonts/local.conf
 RUN fc-cache -f
 
 WORKDIR /app
-COPY contract.py /app/contract.py
-COPY drumscore/server.py /app/server.py
-COPY drumscore/entrypoint.sh /app/entrypoint.sh
+COPY --from=build /out/drumscore-renderer /app/drumscore-renderer
+COPY go/cmd/drumscore/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8080
