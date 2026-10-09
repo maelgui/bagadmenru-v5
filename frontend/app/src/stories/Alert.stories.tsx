@@ -1,4 +1,4 @@
-import { CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-react';
+import { Bell, CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -11,7 +11,7 @@ const meta = {
   tags: ['autodocs'],
   argTypes: {
     variant: {
-      options: ['default', 'destructive'],
+      options: ['default', 'destructive', 'success', 'warning', 'info'],
       control: { type: 'select' },
     },
   },
@@ -19,6 +19,16 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Neutral: Story = {
+  render: () => (
+    <Alert>
+      <Bell />
+      <AlertTitle>Notification</AlertTitle>
+      <AlertDescription>Vous avez un nouveau message.</AlertDescription>
+    </Alert>
+  ),
+};
 
 export const Error: Story = {
   render: () => (
@@ -32,7 +42,7 @@ export const Error: Story = {
 
 export const Warning: Story = {
   render: () => (
-    <Alert>
+    <Alert variant="warning">
       <TriangleAlert />
       <AlertTitle>Attention</AlertTitle>
       <AlertDescription>Vérifiez les informations saisies.</AlertDescription>
@@ -42,7 +52,7 @@ export const Warning: Story = {
 
 export const Success: Story = {
   render: () => (
-    <Alert>
+    <Alert variant="success">
       <CircleCheck />
       <AlertTitle>Succès</AlertTitle>
       <AlertDescription>L’opération a bien été effectuée.</AlertDescription>
@@ -52,7 +62,7 @@ export const Success: Story = {
 
 export const InfoAlert: Story = {
   render: () => (
-    <Alert>
+    <Alert variant="info">
       <Info />
       <AlertTitle>Information</AlertTitle>
       <AlertDescription>Une nouvelle version est disponible.</AlertDescription>
