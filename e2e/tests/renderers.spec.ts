@@ -22,6 +22,24 @@ const CASES: RendererCase[] = [
 ];
 
 test.describe('Score renderers', () => {
+  // Each test uploads a real file, which creates a persistent CONTAINER (plus
+  // its source + generated PDF) on the deployed environment. Record the id so
+  // afterEach can delete it — otherwise every run leaves orphans behind on beta.
+  let createdContainerId: string | null = null;
+
+  test.afterEach(async ({ page }) => {
+    if (!createdContainerId) return;
+    // Reuse the test's own authenticated session (session cookie) via
+    // page.request — no second login. Deleting a CONTAINER cascades to its
+    // children (source + PDF) in both the DB and S3, so one DELETE cleans up
+    // the whole run.
+    try {
+      await page.request.delete(`/api/v1/files/${createdContainerId}`);
+    } finally {
+      createdContainerId = null;
+    }
+  });
+
   for (const { label, fixture, mimeType } of CASES) {
     test(`${label}: upload generates a PDF through the deployed renderer`, async ({ page }) => {
       // The whole flow waits on a real MuseScore/DrumScore conversion, so the
@@ -57,6 +75,12 @@ test.describe('Score renderers', () => {
       await container.click();
 
       await page.waitForURL(/\/files\/\d+/);
+
+      // Record the container id as soon as it exists so afterEach cleans it up
+      // even if the conversion assertions below fail.
+      const containerId = page.url().match(/\/files\/(\d+)/)?.[1];
+      expect(containerId, 'container id in URL').toBeTruthy();
+      createdContainerId = containerId!;
 
       // The container page polls the async conversion. It resolves to exactly
       // one of two terminal states: the read-only alert (success) or the
