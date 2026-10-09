@@ -248,6 +248,66 @@ def test_delete_file(client: TestClient):
     assert response.content == b""
 
 
+def test_move_file(client: TestClient):
+    response = client.post("/api/v1/files/3/move", json={"target_parent_id": 2})
+    assert response.status_code == 200
+    assert response.json()["parent_id"] == 2
+
+    children = client.get("/api/v1/files/2/children").json()
+    assert [child["id"] for child in children] == [3]
+
+
+def test_move_file_target_not_found(client: TestClient):
+    response = client.post("/api/v1/files/3/move", json={"target_parent_id": 999})
+    assert response.status_code == 404
+
+
+def test_move_file_source_not_found(client: TestClient):
+    response = client.post("/api/v1/files/999/move", json={"target_parent_id": 1})
+    assert response.status_code == 404
+
+
+def test_move_file_into_itself(client: TestClient):
+    response = client.post("/api/v1/files/2/move", json={"target_parent_id": 2})
+    assert response.status_code == 400
+
+
+def test_move_folder_into_descendant(client: TestClient):
+    # Create folder 2 > sub, then try to move folder 2 inside sub.
+    sub = client.post("/api/v1/files/2", json={"name": "sub"}).json()
+    response = client.post(
+        "/api/v1/files/2/move", json={"target_parent_id": sub["id"]}
+    )
+    assert response.status_code == 400
+
+
+def test_move_root_is_forbidden(client: TestClient):
+    response = client.post("/api/v1/files/1/move", json={"target_parent_id": 2})
+    assert response.status_code == 400
+
+
+def test_move_target_not_a_folder(client: TestClient):
+    with patch("bbe2.utils.s3.S3Helper.upload_file"):
+        uploaded = client.post(
+            "/api/v1/files/1/upload",
+            files={"file": (files("tests.assets") / "lena.jpg").open("rb")},
+        ).json()
+    response = client.post(
+        "/api/v1/files/2/move", json={"target_parent_id": uploaded["id"]}
+    )
+    assert response.status_code == 400
+
+
+def test_move_name_collision(client: TestClient):
+    # Both folders 2 and 3 are under root; create a "dup" in each, then move.
+    dup_in_2 = client.post("/api/v1/files/2", json={"name": "dup"}).json()
+    client.post("/api/v1/files/3", json={"name": "dup"})
+    response = client.post(
+        f"/api/v1/files/{dup_in_2['id']}/move", json={"target_parent_id": 3}
+    )
+    assert response.status_code == 409
+
+
 @patch("bbe2.services.files.ConversionService")
 @patch("bbe2.utils.s3.S3Helper.upload_file")
 def test_upload_mscz_creates_pending_container(

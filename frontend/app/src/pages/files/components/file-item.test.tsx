@@ -86,4 +86,19 @@ describe('FileItem action menu permission gating', () => {
     openMenu('Partitions');
     expect(screen.queryByRole('menuitem', { name: 'Détails...' })).toBeNull();
   });
+
+  it('shows the move entry and calls back when a move callback is provided', () => {
+    const moveFn = vi.fn();
+    renderItem(<FileItem file={makeFolder()} moveFn={moveFn} />);
+    openMenu('Partitions');
+    const item = screen.getByRole('menuitem', { name: 'Déplacer...' });
+    fireEvent.click(item);
+    expect(moveFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the move entry when no move callback is provided', () => {
+    renderItem(<FileItem file={makeFolder()} renameFn={vi.fn()} />);
+    openMenu('Partitions');
+    expect(screen.queryByRole('menuitem', { name: 'Déplacer...' })).toBeNull();
+  });
 });

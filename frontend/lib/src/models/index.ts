@@ -8,6 +8,7 @@ export * from './CredentialDeviceType';
 export * from './Event';
 export * from './EventCreate';
 export * from './FileAuthor';
+export * from './FileMove';
 export * from './FileOrFolder';
 export * from './FileOrFolderType';
 export * from './FileOrFolderUpdate';

@@ -1,4 +1,4 @@
-import { type LucideIcon, Download, EllipsisVertical, File, FileArchive, FileAudio, FileImage, FileMusic, FileText, FileVideo, Folder, FolderArchive, Info, Pencil, Trash2 } from 'lucide-react';
+import { type LucideIcon, Download, EllipsisVertical, File, FileArchive, FileAudio, FileImage, FileMusic, FileText, FileVideo, Folder, FolderArchive, FolderInput, Info, Pencil, Trash2 } from 'lucide-react';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
 import { createElement, type MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -28,6 +28,7 @@ interface FileItemProps {
   big?: boolean
   deleteFn?: () => void
   renameFn?: () => void
+  moveFn?: () => void
   detailsFn?: () => void
   noAction?: boolean
   variant?: 'default' | 'outline' | 'muted'
@@ -137,7 +138,7 @@ function FileItemLink({
 }
 
 function FileItemMenu({
-  file, isOpen, setIsOpen, showDownload, downloadLabel, deleteFn, renameFn, detailsFn,
+  file, isOpen, setIsOpen, showDownload, downloadLabel, deleteFn, renameFn, moveFn, detailsFn,
 }: {
   file: FileOrFolder;
   isOpen: boolean;
@@ -146,6 +147,7 @@ function FileItemMenu({
   downloadLabel: string;
   deleteFn?: () => void;
   renameFn?: () => void;
+  moveFn?: () => void;
   detailsFn?: () => void;
 }) {
   const primaryActions = [
@@ -168,6 +170,12 @@ function FileItemMenu({
       <DropdownMenuItem key="rename" onClick={renameFn}>
         <Pencil />
         Renommer...
+      </DropdownMenuItem>
+    ),
+    moveFn && (
+      <DropdownMenuItem key="move" onClick={moveFn}>
+        <FolderInput />
+        Déplacer...
       </DropdownMenuItem>
     ),
   ].filter(Boolean);
@@ -196,7 +204,7 @@ function FileItemMenu({
 }
 
 export default function FileItem({
-  file, big = false, deleteFn = undefined, renameFn = undefined, detailsFn = undefined, noAction = false, variant = 'outline',
+  file, big = false, deleteFn = undefined, renameFn = undefined, moveFn = undefined, detailsFn = undefined, noAction = false, variant = 'outline',
 }: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const bind = useLongPress(() => setIsOpen(true), { detect: LongPressEventType.Touch });
@@ -207,7 +215,7 @@ export default function FileItem({
 
   const showDownload = (isFile || isContainer) && !!file.downloadUrl;
   const downloadLabel = isContainer ? 'Télécharger la source' : 'Télécharger';
-  const hasActions = !noAction && (showDownload || renameFn !== undefined || deleteFn !== undefined || detailsFn !== undefined);
+  const hasActions = !noAction && (showDownload || renameFn !== undefined || moveFn !== undefined || deleteFn !== undefined || detailsFn !== undefined);
 
   return (
     <Item variant={variant} className="relative transition-colors hover:bg-muted">
@@ -234,6 +242,7 @@ export default function FileItem({
             downloadLabel={downloadLabel}
             deleteFn={deleteFn}
             renameFn={renameFn}
+            moveFn={moveFn}
             detailsFn={detailsFn}
           />
         </ItemActions>

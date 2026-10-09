@@ -15,6 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
+  FileMove,
   FileOrFolder,
   FileOrFolderType,
   FileOrFolderUpdate,
@@ -22,6 +23,8 @@ import type {
   HTTPValidationError,
 } from '../models/index';
 import {
+    FileMoveFromJSON,
+    FileMoveToJSON,
     FileOrFolderFromJSON,
     FileOrFolderToJSON,
     FileOrFolderTypeFromJSON,
@@ -58,6 +61,11 @@ export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
 export interface ListFilesApiV1FilesGetRequest {
     t?: FileOrFolderType | null;
     limit?: number;
+}
+
+export interface MoveFileApiV1FilesFileIdMovePostRequest {
+    fileId: number;
+    fileMove: FileMove;
 }
 
 export interface UpdateFileApiV1FilesFileIdPutRequest {
@@ -377,6 +385,59 @@ export class FilesApi extends runtime.BaseAPI {
      */
     async listFilesApiV1FilesGet(requestParameters: ListFilesApiV1FilesGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
         const response = await this.listFilesApiV1FilesGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Move a file or folder into another folder.
+     * Move File
+     */
+    async moveFileApiV1FilesFileIdMovePostRaw(requestParameters: MoveFileApiV1FilesFileIdMovePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FileOrFolder>> {
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling moveFileApiV1FilesFileIdMovePost().'
+            );
+        }
+
+        if (requestParameters['fileMove'] == null) {
+            throw new runtime.RequiredError(
+                'fileMove',
+                'Required parameter "fileMove" was null or undefined when calling moveFileApiV1FilesFileIdMovePost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/files/{file_id}/move`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: FileMoveToJSON(requestParameters['fileMove']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FileOrFolderFromJSON(jsonValue));
+    }
+
+    /**
+     * Move a file or folder into another folder.
+     * Move File
+     */
+    async moveFileApiV1FilesFileIdMovePost(requestParameters: MoveFileApiV1FilesFileIdMovePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
+        const response = await this.moveFileApiV1FilesFileIdMovePostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
