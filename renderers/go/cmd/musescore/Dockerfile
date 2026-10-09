@@ -1,4 +1,15 @@
 ARG UBUNTU_VERSION=24.04
+ARG GO_VERSION=1.23
+
+# ---- build stage: compile a static Go binary (stdlib only, no go.sum) ----
+FROM golang:${GO_VERSION} AS build
+WORKDIR /src
+COPY go/go.mod ./
+COPY go/renderer ./renderer
+COPY go/cmd/musescore ./cmd/musescore
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/musescore-renderer ./cmd/musescore
+
+# ---- runtime stage: same harness as the Python image ----
 FROM ubuntu:${UBUNTU_VERSION}
 
 ARG MSCORE_VERSION=4.7.5
@@ -6,16 +17,12 @@ ARG MSCORE_BUILD=4.7.5.260831071
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MSCORE_BIN=/opt/musescore/squashfs-root/AppRun
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH=/opt/venv/bin:$PATH
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         wget \
         xvfb \
-        python3 \
-        python3-venv \
         libfuse2t64 \
         libglib2.0-0 \
         libegl1 \
@@ -56,15 +63,10 @@ RUN mkdir -p /opt/musescore \
     && ./MuseScore.AppImage --appimage-extract >/dev/null \
     && rm /opt/musescore/MuseScore.AppImage
 
-RUN python3 -m venv "$VIRTUAL_ENV"
-COPY musescore/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
 WORKDIR /app
-COPY contract.py /app/contract.py
-COPY musescore/server.py /app/server.py
+COPY --from=build /out/musescore-renderer /app/musescore-renderer
 
 ENV QT_QPA_PLATFORM=offscreen
 
 EXPOSE 8080
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8080"]
+ENTRYPOINT ["/app/musescore-renderer"]
