@@ -11,6 +11,8 @@ from .file import (
     SuggestionReason,
 )
 from .helloasso import (
+    CercleAdhesion,
+    CercleNotification,
     HelloAssoItem,
     HelloAssoNotification,
     HelloAssoOrderData,

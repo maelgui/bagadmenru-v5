@@ -221,8 +221,8 @@ def test_accept_links_orphan_membership_by_adherent_email(client: TestClient, se
     with _session() as s:
         s.add(
             HelloAssoMembershipDB(
-                helloasso_order_id=555,
-                helloasso_item_id=5551,
+                source="helloasso",
+                source_id="5551",
                 user_id=None,
                 payer_email=payer_email,
                 adherent_email=adherent_email,
@@ -256,7 +256,7 @@ def test_accept_links_orphan_membership_by_adherent_email(client: TestClient, se
     # admin "unlinked" list (checked through the API, i.e. the same DB session
     # path the endpoint used, avoiding a stale concurrent read).
     unlinked = client.get("/api/v1/helloasso/orders/unlinked").json()
-    assert all(r["helloasso_item_id"] != 5551 for r in unlinked)
+    assert all(r["source_id"] != "5551" for r in unlinked)
 
 
 def test_accept_does_not_link_by_payer_email(client: TestClient, sender):
@@ -271,8 +271,8 @@ def test_accept_does_not_link_by_payer_email(client: TestClient, sender):
     with _session() as s:
         s.add(
             HelloAssoMembershipDB(
-                helloasso_order_id=666,
-                helloasso_item_id=6661,
+                source="helloasso",
+                source_id="6661",
                 user_id=None,
                 payer_email=parent_email,
                 adherent_email="child.adherent@example.com",
@@ -304,7 +304,7 @@ def test_accept_does_not_link_by_payer_email(client: TestClient, sender):
     # The membership stays unlinked (payer email must not trigger a link): it is
     # still present in the admin "unlinked" list.
     unlinked = client.get("/api/v1/helloasso/orders/unlinked").json()
-    assert any(r["helloasso_item_id"] == 6661 for r in unlinked)
+    assert any(r["source_id"] == "6661" for r in unlinked)
 
 
 def test_accept_email_proven_changed_address_requires_otp(client: TestClient, sender):

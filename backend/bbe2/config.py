@@ -93,6 +93,17 @@ class Settings(BaseSettings):
     helloasso_signature_key: Optional[str] = None
     helloasso_webhook_token: Optional[str] = None
 
+    # Cercle Montfortais relayed-webhook authentication.
+    #
+    # The Cercle (parent association) relays adhesions to its own endpoint,
+    # authenticated by an HMAC-SHA256 signature over ``timestamp + "." +
+    # raw_body`` carried in the ``X-Cercle-Timestamp`` / ``X-Cercle-Signature``
+    # headers, with a 5-minute anti-replay window. Fail closed: if the secret
+    # is unset, the Cercle webhook rejects every request, so a misconfigured
+    # deployment cannot accept forged notifications. Kept separate from the
+    # HelloAsso signature key so each source has its own key.
+    cercle_webhook_secret: Optional[str] = None
+
     # Unlinked HelloAsso memberships (``user_id IS NULL``) are orders we could
     # not attach to a member automatically. Most are noise: the Cercle
     # Montfortais handles memberships for several activities, so we receive

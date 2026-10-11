@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from bbe2.models import HelloAssoMembershipDB, UserDB
 from bbe2.schemas.helloasso import (
+    CercleNotification,
     HelloAssoNotification,
     MembershipHistoryItem,
     MembershipInfo,
@@ -35,6 +36,17 @@ SEASON_START_MONTH = 9
 # assigns to a completed free/manually-validated membership (amount 0), which
 # we still consider a valid adhesion for the season.
 VALID_STATES = {"Processed", "Registered"}
+
+# Source tags stored on each membership row (``HelloAssoMembershipDB.source``).
+SOURCE_HELLOASSO = "helloasso"
+SOURCE_CERCLE = "cercle"
+
+# The Cercle Montfortais relays adhesions under this ``evenement`` value.
+CERCLE_MEMBERSHIP_EVENT = "adhesions"
+
+# A Cercle adhesion carries no state; it means "this person is a member", so we
+# store it as a valid membership for the season it is received in.
+CERCLE_MEMBERSHIP_STATE = "Processed"
 
 
 def season_start_year(moment: datetime) -> int:
@@ -241,26 +253,16 @@ def ingest_notification(
 ) -> int:
     """Ingest a HelloAsso notification, persisting any membership items.
 
-    Idempotent: an item already stored (by ``helloasso_item_id``) is updated in
-    place rather than duplicated, so HelloAsso retries are safe. Returns the
-    number of membership items processed.
+    Idempotent: an item already stored (by its ``(source, source_id)`` pair) is
+    updated in place rather than duplicated, so HelloAsso retries are safe.
+    Returns the number of membership items processed.
     """
     if notification.event_type != "Order" or notification.data is None:
         return 0
 
     data = notification.data
     payer = data.payer
-    order_id = data.id
     order_date = data.date or _now()
-
-    if order_id is None:
-        # Idempotency keys on helloasso_item_id, not order_id, so this is not
-        # fatal — but a membership order with no order id is anomalous and worth
-        # surfacing for later reconciliation.
-        logger.warning(
-            "HelloAsso Order notification without an order id; storing item(s) "
-            "with helloasso_order_id=0"
-        )
 
     processed = 0
     for item in data.items:
@@ -278,10 +280,12 @@ def ingest_notification(
         user_id = _member_id_by_email(session, adherent_email)
 
         adherent = item.user
+        source_id = str(item.id)
 
         existing = session.scalar(
             select(HelloAssoMembershipDB).where(
-                HelloAssoMembershipDB.helloasso_item_id == item.id
+                HelloAssoMembershipDB.source == SOURCE_HELLOASSO,
+                HelloAssoMembershipDB.source_id == source_id,
             )
         )
         if existing is not None:
@@ -301,8 +305,8 @@ def ingest_notification(
         else:
             session.add(
                 HelloAssoMembershipDB(
-                    helloasso_order_id=order_id or 0,
-                    helloasso_item_id=item.id,
+                    source=SOURCE_HELLOASSO,
+                    source_id=source_id,
                     user_id=user_id,
                     payer_email=payer.email if payer else None,
                     payer_first_name=payer.first_name if payer else None,
@@ -315,6 +319,66 @@ def ingest_notification(
                     amount=item.amount or 0,
                     order_date=order_date,
                     state=item.state or "Unknown",
+                    raw_payload=raw_payload,
+                )
+            )
+        processed += 1
+
+    session.commit()
+    return processed
+
+
+def ingest_cercle_notification(
+    session: Session, notification: CercleNotification, raw_payload: dict
+) -> int:
+    """Ingest a Cercle Montfortais relayed notification.
+
+    Idempotent on each adhesion's ``(source, source_id)`` pair, where
+    ``source_id`` is the opaque Cercle identifier (such as "item:78901234"):
+    the Cercle re-sends the same id when a member is edited, so an existing row
+    is updated in place (name, email, adhesion date) rather than duplicated. A
+    Cercle adhesion carries no amount, state or tier, so the row is stored as a
+    valid membership for the season its ``date_adhesion`` falls into (falling
+    back to the reception time when that date is absent). Returns the number of
+    adhesions processed.
+    """
+    if notification.evenement != CERCLE_MEMBERSHIP_EVENT:
+        return 0
+
+    received = _now()
+    processed = 0
+    for adhesion in notification.adhesions:
+        user_id = _member_id_by_email(session, adhesion.email)
+        order_date = adhesion.date_adhesion or received
+
+        existing = session.scalar(
+            select(HelloAssoMembershipDB).where(
+                HelloAssoMembershipDB.source == SOURCE_CERCLE,
+                HelloAssoMembershipDB.source_id == adhesion.id,
+            )
+        )
+        if existing is not None:
+            # Re-notification after a member edit: refresh the mutable fields.
+            existing.adherent_first_name = adhesion.prenom
+            existing.adherent_last_name = adhesion.nom
+            existing.adherent_email = adhesion.email
+            existing.order_date = order_date
+            existing.raw_payload = raw_payload
+            # A corrected email may now match a member; fill the link if empty.
+            if existing.user_id is None and user_id is not None:
+                existing.user_id = user_id
+        else:
+            session.add(
+                HelloAssoMembershipDB(
+                    source=SOURCE_CERCLE,
+                    source_id=adhesion.id,
+                    user_id=user_id,
+                    adherent_first_name=adhesion.prenom,
+                    adherent_last_name=adhesion.nom,
+                    adherent_email=adhesion.email,
+                    amount=0,
+                    order_date=order_date,
+                    state=CERCLE_MEMBERSHIP_STATE,
                     raw_payload=raw_payload,
                 )
             )

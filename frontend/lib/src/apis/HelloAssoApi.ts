@@ -28,6 +28,11 @@ import {
     UnlinkedMembershipToJSON,
 } from '../models/index';
 
+export interface CercleWebhookApiV1HelloassoCercleWebhookPostRequest {
+    xCercleTimestamp?: string | null;
+    xCercleSignature?: string | null;
+}
+
 export interface DeleteMembershipApiV1HelloassoOrdersMembershipIdDeleteRequest {
     membershipId: string;
 }
@@ -46,6 +51,46 @@ export interface LinkMembershipApiV1HelloassoOrdersMembershipIdLinkPostRequest {
  * 
  */
 export class HelloAssoApi extends runtime.BaseAPI {
+
+    /**
+     * Receive a Cercle Montfortais relayed notification and persist adhesions.  Coexists with the HelloAsso webhook: the Cercle relays adhesions it collects on its own app in a flat French-keyed shape. Authenticated by an HMAC-SHA256 signature over ``timestamp + \".\" + raw_body`` carried in the ``X-Cercle-Timestamp`` / ``X-Cercle-Signature`` headers, keyed on ``cercle_webhook_secret``, with a 5-minute anti-replay window. Acknowledges authentic, well-formed but unrecognized notifications with 200 so the Cercle stops retrying.
+     * Cercle Webhook
+     */
+    async cercleWebhookApiV1HelloassoCercleWebhookPostRaw(requestParameters: CercleWebhookApiV1HelloassoCercleWebhookPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['xCercleTimestamp'] != null) {
+            headerParameters['x-cercle-timestamp'] = String(requestParameters['xCercleTimestamp']);
+        }
+
+        if (requestParameters['xCercleSignature'] != null) {
+            headerParameters['x-cercle-signature'] = String(requestParameters['xCercleSignature']);
+        }
+
+        const response = await this.request({
+            path: `/api/v1/helloasso/cercle/webhook`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Receive a Cercle Montfortais relayed notification and persist adhesions.  Coexists with the HelloAsso webhook: the Cercle relays adhesions it collects on its own app in a flat French-keyed shape. Authenticated by an HMAC-SHA256 signature over ``timestamp + \".\" + raw_body`` carried in the ``X-Cercle-Timestamp`` / ``X-Cercle-Signature`` headers, keyed on ``cercle_webhook_secret``, with a 5-minute anti-replay window. Acknowledges authentic, well-formed but unrecognized notifications with 200 so the Cercle stops retrying.
+     * Cercle Webhook
+     */
+    async cercleWebhookApiV1HelloassoCercleWebhookPost(requestParameters: CercleWebhookApiV1HelloassoCercleWebhookPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.cercleWebhookApiV1HelloassoCercleWebhookPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Delete a membership record (e.g. a duplicate or erroneous order).
