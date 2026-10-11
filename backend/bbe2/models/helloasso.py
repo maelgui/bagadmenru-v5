@@ -1,8 +1,9 @@
-"""HelloAsso membership models.
+"""Membership models.
 
-We only persist *memberships* ingested from HelloAsso order notifications
-(``eventType == "Order"`` with an item ``type == "Membership"``). Each row is
-the immutable record of one membership item as HelloAsso reported it; the
+We persist *memberships* ingested from two sources: HelloAsso order
+notifications (``eventType == "Order"`` with an item ``type == "Membership"``)
+and relayed notifications from the Cercle Montfortais (the parent association).
+Each row is the record of one membership as the source reported it; the
 member's current status is *computed* from these rows (see
 ``bbe2.services.membership``) rather than stored, so it can never drift out of
 sync with the source of truth.
@@ -12,31 +13,39 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import JSON, BigInteger, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bbe2.models.base import Base
 
 
 class HelloAssoMembershipDB(Base):
-    """A single membership item ingested from a HelloAsso order notification."""
+    """A single membership ingested from HelloAsso or the Cercle Montfortais."""
 
     __tablename__ = "helloasso_memberships"
+
+    __table_args__ = (
+        UniqueConstraint("source", "source_id", name="uq_membership_source_id"),
+    )
 
     id: Mapped[str] = mapped_column(
         String(64), primary_key=True, index=True, default=lambda: str(uuid.uuid4())
     )
 
-    # HelloAsso identifiers. ``helloasso_item_id`` is the membership item id and
-    # is globally unique on HelloAsso's side; we key idempotency on it so a
-    # replayed notification (HelloAsso retries until it gets a 200) updates the
-    # existing row instead of inserting a duplicate.
-    helloasso_order_id: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, index=True
+    # Which source emitted this membership: "helloasso" for a direct HelloAsso
+    # order notification, "cercle" for a relayed Cercle Montfortais
+    # notification.
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="helloasso", index=True
     )
-    helloasso_item_id: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, unique=True, index=True
-    )
+
+    # The source's own identifier for this membership, kept as the source sends
+    # it: the HelloAsso item id (a number, stored as text) or the Cercle
+    # adhesion id (an opaque string such as "item:78901234"). Idempotency keys
+    # on the ``(source, source_id)`` pair: a replayed HelloAsso notification
+    # (retried until it gets a 200) or a Cercle re-send after a member edit
+    # updates the existing row in place rather than inserting a duplicate.
+    source_id: Mapped[str] = mapped_column(String(128), nullable=False)
 
     # Member link. Nullable because the payer email may not match any member
     # (e.g. a parent paying for their child, or a typo). Unmatched rows are

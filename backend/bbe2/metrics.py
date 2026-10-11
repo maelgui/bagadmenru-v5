@@ -110,6 +110,15 @@ HELLOASSO_WEBHOOKS = Counter(
     ["outcome"],
 )
 
+CERCLE_WEBHOOKS = Counter(
+    "bbe2_cercle_webhooks_total",
+    "Cercle Montfortais relayed webhook deliveries by outcome.",
+    # outcome: ok (persisted) | ignored (authentic but unrecognized shape)
+    #          | invalid_signature (rejected 401) | invalid_json (rejected 400)
+    # A spike of invalid_signature means someone is probing the endpoint.
+    ["outcome"],
+)
+
 EVENT_RESPONSES = Counter(
     "bbe2_event_responses_total",
     "Event RSVP responses recorded.",

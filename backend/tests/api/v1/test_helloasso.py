@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 import json
+import time
 from datetime import datetime, timezone
 
 import pytest
@@ -499,7 +500,7 @@ def test_no_custom_field_email_stays_unlinked(helloasso_client: TestClient):
     me = helloasso_client.get("/api/v1/profiles/me/membership").json()
     assert me["status"] == MembershipStatus.NONE.value
     unlinked = helloasso_client.get("/api/v1/helloasso/orders/unlinked").json()
-    assert any(r["helloasso_item_id"] == 105320 for r in unlinked)
+    assert any(r["source_id"] == "105320" for r in unlinked)
 
 
 def test_custom_field_email_parsing():
@@ -553,6 +554,270 @@ def test_webhook_counters_ok_ignored_and_rejected(helloasso_client: TestClient):
         headers={"Content-Type": "application/json"},
     )
     assert resp.status_code == 400
+
+    after = snap()
+    assert {k: after[k] - before[k] for k in before} == {
+        "ok": 1,
+        "ignored": 1,
+        "invalid_signature": 1,
+        "invalid_json": 1,
+    }
+
+
+# --- Cercle Montfortais relayed webhook -------------------------------------
+
+CERCLE_SECRET = "test-cercle-secret"
+
+
+def _settings_with_cercle():
+    settings = get_fake_settings()
+    settings.cercle_webhook_secret = CERCLE_SECRET
+    return settings
+
+
+@pytest.fixture()
+def cercle_client(client: TestClient):
+    """The shared client, but with the Cercle webhook secret configured."""
+    app.dependency_overrides[get_settings] = _settings_with_cercle
+    yield client
+    app.dependency_overrides[get_settings] = get_fake_settings
+
+
+def _cercle_notification(
+    *,
+    adhesion_id: str = "item:78901234",
+    nom: str = "Doe",
+    prenom: str = "John",
+    email: str = "john.doe@example.com",
+    evenement: str = "adhesions",
+    date_adhesion: str | None = None,
+) -> dict:
+    adhesion: dict = {"id": adhesion_id, "nom": nom, "prenom": prenom, "email": email}
+    if date_adhesion is not None:
+        adhesion["date_adhesion"] = date_adhesion
+    return {
+        "evenement": evenement,
+        "origine": "webhook",
+        "adhesions": [adhesion],
+    }
+
+
+def _cercle_sign(body: bytes, *, secret: str = CERCLE_SECRET, timestamp: int | None = None):
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    digest = hmac.new(
+        secret.encode("utf-8"), ts.encode("utf-8") + b"." + body, hashlib.sha256
+    ).hexdigest()
+    return {"X-Cercle-Timestamp": ts, "X-Cercle-Signature": f"sha256={digest}"}
+
+
+def _post_cercle(
+    client: TestClient,
+    payload: dict,
+    *,
+    secret: str = CERCLE_SECRET,
+    timestamp: int | None = None,
+):
+    body = json.dumps(payload).encode("utf-8")
+    headers = _cercle_sign(body, secret=secret, timestamp=timestamp)
+    headers["content-type"] = "application/json"
+    return client.post(
+        "/api/v1/helloasso/cercle/webhook",
+        content=body,
+        headers=headers,
+    )
+
+
+def test_cercle_rejected_without_signature(cercle_client: TestClient):
+    resp = cercle_client.post(
+        "/api/v1/helloasso/cercle/webhook", json=_cercle_notification()
+    )
+    assert resp.status_code == 401
+
+
+def test_cercle_rejects_bad_signature(cercle_client: TestClient):
+    resp = _post_cercle(
+        cercle_client, _cercle_notification(), secret="wrong-secret"
+    )
+    assert resp.status_code == 401
+
+
+def test_cercle_rejects_expired_timestamp(cercle_client: TestClient):
+    # A signature valid in content but stamped more than 5 minutes ago is
+    # rejected, bounding the replay window.
+    resp = _post_cercle(
+        cercle_client,
+        _cercle_notification(),
+        timestamp=int(time.time()) - 600,
+    )
+    assert resp.status_code == 401
+
+
+def test_cercle_rejects_tampered_body(cercle_client: TestClient):
+    # Sign one body, send another: the HMAC over the raw body must not match.
+    body = json.dumps(_cercle_notification()).encode("utf-8")
+    headers = _cercle_sign(body)
+    headers["content-type"] = "application/json"
+    tampered = json.dumps(_cercle_notification(email="attacker@example.com")).encode(
+        "utf-8"
+    )
+    resp = cercle_client.post(
+        "/api/v1/helloasso/cercle/webhook", content=tampered, headers=headers
+    )
+    assert resp.status_code == 401
+
+
+def test_cercle_rejects_when_secret_unset(helloasso_client: TestClient):
+    # Fail closed: with no cercle_webhook_secret configured, even a correctly
+    # signed request is rejected.
+    body = json.dumps(_cercle_notification()).encode("utf-8")
+    headers = _cercle_sign(body)
+    headers["content-type"] = "application/json"
+    resp = helloasso_client.post(
+        "/api/v1/helloasso/cercle/webhook", content=body, headers=headers
+    )
+    assert resp.status_code == 401
+
+
+def test_cercle_accepts_valid_signature_and_links(cercle_client: TestClient):
+    resp = _post_cercle(cercle_client, _cercle_notification())
+    assert resp.status_code == 200
+    assert resp.json()["memberships_processed"] == 1
+
+    # The adhesion email matches the seeded member, so they are active for the
+    # current season.
+    me = cercle_client.get("/api/v1/profiles/me/membership").json()
+    assert me["status"] == MembershipStatus.ACTIVE.value
+    assert len(me["history"]) == 1
+    assert cercle_client.get("/api/v1/helloasso/orders/unlinked").json() == []
+
+
+def test_cercle_uses_date_adhesion_for_season(cercle_client: TestClient):
+    # An adhesion dated in a past season must be EXPIRED, not active — proving
+    # date_adhesion (not the reception time) drives the season.
+    _post_cercle(
+        cercle_client,
+        _cercle_notification(date_adhesion="2020-09-15T10:00:00+00:00"),
+    )
+    me = cercle_client.get("/api/v1/profiles/me/membership").json()
+    assert me["status"] == MembershipStatus.EXPIRED.value
+    assert me["history"][0]["season"] == "2020-2021"
+
+
+def test_cercle_current_season_date_is_active(cercle_client: TestClient):
+    _post_cercle(
+        cercle_client,
+        _cercle_notification(date_adhesion=_current_season_date()),
+    )
+    me = cercle_client.get("/api/v1/profiles/me/membership").json()
+    assert me["status"] == MembershipStatus.ACTIVE.value
+
+
+def test_cercle_ignores_unknown_event(cercle_client: TestClient):
+    resp = _post_cercle(
+        cercle_client, _cercle_notification(evenement="autre_chose")
+    )
+    assert resp.status_code == 200
+    assert resp.json()["memberships_processed"] == 0
+
+
+def test_cercle_is_idempotent_and_updates_on_edit(cercle_client: TestClient):
+    # First notification: wrong email, so it stays unlinked.
+    _post_cercle(
+        cercle_client,
+        _cercle_notification(email="typo@example.com"),
+    )
+    unlinked = cercle_client.get("/api/v1/helloasso/orders/unlinked").json()
+    assert len(unlinked) == 1
+    assert unlinked[0]["adherent_email"] == "typo@example.com"
+
+    # Re-notification with the SAME id but a corrected email: must update in
+    # place (not duplicate) and now link to the member.
+    _post_cercle(
+        cercle_client,
+        _cercle_notification(email="john.doe@example.com"),
+    )
+    assert cercle_client.get("/api/v1/helloasso/orders/unlinked").json() == []
+    me = cercle_client.get("/api/v1/profiles/me/membership").json()
+    assert len(me["history"]) == 1
+    assert me["status"] == MembershipStatus.ACTIVE.value
+
+
+def test_cercle_edit_updates_season(cercle_client: TestClient):
+    # First notification places the adhesion in a past season (EXPIRED).
+    _post_cercle(
+        cercle_client,
+        _cercle_notification(date_adhesion="2020-09-15T10:00:00+00:00"),
+    )
+    assert (
+        cercle_client.get("/api/v1/profiles/me/membership").json()["status"]
+        == MembershipStatus.EXPIRED.value
+    )
+
+    # Re-notification with the SAME id but a corrected current-season date must
+    # update the row's season in place -> now ACTIVE, still a single row.
+    _post_cercle(
+        cercle_client,
+        _cercle_notification(date_adhesion=_current_season_date()),
+    )
+    me = cercle_client.get("/api/v1/profiles/me/membership").json()
+    assert len(me["history"]) == 1
+    assert me["status"] == MembershipStatus.ACTIVE.value
+
+
+def test_cercle_unknown_email_stays_unlinked(cercle_client: TestClient):
+    _post_cercle(
+        cercle_client,
+        _cercle_notification(
+            adhesion_id="item:555", email="stranger@example.com"
+        ),
+    )
+    me = cercle_client.get("/api/v1/profiles/me/membership").json()
+    assert me["status"] == MembershipStatus.NONE.value
+    unlinked = cercle_client.get("/api/v1/helloasso/orders/unlinked").json()
+    assert len(unlinked) == 1
+    assert unlinked[0]["adherent_email"] == "stranger@example.com"
+    assert unlinked[0]["source_id"] == "item:555"
+
+
+def test_cercle_counters_ok_ignored_and_rejected(cercle_client: TestClient):
+    def snap():
+        return {
+            o: _counter("bbe2_cercle_webhooks_total", {"outcome": o})
+            for o in ("ok", "ignored", "invalid_signature", "invalid_json")
+        }
+
+    before = snap()
+
+    # Authentic + recognized -> ok
+    assert _post_cercle(cercle_client, _cercle_notification()).status_code == 200
+
+    # Authentic + unrecognized shape -> ignored
+    assert (
+        _post_cercle(cercle_client, {"evenement": "adhesions", "adhesions": "nope"})
+        .status_code
+        == 200
+    )
+
+    # No signature -> invalid_signature (the "rejected" bucket)
+    assert (
+        cercle_client.post(
+            "/api/v1/helloasso/cercle/webhook", json=_cercle_notification()
+        ).status_code
+        == 401
+    )
+
+    # Authentic + malformed JSON -> invalid_json
+    bad_body = b"{not json"
+    headers = _cercle_sign(bad_body)
+    headers["content-type"] = "application/json"
+    assert (
+        cercle_client.post(
+            "/api/v1/helloasso/cercle/webhook",
+            content=bad_body,
+            headers=headers,
+        ).status_code
+        == 400
+    )
 
     after = snap()
     assert {k: after[k] - before[k] for k in before} == {

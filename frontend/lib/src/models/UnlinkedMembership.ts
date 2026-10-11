@@ -27,16 +27,16 @@ export interface UnlinkedMembership {
     id: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof UnlinkedMembership
      */
-    helloassoOrderId: number;
+    source: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof UnlinkedMembership
      */
-    helloassoItemId: number;
+    sourceId: string;
     /**
      * 
      * @type {string}
@@ -110,8 +110,8 @@ export interface UnlinkedMembership {
  */
 export function instanceOfUnlinkedMembership(value: object): value is UnlinkedMembership {
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('helloassoOrderId' in value) || value['helloassoOrderId'] === undefined) return false;
-    if (!('helloassoItemId' in value) || value['helloassoItemId'] === undefined) return false;
+    if (!('source' in value) || value['source'] === undefined) return false;
+    if (!('sourceId' in value) || value['sourceId'] === undefined) return false;
     if (!('payerEmail' in value) || value['payerEmail'] === undefined) return false;
     if (!('payerFirstName' in value) || value['payerFirstName'] === undefined) return false;
     if (!('payerLastName' in value) || value['payerLastName'] === undefined) return false;
@@ -137,8 +137,8 @@ export function UnlinkedMembershipFromJSONTyped(json: any, ignoreDiscriminator: 
     return {
         
         'id': json['id'],
-        'helloassoOrderId': json['helloasso_order_id'],
-        'helloassoItemId': json['helloasso_item_id'],
+        'source': json['source'],
+        'sourceId': json['source_id'],
         'payerEmail': json['payer_email'],
         'payerFirstName': json['payer_first_name'],
         'payerLastName': json['payer_last_name'],
@@ -165,8 +165,8 @@ export function UnlinkedMembershipToJSONTyped(value?: UnlinkedMembership | null,
     return {
         
         'id': value['id'],
-        'helloasso_order_id': value['helloassoOrderId'],
-        'helloasso_item_id': value['helloassoItemId'],
+        'source': value['source'],
+        'source_id': value['sourceId'],
         'payer_email': value['payerEmail'],
         'payer_first_name': value['payerFirstName'],
         'payer_last_name': value['payerLastName'],

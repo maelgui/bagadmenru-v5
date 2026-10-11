@@ -150,8 +150,8 @@ def test_list_profiles_membership_status_shown_with_permission(client: TestClien
     with Session(engine) as session:
         session.add(
             models.HelloAssoMembershipDB(
-                helloasso_order_id=1,
-                helloasso_item_id=1,
+                source="helloasso",
+                source_id="1",
                 user_id="a8e2d3249e9d997e",
                 tier_description="Adhésion",
                 amount=1000,
@@ -236,8 +236,8 @@ def test_create_profile_links_orphan_membership_by_adherent_email(
         with Session(engine) as session:
             session.add(
                 models.HelloAssoMembershipDB(
-                    helloasso_order_id=777,
-                    helloasso_item_id=7771,
+                    source="helloasso",
+                    source_id="7771",
                     user_id=None,
                     payer_email="parent@example.com",
                     adherent_email="new.member@example.com",
@@ -269,7 +269,7 @@ def test_create_profile_links_orphan_membership_by_adherent_email(
         # admin "unlinked" list (checked through the API to use the endpoint's
         # own DB session path).
         unlinked = client.get("/api/v1/helloasso/orders/unlinked").json()
-        assert all(r["helloasso_item_id"] != 7771 for r in unlinked)
+        assert all(r["source_id"] != "7771" for r in unlinked)
     finally:
         app.dependency_overrides.pop(EmailSender, None)
 

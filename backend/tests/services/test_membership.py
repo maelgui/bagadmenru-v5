@@ -31,8 +31,8 @@ def _add_membership(
     session, user_id, order_date: datetime, item_id: int, received_at=None
 ):
     kwargs = dict(
-        helloasso_order_id=item_id,
-        helloasso_item_id=item_id,
+        source="helloasso",
+        source_id=str(item_id),
         user_id=user_id,
         tier_description="Adhésion",
         amount=2500,
@@ -123,7 +123,7 @@ def test_purge_unlinked_memberships_removes_only_stale_unlinked():
         assert deleted == 1
 
         remaining = {
-            row.helloasso_item_id
+            int(row.source_id)
             for row in session.scalars(select(models.HelloAssoMembershipDB)).all()
         }
         assert remaining == {2, 3}

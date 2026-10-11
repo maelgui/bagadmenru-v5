@@ -55,8 +55,8 @@ class UnlinkedMembership(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    helloasso_order_id: int
-    helloasso_item_id: int
+    source: str
+    source_id: str
     payer_email: Optional[str]
     payer_first_name: Optional[str]
     payer_last_name: Optional[str]
@@ -159,3 +159,39 @@ class HelloAssoNotification(BaseModel):
 
     event_type: str = Field(alias="eventType")
     data: Optional[HelloAssoOrderData] = None
+
+
+# --- Cercle Montfortais relayed webhook payload -----------------------------
+#
+# The Cercle Montfortais (parent association) relays adhesions it collects on
+# its own app in a flat French-keyed shape. It carries an adhesion date
+# (``date_adhesion``) used to place the adhesion in a season, but no amount,
+# state or tier: an adhesion is simply "this person is a member for that
+# season". It re-sends the same ``id`` whenever the member is edited (corrected
+# email, name, …), so we upsert on it. We ignore unknown keys so the Cercle can
+# add fields without breaking us.
+
+
+class CercleAdhesion(BaseModel):
+    """One adhesion in a Cercle Montfortais notification."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    nom: Optional[str] = None
+    prenom: Optional[str] = None
+    email: Optional[str] = None
+    # Date the adhesion was recorded, used to assign it to a season. Optional:
+    # if the Cercle omits it (or sends an unparseable value), the service falls
+    # back to the reception time.
+    date_adhesion: Optional[datetime] = None
+
+
+class CercleNotification(BaseModel):
+    """Top-level Cercle Montfortais relayed notification envelope."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    evenement: str
+    origine: Optional[str] = None
+    adhesions: List[CercleAdhesion] = Field(default_factory=list)
