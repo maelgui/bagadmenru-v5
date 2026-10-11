@@ -1,5 +1,5 @@
 import { AlertCircle, CloudUpload, FolderPlus } from 'lucide-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { type FileOrFolder, type FileOrFolderUpdate, FileOrFolderType, ResponseError } from 'bagad-client';
 import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -22,8 +22,8 @@ import MoveDialog from './components/dialogs/move-dialog';
 import RenameDialog from './components/dialogs/rename-dialog';
 import UploadProgressDialog from './components/dialogs/upload-progress-dialog';
 import { useBatchUpload } from './use-batch-upload';
+import { useFolder } from './use-folder';
 
-const CONVERSION_POLL_INTERVAL_MS = 2000;
 const AUTOCLOSE_DELAY_MS = 1000;
 const HTTP_BAD_REQUEST = 400;
 const HTTP_CONFLICT = 409;
@@ -40,47 +40,16 @@ function updateErrorMessage(error: unknown): string {
   return 'La modification a échoué.';
 }
 
-function isConverting(node?: FileOrFolder): boolean {
-  return node?.type === FileOrFolderType.Container
-    && node.processingStatus != null
-    && node.processingStatus !== 'completed'
-    && node.processingStatus !== 'failed';
+function parseFolderId(param?: string): number | undefined {
+  return param === undefined ? undefined : parseInt(param, 10);
 }
 
-function useFolder(folderId?: string) {
-  const { filesApi } = useApiClient();
-  const { data: folder } = useQuery({
-    queryKey: ['files', folderId === undefined ? 'root' : parseInt(folderId, 10)],
-    queryFn: async () => (
-      folderId === undefined
-        ? await filesApi.getRootApiV1FilesRootGet()
-        : await filesApi.getFileApiV1FilesFileIdGet({ fileId: parseInt(folderId, 10) })
-    ),
-    refetchInterval: (query) => (isConverting(query.state.data) ? CONVERSION_POLL_INTERVAL_MS : false),
-  });
-  const converting = isConverting(folder);
-  const { data: children, status } = useQuery({
-    queryKey: ['files', folder?.id, 'children', folder?.processingStatus],
-    queryFn: async () => {
-      if (!folder?.id) throw new Error('Invalid id');
-      return await filesApi.listChildrenApiV1FilesFolderIdChildrenGet({ folderId: folder.id });
-    },
-    select: (data) => ({
-      folders: data.filter((value) => value.type === FileOrFolderType.Dir || value.type === FileOrFolderType.Container),
-      files: data.filter((value) => value.type === FileOrFolderType.File),
-    }),
-    enabled: !!folder?.id,
-    refetchInterval: converting ? CONVERSION_POLL_INTERVAL_MS : false,
-  });
-  const { data: breadcrumb } = useQuery({
-    queryKey: ['files', folder?.id, 'breadcrumb'],
-    queryFn: async () => {
-      if (!folder?.id) throw new Error('Invalid id');
-      return await filesApi.getBreadcrumbApiV1FilesFileIdBreadcrumbGet({ fileId: folder.id });
-    },
-    enabled: !!folder?.id,
-  });
-  return { folder, children, status, breadcrumb };
+function splitChildren(children?: FileOrFolder[]) {
+  if (!children) return undefined;
+  return {
+    folders: children.filter((value) => value.type === FileOrFolderType.Dir || value.type === FileOrFolderType.Container),
+    files: children.filter((value) => value.type === FileOrFolderType.File),
+  };
 }
 
 function useFileMutations(folderId?: number) {
@@ -227,7 +196,8 @@ function effectivePermissions(
 export default function ListFilesPage() {
   const { can } = usePermissions();
   const params = useParams();
-  const { folder, children, status, breadcrumb } = useFolder(params.folderId);
+  const { folder, children, status, breadcrumb } = useFolder(parseFolderId(params.folderId));
+  const content = splitChildren(children);
   const { createFolder, deleteFile, updateFile } = useFileMutations(folder?.id);
 
   const invalidateChildren = async () => await queryClient.invalidateQueries({ queryKey: ['files', folder?.id] });
@@ -290,7 +260,7 @@ export default function ListFilesPage() {
         <div {...getRootProps({ className: 'relative' })}>
           <FolderBody
             status={status}
-            content={children}
+            content={content}
             isDragActive={isDragActive}
             canCreate={canWriteHere}
             onDelete={canDeleteHere ? setFileToDelete : undefined}
