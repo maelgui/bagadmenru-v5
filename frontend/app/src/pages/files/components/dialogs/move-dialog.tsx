@@ -1,5 +1,4 @@
 import { ChevronRight, FolderInput, Home } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
 import { Fragment, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,61 +13,27 @@ import {
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
-import { useApiClient } from '../../../../config/client';
+import { useFolder } from '../../use-folder';
 
-function useFolderContent(folderId?: number) {
-  const { filesApi } = useApiClient();
-  const { data: folder } = useQuery({
-    queryKey: ['files', folderId ?? 'root'],
-    queryFn: async () => (
-      folderId === undefined
-        ? await filesApi.getRootApiV1FilesRootGet()
-        : await filesApi.getFileApiV1FilesFileIdGet({ fileId: folderId })
-    ),
-  });
-  const { data: children, status } = useQuery({
-    queryKey: ['files', folder?.id, 'children'],
-    queryFn: async () => {
-      if (!folder?.id) throw new Error('Invalid id');
-      return await filesApi.listChildrenApiV1FilesFolderIdChildrenGet({ folderId: folder.id });
-    },
-    select: (data) => data.filter((item) => item.type === FileOrFolderType.Dir),
-    enabled: !!folder?.id,
-  });
-  return { folder, children, status };
-}
-
-function FolderRow({
-  folder, disabled, onOpen,
-}: {
-  folder: FileOrFolder;
-  disabled: boolean;
-  onOpen: () => void;
-}) {
+function FolderRow({ folder, onOpen }: { folder: FileOrFolder; onOpen: () => void }) {
   return (
     <button
       type="button"
-      disabled={disabled}
       onClick={onOpen}
-      className={cn(
-        'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors',
-        disabled ? 'cursor-not-allowed opacity-40' : 'hover:bg-muted',
-      )}
+      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
     >
       <FolderInput className="size-4 shrink-0 text-primary" aria-hidden />
       <span className="flex-1 truncate">{folder.name}</span>
-      {!disabled ? <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden /> : null}
+      <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
     </button>
   );
 }
 
 function FolderList({
-  status, items, movedId, onOpen,
+  status, items, onOpen,
 }: {
   status: 'pending' | 'error' | 'success';
   items: FileOrFolder[] | undefined;
-  movedId: number;
   onOpen: (folder: FileOrFolder) => void;
 }) {
   if (status === 'pending') {
@@ -93,12 +58,7 @@ function FolderList({
   return (
     <div className="flex flex-col">
       {items.map((child) => (
-        <FolderRow
-          key={child.id}
-          folder={child}
-          disabled={child.id === movedId}
-          onOpen={() => onOpen(child)}
-        />
+        <FolderRow key={child.id} folder={child} onOpen={() => onOpen(child)} />
       ))}
     </div>
   );
@@ -112,17 +72,13 @@ export default function MoveDialog({
   onSubmit: (parentId: number) => void;
   onClose: () => void;
 }) {
-  const [path, setPath] = useState<FileOrFolder[]>([]);
-  const currentId = path.length ? path[path.length - 1].id : undefined;
-  const { folder, children, status } = useFolderContent(currentId);
-
-  const openFolder = (next: FileOrFolder) => setPath((prev) => [...prev, next]);
-  const goTo = (index: number) => setPath((prev) => prev.slice(0, index + 1));
-  const goHome = () => setPath([]);
+  const [currentId, setCurrentId] = useState<number | undefined>(undefined);
+  const { folder, children, status, breadcrumb } = useFolder(currentId);
+  const folders = children?.filter((item) => item.type === FileOrFolderType.Dir);
 
   const targetId = folder?.id;
   const isSameParent = targetId != null && targetId === file.parentId;
-  const canSubmit = targetId != null && !isSameParent && targetId !== file.id;
+  const canSubmit = targetId != null && !isSameParent;
   const submit = () => {
     if (canSubmit) onSubmit(targetId);
   };
@@ -140,18 +96,18 @@ export default function MoveDialog({
         <nav className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
           <button
             type="button"
-            onClick={goHome}
+            onClick={() => setCurrentId(undefined)}
             className="flex items-center gap-1 rounded px-1 hover:text-foreground"
           >
             <Home className="size-4" aria-hidden />
             Fichiers
           </button>
-          {path.map((item, index) => (
+          {breadcrumb?.slice(1).map((item) => (
             <Fragment key={item.id}>
               <ChevronRight className="size-3.5" aria-hidden />
               <button
                 type="button"
-                onClick={() => goTo(index)}
+                onClick={() => setCurrentId(item.id)}
                 className="truncate rounded px-1 hover:text-foreground"
               >
                 {item.name}
@@ -161,14 +117,14 @@ export default function MoveDialog({
         </nav>
 
         <div className="min-h-48 rounded-md border p-1">
-          <FolderList status={status} items={children} movedId={file.id} onOpen={openFolder} />
+          <FolderList status={status} items={folders} onOpen={(next) => setCurrentId(next.id)} />
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Annuler</Button>
           <Button disabled={!canSubmit || isPending} onClick={submit}>
             {isPending ? <Spinner data-icon="inline-start" /> : <FolderInput data-icon="inline-start" />}
-            {isSameParent ? 'Déjà dans ce dossier' : `Déplacer ici`}
+            {isSameParent ? 'Déjà dans ce dossier' : 'Déplacer ici'}
           </Button>
         </DialogFooter>
       </DialogContent>
