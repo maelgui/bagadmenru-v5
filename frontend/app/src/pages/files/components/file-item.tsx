@@ -22,6 +22,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
+import { fileDownloadUrl, fileViewUrl } from '../file-urls';
 
 interface FileItemProps {
   file: FileOrFolder
@@ -123,9 +124,14 @@ function FileItemLink({
     onContextMenu: (event: MouseEvent) => event.preventDefault(),
     ...bind(),
   };
-  if (file.type === FileOrFolderType.File && file.fileUrl) {
+  if (file.type === FileOrFolderType.File && file.fileKey) {
     return (
-      <a href={file.fileUrl} target="_blank" rel="noopener noreferrer" {...commonProps}>
+      <a
+        href={fileViewUrl(file.id)}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...commonProps}
+      >
         {file.name}
       </a>
     );
@@ -154,7 +160,7 @@ function FileItemMenu({
     showDownload && (
       <DropdownMenuItem
         key="download"
-        render={<a href={file.downloadUrl ?? undefined} download={file.name} rel="noopener noreferrer" />}
+        render={<a href={fileDownloadUrl(file.id)} rel="noopener noreferrer" />}
       >
         <Download />
         {downloadLabel}
@@ -213,7 +219,7 @@ export default function FileItem({
   const isFile = file.type === FileOrFolderType.File;
   const isContainer = file.type === FileOrFolderType.Container;
 
-  const showDownload = (isFile || isContainer) && !!file.downloadUrl;
+  const showDownload = (isFile || isContainer) && !!file.fileKey;
   const downloadLabel = isContainer ? 'Télécharger la source' : 'Télécharger';
   const hasActions = !noAction && (showDownload || renameFn !== undefined || moveFn !== undefined || deleteFn !== undefined || detailsFn !== undefined);
 

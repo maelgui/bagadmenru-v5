@@ -72,6 +72,8 @@ src/models/Role.ts
 src/models/SeasonRanking.ts
 src/models/SessionInfo.ts
 src/models/SetPassword.ts
+src/models/Suggestion.ts
+src/models/SuggestionReason.ts
 src/models/Token.ts
 src/models/UnlinkedMembership.ts
 src/models/UserRankingItem.ts

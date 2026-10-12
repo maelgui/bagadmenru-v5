@@ -11,8 +11,7 @@ function makeFile(overrides: Partial<FileOrFolder> = {}): FileOrFolder {
     name: 'photo.jpg',
     type: FileOrFolderType.File,
     parentId: 10,
-    fileUrl: 'https://example.invalid/photo.jpg',
-    downloadUrl: 'https://example.invalid/photo.jpg?download',
+    fileKey: 'files/1',
   };
   return { ...base, ...overrides };
 }
@@ -21,8 +20,7 @@ function makeFolder(overrides: Partial<FileOrFolder> = {}): FileOrFolder {
   return makeFile({
     name: 'Partitions',
     type: FileOrFolderType.Dir,
-    fileUrl: null,
-    downloadUrl: null,
+    fileKey: null,
     ...overrides,
   });
 }

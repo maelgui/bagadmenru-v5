@@ -58,6 +58,8 @@ export * from './Role';
 export * from './SeasonRanking';
 export * from './SessionInfo';
 export * from './SetPassword';
+export * from './Suggestion';
+export * from './SuggestionReason';
 export * from './Token';
 export * from './UnlinkedMembership';
 export * from './UserRankingItem';
