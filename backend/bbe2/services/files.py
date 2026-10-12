@@ -7,10 +7,15 @@ from fastapi import BackgroundTasks, Depends, UploadFile
 from bbe2 import models
 from bbe2.crud import CRUDFile
 from bbe2.dependencies import SettingsDep, get_s3_helper
+from bbe2.models.file_access import FileAccessDB
 from bbe2.schemas import FileOrFolderUpdate
-from bbe2.schemas.file import FileOrFolderType
+from bbe2.schemas.file import FileAccessAction, FileOrFolderType
 from bbe2.services.conversion import ConversionService, source_format_for
-from bbe2.utils.s3 import S3Helper
+from bbe2.utils.s3 import (
+    FILE_URL_EXPIRATION_SECONDS,
+    ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
+    S3Helper,
+)
 
 
 class FileNotFoundInStoreError(Exception):
@@ -132,6 +137,30 @@ class FileService:
         self.file_crud.db_session.flush()
         self.file_crud.db_session.refresh(db_file)
         return db_file
+
+    def serve(
+        self,
+        file_id: int,
+        user_id: str,
+        action: FileAccessAction,
+        disposition: str,
+    ) -> str:
+        db_file = self.file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
+        if not db_file or not db_file.file_key:
+            raise FileNotFoundInStoreError()
+        url = self.s3.generate_get_presigned_url(
+            object_name=db_file.file_key,
+            filename=db_file.name,
+            disposition=disposition,
+            cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
+            expiration=FILE_URL_EXPIRATION_SECONDS,
+            stable=True,
+        )
+        self.file_crud.db_session.add(
+            FileAccessDB(file_id=file_id, user_id=user_id, action=action)
+        )
+        self.file_crud.db_session.commit()
+        return url
 
     def _assert_valid_move_target(
         self,
