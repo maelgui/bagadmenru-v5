@@ -16,9 +16,8 @@ from sqlalchemy.orm import aliased
 
 from bbe2 import models, schemas
 from bbe2.crud import CRUDFile
-from bbe2.dependencies import S3Dep, SessionDep, get_s3_helper
+from bbe2.dependencies import SessionDep, get_s3_helper
 from bbe2.metrics import FILE_ACCESSES
-from bbe2.models.file_access import FileAccessDB
 from bbe2.schemas.file import FileOrFolderType
 from bbe2.services.files import (
     ContainerChildError,
@@ -32,7 +31,6 @@ from bbe2.services.files import (
 )
 from bbe2.services.suggestions import SuggestionServiceDep
 from bbe2.utils.auth import Action, Authorization, JwtPayload, Resource
-from bbe2.utils.s3 import FILE_URL_EXPIRATION_SECONDS, ONE_YEAR_IMMUTABLE_CACHE_CONTROL
 
 router = APIRouter(prefix="/files")
 
@@ -116,34 +114,7 @@ async def get_file(
     return db_file
 
 
-def _serve_file(
-    file_id: int,
-    disposition: str,
-    action: schemas.FileAccessAction,
-    session: SessionDep,
-    s3_helper: S3Dep,
-    payload: JwtPayload,
-) -> RedirectResponse:
-    db_file = session.get(models.FileOrFolderDB, file_id)
-    if not db_file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-        )
-    if not db_file.file_key:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="File has no content"
-        )
-    url = s3_helper.generate_get_presigned_url(
-        object_name=db_file.file_key,
-        filename=db_file.name,
-        disposition=disposition,
-        cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
-        expiration=FILE_URL_EXPIRATION_SECONDS,
-        stable=True,
-    )
-    session.add(FileAccessDB(file_id=file_id, user_id=payload.sub, action=action))
-    session.commit()
-    FILE_ACCESSES.labels(action=action.value.lower()).inc()
+def _redirect_to_presigned(url: str) -> RedirectResponse:
     response = RedirectResponse(url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
     response.headers["Cache-Control"] = "no-store"
     return response
@@ -155,8 +126,7 @@ def _serve_file(
 )
 async def view_file(
     file_id: int,
-    session: SessionDep,
-    s3_helper: S3Dep,
+    file_service: FileServiceDep,
     payload: Annotated[JwtPayload, Depends(Authorization(Action.VIEW, Resource.FILE))],
 ) -> RedirectResponse:
     """Record a view and redirect to the file served inline.
@@ -166,14 +136,16 @@ async def view_file(
     point where a view is counted — feeds the suggestions and the access
     metric.
     """
-    return _serve_file(
-        file_id,
-        "inline",
-        schemas.FileAccessAction.VIEW,
-        session,
-        s3_helper,
-        payload,
-    )
+    try:
+        url = file_service.serve(
+            file_id, payload.sub, schemas.FileAccessAction.VIEW, "inline"
+        )
+    except FileNotFoundInStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        ) from exc
+    FILE_ACCESSES.labels(action=schemas.FileAccessAction.VIEW.value.lower()).inc()
+    return _redirect_to_presigned(url)
 
 
 @router.get(
@@ -182,19 +154,20 @@ async def view_file(
 )
 async def download_file(
     file_id: int,
-    session: SessionDep,
-    s3_helper: S3Dep,
+    file_service: FileServiceDep,
     payload: Annotated[JwtPayload, Depends(Authorization(Action.VIEW, Resource.FILE))],
 ) -> RedirectResponse:
     """Record a download and redirect to the file served as an attachment."""
-    return _serve_file(
-        file_id,
-        "attachment",
-        schemas.FileAccessAction.DOWNLOAD,
-        session,
-        s3_helper,
-        payload,
-    )
+    try:
+        url = file_service.serve(
+            file_id, payload.sub, schemas.FileAccessAction.DOWNLOAD, "attachment"
+        )
+    except FileNotFoundInStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        ) from exc
+    FILE_ACCESSES.labels(action=schemas.FileAccessAction.DOWNLOAD.value.lower()).inc()
+    return _redirect_to_presigned(url)
 
 
 @router.get(
