@@ -10,8 +10,6 @@ function makeFile(overrides: Partial<FileOrFolder> = {}): FileOrFolder {
     name: 'photo.jpg',
     type: FileOrFolderType.File,
     parentId: 10,
-    fileUrl: 'https://example.invalid/photo.jpg',
-    downloadUrl: 'https://example.invalid/photo.jpg?download',
     uploadedAt: new Date('2026-01-15T09:30:00Z'),
   };
   return { ...base, ...overrides };

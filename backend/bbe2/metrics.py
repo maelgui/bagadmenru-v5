@@ -119,6 +119,16 @@ EVENT_RESPONSES = Counter(
     ["source", "value"],
 )
 
+FILE_ACCESSES = Counter(
+    "bbe2_file_accesses_total",
+    "File open/download intents recorded by the explorer.",
+    # action: view (opened inline) | download (saved to disk)
+    # Files are served to the browser by a presigned S3 URL that never touches
+    # the backend, so the only count we can keep is the intent the frontend
+    # reports when it hands the URL over. One increment per reported access.
+    ["action"],
+)
+
 
 class MembershipStateCollector(Collector):
     """Yields point-in-time membership/credential gauges at scrape time.

@@ -20,6 +20,7 @@ import type {
   FileOrFolderUpdate,
   FolderCreate,
   HTTPValidationError,
+  Suggestion,
 } from '../models/index';
 import {
     FileOrFolderFromJSON,
@@ -32,6 +33,8 @@ import {
     FolderCreateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    SuggestionFromJSON,
+    SuggestionToJSON,
 } from '../models/index';
 
 export interface CreateFolderApiV1FilesFolderIdPostRequest {
@@ -40,6 +43,10 @@ export interface CreateFolderApiV1FilesFolderIdPostRequest {
 }
 
 export interface DeleteFileApiV1FilesFileIdDeleteRequest {
+    fileId: number;
+}
+
+export interface DownloadFileApiV1FilesFileIdDownloadGetRequest {
     fileId: number;
 }
 
@@ -60,6 +67,10 @@ export interface ListFilesApiV1FilesGetRequest {
     limit?: number;
 }
 
+export interface ListSuggestionsApiV1FilesSuggestionsGetRequest {
+    folderId?: number | null;
+}
+
 export interface UpdateFileApiV1FilesFileIdPatchRequest {
     fileId: number;
     fileOrFolderUpdate: FileOrFolderUpdate;
@@ -69,6 +80,10 @@ export interface UploadFileApiV1FilesFolderIdUploadPostRequest {
     folderId: number;
     file: Blob;
     force?: boolean;
+}
+
+export interface ViewFileApiV1FilesFileIdViewGetRequest {
+    fileId: number;
 }
 
 /**
@@ -169,6 +184,53 @@ export class FilesApi extends runtime.BaseAPI {
      */
     async deleteFileApiV1FilesFileIdDelete(requestParameters: DeleteFileApiV1FilesFileIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.deleteFileApiV1FilesFileIdDeleteRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Record a download and redirect to the file served as an attachment.
+     * Download File
+     */
+    async downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling downloadFileApiV1FilesFileIdDownloadGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/files/{file_id}/download`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Record a download and redirect to the file served as an attachment.
+     * Download File
+     */
+    async downloadFileApiV1FilesFileIdDownloadGet(requestParameters: DownloadFileApiV1FilesFileIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.downloadFileApiV1FilesFileIdDownloadGetRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**
@@ -381,6 +443,46 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * List suggested files with the reason each is suggested, optionally scoped to a folder.
+     * List Suggestions
+     */
+    async listSuggestionsApiV1FilesSuggestionsGetRaw(requestParameters: ListSuggestionsApiV1FilesSuggestionsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Suggestion>>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['folderId'] != null) {
+            queryParameters['folder_id'] = requestParameters['folderId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/files/suggestions`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SuggestionFromJSON));
+    }
+
+    /**
+     * List suggested files with the reason each is suggested, optionally scoped to a folder.
+     * List Suggestions
+     */
+    async listSuggestionsApiV1FilesSuggestionsGet(requestParameters: ListSuggestionsApiV1FilesSuggestionsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Suggestion>> {
+        const response = await this.listSuggestionsApiV1FilesSuggestionsGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Rename and/or move a file or folder.
      * Update File
      */
@@ -503,6 +605,53 @@ export class FilesApi extends runtime.BaseAPI {
      */
     async uploadFileApiV1FilesFolderIdUploadPost(requestParameters: UploadFileApiV1FilesFolderIdUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FileOrFolder> {
         const response = await this.uploadFileApiV1FilesFolderIdUploadPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Record a view and redirect to the file served inline.  The actual bytes are served by a presigned S3 URL; the backend only gatekeeps (auth), counts the access, and redirects. This is the single point where a view is counted — feeds the suggestions and the access metric.
+     * View File
+     */
+    async viewFileApiV1FilesFileIdViewGetRaw(requestParameters: ViewFileApiV1FilesFileIdViewGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling viewFileApiV1FilesFileIdViewGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/files/{file_id}/view`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Record a view and redirect to the file served inline.  The actual bytes are served by a presigned S3 URL; the backend only gatekeeps (auth), counts the access, and redirects. This is the single point where a view is counted — feeds the suggestions and the access metric.
+     * View File
+     */
+    async viewFileApiV1FilesFileIdViewGet(requestParameters: ViewFileApiV1FilesFileIdViewGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.viewFileApiV1FilesFileIdViewGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

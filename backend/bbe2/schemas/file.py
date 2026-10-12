@@ -1,14 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, computed_field, model_validator
-
-from bbe2.utils.s3 import (
-    FILE_URL_EXPIRATION_SECONDS,
-    ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
-    S3Helper,
-)
 
 
 class FileOrFolderType(Enum):
@@ -51,8 +45,6 @@ class FileOrFolderUpdate(BaseModel):
 
 class FileOrFolder(_FileOrFolderBase):
     model_config = ConfigDict(from_attributes=True)
-    # s3_helper must be set in S3Helper and S3HelperDependencies must be used in route
-    s3_helper: ClassVar[S3Helper]
 
     type: FileOrFolderType
     id: int
@@ -70,30 +62,19 @@ class FileOrFolder(_FileOrFolderBase):
     modifier: Optional[FileAuthor] = None
     size: Optional[int] = None
 
-    @computed_field  # type: ignore[misc]
-    @property
-    def fileUrl(self) -> Optional[str]:
-        if not self.file_key:
-            return None
-        return self.s3_helper.generate_get_presigned_url(
-            object_name=self.file_key,
-            filename=self.name,
-            disposition="inline",
-            cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
-            expiration=FILE_URL_EXPIRATION_SECONDS,
-            stable=True,
-        )
 
-    @computed_field  # type: ignore[misc]
-    @property
-    def downloadUrl(self) -> Optional[str]:
-        if not self.file_key:
-            return None
-        return self.s3_helper.generate_get_presigned_url(
-            object_name=self.file_key,
-            filename=self.name,
-            disposition="attachment",
-            cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
-            expiration=FILE_URL_EXPIRATION_SECONDS,
-            stable=True,
-        )
+class FileAccessAction(Enum):
+    VIEW = "VIEW"
+    DOWNLOAD = "DOWNLOAD"
+
+
+class SuggestionReason(Enum):
+    GROUP = "GROUP"
+    TRENDING = "TRENDING"
+    RECENT = "RECENT"
+
+
+class Suggestion(BaseModel):
+    file: FileOrFolder
+    reason: SuggestionReason
+    group_name: Optional[str] = None

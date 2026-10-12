@@ -21,8 +21,10 @@ import FileDetailsDialog from './components/dialogs/file-details-dialog';
 import MoveDialog from './components/dialogs/move-dialog';
 import RenameDialog from './components/dialogs/rename-dialog';
 import UploadProgressDialog from './components/dialogs/upload-progress-dialog';
+import Suggestions from './components/suggestions';
 import { useBatchUpload } from './use-batch-upload';
 import { useFolder } from './use-folder';
+import { useSuggestions } from './use-suggestions';
 
 const AUTOCLOSE_DELAY_MS = 1000;
 const HTTP_BAD_REQUEST = 400;
@@ -113,7 +115,7 @@ function FolderBody({
     );
   }
   return (
-    <>
+    <section aria-label="Contenu du dossier">
       {isDragActive ? <div className="absolute z-10 size-full rounded-lg border-2 border-primary bg-primary/10" /> : null}
       {!content.files.length && !content.folders.length ? (
         <Empty>
@@ -143,7 +145,7 @@ function FolderBody({
       <div className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {content.files.map((file) => <FileItem key={file.id} file={file} big deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} moveFn={onMove && (() => onMove(file))} detailsFn={() => onDetails(file)} />)}
       </div>
-    </>
+    </section>
   );
 }
 
@@ -199,6 +201,7 @@ export default function ListFilesPage() {
   const { folder, children, status, breadcrumb } = useFolder(parseFolderId(params.folderId));
   const content = splitChildren(children);
   const { createFolder, deleteFile, updateFile } = useFileMutations(folder?.id);
+  const { data: suggestions, isPending: suggestionsPending } = useSuggestions(folder?.id);
 
   const invalidateChildren = async () => await queryClient.invalidateQueries({ queryKey: ['files', folder?.id] });
   const upload = useBatchUpload(folder?.id, invalidateChildren);
@@ -257,6 +260,9 @@ export default function ListFilesPage() {
       />
       <Container>
         {containerStatus}
+        {!isContainer && status === 'success' ? (
+          <Suggestions suggestions={suggestions} isPending={suggestionsPending} />
+        ) : null}
         <div {...getRootProps({ className: 'relative' })}>
           <FolderBody
             status={status}

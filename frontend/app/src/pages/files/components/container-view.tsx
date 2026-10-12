@@ -3,6 +3,7 @@ import type { FileOrFolder } from 'bagad-client';
 import { buttonVariants } from '@/components/ui/button';
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { fileDownloadUrl } from '../file-urls';
 
 const statusLabels = new Map<string, string>([
   ['pending', 'La conversion va démarrer...'],
@@ -51,12 +52,11 @@ export function ContainerStatus({ container }: { container: FileOrFolder }) {
 }
 
 function ContainerSourceDownload({ container }: { container: FileOrFolder }) {
-  if (!container.downloadUrl) return null;
+  if (!container.fileKey) return null;
   return (
     <AlertAction>
       <a
-        href={container.downloadUrl}
-        download={container.name}
+        href={fileDownloadUrl(container.id)}
         rel="noopener noreferrer"
         className={cn(
           buttonVariants({ size: 'sm' }),

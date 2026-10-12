@@ -118,18 +118,6 @@ export interface FileOrFolder {
      * @memberof FileOrFolder
      */
     size?: number | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof FileOrFolder
-     */
-    fileUrl: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof FileOrFolder
-     */
-    downloadUrl: string | null;
 }
 
 
@@ -141,8 +129,6 @@ export function instanceOfFileOrFolder(value: object): value is FileOrFolder {
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('type' in value) || value['type'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('fileUrl' in value) || value['fileUrl'] === undefined) return false;
-    if (!('downloadUrl' in value) || value['downloadUrl'] === undefined) return false;
     return true;
 }
 
@@ -170,8 +156,6 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'modifiedAt': json['modified_at'] == null ? undefined : (new Date(json['modified_at'])),
         'modifier': json['modifier'] == null ? undefined : FileAuthorFromJSON(json['modifier']),
         'size': json['size'] == null ? undefined : json['size'],
-        'fileUrl': json['fileUrl'],
-        'downloadUrl': json['downloadUrl'],
     };
 }
 
@@ -200,8 +184,6 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'modified_at': value['modifiedAt'] == null ? undefined : ((value['modifiedAt'] as any).toISOString()),
         'modifier': FileAuthorToJSON(value['modifier']),
         'size': value['size'],
-        'fileUrl': value['fileUrl'],
-        'downloadUrl': value['downloadUrl'],
     };
 }
 
