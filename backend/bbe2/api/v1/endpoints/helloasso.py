@@ -90,7 +90,9 @@ def _verify_cercle_signature(
     if skew > CERCLE_SIGNATURE_TOLERANCE:
         return False
 
-    received = signature[len("sha256=") :] if signature.startswith("sha256=") else signature
+    received = (
+        signature[len("sha256=") :] if signature.startswith("sha256=") else signature
+    )
     signed_payload = timestamp.encode("utf-8") + b"." + raw_body
     expected = hmac.new(
         settings.cercle_webhook_secret.encode("utf-8"),
