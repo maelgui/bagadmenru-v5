@@ -156,6 +156,22 @@ export default createBrowserRouter([
                 path: '/groups/edit/:groupId',
                 lazy: lazyPage(async () => await import('../pages/groups/edit')),
               },
+              {
+                path: '/campaigns',
+                lazy: lazyPage(async () => await import('../pages/campaigns/list')),
+              },
+              {
+                path: '/campaigns/add',
+                lazy: lazyPage(async () => await import('../pages/campaigns/add')),
+              },
+              {
+                path: '/campaigns/:id',
+                lazy: lazyPage(async () => await import('../pages/campaigns/detail')),
+              },
+              {
+                path: '/campaigns/:id/edit',
+                lazy: lazyPage(async () => await import('../pages/campaigns/edit')),
+              },
             ],
           },
         ],

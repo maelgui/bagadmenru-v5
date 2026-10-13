@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import type { EventCreate } from 'bagad-client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from '@/components/ui/toast';
 import Header from '../../components/header';
 import Container from '../../components/container';
@@ -10,6 +10,11 @@ import EventForm from './components/form';
 export default function AddEventPage() {
   const { eventsApi } = useApiClient();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const campaignParam = searchParams.get('campaign');
+  const parsedCampaignId = campaignParam ? Number(campaignParam) : Number.NaN;
+  const defaultCampaignId = Number.isNaN(parsedCampaignId) ? null : parsedCampaignId;
+
   const { mutateAsync } = useMutation({
     mutationFn: async (data: EventCreate) => await eventsApi.createEventApiV1EventsPost({ eventCreate: data }),
     onSuccess: async () => {
@@ -34,7 +39,7 @@ export default function AddEventPage() {
         ]}
       />
       <Container>
-        <EventForm onSubmit={onSubmit} />
+        <EventForm onSubmit={onSubmit} defaultCampaignId={defaultCampaignId} />
       </Container>
     </>
   );

@@ -1,5 +1,12 @@
 from .api_key import ApiKey, ApiKeyCreate, ApiKeyCreated
 from .auth import JwtPayload, LoginData
+from .campaign import (
+    Campaign,
+    CampaignCreate,
+    CampaignEvent,
+    CampaignListItem,
+    CampaignUpdate,
+)
 from .event import Costume, Event, EventCreate
 from .file import (
     FileAccessAction,

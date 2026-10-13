@@ -1,5 +1,6 @@
 import type { Event, EventCreate } from 'bagad-client';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import costume from '../../../assets/costume.svg';
 import polo from '../../../assets/polo.svg';
 import tshirt from '../../../assets/tshirt.svg';
@@ -17,14 +18,17 @@ import {
   FieldTitle,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
+import { useApiClient, usePermissions } from '../../../config/client';
 import { fromIsoDate, toIsoDate, toUtcDate } from '../../../utils/date';
 
 interface EventFormProps {
   onSubmit: SubmitHandler<EventCreate>;
   data?: Event;
+  defaultCampaignId?: number | null;
 }
 
 const categoryOptions = [
@@ -39,10 +43,24 @@ const costumeOptions = [
   { value: 'NONE', id: 'costume-none', image: tshirt, label: 'Aucune tenue définie' },
 ] as const;
 
-export default function EventForm({ onSubmit, data = undefined }: EventFormProps) {
+export default function EventForm({ onSubmit, data = undefined, defaultCampaignId = null }: EventFormProps) {
+  const { campaignsApi } = useApiClient();
+  const { can } = usePermissions();
+  const isCampaignManager = can('edit', 'campaign');
+
+  const { data: campaigns } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: async () => await campaignsApi.listCampaignsApiV1CampaignsGet(),
+    enabled: isCampaignManager,
+  });
+
   const {
     register, control, handleSubmit, formState: { errors, dirtyFields, isSubmitting }, setValue,
-  } = useForm<EventCreate>({ defaultValues: data || { category: 'sortie', isInDoodle: true, costume: 'COSTUME' } });
+  } = useForm<EventCreate>({
+    defaultValues: data || {
+      category: 'sortie', isInDoodle: true, costume: 'COSTUME', campaignId: defaultCampaignId,
+    },
+  });
 
   // Pin the picked calendar date to UTC midnight before submitting: the
   // generated client serializes dates in UTC, which would otherwise shift
@@ -95,6 +113,34 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
           />
           <FieldError>{errors.date?.message}</FieldError>
         </Field>
+
+        {isCampaignManager ? (
+          <Controller
+            name="campaignId"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel htmlFor="campaignId">Campagne (optionnel)</FieldLabel>
+                <NativeSelect
+                  id="campaignId"
+                  className="w-full"
+                  name={field.name}
+                  ref={field.ref}
+                  value={field.value ?? ''}
+                  onBlur={field.onBlur}
+                  onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                >
+                  <NativeSelectOption value="">Aucune campagne</NativeSelectOption>
+                  {campaigns?.map((campaign) => (
+                    <NativeSelectOption key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </Field>
+            )}
+          />
+        ) : null}
 
         <Controller
           name="category"
