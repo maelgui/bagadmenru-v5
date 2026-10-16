@@ -24,6 +24,7 @@ class Resource(Enum):
     # roles as viewing events (every member who can see events can subscribe).
     CALENDAR = "calendar"
     RESPONSE = "response"
+    CAMPAIGN = "campaign"
     # Audit trail of RSVP state changes (e.g. a member switching from present to
     # absent). Separate from RESPONSE so viewing the log can be granted (to
     # staff) without implying the ability to answer on others' behalf.
@@ -52,6 +53,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.EVENT.value),
         (Action.VIEW.value, Resource.CALENDAR.value),
+        (Action.VIEW.value, Resource.CAMPAIGN.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
         (Action.VIEW.value, Resource.GROUP.value),
@@ -68,6 +70,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.CALENDAR.value),
         (Action.VIEW.value, Resource.RESPONSE.value),
         (Action.CREATE.value, Resource.RESPONSE.value),
+        (Action.VIEW.value, Resource.CAMPAIGN.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
         (Action.VIEW.value, Resource.GROUP.value),
@@ -84,6 +87,10 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.VIEW.value, Resource.RESPONSE.value),
         (Action.CREATE.value, Resource.RESPONSE.value),
         (Action.VIEW.value, Resource.RESPONSE_HISTORY.value),
+        (Action.VIEW.value, Resource.CAMPAIGN.value),
+        (Action.CREATE.value, Resource.CAMPAIGN.value),
+        (Action.EDIT.value, Resource.CAMPAIGN.value),
+        (Action.DELETE.value, Resource.CAMPAIGN.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.CREATE.value, Resource.PROFILE.value),
         (Action.EDIT.value, Resource.PROFILE.value),

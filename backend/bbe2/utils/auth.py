@@ -294,6 +294,18 @@ def verify_token(token: str, settings: Settings) -> JwtPayload | None:
     return payload
 
 
+def user_can_manage_campaigns(session: DbSession, user_id: str) -> bool:
+    user = session.get(UserDB, user_id)
+    if not user:
+        return False
+    roles = [role.id for group in user.groups for role in group.roles]
+    return is_allowed(roles, Action.EDIT, Resource.CAMPAIGN)
+
+
+def payload_can_manage_campaigns(payload: JwtPayload) -> bool:
+    return is_allowed(payload.roles, Action.EDIT, Resource.CAMPAIGN)
+
+
 class Authorization:
     def __init__(self, action: Action, resource: Resource):
         self.action = action

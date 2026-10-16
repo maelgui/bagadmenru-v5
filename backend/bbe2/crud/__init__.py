@@ -1,3 +1,4 @@
+from .crud_campaign import CRUDCampaign
 from .crud_event import CRUDEvent
 from .crud_file import CRUDFile
 from .crud_group import CRUDGroup
