@@ -43,6 +43,7 @@ src/models/LoginCode.ts
 src/models/LoginData.ts
 src/models/LoginType.ts
 src/models/LogoutRequest.ts
+src/models/MailingListPreview.ts
 src/models/MembershipHistoryItem.ts
 src/models/MembershipInfo.ts
 src/models/MembershipLinkRequest.ts

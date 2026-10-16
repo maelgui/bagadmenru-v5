@@ -1,7 +1,7 @@
 import logging
 import uuid
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from botocore.exceptions import ClientError
@@ -25,6 +25,7 @@ from bbe2.schemas.utils import (
     UserRankingItem,
     UserRankings,
 )
+from bbe2.services import mailing as mailing_service
 from bbe2.services import membership as membership_service
 from bbe2.services.otp import OTP_MAX_ATTEMPTS, generate_otp, hash_otp
 from bbe2.utils.action_token import create_action_token
@@ -878,6 +879,104 @@ async def update_group(
     group_db.is_instrument = group.is_instrument
     session.commit()
     return group_db
+
+
+def _expected_emails(group_db: models.GroupDB) -> set[str]:
+    return set(m.email for m in group_db.members if m.receives_emails and m.is_active)
+
+
+@groups_router.get(
+    "/{group_id}/mailing-list/preview",
+    response_model=schemas.MailingListPreview,
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.GROUP))],
+)
+async def preview_mailing_list(
+    group_id: int,
+    session: SessionDep,
+    settings: SettingsDep,
+):
+    group_db = session.get(models.GroupDB, group_id)
+    if not group_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Group not found"
+        )
+    if not group_db.mailing_list:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Group has no mailing list",
+        )
+
+    diff = await mailing_service.compute_diff(
+        settings,
+        group_db.mailing_list,
+        mailing_service.DOMAIN,
+        _expected_emails(group_db),
+    )
+    return schemas.MailingListPreview(
+        configured=diff.configured,
+        in_sync=diff.in_sync,
+        subscribers=diff.subscribers,
+        expected=diff.expected,
+        to_add=diff.to_add,
+        to_remove=diff.to_remove,
+        synced_at=group_db.mailing_list_synced_at,
+        error=group_db.mailing_list_sync_error,
+    )
+
+
+@groups_router.post(
+    "/{group_id}/mailing-list/sync",
+    response_model=schemas.MailingListPreview,
+    dependencies=[Depends(Authorization(Action.EDIT, Resource.GROUP))],
+)
+async def sync_mailing_list(
+    group_id: int,
+    session: SessionDep,
+    settings: SettingsDep,
+):
+    group_db = session.get(models.GroupDB, group_id)
+    if not group_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Group not found"
+        )
+    if not group_db.mailing_list:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Group has no mailing list",
+        )
+
+    try:
+        diff = await mailing_service.sync_mailing_list(
+            settings,
+            group_db.mailing_list,
+            mailing_service.DOMAIN,
+            _expected_emails(group_db),
+        )
+        if diff.configured:
+            group_db.mailing_list_synced_at = datetime.now(tz=timezone.utc)
+        group_db.mailing_list_sync_error = None
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logging.getLogger(__name__).exception(
+            "Manual mailing list sync failed for group %s", group_db.name
+        )
+        group_db.mailing_list_sync_error = str(exc)
+        session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Mailing list sync failed",
+        ) from exc
+    session.commit()
+
+    return schemas.MailingListPreview(
+        configured=diff.configured,
+        in_sync=diff.in_sync,
+        subscribers=diff.subscribers,
+        expected=diff.expected,
+        to_add=diff.to_add,
+        to_remove=diff.to_remove,
+        synced_at=group_db.mailing_list_synced_at,
+        error=group_db.mailing_list_sync_error,
+    )
 
 
 permissions_router = APIRouter(prefix="/roles")

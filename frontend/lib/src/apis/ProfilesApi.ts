@@ -24,6 +24,7 @@ import type {
   GroupCreate,
   GroupUpdate,
   HTTPValidationError,
+  MailingListPreview,
   MembershipInfo,
   MyProfileUpdate,
   MyStats,
@@ -52,6 +53,8 @@ import {
     GroupUpdateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    MailingListPreviewFromJSON,
+    MailingListPreviewToJSON,
     MembershipInfoFromJSON,
     MembershipInfoToJSON,
     MyProfileUpdateFromJSON,
@@ -98,8 +101,16 @@ export interface GetProfileMembershipApiV1ProfilesProfileIdMembershipGetRequest 
     profileId: string;
 }
 
+export interface PreviewMailingListApiV1GroupsGroupIdMailingListPreviewGetRequest {
+    groupId: number;
+}
+
 export interface RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest {
     keyHash: string;
+}
+
+export interface SyncMailingListApiV1GroupsGroupIdMailingListSyncPostRequest {
+    groupId: number;
 }
 
 export interface UnsubscribeApiV1ProfilesProfileIdUnsubscribePostRequest {
@@ -808,6 +819,47 @@ export class ProfilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Preview Mailing List
+     */
+    async previewMailingListApiV1GroupsGroupIdMailingListPreviewGetRaw(requestParameters: PreviewMailingListApiV1GroupsGroupIdMailingListPreviewGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MailingListPreview>> {
+        if (requestParameters['groupId'] == null) {
+            throw new runtime.RequiredError(
+                'groupId',
+                'Required parameter "groupId" was null or undefined when calling previewMailingListApiV1GroupsGroupIdMailingListPreviewGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/groups/{group_id}/mailing-list/preview`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters['groupId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MailingListPreviewFromJSON(jsonValue));
+    }
+
+    /**
+     * Preview Mailing List
+     */
+    async previewMailingListApiV1GroupsGroupIdMailingListPreviewGet(requestParameters: PreviewMailingListApiV1GroupsGroupIdMailingListPreviewGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MailingListPreview> {
+        const response = await this.previewMailingListApiV1GroupsGroupIdMailingListPreviewGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Revoke one of the current member\'s API keys.
      * Revoke My Api Key
      */
@@ -847,6 +899,47 @@ export class ProfilesApi extends runtime.BaseAPI {
      */
     async revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDelete(requestParameters: RevokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.revokeMyApiKeyApiV1ProfilesMeApiKeysKeyHashDeleteRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Sync Mailing List
+     */
+    async syncMailingListApiV1GroupsGroupIdMailingListSyncPostRaw(requestParameters: SyncMailingListApiV1GroupsGroupIdMailingListSyncPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MailingListPreview>> {
+        if (requestParameters['groupId'] == null) {
+            throw new runtime.RequiredError(
+                'groupId',
+                'Required parameter "groupId" was null or undefined when calling syncMailingListApiV1GroupsGroupIdMailingListSyncPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/groups/{group_id}/mailing-list/sync`.replace(`{${"group_id"}}`, encodeURIComponent(String(requestParameters['groupId']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MailingListPreviewFromJSON(jsonValue));
+    }
+
+    /**
+     * Sync Mailing List
+     */
+    async syncMailingListApiV1GroupsGroupIdMailingListSyncPost(requestParameters: SyncMailingListApiV1GroupsGroupIdMailingListSyncPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MailingListPreview> {
+        const response = await this.syncMailingListApiV1GroupsGroupIdMailingListSyncPostRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

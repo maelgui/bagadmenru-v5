@@ -14,6 +14,7 @@ import AvatarGroup from '../../components/avatar-group';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { useApiClient } from '../../config/client';
+import MailingListSection from './components/mailingListSection';
 
 /** Limit of member avatars shown before collapsing the rest into a "+N" avatar. */
 const MAX_VISIBLE_MEMBERS = 20;
@@ -148,6 +149,7 @@ export default function GroupPage() {
         {status === 'success' ? (
           <>
             <MembersSection group={group} />
+            {group.mailingList ? <MailingListSection group={group} /> : null}
             <RolesSection group={group} />
           </>
         ) : null}
