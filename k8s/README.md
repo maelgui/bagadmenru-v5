@@ -77,9 +77,8 @@ kubectl create secret generic backend-secrets \
   --from-literal=S3_SECRET_ACCESS_KEY='your-value' \
   --from-literal=SMTP_PASSWORD='your-value' \
   --from-literal=IMAP_PASSWORD='your-value' \
-  --from-literal=OVH_APPLICATION_KEY='your-value' \
-  --from-literal=OVH_APPLICATION_SECRET='your-value' \
-  --from-literal=OVH_CONSUMER_KEY='your-value' \
+  --from-literal=OVH_CLIENT_ID='your-value' \
+  --from-literal=OVH_CLIENT_SECRET='your-value' \
   --from-literal=VAPID_PRIVATE_KEY='your-value' \
   --from-literal=VAPID_PUBLIC_KEY='your-value' \
   --dry-run=client -o yaml | kubeseal --format yaml > k8s/overlays/beta/sealed-secrets.yaml

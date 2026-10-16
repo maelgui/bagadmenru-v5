@@ -1,5 +1,5 @@
-import hashlib
-from datetime import datetime
+import time
+import time
 
 import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -21,55 +21,54 @@ DRY_RUN = False
 DOMAIN = "bagadmenru.bzh"
 
 
-class OvhApiAuth(httpx.Auth):
-    def __init__(
-        self, application_key: str, application_secret: str, consumer_key: str
-    ):
-        self._application_key = application_key
-        self._application_secret = application_secret
-        self._consumer_key = consumer_key
+OVH_API_BASE_URL = "https://eu.api.ovh.com/v1"
+OVH_OAUTH2_TOKEN_URL = "https://www.ovh.com/auth/oauth2/token"
+
+
+class OvhOAuth2Auth(httpx.Auth):
+    def __init__(self, client_id: str, client_secret: str):
+        self._client_id = client_id
+        self._client_secret = client_secret
+        self._access_token: str | None = None
+        self._expires_at: float = 0.0
+
+    def _fetch_token(self) -> str:
+        resp = httpx.post(
+            OVH_OAUTH2_TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self._client_id,
+                "client_secret": self._client_secret,
+                "scope": "all",
+            },
+        )
+        resp.raise_for_status()
+        payload = resp.json()
+        self._access_token = payload["access_token"]
+        # Refresh 60s early to avoid using a token that expires mid-request.
+        self._expires_at = time.monotonic() + int(payload["expires_in"]) - 60
+        return self._access_token
 
     def auth_flow(self, request):
-        timestamp = str(int(datetime.now().timestamp()))
-        signature = hashlib.sha1()
-        signature.update(
-            "+".join(
-                [
-                    self._application_secret,
-                    self._consumer_key,
-                    request.method.upper(),
-                    str(request.url),
-                    request.content.decode("utf-8"),
-                    timestamp,
-                ]
-            ).encode("utf-8")
-        )
-
-        request.headers["X-Ovh-Consumer"] = self._consumer_key
-        request.headers["X-Ovh-Timestamp"] = timestamp
-        request.headers["X-Ovh-Signature"] = "$1$" + signature.hexdigest()
-        request.headers["X-Ovh-Application"] = self._application_key
-
+        if self._access_token is None or time.monotonic() >= self._expires_at:
+            self._fetch_token()
+        request.headers["Authorization"] = f"Bearer {self._access_token}"
         yield request
 
 
 class OvhHelper:
-    def __init__(
-        self, application_key: str, application_secret: str, consumer_key: str
-    ):
-        self._application_key = application_key
-        self._application_secret = application_secret
-        self._consumer_key = consumer_key
+    def __init__(self, client_id: str, client_secret: str):
+        self._client_id = client_id
+        self._client_secret = client_secret
         self.client = None
 
     async def __aenter__(self):
         self.client = httpx.AsyncClient()
-        self.client.auth = OvhApiAuth(
-            application_key=self._application_key,
-            application_secret=self._application_secret,
-            consumer_key=self._consumer_key,
+        self.client.auth = OvhOAuth2Auth(
+            client_id=self._client_id,
+            client_secret=self._client_secret,
         )
-        self.client.base_url = "https://eu.api.ovh.com/v1"
+        self.client.base_url = OVH_API_BASE_URL
         self.client.headers["Content-Type"] = "application/json"
         return self
 
@@ -131,18 +130,13 @@ async def synchronize_mailing_lists():
 async def sync_mailing_list(name, domain, email_list: set[str]):
     settings = get_settings()
 
-    if (
-        not settings.ovh_application_key
-        or not settings.ovh_application_secret
-        or not settings.ovh_consumer_key
-    ):
+    if not settings.ovh_client_id or not settings.ovh_client_secret:
         logger.info("Ovh settings not set, skipping mailing list update")
         return
 
     async with OvhHelper(
-        application_key=settings.ovh_application_key,
-        application_secret=settings.ovh_application_secret,
-        consumer_key=settings.ovh_consumer_key,
+        client_id=settings.ovh_client_id,
+        client_secret=settings.ovh_client_secret,
     ) as helper:
         logger.info("Updating %s@%s", name, domain)
         subscribers = set(await helper.retrieve_subscriber(domain=domain, name=name))
