@@ -56,9 +56,8 @@ class Settings(BaseSettings):
 
     token_secret_key: str
 
-    ovh_application_key: Optional[str] = None
-    ovh_application_secret: Optional[str] = None
-    ovh_consumer_key: Optional[str] = None
+    ovh_client_id: Optional[str] = None
+    ovh_client_secret: Optional[str] = None
 
     relying_party_id: str = "prod.bagadmenru.bzh"
     relying_party_name: str = "Bagad Men Ru"
