@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict, computed_field
@@ -131,5 +132,18 @@ class GroupUpdate(_GroupBase):
 
 class Group(MinimalGroup):
     mailing_list: Optional[str]
+    mailing_list_synced_at: Optional[datetime] = None
+    mailing_list_sync_error: Optional[str] = None
     roles: list[Role]
     members: list[Profile]
+
+
+class MailingListPreview(BaseModel):
+    configured: bool
+    in_sync: bool
+    subscribers: list[str]
+    expected: list[str]
+    to_add: list[str]
+    to_remove: list[str]
+    synced_at: Optional[datetime] = None
+    error: Optional[str] = None

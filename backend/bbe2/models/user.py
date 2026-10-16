@@ -2,10 +2,12 @@
 
 import secrets
 import uuid
+from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy import (
     Column,
+    DateTime,
     ForeignKey,
     Index,
     LargeBinary,
@@ -80,6 +82,10 @@ class GroupDB(Base):
     mailing_list: Mapped[Optional[str]] = mapped_column(
         String(100), unique=True, nullable=True
     )
+    mailing_list_synced_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    mailing_list_sync_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     roles: Mapped[List["RoleDB"]] = relationship(secondary=group_role_association_table)
     members: Mapped[List[UserDB]] = relationship(
         secondary=user_group_association_table, back_populates="groups"

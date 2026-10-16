@@ -29,6 +29,7 @@ export * from './LoginCode';
 export * from './LoginData';
 export * from './LoginType';
 export * from './LogoutRequest';
+export * from './MailingListPreview';
 export * from './MembershipHistoryItem';
 export * from './MembershipInfo';
 export * from './MembershipLinkRequest';

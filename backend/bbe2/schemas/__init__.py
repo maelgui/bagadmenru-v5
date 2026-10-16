@@ -36,6 +36,7 @@ from .profile import (
     Group,
     GroupCreate,
     GroupUpdate,
+    MailingListPreview,
     MyProfileUpdate,
     Profile,
     ProfileCreate,

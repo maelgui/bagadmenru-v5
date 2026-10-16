@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 
-from bbe2.scheduler import OVH_OAUTH2_TOKEN_URL, OvhOAuth2Auth
+from bbe2.services.mailing import OVH_OAUTH2_TOKEN_URL, OvhOAuth2Auth
 
 
 def _token_response(access_token, expires_in):
@@ -26,7 +26,7 @@ def test_fetches_token_and_sets_bearer_header():
     auth = OvhOAuth2Auth(client_id="id", client_secret="secret")
     request = httpx.Request("GET", "https://eu.api.ovh.com/v1/ping")
 
-    with patch("bbe2.scheduler.httpx.post") as post:
+    with patch("bbe2.services.mailing.httpx.post") as post:
         post.return_value = _token_response("tok-1", 3600)
         _run_flow(auth, request)
 
@@ -42,7 +42,7 @@ def test_fetches_token_and_sets_bearer_header():
 def test_reuses_cached_token_until_expiry():
     auth = OvhOAuth2Auth(client_id="id", client_secret="secret")
 
-    with patch("bbe2.scheduler.httpx.post") as post:
+    with patch("bbe2.services.mailing.httpx.post") as post:
         post.return_value = _token_response("tok-1", 3600)
         _run_flow(auth, httpx.Request("GET", "https://eu.api.ovh.com/v1/a"))
         _run_flow(auth, httpx.Request("GET", "https://eu.api.ovh.com/v1/b"))
@@ -53,7 +53,7 @@ def test_reuses_cached_token_until_expiry():
 def test_refreshes_token_when_expired():
     auth = OvhOAuth2Auth(client_id="id", client_secret="secret")
 
-    with patch("bbe2.scheduler.httpx.post") as post:
+    with patch("bbe2.services.mailing.httpx.post") as post:
         # expires_in=0 => with the -60s safety margin the token is already stale.
         post.return_value = _token_response("tok-1", 0)
         _run_flow(auth, httpx.Request("GET", "https://eu.api.ovh.com/v1/a"))

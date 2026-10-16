@@ -66,6 +66,18 @@ export interface Group {
     mailingList: string | null;
     /**
      * 
+     * @type {Date}
+     * @memberof Group
+     */
+    mailingListSyncedAt?: Date | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof Group
+     */
+    mailingListSyncError?: string | null;
+    /**
+     * 
      * @type {Array<Role>}
      * @memberof Group
      */
@@ -105,6 +117,8 @@ export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Gro
         'id': json['id'],
         'isInstrument': json['is_instrument'] == null ? undefined : json['is_instrument'],
         'mailingList': json['mailing_list'],
+        'mailingListSyncedAt': json['mailing_list_synced_at'] == null ? undefined : (new Date(json['mailing_list_synced_at'])),
+        'mailingListSyncError': json['mailing_list_sync_error'] == null ? undefined : json['mailing_list_sync_error'],
         'roles': ((json['roles'] as Array<any>).map(RoleFromJSON)),
         'members': ((json['members'] as Array<any>).map(ProfileFromJSON)),
     };
@@ -126,6 +140,8 @@ export function GroupToJSONTyped(value?: Group | null, ignoreDiscriminator: bool
         'id': value['id'],
         'is_instrument': value['isInstrument'],
         'mailing_list': value['mailingList'],
+        'mailing_list_synced_at': value['mailingListSyncedAt'] == null ? undefined : ((value['mailingListSyncedAt'] as any).toISOString()),
+        'mailing_list_sync_error': value['mailingListSyncError'],
         'roles': ((value['roles'] as Array<any>).map(RoleToJSON)),
         'members': ((value['members'] as Array<any>).map(ProfileToJSON)),
     };
