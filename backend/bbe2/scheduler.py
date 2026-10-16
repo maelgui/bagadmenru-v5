@@ -37,7 +37,7 @@ async def run_group_sync(settings, session, group: GroupDB) -> None:
     session.commit()
 
 
-@scheduler.scheduled_job("cron", hour="3")
+@scheduler.scheduled_job("cron", hour="*/3", minute="30")
 async def synchronize_mailing_lists():
     settings = get_settings()
     with session_ctx(settings.database_url) as ses:
