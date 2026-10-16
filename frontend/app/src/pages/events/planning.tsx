@@ -31,6 +31,7 @@ import {
 import groupBy from '../../utils/groupby';
 import sum from '../../utils/sum';
 import DisplaySelector from './components/selector';
+import StageMap, { type StageMember } from './components/stage-map';
 import IcsExportButton from './components/ics-export';
 import { upcomingDoodleEventsQuery, upcomingResponsesQuery } from './queries';
 
@@ -43,6 +44,27 @@ function groupResponsesByEventAndEnrichUser(responses: Response[], profiles: Pro
     ...response,
     user: profiles.find((profile) => profile.id === response.userId),
   })), (response) => response.eventId);
+}
+
+const FALLBACK_COLOR = 'currentColor';
+
+function profileToStageMember(profile: Profile | undefined, id: string, state: StageMember['state']): StageMember {
+  const instrument = profile?.instrument;
+  const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ');
+  return {
+    id,
+    name,
+    color: instrument?.color ?? FALLBACK_COLOR,
+    sectionName: instrument?.name ?? '',
+    state,
+  };
+}
+
+function toStageMembers(responses: EnrichedResponse[], noResponseProfiles: Profile[]): StageMember[] {
+  return [
+    ...responses.map((response) => profileToStageMember(response.user, response.userId, response.value ? 'present' : 'absent')),
+    ...noResponseProfiles.map((person) => profileToStageMember(person, person.id, 'unknown')),
+  ];
 }
 
 function ResponseIcon({ value }: { value: boolean | undefined }) {
@@ -160,6 +182,7 @@ export function ResponsesDialog({
   const noResponseProfiles = profiles.filter((person) => !responses.find((response) => response.userId === person.id));
   const presentCount = responses.filter((response) => response.value).length;
   const responseRate = totalMembers > 0 ? Math.round((responses.length / totalMembers) * PERCENT) : 0;
+  const stageMembers = toStageMembers(responses, noResponseProfiles);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -171,6 +194,14 @@ export function ResponsesDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-border/70 bg-primary/5 p-3">
+            <StageMap members={stageMembers} />
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 pt-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-foreground" />Présent</span>
+              <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full border border-foreground opacity-70" />Absent</span>
+              <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full border border-dashed border-foreground" />Sans réponse</span>
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col items-center justify-center gap-1 p-4">
               <span className="font-heading text-3xl text-primary">{presentCount}</span>
