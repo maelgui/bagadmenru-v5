@@ -86,7 +86,9 @@ class GroupDB(Base):
         DateTime(timezone=True), nullable=True
     )
     mailing_list_sync_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    roles: Mapped[List["RoleDB"]] = relationship(secondary=group_role_association_table)
+    roles: Mapped[List["RoleDB"]] = relationship(
+        secondary=group_role_association_table, lazy="selectin"
+    )
     members: Mapped[List[UserDB]] = relationship(
         secondary=user_group_association_table, back_populates="groups"
     )
