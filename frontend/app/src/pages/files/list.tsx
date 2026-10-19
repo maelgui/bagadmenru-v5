@@ -1,4 +1,4 @@
-import { AlertCircle, CloudUpload, FolderPlus } from 'lucide-react';
+import { AlertCircle, CloudUpload, File, Folder, FolderPlus } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { type FileOrFolder, type FileOrFolderUpdate, FileOrFolderType, ResponseError } from 'bagad-client';
 import { useEffect, useState } from 'react';
@@ -130,21 +130,37 @@ function FolderBody({
           </EmptyHeader>
         </Empty>
       ) : null}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {content.folders.map((file) => (
-          <FileItem
-            key={file.id}
-            file={file}
-            deleteFn={onDelete && (() => onDelete(file))}
-            renameFn={onRename && file.type !== FileOrFolderType.Container ? () => onRename(file) : undefined}
-            moveFn={onMove && (() => onMove(file))}
-            detailsFn={() => onDetails(file)}
-          />
-        ))}
-      </div>
-      <div className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {content.files.map((file) => <FileItem key={file.id} file={file} big deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} moveFn={onMove && (() => onMove(file))} detailsFn={() => onDetails(file)} />)}
-      </div>
+      {content.folders.length ? (
+        <>
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            <Folder className="size-4 text-primary" aria-hidden="true" />
+            Dossiers
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {content.folders.map((file) => (
+              <FileItem
+                key={file.id}
+                file={file}
+                deleteFn={onDelete && (() => onDelete(file))}
+                renameFn={onRename && file.type !== FileOrFolderType.Container ? () => onRename(file) : undefined}
+                moveFn={onMove && (() => onMove(file))}
+                detailsFn={() => onDetails(file)}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+      {content.files.length ? (
+        <>
+          <h2 className="mb-3 mt-16 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            <File className="size-4 text-muted-foreground" aria-hidden="true" />
+            Fichiers
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {content.files.map((file) => <FileItem key={file.id} file={file} big deleteFn={onDelete && (() => onDelete(file))} renameFn={onRename && (() => onRename(file))} moveFn={onMove && (() => onMove(file))} detailsFn={() => onDetails(file)} />)}
+          </div>
+        </>
+      ) : null}
     </section>
   );
 }
