@@ -3,6 +3,8 @@ import { type Suggestion, SuggestionReason } from 'bagad-client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import FileItem, { FileItemSkeleton } from './file-item';
 
+const MAX_SUGGESTIONS = 4;
+
 function reasonLabel(suggestion: Suggestion): string {
   switch (suggestion.reason) {
     case SuggestionReason.Group:
@@ -52,7 +54,7 @@ export default function Suggestions({ suggestions, isPending }: { suggestions?: 
         <SuggestionsHelp />
       </h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {suggestions.map((suggestion) => (
+        {suggestions.slice(0, MAX_SUGGESTIONS).map((suggestion) => (
           <FileItem key={suggestion.file.id} file={suggestion.file} badge={reasonLabel(suggestion)} />
         ))}
       </div>
