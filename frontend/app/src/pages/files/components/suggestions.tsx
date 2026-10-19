@@ -1,7 +1,18 @@
 import { CircleHelp, Lightbulb } from 'lucide-react';
-import type { Suggestion } from 'bagad-client';
+import { type Suggestion, SuggestionReason } from 'bagad-client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import FileItem, { FileItemSkeleton } from './file-item';
+
+function reasonLabel(suggestion: Suggestion): string {
+  switch (suggestion.reason) {
+    case SuggestionReason.Group:
+      return suggestion.groupName ? `Populaire chez ${suggestion.groupName}` : 'Populaire dans ton pupitre';
+    case SuggestionReason.Trending:
+      return 'En vogue';
+    case SuggestionReason.Recent:
+      return 'Ajouté récemment';
+  }
+}
 
 function SuggestionsHelp() {
   return (
@@ -42,7 +53,7 @@ export default function Suggestions({ suggestions, isPending }: { suggestions?: 
       </h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {suggestions.map((suggestion) => (
-          <FileItem key={suggestion.file.id} file={suggestion.file} />
+          <FileItem key={suggestion.file.id} file={suggestion.file} badge={reasonLabel(suggestion)} />
         ))}
       </div>
     </section>

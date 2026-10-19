@@ -27,6 +27,7 @@ import { fileDownloadUrl, fileViewUrl } from '../file-urls';
 interface FileItemProps {
   file: FileOrFolder
   big?: boolean
+  badge?: string
   deleteFn?: () => void
   renameFn?: () => void
   moveFn?: () => void
@@ -210,7 +211,7 @@ function FileItemMenu({
 }
 
 export default function FileItem({
-  file, big = false, deleteFn = undefined, renameFn = undefined, moveFn = undefined, detailsFn = undefined, noAction = false, variant = 'outline',
+  file, big = false, badge = undefined, deleteFn = undefined, renameFn = undefined, moveFn = undefined, detailsFn = undefined, noAction = false, variant = 'outline',
 }: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const bind = useLongPress(() => setIsOpen(true), { detect: LongPressEventType.Touch });
@@ -225,6 +226,13 @@ export default function FileItem({
 
   return (
     <Item variant={variant} className="relative transition-colors hover:bg-muted">
+      {badge ? (
+        <ItemHeader>
+          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+            {badge}
+          </span>
+        </ItemHeader>
+      ) : null}
       {big ? (
         <ItemHeader className="justify-center py-4 [&_svg]:size-16">
           {icon}
