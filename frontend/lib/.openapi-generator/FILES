@@ -3,6 +3,7 @@
 README.md
 package.json
 src/apis/AuthenticationApi.ts
+src/apis/CampaignsApi.ts
 src/apis/DefaultApi.ts
 src/apis/EventsApi.ts
 src/apis/FilesApi.ts
@@ -17,6 +18,11 @@ src/index.ts
 src/models/ApiKey.ts
 src/models/ApiKeyCreate.ts
 src/models/ApiKeyCreated.ts
+src/models/Campaign.ts
+src/models/CampaignCreate.ts
+src/models/CampaignEvent.ts
+src/models/CampaignListItem.ts
+src/models/CampaignUpdate.ts
 src/models/Costume.ts
 src/models/CredentialDeviceType.ts
 src/models/Event.ts

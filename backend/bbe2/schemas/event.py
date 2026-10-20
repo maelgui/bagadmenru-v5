@@ -1,5 +1,6 @@
 from datetime import date
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -20,10 +21,11 @@ class _EventBase(BaseModel):
 
 
 class EventCreate(_EventBase):
-    pass
+    campaign_id: Optional[int] = None
 
 
 class Event(_EventBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    campaign_id: Optional[int] = None

@@ -63,6 +63,12 @@ export interface EventCreate {
      * @memberof EventCreate
      */
     isInDoodle: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof EventCreate
+     */
+    campaignId?: number | null;
 }
 
 
@@ -96,6 +102,7 @@ export function EventCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'costume': CostumeFromJSON(json['costume']),
         'category': json['category'],
         'isInDoodle': json['is_in_doodle'],
+        'campaignId': json['campaign_id'] == null ? undefined : json['campaign_id'],
     };
 }
 
@@ -116,6 +123,7 @@ export function EventCreateToJSONTyped(value?: EventCreate | null, ignoreDiscrim
         'costume': CostumeToJSON(value['costume']),
         'category': value['category'],
         'is_in_doodle': value['isInDoodle'],
+        'campaign_id': value['campaignId'],
     };
 }
 

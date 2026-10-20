@@ -50,6 +50,7 @@ def test_list_events(client: TestClient):
             "costume": "COSTUME",
             "category": "TEST",
             "is_in_doodle": True,
+            "campaign_id": None,
         }
     ]
 
@@ -65,6 +66,7 @@ def test_fetch_event(client: TestClient):
         "costume": "COSTUME",
         "category": "TEST",
         "is_in_doodle": True,
+        "campaign_id": None,
     }
 
 
@@ -89,6 +91,7 @@ def test_create_event(client: TestClient):
         "costume": "POLO",
         "category": "CAT1",
         "is_in_doodle": True,
+        "campaign_id": None,
     }
 
 
@@ -113,6 +116,7 @@ def test_edit_event(client: TestClient):
         "costume": "COSTUME",
         "category": "CAT1",
         "is_in_doodle": True,
+        "campaign_id": None,
     }
 
 

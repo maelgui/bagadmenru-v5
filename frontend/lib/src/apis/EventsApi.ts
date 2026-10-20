@@ -71,6 +71,7 @@ export interface ListEventsApiV1EventsGetRequest {
     dateGte?: Date | null;
     dateLt?: Date | null;
     isInDoodle?: boolean | null;
+    linkable?: boolean | null;
     ordering?: string;
 }
 
@@ -446,6 +447,10 @@ export class EventsApi extends runtime.BaseAPI {
 
         if (requestParameters['isInDoodle'] != null) {
             queryParameters['is_in_doodle'] = requestParameters['isInDoodle'];
+        }
+
+        if (requestParameters['linkable'] != null) {
+            queryParameters['linkable'] = requestParameters['linkable'];
         }
 
         if (requestParameters['ordering'] != null) {

@@ -53,6 +53,9 @@ function useNavigationItems(): NavigationItem[] {
           to: `/events/${can('create', 'response') ? '' : 'calendar'}`,
         }]
       : []),
+    ...(can('view', 'campaign')
+      ? [{ label: 'Campagnes', to: '/campaigns' }]
+      : []),
     ...(can('view', 'file')
       ? [{ label: 'Fichiers', to: '/files' }]
       : []),
