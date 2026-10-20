@@ -1,9 +1,9 @@
 """Filesystem ORM models."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -14,6 +14,36 @@ if TYPE_CHECKING:
     from bbe2.models.user import UserDB
 
 
+class FileVersionDB(Base):
+    __tablename__ = "file_versions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    file_id: Mapped[int] = mapped_column(
+        ForeignKey("files.id", ondelete="cascade"), nullable=False
+    )
+    number: Mapped[int] = mapped_column(nullable=False)
+    file_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    size: Mapped[Optional[int]] = mapped_column(nullable=True)
+    # pylint: disable=not-callable
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    uploaded_by: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("users.id", ondelete="set null"), nullable=True
+    )
+    uploader: Mapped[Optional["UserDB"]] = relationship()
+    superseded_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    purged_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint("file_id", "number", name="file_version_unique_number"),
+    )
+
+
 class FileOrFolderDB(Base):
     """Database representation of file or folder entity."""
 
@@ -21,10 +51,30 @@ class FileOrFolderDB(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(128))
-    file_key: Mapped[str] = mapped_column(String(128), nullable=True)
+    storage_id: Mapped[Optional[str]] = mapped_column(
+        String(36), nullable=True, unique=True
+    )
     type: Mapped[FileOrFolderType]
     children: Mapped[list["FileOrFolderDB"]] = relationship(
         order_by="FileOrFolderDB.name"
+    )
+    versions: Mapped[list[FileVersionDB]] = relationship(
+        foreign_keys=[FileVersionDB.file_id],
+        order_by=FileVersionDB.number.desc(),
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    current_version_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey(
+            "file_versions.id",
+            ondelete="set null",
+            use_alter=True,
+            name="files_current_version_id_fkey",
+        ),
+        nullable=True,
+    )
+    current_version: Mapped[Optional[FileVersionDB]] = relationship(
+        foreign_keys=[current_version_id], post_update=True, lazy="selectin"
     )
     # pylint: disable=not-callable
     uploaded_at: Mapped[datetime] = mapped_column(server_default=func.now())
@@ -37,7 +87,6 @@ class FileOrFolderDB(Base):
         ForeignKey("users.id", ondelete="set null"), nullable=True
     )
     modifier: Mapped[Optional["UserDB"]] = relationship(foreign_keys=[modified_by])
-    size: Mapped[Optional[int]] = mapped_column(nullable=True)
 
     parent_id: Mapped[int] = mapped_column(
         ForeignKey("files.id", ondelete="cascade"), nullable=True
@@ -56,3 +105,22 @@ class FileOrFolderDB(Base):
     __table_args__ = (
         UniqueConstraint("name", "parent_id", name="file_unique_per_folder"),
     )
+
+    def add_version(
+        self, size: Optional[int], uploaded_by: Optional[str]
+    ) -> FileVersionDB:
+        assert self.storage_id is not None
+        now = datetime.now(timezone.utc)
+        if self.current_version is not None:
+            self.current_version.superseded_at = now
+        number = max((v.number for v in self.versions), default=0) + 1
+        version = FileVersionDB(
+            number=number,
+            file_key=f"files/{self.storage_id}-v{number}",
+            size=size,
+            uploaded_at=now,
+            uploaded_by=uploaded_by,
+        )
+        self.versions.append(version)
+        self.current_version = version
+        return version

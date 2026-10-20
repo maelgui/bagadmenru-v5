@@ -18,6 +18,7 @@ import type {
   FileOrFolder,
   FileOrFolderType,
   FileOrFolderUpdate,
+  FileVersion,
   FolderCreate,
   HTTPValidationError,
   Suggestion,
@@ -29,6 +30,8 @@ import {
     FileOrFolderTypeToJSON,
     FileOrFolderUpdateFromJSON,
     FileOrFolderUpdateToJSON,
+    FileVersionFromJSON,
+    FileVersionToJSON,
     FolderCreateFromJSON,
     FolderCreateToJSON,
     HTTPValidationErrorFromJSON,
@@ -50,6 +53,11 @@ export interface DownloadFileApiV1FilesFileIdDownloadGetRequest {
     fileId: number;
 }
 
+export interface DownloadFileVersionApiV1FilesFileIdVersionsVersionIdDownloadGetRequest {
+    fileId: number;
+    versionId: number;
+}
+
 export interface GetBreadcrumbApiV1FilesFileIdBreadcrumbGetRequest {
     fileId: number;
 }
@@ -60,6 +68,10 @@ export interface GetFileApiV1FilesFileIdGetRequest {
 
 export interface ListChildrenApiV1FilesFolderIdChildrenGetRequest {
     folderId: number;
+}
+
+export interface ListFileVersionsApiV1FilesFileIdVersionsGetRequest {
+    fileId: number;
 }
 
 export interface ListFilesApiV1FilesGetRequest {
@@ -234,6 +246,60 @@ export class FilesApi extends runtime.BaseAPI {
     }
 
     /**
+     * Redirect to a version of the file served as an attachment.
+     * Download File Version
+     */
+    async downloadFileVersionApiV1FilesFileIdVersionsVersionIdDownloadGetRaw(requestParameters: DownloadFileVersionApiV1FilesFileIdVersionsVersionIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling downloadFileVersionApiV1FilesFileIdVersionsVersionIdDownloadGet().'
+            );
+        }
+
+        if (requestParameters['versionId'] == null) {
+            throw new runtime.RequiredError(
+                'versionId',
+                'Required parameter "versionId" was null or undefined when calling downloadFileVersionApiV1FilesFileIdVersionsVersionIdDownloadGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/files/{file_id}/versions/{version_id}/download`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))).replace(`{${"version_id"}}`, encodeURIComponent(String(requestParameters['versionId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Redirect to a version of the file served as an attachment.
+     * Download File Version
+     */
+    async downloadFileVersionApiV1FilesFileIdVersionsVersionIdDownloadGet(requestParameters: DownloadFileVersionApiV1FilesFileIdVersionsVersionIdDownloadGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.downloadFileVersionApiV1FilesFileIdVersionsVersionIdDownloadGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Get breadcrumb for a file.
      * Get Breadcrumb
      */
@@ -395,6 +461,49 @@ export class FilesApi extends runtime.BaseAPI {
      */
     async listChildrenApiV1FilesFolderIdChildrenGet(requestParameters: ListChildrenApiV1FilesFolderIdChildrenGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileOrFolder>> {
         const response = await this.listChildrenApiV1FilesFolderIdChildrenGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * List the content versions of a file, newest first.
+     * List File Versions
+     */
+    async listFileVersionsApiV1FilesFileIdVersionsGetRaw(requestParameters: ListFileVersionsApiV1FilesFileIdVersionsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FileVersion>>> {
+        if (requestParameters['fileId'] == null) {
+            throw new runtime.RequiredError(
+                'fileId',
+                'Required parameter "fileId" was null or undefined when calling listFileVersionsApiV1FilesFileIdVersionsGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/files/{file_id}/versions`.replace(`{${"file_id"}}`, encodeURIComponent(String(requestParameters['fileId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(FileVersionFromJSON));
+    }
+
+    /**
+     * List the content versions of a file, newest first.
+     * List File Versions
+     */
+    async listFileVersionsApiV1FilesFileIdVersionsGet(requestParameters: ListFileVersionsApiV1FilesFileIdVersionsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FileVersion>> {
+        const response = await this.listFileVersionsApiV1FilesFileIdVersionsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

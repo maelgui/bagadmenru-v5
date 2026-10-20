@@ -20,6 +20,13 @@ import {
     FileOrFolderTypeToJSON,
     FileOrFolderTypeToJSONTyped,
 } from './FileOrFolderType';
+import type { FileVersion } from './FileVersion';
+import {
+    FileVersionFromJSON,
+    FileVersionFromJSONTyped,
+    FileVersionToJSON,
+    FileVersionToJSONTyped,
+} from './FileVersion';
 import type { FileAuthor } from './FileAuthor';
 import {
     FileAuthorFromJSON,
@@ -60,10 +67,10 @@ export interface FileOrFolder {
     parentId?: number | null;
     /**
      * 
-     * @type {string}
+     * @type {FileVersion}
      * @memberof FileOrFolder
      */
-    fileKey?: string | null;
+    currentVersion?: FileVersion | null;
     /**
      * 
      * @type {string}
@@ -112,12 +119,6 @@ export interface FileOrFolder {
      * @memberof FileOrFolder
      */
     modifier?: FileAuthor | null;
-    /**
-     * 
-     * @type {number}
-     * @memberof FileOrFolder
-     */
-    size?: number | null;
 }
 
 
@@ -146,7 +147,7 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'type': FileOrFolderTypeFromJSON(json['type']),
         'id': json['id'],
         'parentId': json['parent_id'] == null ? undefined : json['parent_id'],
-        'fileKey': json['file_key'] == null ? undefined : json['file_key'],
+        'currentVersion': json['current_version'] == null ? undefined : FileVersionFromJSON(json['current_version']),
         'sourceFormat': json['source_format'] == null ? undefined : json['source_format'],
         'processingStatus': json['processing_status'] == null ? undefined : json['processing_status'],
         'processingFailureReason': json['processing_failure_reason'] == null ? undefined : json['processing_failure_reason'],
@@ -155,7 +156,6 @@ export function FileOrFolderFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'uploader': json['uploader'] == null ? undefined : FileAuthorFromJSON(json['uploader']),
         'modifiedAt': json['modified_at'] == null ? undefined : (new Date(json['modified_at'])),
         'modifier': json['modifier'] == null ? undefined : FileAuthorFromJSON(json['modifier']),
-        'size': json['size'] == null ? undefined : json['size'],
     };
 }
 
@@ -174,7 +174,7 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'type': FileOrFolderTypeToJSON(value['type']),
         'id': value['id'],
         'parent_id': value['parentId'],
-        'file_key': value['fileKey'],
+        'current_version': FileVersionToJSON(value['currentVersion']),
         'source_format': value['sourceFormat'],
         'processing_status': value['processingStatus'],
         'processing_failure_reason': value['processingFailureReason'],
@@ -183,7 +183,6 @@ export function FileOrFolderToJSONTyped(value?: FileOrFolder | null, ignoreDiscr
         'uploader': FileAuthorToJSON(value['uploader']),
         'modified_at': value['modifiedAt'] == null ? undefined : ((value['modifiedAt'] as any).toISOString()),
         'modifier': FileAuthorToJSON(value['modifier']),
-        'size': value['size'],
     };
 }
 

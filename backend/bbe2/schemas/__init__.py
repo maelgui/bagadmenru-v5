@@ -14,6 +14,7 @@ from .file import (
     FileOrFolder,
     FileOrFolderType,
     FileOrFolderUpdate,
+    FileVersion,
     FolderCreate,
     Suggestion,
     SuggestionReason,

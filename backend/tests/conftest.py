@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import Generator
 from unittest.mock import patch
@@ -77,6 +78,12 @@ def populate_db(session):
 
 
 DATABASE_URL = "sqlite:///tests.sqlite?check_same_thread=false"
+
+
+def stored_file(file_key: str, **kwargs) -> models.FileOrFolderDB:
+    node = models.FileOrFolderDB(storage_id=str(uuid.uuid4()), **kwargs)
+    node.add_version(size=None, uploaded_by=None).file_key = file_key
+    return node
 
 
 def get_fake_settings():

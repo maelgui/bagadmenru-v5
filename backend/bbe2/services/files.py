@@ -1,8 +1,10 @@
 import uuid
-from datetime import datetime, timezone
-from typing import Annotated
+from datetime import datetime, timedelta, timezone
+from typing import Annotated, Optional
 
 from fastapi import BackgroundTasks, Depends, UploadFile
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from bbe2 import models
 from bbe2.crud import CRUDFile
@@ -44,6 +46,43 @@ class MoveCycleError(Exception):
 
 class NameCollisionError(Exception):
     pass
+
+
+class VersionPurgedError(Exception):
+    pass
+
+
+def _live_keys(node: models.FileOrFolderDB) -> list[str]:
+    return [v.file_key for v in node.versions if v.purged_at is None]
+
+
+def _versioned_name(name: str, number: int) -> str:
+    stem, dot, extension = name.rpartition(".")
+    if not dot:
+        return f"{name} (v{number})"
+    return f"{stem} (v{number}).{extension}"
+
+
+def purge_superseded_versions(
+    session: Session,
+    s3: S3Helper,
+    *,
+    retention_days: int,
+    now: Optional[datetime] = None,
+) -> int:
+    now = now or datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=retention_days)
+    versions = session.scalars(
+        select(models.FileVersionDB).where(
+            models.FileVersionDB.superseded_at < cutoff,
+            models.FileVersionDB.purged_at.is_(None),
+        )
+    ).all()
+    for version in versions:
+        s3.delete_object(version.file_key)
+        version.purged_at = now
+    session.commit()
+    return len(versions)
 
 
 class FileService:
@@ -89,20 +128,17 @@ class FileService:
             self._delete_node_s3(existing)
             self.file_crud.delete(existing.id)
 
-        new_key = "files/" + str(uuid.uuid4())
-        upload_size = file.size
-        self.s3.upload_file(file.file, new_key, content_type=file.content_type)
-
-        created = self.file_crud.create(
+        created = models.FileOrFolderDB(
             type=FileOrFolderType.CONTAINER if src_format else FileOrFolderType.FILE,
             name=file.filename,
-            file_key=new_key,
+            storage_id=str(uuid.uuid4()),
             parent_id=folder_id,
             source_format=src_format,
             processing_status="pending" if src_format else None,
             uploaded_by=user_id,
-            size=upload_size,
         )
+        self.file_crud.db_session.add(created)
+        self._store_new_version(created, file, user_id)
 
         if src_format:
             self._enqueue_generation(created.id, background_tasks)
@@ -146,21 +182,47 @@ class FileService:
         disposition: str,
     ) -> str:
         db_file = self.file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
-        if not db_file or not db_file.file_key:
+        if not db_file or not db_file.current_version:
             raise FileNotFoundInStoreError()
-        url = self.s3.generate_get_presigned_url(
-            object_name=db_file.file_key,
-            filename=db_file.name,
-            disposition=disposition,
-            cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
-            expiration=FILE_URL_EXPIRATION_SECONDS,
-            stable=True,
+        url = self._presigned_url(
+            db_file.current_version.file_key, db_file.name, disposition
         )
         self.file_crud.db_session.add(
             FileAccessDB(file_id=file_id, user_id=user_id, action=action)
         )
         self.file_crud.db_session.commit()
         return url
+
+    def list_versions(self, file_id: int) -> list[models.FileVersionDB]:
+        db_file = self.file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
+        if not db_file:
+            raise FileNotFoundInStoreError()
+        return db_file.versions
+
+    def serve_version(self, file_id: int, version_id: int) -> str:
+        db_file = self.file_crud.find_one_by(models.FileOrFolderDB.id == file_id)
+        if not db_file:
+            raise FileNotFoundInStoreError()
+        version = next((v for v in db_file.versions if v.id == version_id), None)
+        if version is None:
+            raise FileNotFoundInStoreError()
+        if version.purged_at is not None:
+            raise VersionPurgedError()
+        return self._presigned_url(
+            version.file_key,
+            _versioned_name(db_file.name, version.number),
+            "attachment",
+        )
+
+    def _presigned_url(self, key: str, filename: str, disposition: str) -> str:
+        return self.s3.generate_get_presigned_url(
+            object_name=key,
+            filename=filename,
+            disposition=disposition,
+            cache_control=ONE_YEAR_IMMUTABLE_CACHE_CONTROL,
+            expiration=FILE_URL_EXPIRATION_SECONDS,
+            stable=True,
+        )
 
     def _assert_valid_move_target(
         self,
@@ -226,20 +288,9 @@ class FileService:
         file: UploadFile,
         user_id: str,
     ) -> models.FileOrFolderDB:
-        old_key = existing.file_key
-        new_key = "files/" + str(uuid.uuid4())
-        upload_size = file.size
-        self.s3.upload_file(file.file, new_key, content_type=file.content_type)
-
-        existing.file_key = new_key
-        existing.size = upload_size
         existing.modified_at = datetime.now(timezone.utc)
         existing.modified_by = user_id
-        self.file_crud.db_session.flush()
-        self.file_crud.db_session.refresh(existing)
-
-        if old_key:
-            self.s3.delete_object(old_key)
+        self._store_new_version(existing, file, user_id)
         return existing
 
     def _reupload_container(
@@ -249,30 +300,35 @@ class FileService:
         background_tasks: BackgroundTasks,
         user_id: str,
     ) -> models.FileOrFolderDB:
-        new_key = "files/" + str(uuid.uuid4())
-        upload_size = file.size
-        self.s3.upload_file(file.file, new_key, content_type=file.content_type)
-
-        old_keys = [child.file_key for child in container.children if child.file_key]
-        if container.file_key:
-            old_keys.append(container.file_key)
+        derived_keys = [
+            key for child in container.children for key in _live_keys(child)
+        ]
         for child in list(container.children):
-            self.file_crud.delete(child.id)
+            self.file_crud.db_session.delete(child)
 
-        container.file_key = new_key
-        container.size = upload_size
         container.processing_status = "pending"
         container.processing_failure_reason = None
         container.modified_at = datetime.now(timezone.utc)
         container.modified_by = user_id
-        self.file_crud.db_session.commit()
-        self.file_crud.db_session.refresh(container)
+        self._store_new_version(container, file, user_id)
 
-        for key in old_keys:
+        for key in derived_keys:
             self.s3.delete_object(key)
 
         self._enqueue_generation(container.id, background_tasks)
         return container
+
+    def _store_new_version(
+        self,
+        node: models.FileOrFolderDB,
+        file: UploadFile,
+        user_id: str,
+    ) -> None:
+        version = node.add_version(file.size, user_id)
+        self.file_crud.db_session.flush()
+        self.s3.upload_file(file.file, version.file_key, content_type=file.content_type)
+        self.file_crud.db_session.commit()
+        self.file_crud.db_session.refresh(node)
 
     def _enqueue_generation(
         self,
@@ -283,14 +339,13 @@ class FileService:
         background_tasks.add_task(service.generate, container_id)
 
     def _delete_node_s3(self, node: models.FileOrFolderDB) -> None:
-        if node.type == FileOrFolderType.CONTAINER:
-            for child in node.children:
-                if child.file_key:
-                    self.s3.delete_object(child.file_key)
-            if node.file_key:
-                self.s3.delete_object(node.file_key)
-        elif node.type == FileOrFolderType.FILE and node.file_key:
-            self.s3.delete_object(node.file_key)
+        nodes = (
+            [node, *node.children]
+            if node.type == FileOrFolderType.CONTAINER
+            else [node]
+        )
+        for key in (key for n in nodes for key in _live_keys(n)):
+            self.s3.delete_object(key)
 
     def _parent_is_container(self, node: models.FileOrFolderDB) -> bool:
         if node.parent_id is None:

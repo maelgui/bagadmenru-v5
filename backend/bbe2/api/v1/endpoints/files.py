@@ -28,6 +28,7 @@ from bbe2.services.files import (
     InvalidMoveTargetError,
     MoveCycleError,
     NameCollisionError,
+    VersionPurgedError,
 )
 from bbe2.services.suggestions import SuggestionServiceDep
 from bbe2.utils.auth import Action, Authorization, JwtPayload, Resource
@@ -167,6 +168,47 @@ async def download_file(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         ) from exc
     FILE_ACCESSES.labels(action=schemas.FileAccessAction.DOWNLOAD.value.lower()).inc()
+    return _redirect_to_presigned(url)
+
+
+@router.get(
+    "/{file_id}/versions",
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
+    response_model=list[schemas.FileVersion],
+)
+async def list_file_versions(
+    file_id: int,
+    file_service: FileServiceDep,
+):
+    """List the content versions of a file, newest first."""
+    try:
+        return file_service.list_versions(file_id)
+    except FileNotFoundInStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        ) from exc
+
+
+@router.get(
+    "/{file_id}/versions/{version_id}/download",
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.FILE))],
+)
+async def download_file_version(
+    file_id: int,
+    version_id: int,
+    file_service: FileServiceDep,
+) -> RedirectResponse:
+    """Redirect to a version of the file served as an attachment."""
+    try:
+        url = file_service.serve_version(file_id, version_id)
+    except FileNotFoundInStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Version not found"
+        ) from exc
+    except VersionPurgedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE, detail="Version content expired"
+        ) from exc
     return _redirect_to_presigned(url)
 
 

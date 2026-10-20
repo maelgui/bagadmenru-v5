@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
-import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
+import { Download } from 'lucide-react';
+import { type FileOrFolder, FileOrFolderType, type FileVersion } from 'bagad-client';
+import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { fileVersionDownloadUrl } from '../../file-urls';
 
 const typeLabels = new Map<FileOrFolderType, string>([
   [FileOrFolderType.Dir, 'Dossier'],
@@ -48,14 +52,45 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
   );
 }
 
-function FileDetailsBody({ file }: { file: FileOrFolder }) {
-  const hasContent = file.type === FileOrFolderType.File || file.type === FileOrFolderType.Container;
+function VersionRow({ fileId, version }: { fileId: number; version: FileVersion }) {
+  const meta = [
+    formatDateTime(version.uploadedAt),
+    version.uploader?.name,
+    version.size != null ? formatSize(version.size) : undefined,
+  ].filter(Boolean).join(' · ');
+  return (
+    <li className="flex items-center gap-3 py-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="flex items-center gap-2 font-medium">
+          v{version.number}
+          {version.supersededAt ? null : (
+            <Badge className="bg-primary/15 text-primary">Actuelle</Badge>
+          )}
+        </span>
+        <span className="text-muted-foreground text-xs">{meta}</span>
+      </div>
+      {version.purgedAt ? (
+        <span className="text-muted-foreground text-xs">Expirée</span>
+      ) : (
+        <a
+          href={fileVersionDownloadUrl(fileId, version.id)}
+          rel="noopener noreferrer"
+          aria-label={`Télécharger la version ${version.number}`}
+          className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+        >
+          <Download aria-hidden />
+        </a>
+      )}
+    </li>
+  );
+}
+
+function FileDetailsBody({ file, versions }: { file: FileOrFolder; versions?: FileVersion[] }) {
+  const size = file.currentVersion?.size;
   return (
     <dl className="grid gap-4">
       <DetailRow label="Type">{typeLabels.get(file.type) ?? 'Fichier'}</DetailRow>
-      {hasContent && file.size != null ? (
-        <DetailRow label="Taille">{formatSize(file.size)}</DetailRow>
-      ) : null}
+      {size != null ? <DetailRow label="Taille">{formatSize(size)}</DetailRow> : null}
       <DetailRow label="Ajouté">
         {file.uploadedAt ? formatDateTime(file.uploadedAt) : 'Date inconnue'}
         {file.uploader ? ` par ${file.uploader.name}` : null}
@@ -66,14 +101,22 @@ function FileDetailsBody({ file }: { file: FileOrFolder }) {
           {file.modifier ? ` par ${file.modifier.name}` : null}
         </DetailRow>
       ) : null}
+      {versions && versions.length > 1 ? (
+        <DetailRow label="Versions">
+          <ul className="divide-y">
+            {versions.map((version) => <VersionRow key={version.id} fileId={file.id} version={version} />)}
+          </ul>
+        </DetailRow>
+      ) : null}
     </dl>
   );
 }
 
 export default function FileDetailsDialog({
-  file, onClose,
+  file, versions, onClose,
 }: {
   file?: FileOrFolder;
+  versions?: FileVersion[];
   onClose: () => void;
 }) {
   return (
@@ -83,7 +126,7 @@ export default function FileDetailsDialog({
           <DialogTitle className="break-all">{file?.name}</DialogTitle>
           <DialogDescription>Détails</DialogDescription>
         </DialogHeader>
-        {file ? <FileDetailsBody file={file} /> : null}
+        {file ? <FileDetailsBody file={file} versions={versions} /> : null}
       </DialogContent>
     </Dialog>
   );
