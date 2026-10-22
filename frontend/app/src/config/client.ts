@@ -1,6 +1,7 @@
 import { QueryCache, QueryClient, useQuery } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react';
 import {
+  AdminApi,
   AuthenticationApi,
   Configuration, DefaultApi, EventsApi, FilesApi,
   HelloAssoApi,
@@ -115,6 +116,7 @@ const apiClient = {
   instrumentsApi: new InstrumentsApi(apiConf),
   invitationsApi: new InvitationsApi(apiConf),
   helloAssoApi: new HelloAssoApi(apiConf),
+  adminApi: new AdminApi(apiConf),
 };
 
 export function useApiClient() {

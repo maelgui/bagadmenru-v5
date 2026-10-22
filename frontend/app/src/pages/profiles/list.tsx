@@ -1,4 +1,4 @@
-import { BadgeAlert, BadgeCheck, BellOff, ChevronDown, CircleDashed, CirclePlus, Medal, Plus, RotateCcw, UserPlus, WalletIcon, X } from 'lucide-react';
+import { BellOff, ChevronDown, CirclePlus, Medal, Plus, RotateCcw, UserPlus, WalletIcon, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -30,69 +30,9 @@ import { cn } from '../../lib/utils';
 import { useApiClient, usePermissions } from '../../config/client';
 
 import { GroupTag } from './components/groupTag';
+import { MembershipStatusPill } from './components/membershipBadge';
 
 import defaultAvatar from '../../assets/default.svg';
-
-// Membership status, shown only when the API populates `membershipStatus`
-// (i.e. the current user holds `view:membership`). A small pill echoing the
-// group tags' style, colour-coded per status:
-//   active  -> green, labelled with the paid season (e.g. "2026-2027")
-//   expired -> amber, "Expirée"
-//   none    -> muted, "Sans adhésion"
-const MEMBERSHIP_META: Record<
-  MembershipStatus,
-  { icon: typeof BadgeCheck; className: string; label: string; aria: string }
-> = {
-  [MembershipStatus.Active]: {
-    icon: BadgeCheck,
-    className: 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400',
-    label: 'À jour',
-    aria: 'Adhésion à jour',
-  },
-  [MembershipStatus.Expired]: {
-    icon: BadgeAlert,
-    className: 'bg-amber-500/12 text-amber-600 dark:text-amber-400',
-    label: 'Expirée',
-    aria: 'Adhésion expirée',
-  },
-  [MembershipStatus.None]: {
-    icon: CircleDashed,
-    className: 'bg-muted text-muted-foreground',
-    label: 'Sans adhésion',
-    aria: 'Aucune adhésion',
-  },
-};
-
-function MembershipBadge({
-  status,
-  season,
-}: {
-  status?: MembershipStatus | null;
-  season?: string | null;
-}) {
-  if (status == null) {
-    return null;
-  }
-  const meta = MEMBERSHIP_META[status];
-  const Icon = meta.icon;
-  // Only the active pill shows the season label; expired/none use their text.
-  const text = status === MembershipStatus.Active && season ? season : meta.label;
-  const aria = status === MembershipStatus.Active && season
-    ? `${meta.aria}, saison ${season}`
-    : meta.aria;
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-        meta.className,
-      )}
-      aria-label={aria}
-    >
-      <Icon className="size-3.5" aria-hidden="true" />
-      {text}
-    </span>
-  );
-}
 
 // Membership statuses offered in the filter, in display order.
 const MEMBERSHIP_FILTER_OPTIONS: Array<{ value: MembershipStatus; label: string }> = [
@@ -309,7 +249,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
               <BellOff className="ml-1 inline size-3 text-destructive" aria-label="Ne reçoit pas les emails" />
             )}
           </h4>
-          <MembershipBadge
+          <MembershipStatusPill
             status={profile.membershipStatus}
             season={profile.membershipActiveSeason}
           />

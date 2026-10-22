@@ -5,16 +5,19 @@ import { toast } from '@/components/ui/toast';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
+import { useGroupsBreadcrumb, useGroupsReturnPath } from './breadcrumb';
 import GroupForm from './components/groupForm';
 
 export default function AddGroupPage() {
   const { usersApi } = useApiClient();
   const navigate = useNavigate();
+  const parents = useGroupsBreadcrumb();
+  const returnPath = useGroupsReturnPath();
   const { mutateAsync } = useMutation({
     mutationFn: async (data: GroupCreate) => await usersApi.createGroupApiV1GroupsPost({ groupCreate: data }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['groups'] });
-      void navigate('/groups');
+      void navigate(returnPath);
       toast.add({ title: 'Groupe créé !', type: 'success' });
     },
     onError: (error) => {
@@ -32,7 +35,7 @@ export default function AddGroupPage() {
         title="Nouveau groupe"
         subtitle=""
         actions={[]}
-        breadcrumb={[{ title: 'Groupes', link: '/groups' }, { title: 'Nouveau groupe' }]}
+        breadcrumb={[...parents, { title: 'Nouveau groupe' }]}
       />
       <Container><GroupForm onSubmit={onSubmit} /></Container>
     </>

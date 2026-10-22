@@ -1,7 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 
 import {
-  LogOutIcon, MenuIcon, SettingsIcon, UserPlusIcon, XIcon,
+  LogOutIcon, MenuIcon, SettingsIcon, ShieldCheckIcon, UserPlusIcon, XIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -68,6 +68,7 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
     login, logout, switchAccount,
   } = useAuth();
   const { data: sessions = [] } = useSessions();
+  const { can } = usePermissions();
 
   if (!profile) {
     return null;
@@ -127,6 +128,17 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
               <SettingsIcon className="size-4" aria-hidden="true" />
               Profil et paramètres
             </DropdownMenuItem>
+            {can('view', 'admin') ? (
+              <DropdownMenuItem
+                onClick={onNavigate}
+                render={(props) => (
+                  <Link {...props} to="/admin" />
+                )}
+              >
+                <ShieldCheckIcon className="size-4" aria-hidden="true" />
+                Administration
+              </DropdownMenuItem>
+            ) : null}
           </DropdownMenuGroup>
 
           {otherAccounts.length > 0 ? (

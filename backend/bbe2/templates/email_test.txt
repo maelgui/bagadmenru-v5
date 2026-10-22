@@ -1,0 +1,4 @@
+Bonjour {{ first_name }},
+
+Ceci est un e-mail de test envoyé depuis l'espace d'administration du Bagad Men Ru.
+Si vous le lisez, l'envoi d'e-mails fonctionne.

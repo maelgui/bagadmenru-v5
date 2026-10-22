@@ -3,11 +3,11 @@ import { MembershipStatus } from 'bagad-client';
 import { cn } from '@/lib/utils';
 import { useMembership } from '../../../config/client';
 
-// Colour-coded per status, mirroring the trombinoscope's membership pill:
+// Colour-coded per status:
 //   active  -> green, labelled with the paid season (e.g. "2026-2027")
 //   expired -> amber, "Expirée"
 //   none    -> muted, "Sans adhésion"
-const STATUS_META: Record<
+export const MEMBERSHIP_META: Record<
   MembershipStatus,
   { icon: typeof BadgeCheck; className: string; label: string; aria: string }
 > = {
@@ -32,27 +32,26 @@ const STATUS_META: Record<
 };
 
 /**
- * Compact, at-a-glance membership status for the current season. Used on the
- * profile page; the full history lives on the dedicated membership page. Styled
- * to match the trombinoscope's membership pill.
+ * Stateless membership pill. Shared by the trombinoscope, the profile page and
+ * the admin screens so every surface renders the status identically.
  */
-export default function MembershipBadge({ profileId }: { profileId?: string } = {}) {
-  const { data: membership } = useMembership(profileId);
-
-  if (!membership) {
+export function MembershipStatusPill({
+  status,
+  season,
+}: {
+  status?: MembershipStatus | null;
+  season?: string | null;
+}) {
+  if (status == null) {
     return null;
   }
-
-  const meta = STATUS_META[membership.status];
+  const meta = MEMBERSHIP_META[status];
   const Icon = meta.icon;
   // Only the active pill shows the season label; expired/none use their text.
-  const text = membership.status === MembershipStatus.Active
-    ? membership.currentSeason
-    : meta.label;
-  const aria = membership.status === MembershipStatus.Active
-    ? `${meta.aria}, saison ${membership.currentSeason}`
+  const text = status === MembershipStatus.Active && season ? season : meta.label;
+  const aria = status === MembershipStatus.Active && season
+    ? `${meta.aria}, saison ${season}`
     : meta.aria;
-
   return (
     <span
       className={cn(
@@ -65,4 +64,18 @@ export default function MembershipBadge({ profileId }: { profileId?: string } = 
       {text}
     </span>
   );
+}
+
+/**
+ * Membership pill for a member, fetching its status. Used on the profile page;
+ * the full history lives on the dedicated membership page.
+ */
+export default function MembershipBadge({ profileId }: { profileId?: string } = {}) {
+  const { data: membership } = useMembership(profileId);
+
+  if (!membership) {
+    return null;
+  }
+
+  return <MembershipStatusPill status={membership.status} season={membership.currentSeason} />;
 }
