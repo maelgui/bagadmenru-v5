@@ -24,28 +24,14 @@ import {
 import { cn } from '@/lib/utils';
 import { MEMBERSHIP_META, MembershipStatusPill } from '../../profiles/components/membershipBadge';
 import { currentSeasonLabel, useAdminMembers, useUnlinkedMemberships } from '../queries';
+import { MemberIdentity } from './memberIdentity';
+import { Stat, StatTile } from './stats';
 
 const STATUS_ORDER: MembershipStatus[] = [
   MembershipStatus.Active,
   MembershipStatus.Expired,
   MembershipStatus.None,
 ];
-
-function StatusCount({ status, count }: { status: MembershipStatus; count: number | undefined }) {
-  const meta = MEMBERSHIP_META[status];
-  const Icon = meta.icon;
-  return (
-    <div className={cn('flex items-center gap-3 rounded-3xl p-4', meta.className)}>
-      <Icon className="size-6 shrink-0" aria-hidden="true" />
-      <div>
-        <p className="text-2xl font-semibold tabular-nums">
-          {count === undefined ? <Skeleton className="h-8 w-10" /> : count}
-        </p>
-        <p className="text-sm">{meta.label}</p>
-      </div>
-    </div>
-  );
-}
 
 function UnlinkedCard() {
   const { data: unlinked } = useUnlinkedMemberships();
@@ -66,10 +52,7 @@ function UnlinkedCard() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <p className="text-3xl font-semibold tabular-nums">
-          {count === undefined ? <Skeleton className="h-9 w-12" /> : count}
-        </p>
-        <p className="text-sm text-muted-foreground">commande{(count ?? 0) > 1 ? 's' : ''} en attente</p>
+        <Stat value={count} label={`commande${(count ?? 0) > 1 ? 's' : ''} en attente`} />
       </CardContent>
     </Card>
   );
@@ -88,12 +71,7 @@ function FollowUpTable({ members }: { members: AdminMember[] }) {
       <TableBody>
         {members.map((member) => (
           <TableRow key={member.id}>
-            <TableCell>
-              <Link to={`/profile/${member.id}`} className="flex flex-col hover:underline">
-                <span className="font-medium">{member.firstName} {member.lastName}</span>
-                <span className="text-xs text-muted-foreground">{member.email}</span>
-              </Link>
-            </TableCell>
+            <TableCell><MemberIdentity member={member} /></TableCell>
             <TableCell>{member.instrument?.name ?? '—'}</TableCell>
             <TableCell>
               <MembershipStatusPill status={member.membershipStatus} season={member.membershipActiveSeason} />
@@ -146,10 +124,12 @@ export default function MembershipsSection() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {STATUS_ORDER.map((status) => (
-            <StatusCount
+            <StatTile
               key={status}
-              status={status}
-              count={active?.filter((m) => m.membershipStatus === status).length}
+              icon={MEMBERSHIP_META[status].icon}
+              label={MEMBERSHIP_META[status].label}
+              className={MEMBERSHIP_META[status].className}
+              value={active?.filter((m) => m.membershipStatus === status).length}
             />
           ))}
         </CardContent>

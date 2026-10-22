@@ -1,11 +1,16 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// Permissions granted to the mocked user; tests flip `admin` to check gating.
+const perms = vi.hoisted(() => ({ admin: true }));
+
 // Mock the auth/permissions client so Navbar renders without a backend.
 vi.mock('../config/client', () => ({
-  usePermissions: () => ({ can: () => true }),
+  usePermissions: () => ({
+    can: (_action: string, resource: string) => (resource === 'admin' ? perms.admin : true),
+  }),
   useUserProfile: () => ({
     id: '1', firstName: 'Jean', lastName: 'Test', pictureUrl: null,
   }),
@@ -33,6 +38,7 @@ function renderAt(path: string) {
 }
 
 afterEach(() => {
+  cleanup();
   vi.clearAllMocks();
 });
 
@@ -61,5 +67,22 @@ describe('Navbar desktop active tab', () => {
     renderAt('/');
     const home = screen.getAllByRole('link', { name: 'Accueil' });
     expect(home.some((link) => link.className.includes('text-primary'))).toBe(true);
+  });
+});
+
+describe('Navbar account menu', () => {
+  it('offers the Administration entry to view:admin holders', () => {
+    perms.admin = true;
+    renderAt('/');
+    fireEvent.click(screen.getAllByRole('button', { name: /Comptes - / })[0]);
+    expect(screen.getByRole('menuitem', { name: 'Administration' })).toBeTruthy();
+  });
+
+  it('hides the Administration entry otherwise', () => {
+    perms.admin = false;
+    renderAt('/');
+    fireEvent.click(screen.getAllByRole('button', { name: /Comptes - / })[0]);
+    expect(screen.getByRole('menuitem', { name: 'Profil et paramètres' })).toBeTruthy();
+    expect(screen.queryByRole('menuitem', { name: 'Administration' })).toBeNull();
   });
 });

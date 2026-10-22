@@ -46,24 +46,6 @@ class AdminApiKey(ApiKey):
     owner: ApiKeyOwner
 
 
-class AdminOverview(BaseModel):
-    members_total: int
-    members_active: int
-    members_inactive: int
-    members_with_passkey: int
-    members_with_password: int
-    members_without_credential: int
-    groups: int
-    roles: int
-    api_keys_active: int
-    push_subscriptions: int
-    members_with_push: int
-    memberships_active_season: int
-    unlinked_memberships: int
-    events: int
-    files: int
-
-
 class IntegrationStatus(BaseModel):
     key: str
     label: str

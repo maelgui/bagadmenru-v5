@@ -1,14 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiClient } from '../../config/client';
 
-export function useAdminOverview() {
-  const { adminApi } = useApiClient();
-  return useQuery({
-    queryKey: ['admin', 'overview'],
-    queryFn: async () => await adminApi.getOverviewApiV1AdminOverviewGet(),
-  });
-}
-
 export function useAdminMembers() {
   const { adminApi } = useApiClient();
   return useQuery({

@@ -17,7 +17,6 @@ import * as runtime from '../runtime';
 import type {
   AdminApiKey,
   AdminMember,
-  AdminOverview,
   HTTPValidationError,
   RoleDetail,
   SystemStatus,
@@ -27,8 +26,6 @@ import {
     AdminApiKeyToJSON,
     AdminMemberFromJSON,
     AdminMemberToJSON,
-    AdminOverviewFromJSON,
-    AdminOverviewToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     RoleDetailFromJSON,
@@ -45,40 +42,6 @@ export interface RevokeApiKeyApiV1AdminApiKeysKeyHashDeleteRequest {
  * 
  */
 export class AdminApi extends runtime.BaseAPI {
-
-    /**
-     * Get Overview
-     */
-    async getOverviewApiV1AdminOverviewGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AdminOverview>> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            const token = this.configuration.accessToken;
-            const tokenString = await token("HTTPBearer", []);
-
-            if (tokenString) {
-                headerParameters["Authorization"] = `Bearer ${tokenString}`;
-            }
-        }
-        const response = await this.request({
-            path: `/api/v1/admin/overview`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => AdminOverviewFromJSON(jsonValue));
-    }
-
-    /**
-     * Get Overview
-     */
-    async getOverviewApiV1AdminOverviewGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AdminOverview> {
-        const response = await this.getOverviewApiV1AdminOverviewGetRaw(initOverrides);
-        return await response.value();
-    }
 
     /**
      * Get System Status

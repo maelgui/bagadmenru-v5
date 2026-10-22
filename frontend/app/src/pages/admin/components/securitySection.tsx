@@ -34,36 +34,7 @@ import { cn } from '@/lib/utils';
 import { queryClient, useApiClient } from '../../../config/client';
 import { hasCredential } from '../memberUtils';
 import { useAdminApiKeys, useAdminMembers } from '../queries';
-
-const PERCENT = 100;
-
-function AdoptionStat({
-  icon: Icon,
-  value,
-  total,
-  label,
-  tone,
-}: {
-  icon: typeof LockIcon;
-  value: number;
-  total: number;
-  label: string;
-  tone?: 'warning';
-}) {
-  const percent = total ? Math.round((value / total) * PERCENT) : null;
-  return (
-    <div className={cn('flex items-start gap-3 rounded-3xl p-4', tone === 'warning' ? 'bg-destructive/10 text-destructive' : 'bg-muted')}>
-      <Icon className="mt-1 size-5 shrink-0" aria-hidden="true" />
-      <div>
-        <p className="text-2xl font-semibold tabular-nums">
-          {value}
-          {percent !== null ? <span className="ml-2 text-sm font-normal">{percent} %</span> : null}
-        </p>
-        <p className="text-sm">{label}</p>
-      </div>
-    </div>
-  );
-}
+import { StatTile } from './stats';
 
 function RevokeButton({ apiKey, onRevoke }: { apiKey: AdminApiKey; onRevoke: () => void }) {
   const [open, setOpen] = useState(false);
@@ -197,24 +168,24 @@ function AdoptionCard({ members }: { members: AdminMember[] }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <AdoptionStat
+          <StatTile
             icon={FingerprintIcon}
             value={members.filter((m) => m.passkeyCount > 0).length}
             total={total}
             label="avec au moins une passkey"
           />
-          <AdoptionStat
+          <StatTile
             icon={LockIcon}
             value={members.filter((m) => m.hasPassword && m.passkeyCount === 0).length}
             total={total}
             label="mot de passe uniquement"
           />
-          <AdoptionStat
+          <StatTile
             icon={ShieldAlertIcon}
             value={withoutCredential.length}
             total={total}
             label="sans identifiant (lien e-mail seulement)"
-            tone={withoutCredential.length > 0 ? 'warning' : undefined}
+            className={withoutCredential.length > 0 ? 'bg-destructive/10 text-destructive' : undefined}
           />
         </div>
         {withoutCredential.length > 0 ? (

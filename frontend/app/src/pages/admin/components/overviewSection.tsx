@@ -1,11 +1,6 @@
-import type { AdminOverview } from 'bagad-client';
 import type { LucideIcon } from 'lucide-react';
 import {
-  CalendarIcon,
-  FileIcon,
   KeyRoundIcon,
-  LinkIcon,
-  ShieldAlertIcon,
   SmartphoneIcon,
   UsersIcon,
   UsersRoundIcon,
@@ -15,77 +10,32 @@ import { Link } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAdminOverview } from '../queries';
+import { buildOverview, type OverviewAlert, plural } from '../overviewUtils';
+import {
+  useAdminMembers,
+  useAdminRoles,
+  useGroups,
+  useUnlinkedMemberships,
+} from '../queries';
 
-function plural(count: number, singular: string, pluralForm = `${singular}s`): string {
-  return `${count} ${count > 1 ? pluralForm : singular}`;
-}
+type Overview = ReturnType<typeof buildOverview>;
 
-interface Stat {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  to,
+}: {
   icon: LucideIcon;
   label: string;
-  value: (data: AdminOverview) => number;
-  detail?: (data: AdminOverview) => string;
+  value: number | undefined;
+  detail?: string;
   to: string;
-}
-
-const STATS: Stat[] = [
-  {
-    icon: UsersIcon,
-    label: 'Membres actifs',
-    value: (d) => d.membersActive,
-    detail: (d) => plural(d.membersInactive, 'inactif'),
-    to: '/admin/members',
-  },
-  { icon: UsersRoundIcon, label: 'Groupes', value: (d) => d.groups, to: '/admin/groups' },
-  { icon: KeyRoundIcon, label: 'Rôles', value: (d) => d.roles, to: '/admin/roles' },
-  { icon: WalletIcon, label: 'Adhésions à jour', value: (d) => d.membershipsActiveSeason, to: '/admin/memberships' },
-  { icon: LinkIcon, label: 'Adhésions à rattacher', value: (d) => d.unlinkedMemberships, to: '/admin/memberships' },
-  {
-    icon: SmartphoneIcon,
-    label: 'Appareils push',
-    value: (d) => d.pushSubscriptions,
-    detail: (d) => plural(d.membersWithPush, 'membre'),
-    to: '/admin/communication',
-  },
-  { icon: KeyRoundIcon, label: "Clés d'API actives", value: (d) => d.apiKeysActive, to: '/admin/security' },
-  { icon: CalendarIcon, label: 'Évènements', value: (d) => d.events, to: '/events/manage' },
-  { icon: FileIcon, label: 'Fichiers', value: (d) => d.files, to: '/files' },
-];
-
-interface OverviewAlert {
-  key: string;
-  title: string;
-  description: string;
-  to: string;
-}
-
-export function buildAlerts(data: AdminOverview): OverviewAlert[] {
-  const alerts: OverviewAlert[] = [];
-  if (data.membersWithoutCredential > 0) {
-    alerts.push({
-      key: 'credentials',
-      title: `${plural(data.membersWithoutCredential, 'membre')} sans identifiant`,
-      description: 'Ni mot de passe ni passkey : ces membres ne peuvent se connecter que par lien e-mail.',
-      to: '/admin/security',
-    });
-  }
-  if (data.unlinkedMemberships > 0) {
-    alerts.push({
-      key: 'unlinked',
-      title: `${plural(data.unlinkedMemberships, 'adhésion')} à rattacher`,
-      description: 'Des commandes HelloAsso ne correspondent à aucun membre.',
-      to: '/admin/memberships',
-    });
-  }
-  return alerts;
-}
-
-function StatCard({ stat, data }: { stat: Stat; data: AdminOverview | undefined }) {
-  const Icon = stat.icon;
+}) {
   return (
     <Link
-      to={stat.to}
+      to={to}
       className="rounded-4xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <Card className="h-full transition-shadow hover:shadow-md">
@@ -95,12 +45,10 @@ function StatCard({ stat, data }: { stat: Stat; data: AdminOverview | undefined 
           </span>
           <div className="min-w-0">
             <CardTitle className="text-3xl tabular-nums">
-              {data ? stat.value(data) : <Skeleton className="h-9 w-12" />}
+              {value === undefined ? <Skeleton className="h-9 w-12" /> : value}
             </CardTitle>
-            <CardDescription>{stat.label}</CardDescription>
-            {data && stat.detail ? (
-              <p className="text-xs text-muted-foreground">{stat.detail(data)}</p>
-            ) : null}
+            <CardDescription>{label}</CardDescription>
+            {detail ? <p className="text-xs text-muted-foreground">{detail}</p> : null}
           </div>
         </CardContent>
       </Card>
@@ -109,13 +57,14 @@ function StatCard({ stat, data }: { stat: Stat; data: AdminOverview | undefined 
 }
 
 function AlertLink({ alert }: { alert: OverviewAlert }) {
+  const Icon = alert.icon;
   return (
     <Link
       to={alert.to}
       className="rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <Alert>
-        <ShieldAlertIcon />
+        <Icon />
         <AlertTitle>{alert.title}</AlertTitle>
         <AlertDescription>{alert.description}</AlertDescription>
       </Alert>
@@ -123,16 +72,49 @@ function AlertLink({ alert }: { alert: OverviewAlert }) {
   );
 }
 
+function StatGrid({ overview, groups, roles }: {
+  overview: Overview | undefined;
+  groups: number | undefined;
+  roles: number | undefined;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <StatCard
+        icon={UsersIcon}
+        label="Membres actifs"
+        value={overview?.membersActive}
+        detail={overview ? plural(overview.membersInactive, 'inactif') : undefined}
+        to="/admin/members"
+      />
+      <StatCard icon={UsersRoundIcon} label="Groupes" value={groups} to="/admin/groups" />
+      <StatCard icon={KeyRoundIcon} label="Rôles" value={roles} to="/admin/roles" />
+      <StatCard icon={WalletIcon} label="Adhésions à jour" value={overview?.membershipsActive} to="/admin/memberships" />
+      <StatCard
+        icon={SmartphoneIcon}
+        label="Appareils push"
+        value={overview?.pushDevices}
+        detail={overview ? plural(overview.membersWithPush, 'membre') : undefined}
+        to="/admin/communication"
+      />
+      <StatCard icon={KeyRoundIcon} label="Clés d'API actives" value={overview?.apiKeys} to="/admin/security" />
+    </div>
+  );
+}
+
 export default function OverviewSection() {
-  const { data } = useAdminOverview();
-  const alerts = data ? buildAlerts(data) : [];
+  const { data: members } = useAdminMembers();
+  const { data: groups } = useGroups();
+  const { data: roles } = useAdminRoles();
+  const { data: unlinked } = useUnlinkedMemberships();
+
+  const overview = members && groups && unlinked
+    ? buildOverview(members, groups, unlinked.length)
+    : undefined;
 
   return (
     <div className="flex flex-col gap-6">
-      {alerts.map((alert) => <AlertLink key={alert.key} alert={alert} />)}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {STATS.map((stat) => <StatCard key={stat.label} stat={stat} data={data} />)}
-      </div>
+      {overview?.alerts.map((alert) => <AlertLink key={alert.key} alert={alert} />)}
+      <StatGrid overview={overview} groups={groups?.length} roles={roles?.length} />
     </div>
   );
 }

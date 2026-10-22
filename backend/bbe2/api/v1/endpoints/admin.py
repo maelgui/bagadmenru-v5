@@ -17,7 +17,6 @@ from sqlalchemy.orm import selectinload
 from bbe2 import models, schemas
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
 from bbe2.models.user import user_group_association_table
-from bbe2.schemas.file import FileOrFolderType
 from bbe2.schemas.profile import MinimalGroup
 from bbe2.services import membership as membership_service
 from bbe2.services.mailing import ovh_configured
@@ -31,11 +30,6 @@ router = APIRouter(
 )
 
 EDIT_ADMIN = Depends(Authorization(Action.EDIT, Resource.ADMIN))
-
-
-def _count(session, stmt) -> int:
-    total = func.count()  # pylint: disable=not-callable
-    return session.scalar(select(total).select_from(stmt.subquery())) or 0
 
 
 def _count_by_user(session, column) -> dict[str, int]:
@@ -65,54 +59,6 @@ def _active_api_keys_by_user(session) -> dict[str, int]:
         .group_by(models.ApiKeyDB.user_id)
     ).all()
     return dict(rows)
-
-
-@router.get("/overview", response_model=schemas.AdminOverview)
-async def get_overview(session: SessionDep) -> schemas.AdminOverview:
-    users = session.scalars(select(models.UserDB)).all()
-    passkeys = _passkeys_by_user(session)
-    pushes = _count_by_user(session, models.PushSubscriptionDB.user_id)
-    api_keys = _active_api_keys_by_user(session)
-    membership_info = membership_service.compute_info_by_user(session)
-
-    with_passkey = sum(1 for u in users if passkeys.get(u.id, 0) > 0)
-    with_password = sum(1 for u in users if u.password)
-    without_credential = sum(
-        1 for u in users if not u.password and passkeys.get(u.id, 0) == 0
-    )
-    active_memberships = sum(
-        1
-        for info in membership_info.values()
-        if info.status == schemas.MembershipStatus.ACTIVE
-    )
-
-    return schemas.AdminOverview(
-        members_total=len(users),
-        members_active=sum(1 for u in users if u.is_active),
-        members_inactive=sum(1 for u in users if not u.is_active),
-        members_with_passkey=with_passkey,
-        members_with_password=with_password,
-        members_without_credential=without_credential,
-        groups=_count(session, select(models.GroupDB.id)),
-        roles=_count(session, select(models.RoleDB.id)),
-        api_keys_active=sum(api_keys.values()),
-        push_subscriptions=sum(pushes.values()),
-        members_with_push=len(pushes),
-        memberships_active_season=active_memberships,
-        unlinked_memberships=_count(
-            session,
-            select(models.HelloAssoMembershipDB.id).where(
-                models.HelloAssoMembershipDB.user_id.is_(None)
-            ),
-        ),
-        events=_count(session, select(models.EventDB.id)),
-        files=_count(
-            session,
-            select(models.FileOrFolderDB.id).where(
-                models.FileOrFolderDB.type == FileOrFolderType.FILE
-            ),
-        ),
-    )
 
 
 @router.get("/roles", response_model=list[schemas.RoleDetail])

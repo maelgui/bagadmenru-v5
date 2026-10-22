@@ -45,27 +45,9 @@ def test_admin_routes_denied_without_permission(client: TestClient, monkeypatch)
         return resource != Resource.ADMIN
 
     monkeypatch.setattr(auth_module, "is_allowed", deny_admin)
-    assert client.get("/api/v1/admin/overview").status_code == 403
+    assert client.get("/api/v1/admin/roles").status_code == 403
     assert client.get("/api/v1/admin/members").status_code == 403
     assert client.delete("/api/v1/admin/api-keys/abc").status_code == 403
-
-
-def test_overview_counts(client: TestClient):
-    _seed_roles_and_group()
-    with _session() as session:
-        create_api_key(session, SEEDED_USER_ID, "k", ["view:event"])
-        session.commit()
-
-    overview = client.get("/api/v1/admin/overview").json()
-
-    assert overview["members_total"] == 1
-    assert overview["members_active"] == 1
-    assert overview["members_without_credential"] == 1
-    assert overview["groups"] == 3
-    assert overview["roles"] == 2
-    assert overview["api_keys_active"] == 1
-    assert overview["events"] == 1
-    assert overview["files"] == 0
 
 
 def test_roles_detail_lists_permissions_groups_and_members(client: TestClient):
