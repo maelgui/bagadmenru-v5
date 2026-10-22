@@ -43,6 +43,10 @@ class Resource(Enum):
     # their own status (guarded by Resource.ME), so this resource governs
     # seeing *other* members' status and reconciling unlinked HelloAsso orders.
     MEMBERSHIP = "membership"
+    # The administration area (cross-member audit, roles matrix, system
+    # status). Granted to no role below on purpose: only ``admin`` holds it,
+    # through the blanket grant in :func:`is_allowed`.
+    ADMIN = "admin"
 
 
 # Role → set of (action, resource) tuples

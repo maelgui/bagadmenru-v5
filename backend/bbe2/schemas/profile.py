@@ -131,6 +131,7 @@ class GroupUpdate(_GroupBase):
 
 
 class Group(MinimalGroup):
+    is_default: bool = False
     mailing_list: Optional[str]
     mailing_list_synced_at: Optional[datetime] = None
     mailing_list_sync_error: Optional[str] = None

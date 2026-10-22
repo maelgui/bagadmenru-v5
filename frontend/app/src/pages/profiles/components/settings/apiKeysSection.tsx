@@ -60,23 +60,7 @@ import {
 } from '@/components/ui/item';
 import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../../../../config/client';
-
-/**
- * Human-friendly (fr) labels for the RBAC permissions a key can carry. Keys are
- * "action:resource" strings as returned by the backend; unknown ones fall back
- * to the raw string so a newly added permission still renders.
- */
-const PERMISSION_LABELS: Record<string, string> = {
-  'view:calendar': 'Synchroniser le calendrier (ICS)',
-  'view:event': 'Voir les évènements',
-  'view:profile': 'Voir les profils des membres',
-  'view:file': 'Voir les fichiers',
-  'view:group': 'Voir les groupes',
-};
-
-function permissionLabel(permission: string): string {
-  return PERMISSION_LABELS[permission] ?? permission;
-}
+import { permissionLabel } from '@/lib/permissions';
 
 /**
  * Dialog shown once, right after a key is created, to reveal the raw secret.

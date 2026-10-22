@@ -5,11 +5,14 @@ import { toast } from '@/components/ui/toast';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
+import { useGroupsBreadcrumb, useGroupsReturnPath } from './breadcrumb';
 import GroupForm from './components/groupForm';
 
 export default function EditGroupPage() {
   const { usersApi } = useApiClient();
   const navigate = useNavigate();
+  const parents = useGroupsBreadcrumb();
+  const returnPath = useGroupsReturnPath();
   const { groupId: groupIdRaw } = useParams<'groupId'>();
   if (!groupIdRaw) {
     throw new Error('Missing groupId');
@@ -25,7 +28,7 @@ export default function EditGroupPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['groups'] });
       await queryClient.invalidateQueries({ queryKey: ['groups', groupId] });
-      void navigate('/groups');
+      void navigate(returnPath);
       toast.add({ title: 'Groupe modifié !', type: 'success' });
     },
     onError: (error) => {
@@ -42,7 +45,7 @@ export default function EditGroupPage() {
         title="Modifier un groupe"
         subtitle={group?.name}
         actions={[]}
-        breadcrumb={[{ title: 'Groupes', link: '/groups' }, { title: 'Modifier un groupe' }]}
+        breadcrumb={[...parents, { title: 'Modifier un groupe' }]}
       />
       <Container>{group ? <GroupForm onSubmit={onSubmit} data={group} /> : null}</Container>
     </>

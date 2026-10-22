@@ -13,7 +13,8 @@ import { cn } from '@/lib/utils';
 import AvatarGroup from '../../components/avatar-group';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { useApiClient } from '../../config/client';
+import { useApiClient, usePermissions } from '../../config/client';
+import { useGroupsBreadcrumb } from './breadcrumb';
 import MailingListSection from './components/mailingListSection';
 
 /** Limit of member avatars shown before collapsing the rest into a "+N" avatar. */
@@ -89,7 +90,9 @@ function GroupPageSkeleton() {
 }
 
 function GroupHeader({ group }: { group?: Group }) {
-  const breadcrumb = (title: React.ReactNode) => [{ title: 'Groupes', link: '/groups' }, { title }];
+  const parents = useGroupsBreadcrumb();
+  const { can } = usePermissions();
+  const breadcrumb = (title: React.ReactNode) => [...parents, { title }];
 
   if (!group) {
     return (
@@ -108,12 +111,12 @@ function GroupHeader({ group }: { group?: Group }) {
     <Header
       title={`Groupe ${group.name}`}
       subtitle={`${memberCount} membre${memberCount > 1 ? 's' : ''} · ${roleCount} rôle${roleCount > 1 ? 's' : ''}`}
-      actions={[
+      actions={can('edit', 'group') ? [
         <Link key="edit-group" to={`/groups/edit/${group.id}`} className={cn(buttonVariants())}>
           <Pen data-icon="inline-start" />
           Modifier
         </Link>,
-      ]}
+      ] : []}
       breadcrumb={breadcrumb(group.name)}
     />
   );

@@ -2,6 +2,7 @@
 .npmignore
 README.md
 package.json
+src/apis/AdminApi.ts
 src/apis/AuthenticationApi.ts
 src/apis/DefaultApi.ts
 src/apis/EventsApi.ts
@@ -14,9 +15,13 @@ src/apis/PushNotificationsApi.ts
 src/apis/UtilsApi.ts
 src/apis/index.ts
 src/index.ts
+src/models/AdminApiKey.ts
+src/models/AdminMember.ts
+src/models/AdminOverview.ts
 src/models/ApiKey.ts
 src/models/ApiKeyCreate.ts
 src/models/ApiKeyCreated.ts
+src/models/ApiKeyOwner.ts
 src/models/Costume.ts
 src/models/CredentialDeviceType.ts
 src/models/Event.ts
@@ -34,6 +39,7 @@ src/models/GroupUpdate.ts
 src/models/HTTPValidationError.ts
 src/models/HealthResponse.ts
 src/models/InboxEmail.ts
+src/models/IntegrationStatus.ts
 src/models/InvitationAccept.ts
 src/models/InvitationChannel.ts
 src/models/InvitationCreate.ts
@@ -70,11 +76,13 @@ src/models/ResponseChange.ts
 src/models/ResponseChangeUser.ts
 src/models/ResponseCreate.ts
 src/models/Role.ts
+src/models/RoleDetail.ts
 src/models/SeasonRanking.ts
 src/models/SessionInfo.ts
 src/models/SetPassword.ts
 src/models/Suggestion.ts
 src/models/SuggestionReason.ts
+src/models/SystemStatus.ts
 src/models/Token.ts
 src/models/UnlinkedMembership.ts
 src/models/UserRankingItem.ts

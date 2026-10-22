@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { createBrowserRouter, redirect } from 'react-router-dom';
+import AdminGuard from '../guards/admin';
 import AuthGuard from '../guards/auth';
 import MainLayout from '../layout/main';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
@@ -141,8 +142,57 @@ export default createBrowserRouter([
                 lazy: lazyPage(async () => await import('../pages/profiles/membershipReconciliation')),
               },
               {
+                path: '/admin',
+                Component: AdminGuard,
+                children: [
+                  {
+                    lazy: async () => ({
+                      Component: (await import('../pages/admin/layout')).default,
+                    }),
+                    children: [
+                      {
+                        index: true,
+                        loader: () => redirect('/admin/overview'),
+                      },
+                      {
+                        path: 'overview',
+                        lazy: lazyPage(async () => await import('../pages/admin/overview')),
+                      },
+                      {
+                        path: 'groups',
+                        lazy: lazyPage(async () => await import('../pages/admin/groups')),
+                      },
+                      {
+                        path: 'roles',
+                        lazy: lazyPage(async () => await import('../pages/admin/roles')),
+                      },
+                      {
+                        path: 'members',
+                        lazy: lazyPage(async () => await import('../pages/admin/members')),
+                      },
+                      {
+                        path: 'memberships',
+                        lazy: lazyPage(async () => await import('../pages/admin/memberships')),
+                      },
+                      {
+                        path: 'communication',
+                        lazy: lazyPage(async () => await import('../pages/admin/communication')),
+                      },
+                      {
+                        path: 'security',
+                        lazy: lazyPage(async () => await import('../pages/admin/security')),
+                      },
+                      {
+                        path: 'system',
+                        lazy: lazyPage(async () => await import('../pages/admin/system')),
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
                 path: '/groups',
-                lazy: lazyPage(async () => await import('../pages/groups/list')),
+                loader: () => redirect('/admin/groups'),
               },
               {
                 path: '/groups/:groupId',

@@ -60,6 +60,12 @@ export interface Group {
     isInstrument?: boolean;
     /**
      * 
+     * @type {boolean}
+     * @memberof Group
+     */
+    isDefault?: boolean;
+    /**
+     * 
      * @type {string}
      * @memberof Group
      */
@@ -116,6 +122,7 @@ export function GroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): Gro
         'color': json['color'] == null ? undefined : json['color'],
         'id': json['id'],
         'isInstrument': json['is_instrument'] == null ? undefined : json['is_instrument'],
+        'isDefault': json['is_default'] == null ? undefined : json['is_default'],
         'mailingList': json['mailing_list'],
         'mailingListSyncedAt': json['mailing_list_synced_at'] == null ? undefined : (new Date(json['mailing_list_synced_at'])),
         'mailingListSyncError': json['mailing_list_sync_error'] == null ? undefined : json['mailing_list_sync_error'],
@@ -139,6 +146,7 @@ export function GroupToJSONTyped(value?: Group | null, ignoreDiscriminator: bool
         'color': value['color'],
         'id': value['id'],
         'is_instrument': value['isInstrument'],
+        'is_default': value['isDefault'],
         'mailing_list': value['mailingList'],
         'mailing_list_synced_at': value['mailingListSyncedAt'] == null ? undefined : ((value['mailingListSyncedAt'] as any).toISOString()),
         'mailing_list_sync_error': value['mailingListSyncError'],
