@@ -48,6 +48,7 @@ import {
   membersToCsv,
 } from '../memberUtils';
 import { useAdminMembers } from '../queries';
+import { MemberIdentity } from './memberIdentity';
 
 const ISO_DATE_LENGTH = 10;
 
@@ -89,15 +90,11 @@ function MemberRow({ member }: { member: AdminMember }) {
   return (
     <TableRow className={cn(!member.isActive && 'opacity-60')}>
       <TableCell>
-        <Link to={`/profile/${member.id}`} className="flex flex-col hover:underline">
-          <span className="font-medium">
-            {member.firstName} {member.lastName}
-            {!member.receivesEmails ? (
-              <BellOffIcon className="ml-1 inline size-3 text-destructive" aria-label="Ne reçoit pas les e-mails" />
-            ) : null}
-          </span>
-          <span className="text-xs text-muted-foreground">{member.email}</span>
-        </Link>
+        <MemberIdentity member={member}>
+          {!member.receivesEmails ? (
+            <BellOffIcon className="ml-1 inline size-3 text-destructive" aria-label="Ne reçoit pas les e-mails" />
+          ) : null}
+        </MemberIdentity>
         {!member.isActive ? <Badge variant="secondary" className="mt-1">Inactif</Badge> : null}
       </TableCell>
       <TableCell>

@@ -17,7 +17,6 @@ src/apis/index.ts
 src/index.ts
 src/models/AdminApiKey.ts
 src/models/AdminMember.ts
-src/models/AdminOverview.ts
 src/models/ApiKey.ts
 src/models/ApiKeyCreate.ts
 src/models/ApiKeyCreated.ts

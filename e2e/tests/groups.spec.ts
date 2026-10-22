@@ -48,13 +48,38 @@ test.describe('Groups API', () => {
 });
 
 test.describe('Groups UI', () => {
-  test('groups list page renders after login', async ({ page }) => {
+  test('admin reaches the groups list in the admin area', async ({ page }) => {
+    await loginViaUI(page, E2E_ADMIN.email, E2E_ADMIN.password);
+
+    // The legacy /groups URL redirects into the admin area.
+    await page.goto('/groups');
+    await page.waitForURL('**/admin/groups');
+
+    await expect(page.getByRole('heading', { name: 'Administration' })).toBeVisible();
+    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page.getByRole('row', { name: /E2E Members/ })).toBeVisible();
+  });
+
+  test('regular member is sent home from the admin area', async ({ page }) => {
     await loginViaUI(page, E2E_USER.email, E2E_USER.password);
 
-    await page.goto('/groups');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/admin/groups');
+    await page.waitForURL((url) => url.pathname === '/');
 
-    // Should see groups list header
-    await expect(page.getByRole('heading', { name: 'Liste des groupes' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Administration' })).toHaveCount(0);
+  });
+
+  test('member still opens a group page from a profile', async ({ page }) => {
+    await loginViaUI(page, E2E_USER.email, E2E_USER.password);
+
+    const res = await page.request.get('/api/v1/groups/');
+    const groups = (await res.json()) as Array<{ id: number; name: string }>;
+    const group = groups.find((g) => g.name === 'E2E Members') ?? groups[0];
+
+    await page.goto(`/groups/${group.id}`);
+    await expect(page.getByRole('heading', { name: `Groupe ${group.name}` })).toBeVisible();
+    // Non-admins get no path back to the admin list and cannot edit.
+    await expect(page.getByRole('link', { name: 'Liste des membres' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Modifier' })).toHaveCount(0);
   });
 });

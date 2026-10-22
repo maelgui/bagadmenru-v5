@@ -2,7 +2,6 @@
 /* eslint-disable */
 export * from './AdminApiKey';
 export * from './AdminMember';
-export * from './AdminOverview';
 export * from './ApiKey';
 export * from './ApiKeyCreate';
 export * from './ApiKeyCreated';

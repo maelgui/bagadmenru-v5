@@ -26,17 +26,7 @@ import { toast } from '@/components/ui/toast';
 import { useApiClient } from '../../../config/client';
 import { GroupTag } from '../../profiles/components/groupTag';
 import { useAdminMembers, useGroups } from '../queries';
-
-function Stat({ value, label }: { value: number | undefined; label: string }) {
-  return (
-    <div>
-      <p className="text-3xl font-semibold tabular-nums">
-        {value === undefined ? <Skeleton className="h-9 w-12" /> : value}
-      </p>
-      <p className="text-sm text-muted-foreground">{label}</p>
-    </div>
-  );
-}
+import { Stat } from './stats';
 
 function MailingListsCard() {
   const { data: groups } = useGroups();

@@ -1,6 +1,5 @@
 import type { Group } from 'bagad-client';
 import { CirclePlus, Pen, UsersRound } from 'lucide-react';
-import { DateTime } from 'luxon';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -26,30 +25,6 @@ import { cn } from '@/lib/utils';
 import { GroupTag } from '../../profiles/components/groupTag';
 import { useGroups } from '../queries';
 
-function MailingListState({ group }: { group: Group }) {
-  if (!group.mailingList) {
-    return <span className="text-muted-foreground">—</span>;
-  }
-  if (group.mailingListSyncError) {
-    return (
-      <span className="flex flex-col gap-0.5">
-        <span className="font-mono text-xs">{group.mailingList}@bagadmenru.bzh</span>
-        <Badge variant="destructive" title={group.mailingListSyncError}>Erreur de synchronisation</Badge>
-      </span>
-    );
-  }
-  return (
-    <span className="flex flex-col gap-0.5">
-      <span className="font-mono text-xs">{group.mailingList}@bagadmenru.bzh</span>
-      <span className="text-xs text-muted-foreground">
-        {group.mailingListSyncedAt
-          ? `Synchronisée ${DateTime.fromJSDate(group.mailingListSyncedAt).toRelative()}`
-          : 'Jamais synchronisée'}
-      </span>
-    </span>
-  );
-}
-
 function GroupRow({ group }: { group: Group }) {
   return (
     <TableRow>
@@ -72,7 +47,9 @@ function GroupRow({ group }: { group: Group }) {
           </span>
         ) : <span className="text-muted-foreground">—</span>}
       </TableCell>
-      <TableCell><MailingListState group={group} /></TableCell>
+      <TableCell className="font-mono text-xs">
+        {group.mailingList ? `${group.mailingList}@bagadmenru.bzh` : <span className="font-sans text-muted-foreground">—</span>}
+      </TableCell>
       <TableCell className="text-right">
         <Link
           to={`/groups/edit/${group.id}`}
