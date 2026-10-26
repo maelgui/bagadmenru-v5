@@ -18,6 +18,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
   me: 'Son propre profil',
   event: 'Évènements',
   calendar: 'Calendrier (ICS)',
+  public_event: 'Agenda public (site vitrine)',
   response: 'Réponses aux évènements',
   response_history: 'Historique des réponses',
   file: 'Fichiers',
@@ -31,6 +32,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
 
 const PERMISSION_LABELS: Record<string, string> = {
   'view:calendar': 'Synchroniser le calendrier (ICS)',
+  'view:public_event': 'Lire l’agenda public (site vitrine)',
   'view:event': 'Voir les évènements',
   'view:profile': 'Voir les profils des membres',
   'view:file': 'Voir les fichiers',

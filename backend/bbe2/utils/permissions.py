@@ -23,6 +23,11 @@ class Resource(Enum):
     # also granting the broader event-listing endpoints. Granted to the same
     # roles as viewing events (every member who can see events can subscribe).
     CALENDAR = "calendar"
+    # Public agenda: the subset of events flagged ``is_public``, reduced to what
+    # the public website may show. A separate resource so an API key handed to
+    # the website build can be scoped to this feed alone, without ``view:event``
+    # (which exposes every event with its internal description).
+    PUBLIC_EVENT = "public_event"
     RESPONSE = "response"
     # Audit trail of RSVP state changes (e.g. a member switching from present to
     # absent). Separate from RESPONSE so viewing the log can be granted (to
@@ -56,6 +61,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.EVENT.value),
         (Action.VIEW.value, Resource.CALENDAR.value),
+        (Action.VIEW.value, Resource.PUBLIC_EVENT.value),
         (Action.VIEW.value, Resource.PROFILE.value),
         (Action.VIEW.value, Resource.FILE.value),
         (Action.VIEW.value, Resource.GROUP.value),
@@ -70,6 +76,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.EVENT.value),
         (Action.VIEW.value, Resource.CALENDAR.value),
+        (Action.VIEW.value, Resource.PUBLIC_EVENT.value),
         (Action.VIEW.value, Resource.RESPONSE.value),
         (Action.CREATE.value, Resource.RESPONSE.value),
         (Action.VIEW.value, Resource.PROFILE.value),
@@ -82,6 +89,7 @@ ROLE_PERMISSIONS: dict[str, set[tuple[str, str]]] = {
         (Action.EDIT.value, Resource.ME.value),
         (Action.VIEW.value, Resource.EVENT.value),
         (Action.VIEW.value, Resource.CALENDAR.value),
+        (Action.VIEW.value, Resource.PUBLIC_EVENT.value),
         (Action.CREATE.value, Resource.EVENT.value),
         (Action.EDIT.value, Resource.EVENT.value),
         (Action.DELETE.value, Resource.EVENT.value),

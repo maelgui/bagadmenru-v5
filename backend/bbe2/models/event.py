@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from typing import Optional
 
 from sqlalchemy import ForeignKey, String
@@ -22,6 +22,18 @@ class EventDB(Base):
     costume: Mapped[Costume]
     category: Mapped[str] = mapped_column(String(30))
     is_in_doodle: Mapped[bool]
+
+    # Optional venue and start time, shown to members with the event and, for
+    # public events, to visitors of the public website.
+    location: Mapped[Optional[str]] = mapped_column(String(100))
+    start_time: Mapped[Optional[time]]
+
+    # Opt-in publication on the public website (``GET /events/public``). Off by
+    # default: an event is members-only unless staff explicitly flags it.
+    is_public: Mapped[bool] = mapped_column(default=False)
+    # Visitor-facing text, distinct from ``description`` which is written for
+    # members (meeting point, logistics) and is never exposed publicly.
+    public_description: Mapped[Optional[str]]
 
     responses: Mapped[list["ResponseDB"]] = relationship(
         back_populates="event", cascade="all, delete"

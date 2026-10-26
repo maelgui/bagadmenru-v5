@@ -1,5 +1,5 @@
 import type { Event, EventCreate } from 'bagad-client';
-import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import costume from '../../../assets/costume.svg';
 import polo from '../../../assets/polo.svg';
 import tshirt from '../../../assets/tshirt.svg';
@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { fromIsoDate, toIsoDate, toUtcDate } from '../../../utils/date';
 
@@ -43,11 +44,20 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
   const {
     register, control, handleSubmit, formState: { errors, dirtyFields, isSubmitting }, setValue,
   } = useForm<EventCreate>({ defaultValues: data || { category: 'sortie', isInDoodle: true, costume: 'COSTUME' } });
+  const isPublic = useWatch({ control, name: 'isPublic' });
 
   // Pin the picked calendar date to UTC midnight before submitting: the
   // generated client serializes dates in UTC, which would otherwise shift
   // the date back a day in positive-offset timezones (e.g. Europe/Paris).
-  const handleFormSubmit: SubmitHandler<EventCreate> = (values) => onSubmit({ ...values, date: toUtcDate(values.date) });
+  // Optional text inputs come back as '' when left empty; send null instead so
+  // the backend stores "not set" rather than an empty string.
+  const handleFormSubmit: SubmitHandler<EventCreate> = (values) => onSubmit({
+    ...values,
+    date: toUtcDate(values.date),
+    location: values.location || null,
+    startTime: values.startTime || null,
+    publicDescription: values.isPublic ? values.publicDescription || null : null,
+  });
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -95,6 +105,26 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
           />
           <FieldError>{errors.date?.message}</FieldError>
         </Field>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Field data-invalid={!!errors.startTime}>
+            <FieldLabel htmlFor="start_time">Heure</FieldLabel>
+            <Input id="start_time" type="time" aria-invalid={!!errors.startTime} {...register('startTime')} />
+            <FieldDescription>Facultatif.</FieldDescription>
+          </Field>
+
+          <Field data-invalid={!!errors.location}>
+            <FieldLabel htmlFor="location">Lieu</FieldLabel>
+            <Input
+              id="location"
+              type="text"
+              placeholder="Salle Juguet, Montfort-sur-Meu"
+              aria-invalid={!!errors.location}
+              {...register('location', { maxLength: { value: 100, message: 'Lieu trop long.' } })}
+            />
+            <FieldError>{errors.location?.message}</FieldError>
+          </Field>
+        </div>
 
         <Controller
           name="category"
@@ -183,6 +213,40 @@ export default function EventForm({ onSubmit, data = undefined }: EventFormProps
             </Field>
           )}
         />
+
+        <Controller
+          name="isPublic"
+          control={control}
+          render={({ field }) => (
+            <Field orientation="horizontal" className={cn('rounded-2xl border p-4 hover:bg-muted', field.value && 'border-primary bg-primary/5')}>
+              <Checkbox
+                id="is_public"
+                checked={!!field.value}
+                onCheckedChange={field.onChange}
+              />
+              <FieldContent>
+                <FieldLabel htmlFor="is_public">Afficher sur le site public</FieldLabel>
+                <FieldDescription>
+                  Le titre, la date, l&apos;heure et le lieu seront visibles par tous dans l&apos;agenda du site bagadmenru.bzh.
+                  La description ci-dessus reste réservée aux membres.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
+          )}
+        />
+
+        {isPublic ? (
+          <Field data-invalid={!!errors.publicDescription}>
+            <FieldLabel htmlFor="public_description">Description publique</FieldLabel>
+            <Textarea
+              id="public_description"
+              placeholder="Une ou deux phrases pour les visiteurs du site."
+              aria-invalid={!!errors.publicDescription}
+              {...register('publicDescription')}
+            />
+            <FieldDescription>Facultatif. Ne mentionnez pas d&apos;informations internes (horaires de rendez-vous, tenue, logistique).</FieldDescription>
+          </Field>
+        ) : null}
 
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? <Spinner data-icon="inline-start" /> : null}

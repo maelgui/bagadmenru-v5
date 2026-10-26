@@ -41,6 +41,7 @@ import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
 import EventCategories from '../../utils/event-category';
 import IcsExportButton from './components/ics-export';
+import { PublicIndicator } from './components/event';
 
 function EventRow({ event }: { event: Event }) {
   const { eventsApi } = useApiClient();
@@ -89,6 +90,7 @@ function EventRow({ event }: { event: Event }) {
         <Badge className={category?.className} variant={category?.variant ?? 'default'}>
           {category?.name ?? event.category}
         </Badge>
+        {event.isPublic ? <PublicIndicator /> : null}
         <Separator orientation="vertical" className="h-6 self-center!" />
         <DropdownMenu>
           <DropdownMenuTrigger

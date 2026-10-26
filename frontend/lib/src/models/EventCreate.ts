@@ -63,6 +63,30 @@ export interface EventCreate {
      * @memberof EventCreate
      */
     isInDoodle: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof EventCreate
+     */
+    location?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof EventCreate
+     */
+    startTime?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventCreate
+     */
+    isPublic?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof EventCreate
+     */
+    publicDescription?: string | null;
 }
 
 
@@ -96,6 +120,10 @@ export function EventCreateFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'costume': CostumeFromJSON(json['costume']),
         'category': json['category'],
         'isInDoodle': json['is_in_doodle'],
+        'location': json['location'] == null ? undefined : json['location'],
+        'startTime': json['start_time'] == null ? undefined : json['start_time'],
+        'isPublic': json['is_public'] == null ? undefined : json['is_public'],
+        'publicDescription': json['public_description'] == null ? undefined : json['public_description'],
     };
 }
 
@@ -116,6 +144,10 @@ export function EventCreateToJSONTyped(value?: EventCreate | null, ignoreDiscrim
         'costume': CostumeToJSON(value['costume']),
         'category': value['category'],
         'is_in_doodle': value['isInDoodle'],
+        'location': value['location'],
+        'start_time': value['startTime'],
+        'is_public': value['isPublic'],
+        'public_description': value['publicDescription'],
     };
 }
 
