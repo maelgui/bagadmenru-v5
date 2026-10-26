@@ -18,6 +18,7 @@ import type {
   Event,
   EventCreate,
   HTTPValidationError,
+  PublicEvent,
   Res,
   Response,
   ResponseChange,
@@ -30,6 +31,8 @@ import {
     EventCreateToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    PublicEventFromJSON,
+    PublicEventToJSON,
     ResFromJSON,
     ResToJSON,
     ResponseFromJSON,
@@ -72,6 +75,13 @@ export interface ListEventsApiV1EventsGetRequest {
     dateLt?: Date | null;
     isInDoodle?: boolean | null;
     ordering?: string;
+}
+
+export interface ListPublicEventsApiV1EventsPublicGetRequest {
+    limit?: number;
+    dateGte?: Date | null;
+    dateLt?: Date | null;
+    category?: string | null;
 }
 
 export interface ListResponseChangesApiV1ResponsesChangesGetRequest {
@@ -477,6 +487,58 @@ export class EventsApi extends runtime.BaseAPI {
      */
     async listEventsApiV1EventsGet(requestParameters: ListEventsApiV1EventsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Event>> {
         const response = await this.listEventsApiV1EventsGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Events flagged ``is_public``, projected to what the public website shows.  Meant for the public website build, authenticated with an API key scoped to ``view:public_event``. Only events staff explicitly flagged public are returned, and only their public fields (see :class:`schemas.PublicEvent`). Everything else (time window, category) is up to the caller, so the website decides what it displays.
+     * List Public Events
+     */
+    async listPublicEventsApiV1EventsPublicGetRaw(requestParameters: ListPublicEventsApiV1EventsPublicGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PublicEvent>>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['dateGte'] != null) {
+            queryParameters['date__gte'] = (requestParameters['dateGte'] as any).toISOString();
+        }
+
+        if (requestParameters['dateLt'] != null) {
+            queryParameters['date__lt'] = (requestParameters['dateLt'] as any).toISOString();
+        }
+
+        if (requestParameters['category'] != null) {
+            queryParameters['category'] = requestParameters['category'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/events/public`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PublicEventFromJSON));
+    }
+
+    /**
+     * Events flagged ``is_public``, projected to what the public website shows.  Meant for the public website build, authenticated with an API key scoped to ``view:public_event``. Only events staff explicitly flagged public are returned, and only their public fields (see :class:`schemas.PublicEvent`). Everything else (time window, category) is up to the caller, so the website decides what it displays.
+     * List Public Events
+     */
+    async listPublicEventsApiV1EventsPublicGet(requestParameters: ListPublicEventsApiV1EventsPublicGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PublicEvent>> {
+        const response = await this.listPublicEventsApiV1EventsPublicGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

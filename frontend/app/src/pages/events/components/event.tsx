@@ -1,5 +1,6 @@
-import { CircleCheck, CircleHelp, CircleX } from 'lucide-react';
+import { CircleCheck, CircleHelp, CircleX, Globe } from 'lucide-react';
 import { Costume, type Event } from 'bagad-client';
+import { DateTime } from 'luxon';
 import costume from '../../../assets/costume.svg';
 import polo from '../../../assets/polo.svg';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +47,18 @@ function CostumeIndicator({ value }: { value: Costume }) {
   );
 }
 
+export function PublicIndicator() {
+  return (
+    <div className="flex size-6 items-center justify-center" title="Visible sur le site public">
+      <Globe className="size-5 text-muted-foreground" aria-label="Visible sur le site public" />
+    </div>
+  );
+}
+
+function formatStartTime(value: string): string {
+  return DateTime.fromISO(value).toFormat("HH'h'mm");
+}
+
 function EventBadgeRow({ event, response, showResponse }: { event: Event; response?: boolean; showResponse: boolean }) {
   const category = EventCategories[event.category];
   return (
@@ -55,6 +68,7 @@ function EventBadgeRow({ event, response, showResponse }: { event: Event; respon
       </Badge>
       {showResponse && event.isInDoodle ? <ResponseIndicator response={response} /> : null}
       <CostumeIndicator value={event.costume} />
+      {event.isPublic ? <PublicIndicator /> : null}
     </div>
   );
 }
@@ -63,6 +77,7 @@ export default function EventListItem({
   event, response = undefined, showResponse = false, className, variant = 'outline',
 }: EventListItemProps) {
   const itemClassName = cn(response === false && 'opacity-60', className);
+  const whenWhere = [event.startTime ? formatStartTime(event.startTime) : null, event.location].filter(Boolean).join(' · ');
 
   return (
     <Item variant={variant} className={itemClassName}>
@@ -74,6 +89,7 @@ export default function EventListItem({
       </ItemMedia>
       <ItemContent>
         <ItemTitle title={event.title}>{event.title}</ItemTitle>
+        {whenWhere ? <ItemDescription className="text-foreground" title={whenWhere}>{whenWhere}</ItemDescription> : null}
         <ItemDescription title={event.description}>{event.description}</ItemDescription>
       </ItemContent>
       <ItemActions>

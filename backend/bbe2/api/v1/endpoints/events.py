@@ -58,6 +58,38 @@ async def list_events(
     return q.all()
 
 
+@events_router.get(
+    "/public",
+    response_model=list[schemas.PublicEvent],
+    dependencies=[Depends(Authorization(Action.VIEW, Resource.PUBLIC_EVENT))],
+)
+async def list_public_events(
+    session: SessionDep,
+    limit: int = 10,
+    date__gte: Optional[datetime] = None,
+    date__lt: Optional[datetime] = None,
+    category: Optional[str] = None,
+):
+    """Events flagged ``is_public``, projected to what the public website shows.
+
+    Meant for the public website build, authenticated with an API key scoped to
+    ``view:public_event``. Only events staff explicitly flagged public are
+    returned, and only their public fields (see :class:`schemas.PublicEvent`).
+    Everything else (time window, category) is up to the caller, so the website
+    decides what it displays.
+    """
+    q = select(models.EventDB).where(models.EventDB.is_public.is_(True))
+    if date__gte:
+        date__gte = date__gte.replace(hour=0, minute=0, second=0, microsecond=0)
+        q = q.where(models.EventDB.date >= date__gte)
+    if date__lt:
+        q = q.where(models.EventDB.date < date__lt)
+    if category:
+        q = q.where(models.EventDB.category == category)
+    q = q.order_by(models.EventDB.date, models.EventDB.start_time).limit(limit)
+    return session.scalars(q).all()
+
+
 def _presence_prefix(value: Optional[bool]) -> str:
     """Emoji marker for a member's participation status on an event.
 

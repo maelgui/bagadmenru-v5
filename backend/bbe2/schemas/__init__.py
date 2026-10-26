@@ -8,7 +8,7 @@ from .admin import (
 )
 from .api_key import ApiKey, ApiKeyCreate, ApiKeyCreated
 from .auth import JwtPayload, LoginData
-from .event import Costume, Event, EventCreate
+from .event import Costume, Event, EventCreate, PublicEvent
 from .file import (
     FileAccessAction,
     FileOrFolder,

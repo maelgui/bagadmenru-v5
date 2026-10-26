@@ -62,6 +62,7 @@ src/models/PasskeySignal.ts
 src/models/Profile.ts
 src/models/ProfileCreate.ts
 src/models/ProfileUpdate.ts
+src/models/PublicEvent.ts
 src/models/PublicInstrument.ts
 src/models/PushDevice.ts
 src/models/PushSubscriptionCreate.ts

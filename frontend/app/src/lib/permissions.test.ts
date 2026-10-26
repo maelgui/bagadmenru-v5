@@ -4,6 +4,7 @@ import { isAction, permissionLabel, resourceLabel, splitPermission } from './per
 describe('permissionLabel', () => {
   it('keeps the established wording for known permissions', () => {
     expect(permissionLabel('view:calendar')).toBe('Synchroniser le calendrier (ICS)');
+    expect(permissionLabel('view:public_event')).toBe('Lire l’agenda public (site vitrine)');
   });
 
   it('composes action and resource otherwise', () => {

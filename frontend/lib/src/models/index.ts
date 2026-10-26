@@ -47,6 +47,7 @@ export * from './PasskeySignal';
 export * from './Profile';
 export * from './ProfileCreate';
 export * from './ProfileUpdate';
+export * from './PublicEvent';
 export * from './PublicInstrument';
 export * from './PushDevice';
 export * from './PushSubscriptionCreate';

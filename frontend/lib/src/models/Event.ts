@@ -65,6 +65,30 @@ export interface Event {
     isInDoodle: boolean;
     /**
      * 
+     * @type {string}
+     * @memberof Event
+     */
+    location?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof Event
+     */
+    startTime?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Event
+     */
+    isPublic?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof Event
+     */
+    publicDescription?: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof Event
      */
@@ -103,6 +127,10 @@ export function EventFromJSONTyped(json: any, ignoreDiscriminator: boolean): Eve
         'costume': CostumeFromJSON(json['costume']),
         'category': json['category'],
         'isInDoodle': json['is_in_doodle'],
+        'location': json['location'] == null ? undefined : json['location'],
+        'startTime': json['start_time'] == null ? undefined : json['start_time'],
+        'isPublic': json['is_public'] == null ? undefined : json['is_public'],
+        'publicDescription': json['public_description'] == null ? undefined : json['public_description'],
         'id': json['id'],
     };
 }
@@ -124,6 +152,10 @@ export function EventToJSONTyped(value?: Event | null, ignoreDiscriminator: bool
         'costume': CostumeToJSON(value['costume']),
         'category': value['category'],
         'is_in_doodle': value['isInDoodle'],
+        'location': value['location'],
+        'start_time': value['startTime'],
+        'is_public': value['isPublic'],
+        'public_description': value['publicDescription'],
         'id': value['id'],
     };
 }
