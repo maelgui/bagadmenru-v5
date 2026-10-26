@@ -1,6 +1,7 @@
 import { Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { Passkey } from 'bagad-client';
+import { PasskeyOrigin } from 'bagad-client';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { UAParser } from 'ua-parser-js';
@@ -52,6 +53,17 @@ function AuthenticatorIcon({ aaguid }: { aaguid: string }) {
   return icon ? <img src={icon} alt="" className="size-6" /> : <PasskeyIcon className="size-6" />;
 }
 
+/**
+ * How the passkey came to exist, completing « Ajoutée <quand> … ». Passkeys
+ * registered before the origin was recorded have none and get no suffix.
+ */
+const ORIGIN_LABELS: Record<PasskeyOrigin, string> = {
+  [PasskeyOrigin.Settings]: 'depuis vos réglages',
+  [PasskeyOrigin.Invitation]: 'à votre inscription',
+  [PasskeyOrigin.AuthPrompt]: 'lors d\'une connexion',
+  [PasskeyOrigin.AuthSilent]: 'automatiquement par votre appareil',
+};
+
 function PasskeyItem({ passkey }: { passkey: Passkey }) {
   const { authApi } = useApiClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -101,6 +113,7 @@ function PasskeyItem({ passkey }: { passkey: Passkey }) {
           <span title={passkey.createdAt.toLocaleString()}>
             {DateTime.fromJSDate(passkey.createdAt).toRelative()}
           </span>
+          {passkey.origin ? ` ${ORIGIN_LABELS[passkey.origin]}` : null}
         </ItemDescription>
         <ItemDescription>
           <span className="font-semibold text-foreground">Dernière utilisation : </span>
@@ -155,7 +168,7 @@ export default function PasskeysSection() {
     queryFn: async () => await authApi.listPasskeysApiV1WebauthnGet(),
   });
 
-  const register = useRegisterPasskey();
+  const register = useRegisterPasskey(PasskeyOrigin.Settings);
 
   return (
     <Card>

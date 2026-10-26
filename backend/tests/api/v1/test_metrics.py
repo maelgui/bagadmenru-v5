@@ -5,9 +5,12 @@ assertion compares before/after deltas instead of absolute values — other
 tests in the session also increment them.
 """
 
+import secrets
+
 from fastapi.testclient import TestClient
 from prometheus_client import REGISTRY
 
+from bbe2.schemas import PasskeyOrigin
 from tests.api.v1.test_auth import (  # noqa: F401  (reset_sender is a fixture)
     _clear_password,
     _https_client,
@@ -20,12 +23,13 @@ def _gauge(name: str, labels: dict[str, str] | None = None) -> float:
     return REGISTRY.get_sample_value(name, labels or {}) or 0.0
 
 
-def _seed_passkey(email: str) -> None:
+def _seed_passkey(email: str, origin: PasskeyOrigin | None = None) -> None:
     """Attach one passkey to the user with the given email.
 
     Mirrors the invitation/enrolment path: a passkey row keyed on the user's
     passkey_user_id. Enough for the membership gauges to count the member as
-    passkey-holding.
+    passkey-holding. ``origin=None`` mimics a row registered before the
+    origin column existed.
     """
     from sqlalchemy.orm import sessionmaker
 
@@ -42,13 +46,14 @@ def _seed_passkey(email: str) -> None:
         s.add(
             models.PasskeyDB(
                 passkey_user_id=user.passkey_user_id,
-                credential_id=b"cred-" + email.encode()[:16],
+                credential_id=b"cred-" + secrets.token_bytes(8),
                 public_key=b"pk",
                 sign_count=0,
                 transports="internal",
                 device_type="single_device",
                 back_up=False,
                 aaguid="00000000-0000-0000-0000-000000000000",
+                origin=origin,
             )
         )
         s.commit()
@@ -106,45 +111,41 @@ def test_password_login_failure_increments_counter(client: TestClient):
     assert _counter("bbe2_auth_logins_total", labels) == before + 1
 
 
-def test_preregister_declared_flow_counts_started_and_labels_register(
+def test_preregister_declared_origin_counts_started_and_labels_register(
     client: TestClient,
 ):
     # The session cookie is Secure: use the https client so it round-trips.
     https_client = _https_client(client)
-    started = {"flow": "silent", "outcome": "started"}
-    invalid = {"flow": "silent", "outcome": "invalid"}
+    started = {"origin": "auth_silent", "outcome": "started"}
+    invalid = {"origin": "auth_silent", "outcome": "invalid"}
     before_started = _counter("bbe2_webauthn_registrations_total", started)
     before_invalid = _counter("bbe2_webauthn_registrations_total", invalid)
 
     response = https_client.get(
-        "/api/v1/webauthn/preregister", params={"flow": "silent"}
+        "/api/v1/webauthn/preregister", params={"origin": "AUTH_SILENT"}
     )
     assert response.status_code == 200
     assert _counter("bbe2_webauthn_registrations_total", started) == before_started + 1
 
-    # A garbage credential fails verification: the outcome must carry the flow
-    # declared at preregister, proving it travelled through the session.
+    # A garbage credential fails verification: the outcome must carry the
+    # origin declared at preregister, proving it travelled through the session.
     response = https_client.post("/api/v1/webauthn/register", json={"response": {}})
     assert response.status_code == 400
     assert _counter("bbe2_webauthn_registrations_total", invalid) == before_invalid + 1
 
 
-def test_preregister_flow_defaults_to_explicit(client: TestClient):
-    labels = {"flow": "explicit", "outcome": "started"}
-    before = _counter("bbe2_webauthn_registrations_total", labels)
-
+def test_preregister_requires_an_origin(client: TestClient):
     response = client.get("/api/v1/webauthn/preregister")
-    assert response.status_code == 200
-    assert _counter("bbe2_webauthn_registrations_total", labels) == before + 1
-
-
-def test_preregister_rejects_unknown_flow(client: TestClient):
-    response = client.get("/api/v1/webauthn/preregister", params={"flow": "sneaky"})
     assert response.status_code == 422
 
 
-def test_register_without_preregister_is_unknown_flow(client: TestClient):
-    labels = {"flow": "unknown", "outcome": "missing_challenge"}
+def test_preregister_rejects_unknown_origin(client: TestClient):
+    response = client.get("/api/v1/webauthn/preregister", params={"origin": "sneaky"})
+    assert response.status_code == 422
+
+
+def test_register_without_preregister_is_unknown_origin(client: TestClient):
+    labels = {"origin": "unknown", "outcome": "missing_challenge"}
     before = _counter("bbe2_webauthn_registrations_total", labels)
 
     response = client.post("/api/v1/webauthn/register", json={"response": {}})
@@ -256,7 +257,9 @@ def test_credential_buckets_reflect_passwordless_seed(client: TestClient):
     assert _gauge("bbe2_users_credentials", {"credential": "none"}) == 1
     assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 0
     assert _gauge("bbe2_users_credentials", {"credential": "password"}) == 0
-    assert _gauge("bbe2_passkeys") == 0
+    # Every origin bucket exists from the first scrape, at zero.
+    for origin in ("settings", "invitation", "auth_prompt", "auth_silent", "unknown"):
+        assert _gauge("bbe2_passkeys", {"origin": origin}) == 0
 
 
 def test_credential_buckets_count_password_only(client: TestClient):
@@ -272,13 +275,27 @@ def test_credential_buckets_count_password_only(client: TestClient):
 
 
 def test_credential_buckets_count_passkey_only(client: TestClient):
-    # Passwordless seed + a passkey -> passkey_only, and bbe2_passkeys counts it.
+    # Passwordless seed + a legacy passkey (no origin) -> passkey_only, and
+    # bbe2_passkeys counts it under unknown.
     _seed_passkey("john.doe@example.com")
     client.get("/metrics")
     assert _gauge("bbe2_users_credentials", {"credential": "passkey"}) == 1
     assert _gauge("bbe2_users_credentials", {"credential": "passkey_only"}) == 1
     assert _gauge("bbe2_users_credentials", {"credential": "none"}) == 0
-    assert _gauge("bbe2_passkeys") == 1
+    assert _gauge("bbe2_passkeys", {"origin": "unknown"}) == 1
+
+
+def test_passkeys_gauge_is_split_by_origin(client: TestClient):
+    _seed_passkey("john.doe@example.com")
+    _seed_passkey("john.doe@example.com", PasskeyOrigin.SETTINGS)
+    _seed_passkey("john.doe@example.com", PasskeyOrigin.AUTH_SILENT)
+    _seed_passkey("john.doe@example.com", PasskeyOrigin.AUTH_SILENT)
+    client.get("/metrics")
+    assert _gauge("bbe2_passkeys", {"origin": "unknown"}) == 1
+    assert _gauge("bbe2_passkeys", {"origin": "settings"}) == 1
+    assert _gauge("bbe2_passkeys", {"origin": "auth_silent"}) == 2
+    assert _gauge("bbe2_passkeys", {"origin": "invitation"}) == 0
+    assert _gauge("bbe2_passkeys", {"origin": "auth_prompt"}) == 0
 
 
 def test_dual_credential_member_counts_in_both_overlapping_buckets(

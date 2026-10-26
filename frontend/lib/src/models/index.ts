@@ -43,6 +43,7 @@ export * from './MyProfileUpdate';
 export * from './MyStats';
 export * from './OtpRequest';
 export * from './Passkey';
+export * from './PasskeyOrigin';
 export * from './PasskeySignal';
 export * from './Profile';
 export * from './ProfileCreate';

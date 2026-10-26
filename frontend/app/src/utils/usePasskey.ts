@@ -11,7 +11,7 @@ import {
 } from '@simplewebauthn/browser';
 import { useMutation } from '@tanstack/react-query';
 import type { AuthenticationApi, PasskeySignal } from 'bagad-client';
-import { ResponseError } from 'bagad-client';
+import { PasskeyOrigin, ResponseError } from 'bagad-client';
 import { toast } from '@/components/ui/toast';
 import { queryClient, useApiClient } from '../config/client';
 import features from './features';
@@ -98,8 +98,11 @@ export async function signalAllAcceptedPasskeys(signal: PasskeySignal) {
  *
  * Wraps the WebAuthn registration ceremony (preregister → browser prompt →
  * register) behind a single mutation, so any surface can offer "add a passkey":
- * the settings section, the post-signup screen, or the future password→passkey
- * migration for existing members.
+ * the settings section, the post-signup screen, the sign-in offer.
+ *
+ * `origin` names the calling surface; the backend persists it on the
+ * credential (shown in the passkeys list) and labels its registration metrics
+ * with it, so adoption can be read per surface.
  *
  * Uses the shared cookie session, so it acts as the currently active account.
  * After an invitation signup the backend has already made the new member the
@@ -108,13 +111,13 @@ export async function signalAllAcceptedPasskeys(signal: PasskeySignal) {
  * On success it invalidates the `['passkeys']` query so any visible list
  * refreshes.
  */
-export function useRegisterPasskey() {
+export function useRegisterPasskey(origin: PasskeyOrigin) {
   const { authApi } = useApiClient();
 
   return useMutation({
     mutationFn: async (): Promise<RegisterPasskeyResult> => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- API response type is not narrowed to the WebAuthn options shape
-      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ flow: 'explicit' }) as PublicKeyCredentialCreationOptionsJSON;
+      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ origin }) as PublicKeyCredentialCreationOptionsJSON;
 
       try {
         const attResp = await startRegistration({ optionsJSON: registrationOpt });
@@ -184,7 +187,7 @@ export async function attemptSilentPasskeyUpgrade(
   const createCredential = async (): Promise<RegistrationResponseJSON | null> => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- API response type is not narrowed to the WebAuthn options shape
-      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ flow: 'silent' }) as PublicKeyCredentialCreationOptionsJSON;
+      const registrationOpt = await authApi.preregisterPasskeyApiV1WebauthnPreregisterGet({ origin: PasskeyOrigin.AuthSilent }) as PublicKeyCredentialCreationOptionsJSON;
       return await startRegistration({
         optionsJSON: registrationOpt,
         useAutoRegister: true,

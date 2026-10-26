@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -6,6 +7,7 @@ from sqlalchemy.sql import func
 
 from bbe2.models.base import Base
 from bbe2.models.user import UserDB
+from bbe2.schemas import PasskeyOrigin
 
 
 class PasskeyDB(Base):
@@ -21,6 +23,8 @@ class PasskeyDB(Base):
     device_type: Mapped[str]
     back_up: Mapped[bool]
     aaguid: Mapped[str]
+    # NULL for passkeys registered before the origin was recorded.
+    origin: Mapped[Optional[PasskeyOrigin]]
 
     last_use_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=True

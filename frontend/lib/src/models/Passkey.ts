@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { PasskeyOrigin } from './PasskeyOrigin';
+import {
+    PasskeyOriginFromJSON,
+    PasskeyOriginFromJSONTyped,
+    PasskeyOriginToJSON,
+    PasskeyOriginToJSONTyped,
+} from './PasskeyOrigin';
 import type { CredentialDeviceType } from './CredentialDeviceType';
 import {
     CredentialDeviceTypeFromJSON,
@@ -63,6 +70,12 @@ export interface Passkey {
      * @memberof Passkey
      */
     aaguid: string;
+    /**
+     * 
+     * @type {PasskeyOrigin}
+     * @memberof Passkey
+     */
+    origin?: PasskeyOrigin | null;
     /**
      * 
      * @type {Date}
@@ -121,6 +134,7 @@ export function PasskeyFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'deviceType': CredentialDeviceTypeFromJSON(json['device_type']),
         'backUp': json['back_up'],
         'aaguid': json['aaguid'],
+        'origin': json['origin'] == null ? undefined : PasskeyOriginFromJSON(json['origin']),
         'lastUseAt': json['last_use_at'] == null ? undefined : (new Date(json['last_use_at'])),
         'lastUseIp': json['last_use_ip'] == null ? undefined : json['last_use_ip'],
         'lastUseUa': json['last_use_ua'] == null ? undefined : json['last_use_ua'],
@@ -145,6 +159,7 @@ export function PasskeyToJSONTyped(value?: Passkey | null, ignoreDiscriminator: 
         'device_type': CredentialDeviceTypeToJSON(value['deviceType']),
         'back_up': value['backUp'],
         'aaguid': value['aaguid'],
+        'origin': PasskeyOriginToJSON(value['origin']),
         'last_use_at': value['lastUseAt'] == null ? undefined : ((value['lastUseAt'] as any).toISOString()),
         'last_use_ip': value['lastUseIp'],
         'last_use_ua': value['lastUseUa'],

@@ -1,9 +1,28 @@
 import base64
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, field_serializer
 from webauthn.helpers.structs import CredentialDeviceType
+
+
+class PasskeyOrigin(Enum):
+    """Which surface created a passkey. Declared by the client at
+    ``/webauthn/preregister`` and persisted with the credential.
+
+    - ``SETTINGS``: the member pressed « Ajouter » in their settings.
+    - ``INVITATION``: the enrolment step right after accepting an invitation.
+    - ``AUTH_PROMPT``: the explicit offer shown during the sign-in flow
+      (the /auth/next landing after a recovery / login link).
+    - ``AUTH_SILENT``: the automatic upgrade after a password sign-in
+      (WebAuthn conditional create, no prompt).
+    """
+
+    SETTINGS = "SETTINGS"
+    INVITATION = "INVITATION"
+    AUTH_PROMPT = "AUTH_PROMPT"
+    AUTH_SILENT = "AUTH_SILENT"
 
 
 class Passkey(BaseModel):
@@ -15,6 +34,8 @@ class Passkey(BaseModel):
     device_type: CredentialDeviceType
     back_up: bool
     aaguid: str
+    # None for passkeys registered before the origin was recorded.
+    origin: Optional[PasskeyOrigin] = None
     last_use_at: Optional[datetime] = None
     last_use_ip: Optional[str] = None
     last_use_ua: Optional[str] = None
