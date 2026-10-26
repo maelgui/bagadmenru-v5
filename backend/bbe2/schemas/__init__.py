@@ -39,7 +39,7 @@ from .invitation import (
     InvitationInfo,
     OtpRequest,
 )
-from .passkey import Passkey, PasskeySignal
+from .passkey import Passkey, PasskeyOrigin, PasskeySignal
 from .profile import (
     Group,
     GroupCreate,

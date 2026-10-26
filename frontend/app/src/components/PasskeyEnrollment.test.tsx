@@ -29,20 +29,20 @@ afterEach(() => {
 describe('PasskeyEnrollment', () => {
   it('offers a skip escape hatch when onSkip is provided', () => {
     const onSkip = vi.fn();
-    render(<PasskeyEnrollment onEnrolled={vi.fn()} onSkip={onSkip} />);
+    render(<PasskeyEnrollment origin="SETTINGS" onEnrolled={vi.fn()} onSkip={onSkip} />);
     fireEvent.click(screen.getByRole('button', { name: 'Plus tard' }));
     expect(onSkip).toHaveBeenCalled();
   });
 
   it('hides the skip button when onSkip is not provided', () => {
-    render(<PasskeyEnrollment onEnrolled={vi.fn()} />);
+    render(<PasskeyEnrollment origin="SETTINGS" onEnrolled={vi.fn()} />);
     expect(screen.queryByRole('button', { name: 'Plus tard' })).toBeNull();
   });
 
   it('surfaces enrollment failures instead of failing silently', () => {
     // Regression: a failed WebAuthn ceremony used to leave the screen unchanged.
     mutationState = { mutate, isPending: false, isError: true };
-    render(<PasskeyEnrollment onEnrolled={vi.fn()} onSkip={vi.fn()} />);
+    render(<PasskeyEnrollment origin="SETTINGS" onEnrolled={vi.fn()} onSkip={vi.fn()} />);
     expect(screen.getByText(/La création de la clé d'accès a échoué/)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Réessayer/ })).toBeTruthy();
   });

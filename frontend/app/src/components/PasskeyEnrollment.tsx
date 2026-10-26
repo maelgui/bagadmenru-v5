@@ -1,3 +1,4 @@
+import type { PasskeyOrigin } from 'bagad-client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -8,8 +9,9 @@ import { useRegisterPasskey } from '../utils/usePasskey';
  * Reusable "create a passkey" screen.
  *
  * Presentational + the shared enrollment mutation, so it can be dropped into
- * any authenticated flow that wants to onboard a passkey: the post-signup step,
- * or the future password→passkey migration for existing members.
+ * any authenticated flow that wants to onboard a passkey: the post-signup step
+ * or the sign-in offer. The mounting flow declares its `origin`, recorded on
+ * the credential.
  *
  * Requires an authenticated session (the enrollment endpoints are gated).
  * Calls `onEnrolled` after a passkey is successfully created.
@@ -20,19 +22,21 @@ import { useRegisterPasskey } from '../utils/usePasskey';
  * flow must never dead-end on this screen.
  */
 export default function PasskeyEnrollment({
+  origin,
   onEnrolled,
   onSkip,
   title = 'Sécurisez votre compte',
   description = 'Créez une clé d\'accès pour vous connecter sans mot de passe, avec votre empreinte, votre visage ou le code de votre appareil.',
   skipNote = 'Vous pourrez créer une clé d\'accès à tout moment depuis vos réglages.',
 }: {
+  origin: PasskeyOrigin;
   onEnrolled: () => void;
   onSkip?: () => void;
   title?: string;
   description?: string;
   skipNote?: string;
 }) {
-  const register = useRegisterPasskey();
+  const register = useRegisterPasskey(origin);
 
   const onCreate = () => {
     register.mutate(undefined, { onSuccess: onEnrolled });

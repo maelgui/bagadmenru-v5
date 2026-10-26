@@ -747,7 +747,9 @@ def test_readonly_responses_do_not_reissue_the_session_cookie(client: TestClient
     https_client = _https_client(client)
 
     # Write the challenge: this response legitimately sets the session cookie.
-    pre = https_client.get("/api/v1/webauthn/preregister")
+    pre = https_client.get(
+        "/api/v1/webauthn/preregister", params={"origin": "SETTINGS"}
+    )
     assert pre.status_code == 200
     assert "session=" in (pre.headers.get("set-cookie") or "")
 
@@ -766,7 +768,7 @@ def test_register_finds_the_challenge_after_an_interleaved_request(
     about the bogus credential, NOT a missing challenge."""
     https_client = _https_client(client)
 
-    https_client.get("/api/v1/webauthn/preregister")
+    https_client.get("/api/v1/webauthn/preregister", params={"origin": "SETTINGS"})
     https_client.get("/api/v1/webauthn")  # post-login page-load style request
 
     response = https_client.post("/api/v1/webauthn/register", json=_BOGUS_CREDENTIAL)
@@ -849,13 +851,13 @@ def test_register_accepts_a_conditional_create_attestation_without_up(
 ):
     """A conditional create (silent passkey upgrade) happens WITHOUT any user
     gesture, so its attestation carries UP=0. When the client declared
-    flow=silent at preregister, register must accept it — the caller is
-    already authenticated. Requiring user presence made every silent upgrade
-    fail with a 400 after the OS had already created the passkey, leaving an
-    orphan credential in the user's keychain."""
+    origin=AUTH_SILENT at preregister, register must accept it — the caller
+    is already authenticated. Requiring user presence made every silent
+    upgrade fail with a 400 after the OS had already created the passkey,
+    leaving an orphan credential in the user's keychain."""
     https_client = _https_client(client)
     options = https_client.get(
-        "/api/v1/webauthn/preregister", params={"flow": "silent"}
+        "/api/v1/webauthn/preregister", params={"origin": "AUTH_SILENT"}
     ).json()
 
     response = _post_forged_registration(https_client, options, up=False)
@@ -863,32 +865,38 @@ def test_register_accepts_a_conditional_create_attestation_without_up(
 
     passkeys = https_client.get("/api/v1/webauthn").json()
     assert len(passkeys) == 1
+    assert passkeys[0]["origin"] == "AUTH_SILENT"
 
 
-def test_register_rejects_missing_user_presence_on_explicit_flow(
+def test_register_rejects_missing_user_presence_on_explicit_origin(
     client: TestClient,
 ):
     """WebAuthn L3 §7.1 step 15: outside conditional mediation the RP must
-    verify UP=1. An explicit enrolment (settings page, post-reset screen)
-    always involves a user gesture, so a UP=0 attestation on the explicit
-    flow is invalid."""
+    verify UP=1. An explicit enrolment (settings page, invitation, sign-in
+    offer) always involves a user gesture, so a UP=0 attestation on any
+    non-silent origin is invalid."""
     https_client = _https_client(client)
-    options = https_client.get("/api/v1/webauthn/preregister").json()
+    options = https_client.get(
+        "/api/v1/webauthn/preregister", params={"origin": "AUTH_PROMPT"}
+    ).json()
 
     response = _post_forged_registration(https_client, options, up=False)
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid registration response"
 
 
-def test_register_accepts_user_presence_on_explicit_flow(client: TestClient):
+def test_register_persists_the_declared_origin(client: TestClient):
     https_client = _https_client(client)
-    options = https_client.get("/api/v1/webauthn/preregister").json()
+    options = https_client.get(
+        "/api/v1/webauthn/preregister", params={"origin": "SETTINGS"}
+    ).json()
 
     response = _post_forged_registration(https_client, options, up=True)
     assert response.status_code == 200, response.text
 
     passkeys = https_client.get("/api/v1/webauthn").json()
     assert len(passkeys) == 1
+    assert passkeys[0]["origin"] == "SETTINGS"
 
 
 def test_register_without_pending_challenge_is_rejected(client: TestClient):

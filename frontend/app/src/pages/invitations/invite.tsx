@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { InvitationAccept, InvitationInfo, PublicInstrument } from 'bagad-client';
+import { PasskeyOrigin } from 'bagad-client';
 import { Link, useParams } from 'react-router-dom';
 import { useRef, useState } from 'react';
 import { buttonVariants } from '@/components/ui/button';
@@ -140,6 +141,7 @@ export default function InvitePage() {
   if (step === 'passkey') {
     return (
       <PasskeyEnrollment
+        origin={PasskeyOrigin.Invitation}
         onEnrolled={() => setStep('done')}
         // The member is already signed in: never dead-end on passkey failure.
         onSkip={() => setStep('done')}

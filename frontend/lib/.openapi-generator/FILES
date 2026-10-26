@@ -58,6 +58,7 @@ src/models/MyProfileUpdate.ts
 src/models/MyStats.ts
 src/models/OtpRequest.ts
 src/models/Passkey.ts
+src/models/PasskeyOrigin.ts
 src/models/PasskeySignal.ts
 src/models/Profile.ts
 src/models/ProfileCreate.ts

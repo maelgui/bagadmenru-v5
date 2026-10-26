@@ -34,6 +34,7 @@ from sqlalchemy import func, select
 from bbe2.config import Settings, get_settings
 from bbe2.database import session_ctx
 from bbe2.models import PasskeyDB, PushSubscriptionDB, UserDB
+from bbe2.schemas import PasskeyOrigin
 
 AUTH_LOGINS = Counter(
     "bbe2_auth_logins_total",
@@ -47,16 +48,19 @@ AUTH_LOGINS = Counter(
 
 WEBAUTHN_REGISTRATIONS = Counter(
     "bbe2_webauthn_registrations_total",
-    "Passkey registration ceremonies by flow and outcome.",
-    # flow: the intent the client declares at /webauthn/preregister —
-    #       explicit (settings page / post-reset enrolment)
-    #       | silent (conditional create after password login)
-    #       | unknown (register reached without a preregister in the session)
+    "Passkey registration ceremonies by origin and outcome.",
+    # origin: the surface the client declares at /webauthn/preregister
+    #         (PasskeyOrigin, lower-cased) —
+    #         settings (« Ajouter » in the settings page)
+    #         | invitation (enrolment right after accepting an invitation)
+    #         | auth_prompt (explicit offer in the sign-in flow, /auth/next)
+    #         | auth_silent (conditional create after a password login)
+    #         | unknown (register reached without a preregister in the session)
     # outcome: started (preregister served) | success | missing_challenge
     #          | invalid
     # started vs success gives the funnel: silent ceremonies the browser
     # declines after preregister never reach /webauthn/register at all.
-    ["flow", "outcome"],
+    ["origin", "outcome"],
 )
 
 LOGIN_LINKS = Counter(
@@ -169,7 +173,7 @@ class MembershipStateCollector(Collector):
         snapshot = self._gather()
         if snapshot is None:
             return
-        active, inactive, cred_counts, passkeys_total, subs_total = snapshot
+        active, inactive, cred_counts, passkeys_by_origin, subs_total = snapshot
 
         users = GaugeMetricFamily(
             "bbe2_users",
@@ -193,10 +197,14 @@ class MembershipStateCollector(Collector):
 
         passkeys = GaugeMetricFamily(
             "bbe2_passkeys",
-            "Total registered passkeys (a member can register several "
-            "devices, so this can exceed the passkey-holding member count).",
+            "Registered passkeys by the surface that created them (sum for the "
+            "total; a member can register several devices, so this can exceed "
+            "the passkey-holding member count). unknown = registered before "
+            "the origin was recorded.",
+            labels=["origin"],
         )
-        passkeys.add_metric([], passkeys_total)
+        for origin, count in passkeys_by_origin.items():
+            passkeys.add_metric([origin], count)
         yield passkeys
 
         subs = GaugeMetricFamily(
@@ -209,7 +217,7 @@ class MembershipStateCollector(Collector):
 
     def _gather(
         self,
-    ) -> Optional[Tuple[int, int, Dict[str, int], int, int]]:
+    ) -> Optional[Tuple[int, int, Dict[str, int], Dict[str, int], int]]:
         try:
             database_url = self._settings_getter().database_url
             with session_ctx(database_url) as session:
@@ -256,11 +264,20 @@ class MembershipStateCollector(Collector):
                     elif not has_password and not has_passkey:
                         cred_counts["none"] += 1
 
-                passkeys_total = session.scalar(
-                    select(func.count()).select_from(  # pylint: disable=not-callable
-                        PasskeyDB
-                    )
-                )
+                # Every origin bucket is always emitted (zero included) so the
+                # series exist in Grafana from the first scrape.
+                passkeys_by_origin = {
+                    origin.value.lower(): 0 for origin in PasskeyOrigin
+                }
+                passkeys_by_origin["unknown"] = 0
+                for origin, count in session.execute(
+                    select(
+                        PasskeyDB.origin,
+                        func.count(),  # pylint: disable=not-callable
+                    ).group_by(PasskeyDB.origin)
+                ).all():
+                    key = origin.value.lower() if origin else "unknown"
+                    passkeys_by_origin[key] = count
                 subs_total = session.scalar(
                     select(func.count()).select_from(  # pylint: disable=not-callable
                         PushSubscriptionDB
@@ -270,7 +287,7 @@ class MembershipStateCollector(Collector):
                     active,
                     inactive,
                     cred_counts,
-                    passkeys_total or 0,
+                    passkeys_by_origin,
                     subs_total or 0,
                 )
         except Exception:  # pylint: disable=broad-except

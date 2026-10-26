@@ -20,6 +20,7 @@ import type {
   LoginData,
   LogoutRequest,
   Passkey,
+  PasskeyOrigin,
   PasskeySignal,
   RecoveryGrant,
   ResetPasswordRequest,
@@ -38,6 +39,8 @@ import {
     LogoutRequestToJSON,
     PasskeyFromJSON,
     PasskeyToJSON,
+    PasskeyOriginFromJSON,
+    PasskeyOriginToJSON,
     PasskeySignalFromJSON,
     PasskeySignalToJSON,
     RecoveryGrantFromJSON,
@@ -65,7 +68,7 @@ export interface LogoutApiV1AuthLogoutPostRequest {
 }
 
 export interface PreregisterPasskeyApiV1WebauthnPreregisterGetRequest {
-    flow?: PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum;
+    origin: PasskeyOrigin;
 }
 
 export interface ProcessLoginApiV1AuthLoginPostRequest {
@@ -297,10 +300,17 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Preregister Passkey
      */
     async preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['origin'] == null) {
+            throw new runtime.RequiredError(
+                'origin',
+                'Required parameter "origin" was null or undefined when calling preregisterPasskeyApiV1WebauthnPreregisterGet().'
+            );
+        }
+
         const queryParameters: any = {};
 
-        if (requestParameters['flow'] != null) {
-            queryParameters['flow'] = requestParameters['flow'];
+        if (requestParameters['origin'] != null) {
+            queryParameters['origin'] = requestParameters['origin'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -330,7 +340,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
     /**
      * Preregister Passkey
      */
-    async preregisterPasskeyApiV1WebauthnPreregisterGet(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+    async preregisterPasskeyApiV1WebauthnPreregisterGet(requestParameters: PreregisterPasskeyApiV1WebauthnPreregisterGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
         const response = await this.preregisterPasskeyApiV1WebauthnPreregisterGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -541,12 +551,3 @@ export class AuthenticationApi extends runtime.BaseAPI {
     }
 
 }
-
-/**
- * @export
- */
-export const PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum = {
-    Explicit: 'explicit',
-    Silent: 'silent'
-} as const;
-export type PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum = typeof PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum[keyof typeof PreregisterPasskeyApiV1WebauthnPreregisterGetFlowEnum];

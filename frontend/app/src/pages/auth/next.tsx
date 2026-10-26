@@ -1,3 +1,4 @@
+import { PasskeyOrigin } from 'bagad-client';
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import RecoveryChooser from './recovery/components/RecoveryChooser';
@@ -59,6 +60,7 @@ function AuthNextPage() {
   if (chosen === 'passkey' || !next.hasPassword) {
     return (
       <PasskeyEnrollment
+        origin={PasskeyOrigin.AuthPrompt}
         title="Créez une clé d'accès"
         description="Vous êtes connecté·e. Pour vous reconnecter facilement la prochaine fois, créez une clé d'accès : empreinte, visage ou code de l'appareil."
         skipNote="Sans clé d'accès, vous devrez repasser par un email pour vous reconnecter."

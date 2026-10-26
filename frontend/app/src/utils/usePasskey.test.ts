@@ -99,6 +99,9 @@ describe('attemptSilentPasskeyUpgrade', () => {
     startRegistration.mockResolvedValue({ id: 'cred' });
     const authApi = makeAuthApi();
     await attemptSilentPasskeyUpgrade(asAuthApi(authApi), 'u1');
+    // The backend persists the declared origin and exempts only this one
+    // from the user-presence check.
+    expect(authApi.preregisterPasskeyApiV1WebauthnPreregisterGet).toHaveBeenCalledWith({ origin: 'AUTH_SILENT' });
     // The conditional-create flag is what makes the ceremony invisible.
     expect(startRegistration).toHaveBeenCalledWith(
       expect.objectContaining({ useAutoRegister: true }),

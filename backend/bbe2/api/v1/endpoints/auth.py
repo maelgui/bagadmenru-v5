@@ -1,7 +1,7 @@
 import base64
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Iterable, Literal
+from typing import Annotated, Iterable
 
 import sentry_sdk
 from fastapi import (
@@ -609,7 +609,7 @@ async def preregister_passkey(
     current_user: Annotated[UserDB, Depends(get_current_profile)],
     session: SessionDep,
     settings: SettingsDep,
-    flow: Literal["explicit", "silent"] = "explicit",
+    origin: schemas.PasskeyOrigin,
 ):
     existing_credentials: Iterable[PasskeyDB] = []
     if current_user.passkey_user_id is None:
@@ -658,13 +658,14 @@ async def preregister_passkey(
     request.session["reg_challenge"] = base64.b64encode(
         simple_registration_options.challenge
     ).decode("utf-8")
-    # The flow the client declared when it started the ceremony (explicit
-    # enrolment vs silent conditional create) travels with the challenge and
-    # labels the outcome counter at /webauthn/register. Counting "started"
-    # here gives a funnel: silent ceremonies the browser aborted after
-    # preregister (declined conditional create) never reach register at all.
-    request.session["reg_flow"] = flow
-    WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="started").inc()
+    # The origin the client declared when it started the ceremony (which
+    # surface: settings, invitation, sign-in offer, silent upgrade) travels
+    # with the challenge: it labels the outcome counter at /webauthn/register
+    # and is persisted on the credential. Counting "started" here gives a
+    # funnel: silent ceremonies the browser aborted after preregister
+    # (declined conditional create) never reach register at all.
+    request.session["reg_origin"] = origin.value
+    WEBAUTHN_REGISTRATIONS.labels(origin=origin.value.lower(), outcome="started").inc()
 
     return Response(
         content=options_to_json(simple_registration_options),
@@ -683,13 +684,17 @@ async def register_passkey(
     session: SessionDep,
     settings: SettingsDep,
 ) -> str:
-    # The flow declared at /webauthn/preregister travels in the session next
-    # to the challenge and is consumed with it (single-use). "unknown" means
+    # The origin declared at /webauthn/preregister travels in the session next
+    # to the challenge and is consumed with it (single-use). None means
     # register was reached without a preregister in this session.
-    flow = request.session.pop("reg_flow", "unknown")
+    stored_origin = request.session.pop("reg_origin", None)
+    origin = schemas.PasskeyOrigin(stored_origin) if stored_origin else None
+    origin_label = origin.value.lower() if origin else "unknown"
     challenge = request.session.get("reg_challenge")
     if not challenge:
-        WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="missing_challenge").inc()
+        WEBAUTHN_REGISTRATIONS.labels(
+            origin=origin_label, outcome="missing_challenge"
+        ).inc()
         # Diagnostic: which session keys survived tells whether the cookie was
         # clobbered (stale keys), never set, or emptied entirely.
         with sentry_sdk.new_scope() as scope:
@@ -716,13 +721,13 @@ async def register_passkey(
             # registration EXCEPT a conditional create, which happens by
             # design without any user gesture (UP=0 — §5.1.3 makes the client
             # set requireUserPresence to false only for conditional
-            # mediation). The flow declared at preregister tells us which
-            # ceremony this is, so only the silent conditional create is
-            # exempted; explicit enrolments must carry a user gesture.
-            require_user_presence=flow != "silent",
+            # mediation). The origin declared at preregister tells us which
+            # ceremony this is, so only the silent upgrade is exempted;
+            # explicit enrolments must carry a user gesture.
+            require_user_presence=origin is not schemas.PasskeyOrigin.AUTH_SILENT,
         )
     except (InvalidJSONStructure, InvalidRegistrationResponse) as exc:
-        WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="invalid").inc()
+        WEBAUTHN_REGISTRATIONS.labels(origin=origin_label, outcome="invalid").inc()
         # Bad client data (malformed credential JSON or a failed WebAuthn
         # verification) is a 400, not a 500. py_webauthn's message pinpoints
         # the exact check that failed (origin, RP ID, challenge mismatch...)
@@ -752,13 +757,14 @@ async def register_passkey(
         device_type=verification.credential_device_type,
         back_up=verification.credential_backed_up,
         aaguid=verification.aaguid,
+        origin=origin,
         last_use_at=None,
         last_use_ip=None,
         last_use_ua=None,
     )
     session.add(passkey_db)
 
-    WEBAUTHN_REGISTRATIONS.labels(flow=flow, outcome="success").inc()
+    WEBAUTHN_REGISTRATIONS.labels(origin=origin_label, outcome="success").inc()
     return "OK"
 
 
