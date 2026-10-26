@@ -43,13 +43,25 @@ class FileOrFolderUpdate(BaseModel):
         return self
 
 
+class FileVersion(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    number: int
+    size: Optional[int] = None
+    uploaded_at: datetime
+    uploader: Optional[FileAuthor] = None
+    superseded_at: Optional[datetime] = None
+    purged_at: Optional[datetime] = None
+
+
 class FileOrFolder(_FileOrFolderBase):
     model_config = ConfigDict(from_attributes=True)
 
     type: FileOrFolderType
     id: int
     parent_id: Optional[int] = None
-    file_key: Optional[str] = None
+    current_version: Optional[FileVersion] = None
     source_format: Optional[str] = None
     processing_status: Optional[str] = None
     processing_failure_reason: Optional[str] = None
@@ -60,7 +72,6 @@ class FileOrFolder(_FileOrFolderBase):
     uploader: Optional[FileAuthor] = None
     modified_at: Optional[datetime] = None
     modifier: Optional[FileAuthor] = None
-    size: Optional[int] = None
 
 
 class FileAccessAction(Enum):

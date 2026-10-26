@@ -1,3 +1,4 @@
+import re
 from importlib.resources import files, open_binary
 from unittest.mock import ANY, MagicMock, patch
 
@@ -6,7 +7,7 @@ from fastapi.testclient import TestClient
 from bbe2.config import get_settings
 from bbe2.main import app
 from bbe2.schemas import FileOrFolderType
-from tests.conftest import DATABASE_URL, get_fake_settings
+from tests.conftest import DATABASE_URL, get_fake_settings, stored_file
 
 
 def test_get_root(client: TestClient):
@@ -20,7 +21,7 @@ def test_get_file(client: TestClient):
     assert response.status_code == 200
     assert response.json() == {
         "id": 1,
-        "file_key": None,
+        "current_version": None,
         "name": "root",
         "parent_id": None,
         "type": "DIR",
@@ -32,7 +33,6 @@ def test_get_file(client: TestClient):
         "uploader": None,
         "modified_at": None,
         "modifier": None,
-        "size": None,
     }
 
 
@@ -42,7 +42,7 @@ def test_get_children(client: TestClient):
     assert response.json() == [
         {
             "id": 2,
-            "file_key": None,
+            "current_version": None,
             "name": "file1",
             "parent_id": 1,
             "type": "DIR",
@@ -54,11 +54,10 @@ def test_get_children(client: TestClient):
             "uploader": None,
             "modified_at": None,
             "modifier": None,
-            "size": None,
         },
         {
             "id": 3,
-            "file_key": None,
+            "current_version": None,
             "name": "file2",
             "parent_id": 1,
             "type": "DIR",
@@ -70,7 +69,6 @@ def test_get_children(client: TestClient):
             "uploader": None,
             "modified_at": None,
             "modifier": None,
-            "size": None,
         },
     ]
 
@@ -112,17 +110,22 @@ def test_upload_file(mock_upload_file: MagicMock, client: TestClient):
     assert response.status_code == 201
     json_response = response.json()
 
-    mock_upload_file.assert_called_once_with(
-        ANY,
-        json_response["file_key"],
-        content_type="image/jpeg",
-    )
+    mock_upload_file.assert_called_once_with(ANY, ANY, content_type="image/jpeg")
+    assert re.fullmatch(r"files/[0-9a-f-]{36}-v1", mock_upload_file.call_args.args[1])
 
     assert json_response == {
         "id": 4,
         "name": "lena.jpg",
         "type": "FILE",
-        "file_key": ANY,
+        "current_version": {
+            "id": ANY,
+            "number": 1,
+            "size": ANY,
+            "uploaded_at": ANY,
+            "uploader": ANY,
+            "superseded_at": None,
+            "purged_at": None,
+        },
         "parent_id": 1,
         "child_count": None,
         "source_format": None,
@@ -132,7 +135,6 @@ def test_upload_file(mock_upload_file: MagicMock, client: TestClient):
         "uploader": ANY,
         "modified_at": None,
         "modifier": None,
-        "size": ANY,
     }
 
 
@@ -148,13 +150,14 @@ def test_upload_file_records_uploader_and_size(
     assert response.status_code == 201
     body = response.json()
     assert body["uploader"]["name"] == "john doe"
-    assert body["size"] == len(b"hello world")
+    assert body["current_version"]["uploader"]["name"] == "john doe"
+    assert body["current_version"]["size"] == len(b"hello world")
     assert body["modified_at"] is None
 
 
 @patch("bbe2.utils.s3.S3Helper.delete_object")
 @patch("bbe2.utils.s3.S3Helper.upload_file")
-def test_force_reupload_file_updates_in_place(
+def test_force_reupload_file_adds_a_version_and_keeps_the_previous_one(
     mock_upload_file: MagicMock, mock_delete: MagicMock, client: TestClient
 ):
     first = client.post(
@@ -171,16 +174,24 @@ def test_force_reupload_file_updates_in_place(
     assert second.status_code == 201
     updated = second.json()
 
-    # Same entity (id preserved), new content (file_key rotated to bust the
-    # immutable cache), modification stamped, original upload metadata kept.
     assert updated["id"] == original["id"]
-    assert updated["file_key"] != original["file_key"]
-    assert updated["size"] == len(b"v2-longer")
+    assert updated["current_version"]["number"] == 2
+    assert updated["current_version"]["size"] == len(b"v2-longer")
     assert updated["uploaded_at"] == original["uploaded_at"]
     assert updated["modified_at"] is not None
     assert updated["modifier"]["name"] == "john doe"
-    # The previous S3 object is cleaned up.
-    mock_delete.assert_called_once_with(original["file_key"])
+    first_key, second_key = (c.args[1] for c in mock_upload_file.call_args_list)
+    assert first_key.endswith("-v1")
+    assert second_key == first_key.removesuffix("-v1") + "-v2"
+    mock_delete.assert_not_called()
+
+    versions = client.get(f"/api/v1/files/{original['id']}/versions").json()
+    assert [(v["number"], v["size"]) for v in versions] == [
+        (2, len(b"v2-longer")),
+        (1, len(b"v1")),
+    ]
+    assert versions[0]["superseded_at"] is None
+    assert versions[1]["superseded_at"] is not None
 
 
 @patch("bbe2.utils.s3.S3Helper.delete_object")
@@ -202,7 +213,7 @@ def test_upload_reads_size_before_s3_consumes_the_stream(
         files={"file": ("notes.txt", b"hello world")},
     )
     assert response.status_code == 201
-    assert response.json()["size"] == len(b"hello world")
+    assert response.json()["current_version"]["size"] == len(b"hello world")
 
 
 def test_rename_file(client: TestClient):
@@ -213,7 +224,7 @@ def test_rename_file(client: TestClient):
         "name": "Suite 2021",
         "parent_id": 1,
         "type": "DIR",
-        "file_key": None,
+        "current_version": None,
         "child_count": None,
         "source_format": None,
         "processing_status": None,
@@ -222,7 +233,6 @@ def test_rename_file(client: TestClient):
         "uploader": None,
         "modified_at": ANY,
         "modifier": ANY,
-        "size": None,
     }
 
 
@@ -435,10 +445,10 @@ def test_reupload_container_with_force_regenerates(
     engine = get_engine(DATABASE_URL)
     session = sessionmaker(bind=engine)()
     session.add(
-        m.FileOrFolderDB(
+        stored_file(
+            "files/old-pdf",
             type=FileOrFolderType.FILE,
             name="Suite.pdf",
-            file_key="files/old-pdf",
             parent_id=container_id,
         )
     )
@@ -483,15 +493,15 @@ def test_reupload_container_commits_new_source_before_generate(
     engine = get_engine(DATABASE_URL)
     session = sessionmaker(bind=engine)()
     session.add(
-        m.FileOrFolderDB(
+        stored_file(
+            "files/old-pdf",
             type=FileOrFolderType.FILE,
             name="Suite.pdf",
-            file_key="files/old-pdf",
             parent_id=container_id,
         )
     )
     container = session.get(m.FileOrFolderDB, container_id)
-    old_key = container.file_key
+    old_version_id = container.current_version_id
     session.commit()
     session.close()
 
@@ -505,7 +515,7 @@ def test_reupload_container_commits_new_source_before_generate(
             .filter(m.FileOrFolderDB.parent_id == cid)
             .all()
         )
-        seen["file_key"] = node.file_key
+        seen["current_version_id"] = node.current_version_id
         seen["processing_status"] = node.processing_status
         seen["child_count"] = len(children)
         probe.close()
@@ -519,7 +529,7 @@ def test_reupload_container_commits_new_source_before_generate(
 
     assert response.status_code == 201
     assert seen["processing_status"] == "pending"
-    assert seen["file_key"] != old_key
+    assert seen["current_version_id"] != old_version_id
     assert seen["child_count"] == 0
 
 
@@ -541,10 +551,10 @@ def test_container_child_cannot_be_modified_or_deleted(
     container_id = _make_container(client)
     engine = get_engine(DATABASE_URL)
     session = sessionmaker(bind=engine)()
-    child = m.FileOrFolderDB(
+    child = stored_file(
+        "files/child",
         type=FileOrFolderType.FILE,
         name="Suite.pdf",
-        file_key="files/child",
         parent_id=container_id,
     )
     session.add(child)
@@ -573,13 +583,13 @@ def test_delete_container_cascades_s3(mock_delete: MagicMock, client: TestClient
     engine = get_engine(DATABASE_URL)
     session = sessionmaker(bind=engine)()
     container = session.get(m.FileOrFolderDB, container_id)
-    container.file_key = "files/source"
+    container.current_version.file_key = "files/source"
     for key in ("files/pdf-a", "files/pdf-b"):
         session.add(
-            m.FileOrFolderDB(
+            stored_file(
+                key,
                 type=FileOrFolderType.FILE,
                 name=key,
-                file_key=key,
                 parent_id=container_id,
             )
         )
@@ -607,18 +617,18 @@ def test_list_files_with_type_file_hides_container_shows_generated_pdfs(
     container = session.get(m.FileOrFolderDB, container_id)
     container.name = "Bro Goz.mscz"
     session.add(
-        m.FileOrFolderDB(
+        stored_file(
+            "files/pdf",
             type=FileOrFolderType.FILE,
             name="Bro Goz.pdf",
-            file_key="files/pdf",
             parent_id=container_id,
         )
     )
     session.add(
-        m.FileOrFolderDB(
+        stored_file(
+            "files/plain",
             type=FileOrFolderType.FILE,
             name="Reglement.pdf",
-            file_key="files/plain",
             parent_id=1,
         )
     )
@@ -631,3 +641,88 @@ def test_list_files_with_type_file_hides_container_shows_generated_pdfs(
     assert "Bro Goz.pdf" in names
     assert "Reglement.pdf" in names
     assert "Bro Goz.mscz" not in names
+
+
+def _upload_two_versions(client: TestClient) -> int:
+    with patch("bbe2.utils.s3.S3Helper.upload_file"):
+        file_id = client.post(
+            "/api/v1/files/1/upload",
+            files={"file": ("notes.txt", b"v1")},
+        ).json()["id"]
+        client.post(
+            "/api/v1/files/1/upload?force=true",
+            files={"file": ("notes.txt", b"v2")},
+        )
+    return file_id
+
+
+def test_list_versions_of_unknown_file_is_404(client: TestClient):
+    assert client.get("/api/v1/files/999/versions").status_code == 404
+
+
+@patch("bbe2.utils.s3.S3Helper.generate_get_presigned_url", return_value="https://s3/x")
+def test_download_previous_version_redirects_with_versioned_name(
+    mock_presign: MagicMock, client: TestClient
+):
+    file_id = _upload_two_versions(client)
+    versions = client.get(f"/api/v1/files/{file_id}/versions").json()
+    previous = versions[1]
+
+    response = client.get(
+        f"/api/v1/files/{file_id}/versions/{previous['id']}/download",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "https://s3/x"
+    assert mock_presign.call_args.kwargs["filename"] == "notes (v1).txt"
+    assert mock_presign.call_args.kwargs["disposition"] == "attachment"
+    assert mock_presign.call_args.kwargs["object_name"].endswith("-v1")
+
+
+def test_download_version_of_another_file_is_404(client: TestClient):
+    file_id = _upload_two_versions(client)
+    version_id = client.get(f"/api/v1/files/{file_id}/versions").json()[0]["id"]
+
+    response = client.get(
+        f"/api/v1/files/2/versions/{version_id}/download", follow_redirects=False
+    )
+
+    assert response.status_code == 404
+
+
+def test_download_purged_version_is_410(client: TestClient):
+    from datetime import datetime, timezone
+
+    from sqlalchemy.orm import sessionmaker
+
+    from bbe2 import models as m
+    from bbe2.database import get_engine
+
+    file_id = _upload_two_versions(client)
+    previous_id = client.get(f"/api/v1/files/{file_id}/versions").json()[1]["id"]
+    session = sessionmaker(bind=get_engine(DATABASE_URL))()
+    session.get(m.FileVersionDB, previous_id).purged_at = datetime.now(timezone.utc)
+    session.commit()
+    session.close()
+
+    response = client.get(
+        f"/api/v1/files/{file_id}/versions/{previous_id}/download",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 410
+    versions = client.get(f"/api/v1/files/{file_id}/versions").json()
+    assert versions[1]["purged_at"] is not None
+
+
+@patch("bbe2.utils.s3.S3Helper.delete_object")
+def test_delete_file_deletes_every_stored_version(
+    mock_delete: MagicMock, client: TestClient
+):
+    file_id = _upload_two_versions(client)
+
+    assert client.delete(f"/api/v1/files/{file_id}").status_code == 204
+
+    deleted = sorted(call.args[0][-3:] for call in mock_delete.call_args_list)
+    assert deleted == ["-v1", "-v2"]

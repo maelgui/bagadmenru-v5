@@ -14,6 +14,7 @@ export * from './FileAuthor';
 export * from './FileOrFolder';
 export * from './FileOrFolderType';
 export * from './FileOrFolderUpdate';
+export * from './FileVersion';
 export * from './FolderCreate';
 export * from './GetUploadUrlResponse';
 export * from './GlobalStats';

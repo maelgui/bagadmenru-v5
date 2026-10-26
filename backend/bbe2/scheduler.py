@@ -8,8 +8,10 @@ from bbe2.database import session_ctx
 from bbe2.models import GroupDB
 from bbe2.services import mailing as mailing_service
 from bbe2.services import membership as membership_service
+from bbe2.services.files import purge_superseded_versions
 from bbe2.utils import get_logger
 from bbe2.utils.action_token import purge_expired_action_tokens
+from bbe2.utils.s3 import S3Helper
 
 scheduler = AsyncIOScheduler()
 
@@ -62,3 +64,10 @@ async def daily_cleanup():
             ses, grace_days=settings.action_token_ttl_days
         )
         logger.info("Action token purge complete: %d deleted", tokens)
+
+        versions = purge_superseded_versions(
+            ses,
+            S3Helper(settings),
+            retention_days=settings.file_version_retention_days,
+        )
+        logger.info("File version purge complete: %d purged", versions)

@@ -9,7 +9,7 @@ from bbe2.database import get_engine
 from bbe2.models.base import Base
 from bbe2.schemas import FileOrFolderType
 from bbe2.services.conversion import ConversionService
-from tests.conftest import DATABASE_URL, get_fake_settings
+from tests.conftest import DATABASE_URL, get_fake_settings, stored_file
 
 
 def _pdf(name: str) -> dict:
@@ -34,10 +34,10 @@ def session():
 
 
 def _make_container(session, file_key: str = "files/source") -> int:
-    container = models.FileOrFolderDB(
+    container = stored_file(
+        file_key,
         type=FileOrFolderType.CONTAINER,
         name="Suite.mscz",
-        file_key=file_key,
         parent_id=1,
         source_format="mscz",
         processing_status="pending",
@@ -80,12 +80,12 @@ def test_duplicate_part_names_are_disambiguated(session):
 
 
 def test_stale_run_discards_results_when_source_changed(session):
-    container_id = _make_container(session, file_key="files/old-source")
+    container_id = _make_container(session)
     service = _service()
 
     def swap_source(_source_key: str) -> bytes:
         container = session.get(models.FileOrFolderDB, container_id)
-        container.file_key = "files/new-source"
+        container.add_version(size=None, uploaded_by=None)
         session.commit()
         return b"<score/>"
 
@@ -104,7 +104,33 @@ def test_stale_run_discards_results_when_source_changed(session):
         .all()
     )
     assert children == []
-    service.s3.delete_object.assert_called()
+    service.s3.upload_file.assert_not_called()
+
+
+def test_failed_upload_discards_derived_files_and_uploaded_objects(session):
+    container_id = _make_container(session)
+    service = _service()
+    service.s3.upload_file.side_effect = [None, RuntimeError("s3 down")]
+
+    with patch.object(service, "_download", return_value=b"<score/>"), patch(
+        "bbe2.services.conversion.httpx.post"
+    ) as mock_post:
+        mock_post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"outputs": [_pdf("Suite.pdf"), _mp3("Suite.mp3")]},
+        )
+        with pytest.raises(RuntimeError):
+            service._run(container_id)
+
+    session.expire_all()
+    children = (
+        session.query(models.FileOrFolderDB)
+        .filter(models.FileOrFolderDB.parent_id == container_id)
+        .all()
+    )
+    assert children == []
+    first_key = service.s3.upload_file.call_args_list[0].args[1]
+    service.s3.delete_object.assert_called_once_with(first_key)
 
 
 def test_pdf_and_mp3_outputs_uploaded_with_correct_content_types(session):
@@ -126,6 +152,7 @@ def test_pdf_and_mp3_outputs_uploaded_with_correct_content_types(session):
         .all()
     )
     assert [c.name for c in children] == ["Suite.pdf", "Suite.mp3"]
+    assert [c.current_version.size for c in children] == [8, 4]
 
     content_types = {
         call.kwargs["content_type"] for call in service.s3.upload_file.call_args_list

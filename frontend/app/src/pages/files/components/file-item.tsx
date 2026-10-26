@@ -125,7 +125,7 @@ function FileItemLink({
     onContextMenu: (event: MouseEvent) => event.preventDefault(),
     ...bind(),
   };
-  if (file.type === FileOrFolderType.File && file.fileKey) {
+  if (file.type === FileOrFolderType.File && file.currentVersion) {
     return (
       <a
         href={fileViewUrl(file.id)}
@@ -220,7 +220,7 @@ export default function FileItem({
   const isFile = file.type === FileOrFolderType.File;
   const isContainer = file.type === FileOrFolderType.Container;
 
-  const showDownload = (isFile || isContainer) && !!file.fileKey;
+  const showDownload = (isFile || isContainer) && !!file.currentVersion;
   const downloadLabel = isContainer ? 'Télécharger la source' : 'Télécharger';
   const hasActions = !noAction && (showDownload || renameFn !== undefined || moveFn !== undefined || deleteFn !== undefined || detailsFn !== undefined);
 

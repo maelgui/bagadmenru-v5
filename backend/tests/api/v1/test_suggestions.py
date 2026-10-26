@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from bbe2 import models
 from bbe2.database import get_engine
 from bbe2.schemas import FileAccessAction, FileOrFolderType
-from tests.conftest import DATABASE_URL
+from tests.conftest import DATABASE_URL, stored_file
 
 SEEDED_USER_ID = "a8e2d3249e9d997e"
 
@@ -19,12 +19,12 @@ def _session():
 def _add_file(file_id: int, name: str, parent_id: int, uploaded_at=None) -> None:
     with _session() as session:
         session.add(
-            models.FileOrFolderDB(
+            stored_file(
+                f"files/{file_id}",
                 id=file_id,
                 type=FileOrFolderType.FILE,
                 name=name,
                 parent_id=parent_id,
-                file_key=f"files/{file_id}",
                 uploaded_at=uploaded_at or datetime.now(timezone.utc),
             )
         )

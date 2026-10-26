@@ -52,7 +52,7 @@ export function ContainerStatus({ container }: { container: FileOrFolder }) {
 }
 
 function ContainerSourceDownload({ container }: { container: FileOrFolder }) {
-  if (!container.fileKey) return null;
+  if (!container.currentVersion) return null;
   return (
     <AlertAction>
       <a

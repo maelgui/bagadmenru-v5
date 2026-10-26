@@ -119,6 +119,12 @@ class Settings(BaseSettings):
     # dead; the delay only leaves a short window for debugging/audit.
     action_token_ttl_days: int = 7
 
+    # Re-uploading a file keeps the previous content as a version. A daily job
+    # deletes the S3 object of versions superseded more than this many days ago;
+    # the version row stays so the history still shows who uploaded what, when.
+    # The current version is never purged.
+    file_version_retention_days: int = 365
+
     # Auto-generated API keys (minted by UI flows such as the calendar-sync
     # dialog, one fresh key per dialog open) that never authenticated are dead
     # weight: the member closed the dialog without subscribing. A daily job

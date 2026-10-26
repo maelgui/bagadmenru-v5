@@ -59,6 +59,21 @@ class RendererError(Exception):
     pass
 
 
+def _disambiguated(outputs: list[tuple[str, bytes]]) -> list[tuple[str, bytes]]:
+    seen: dict[str, int] = {}
+    result = []
+    for name, content in outputs:
+        if name in seen:
+            seen[name] += 1
+            stem, dot, ext = name.rpartition(".")
+            suffix = f" ({seen[name]})"
+            name = f"{stem}{suffix}{dot}{ext}" if dot else f"{name}{suffix}"
+        else:
+            seen[name] = 0
+        result.append((name, content))
+    return result
+
+
 class ConversionService:
     def __init__(self, settings: Settings, s3: S3Helper):
         self.settings = settings
@@ -84,60 +99,48 @@ class ConversionService:
             container.processing_status = STATUS_PROCESSING
             container.processing_failure_reason = None
             session.commit()
-            source_key = container.file_key
+            source_version_id = container.current_version_id
+            source_key = container.current_version.file_key
             source_format = container.source_format
             base_name = container.name.rsplit(".", 1)[0]
 
         source_bytes = self._download(source_key)
         outputs = self._render(source_bytes, source_format, base_name)
 
-        uploaded: list[tuple[str, str]] = []
-        try:
-            for display_name, output_bytes in outputs:
-                key = "files/" + str(uuid.uuid4())
-                self.s3.upload_file(
-                    io.BytesIO(output_bytes),
-                    key,
-                    content_type=content_type_for(display_name),
-                )
-                uploaded.append((display_name, key))
-        except Exception:
-            for _, key in uploaded:
-                self.s3.delete_object(key)
-            raise
-
         with session_ctx(self.settings.database_url) as session:
-            container = session.get(FileOrFolderDB, container_id)
+            container = session.get(FileOrFolderDB, container_id, with_for_update=True)
             if (
                 container is None
                 or container.type != FileOrFolderType.CONTAINER
                 or container.processing_status != STATUS_PROCESSING
-                or container.file_key != source_key
+                or container.current_version_id != source_version_id
             ):
-                for _, key in uploaded:
-                    self.s3.delete_object(key)
                 return
-            seen: dict[str, int] = {}
-            for display_name, key in uploaded:
-                if display_name in seen:
-                    seen[display_name] += 1
-                    stem, dot, ext = display_name.rpartition(".")
-                    suffix = f" ({seen[display_name]})"
-                    display_name = (
-                        f"{stem}{suffix}{dot}{ext}"
-                        if dot
-                        else f"{display_name}{suffix}"
-                    )
-                else:
-                    seen[display_name] = 0
-                session.add(
-                    FileOrFolderDB(
-                        name=display_name,
-                        type=FileOrFolderType.FILE,
-                        file_key=key,
-                        parent_id=container_id,
-                    )
+            derived: list[tuple[FileOrFolderDB, str, bytes]] = []
+            for name, content in _disambiguated(outputs):
+                node = FileOrFolderDB(
+                    name=name,
+                    type=FileOrFolderType.FILE,
+                    storage_id=str(uuid.uuid4()),
+                    parent_id=container_id,
                 )
+                version = node.add_version(size=len(content), uploaded_by=None)
+                derived.append((node, version.file_key, content))
+            session.add_all(node for node, _, _ in derived)
+            session.flush()
+            uploaded: list[str] = []
+            try:
+                for node, key, content in derived:
+                    self.s3.upload_file(
+                        io.BytesIO(content),
+                        key,
+                        content_type=content_type_for(node.name),
+                    )
+                    uploaded.append(key)
+            except Exception:
+                for key in uploaded:
+                    self.s3.delete_object(key)
+                raise
             container.processing_status = STATUS_COMPLETED
             container.processing_failure_reason = None
             session.commit()

@@ -9,3 +9,7 @@ export function fileViewUrl(fileId: number): string {
 export function fileDownloadUrl(fileId: number): string {
   return `${base()}/api/v1/files/${fileId}/download`;
 }
+
+export function fileVersionDownloadUrl(fileId: number, versionId: number): string {
+  return `${base()}/api/v1/files/${fileId}/versions/${versionId}/download`;
+}

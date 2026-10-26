@@ -23,6 +23,7 @@ import RenameDialog from './components/dialogs/rename-dialog';
 import UploadProgressDialog from './components/dialogs/upload-progress-dialog';
 import Suggestions from './components/suggestions';
 import { useBatchUpload } from './use-batch-upload';
+import { useFileVersions } from './use-file-versions';
 import { useFolder } from './use-folder';
 import { useSuggestions } from './use-suggestions';
 
@@ -241,6 +242,7 @@ export default function ListFilesPage() {
   const [fileToRename, setFileToRename] = useState<FileOrFolder | undefined>(undefined);
   const [fileToMove, setFileToMove] = useState<FileOrFolder | undefined>(undefined);
   const [fileToShow, setFileToShow] = useState<FileOrFolder | undefined>(undefined);
+  const { data: versions } = useFileVersions(fileToShow);
   const [creatingFolder, setCreatingFolder] = useState(false);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -301,6 +303,7 @@ export default function ListFilesPage() {
       />
       <FileDetailsDialog
         file={fileToShow}
+        versions={versions}
         onClose={() => setFileToShow(undefined)}
       />
       {fileToRename ? (

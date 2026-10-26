@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
-import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
+import { type FileOrFolder, FileOrFolderType, type FileVersion } from 'bagad-client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import FileDetailsDialog from './file-details-dialog';
 
@@ -34,7 +34,7 @@ describe('FileDetailsDialog', () => {
     render(
       <FileDetailsDialog
         file={makeFile({
-          size: 2048,
+          currentVersion: { id: 1, number: 1, size: 2048, uploadedAt: new Date('2026-01-15T09:30:00Z') },
           uploader: { id: 'u1', firstName: 'Mael', lastName: 'Gui', name: 'Mael Gui' },
         })}
         onClose={vi.fn()}
@@ -65,5 +65,42 @@ describe('FileDetailsDialog', () => {
   it('renders nothing when no file is provided', () => {
     render(<FileDetailsDialog file={undefined} onClose={vi.fn()} />);
     expect(screen.queryByText('Détails')).toBeNull();
+  });
+
+  it('hides the version history while the file has a single version', () => {
+    const versions: FileVersion[] = [{ id: 1, number: 1, uploadedAt: new Date('2026-01-15T09:30:00Z') }];
+    render(<FileDetailsDialog file={makeFile()} versions={versions} onClose={vi.fn()} />);
+    expect(screen.queryByText('Versions')).toBeNull();
+  });
+
+  it('lists versions with a download link, the current badge and expired ones', () => {
+    const versions: FileVersion[] = [
+      {
+        id: 3,
+        number: 3,
+        size: 2048,
+        uploadedAt: new Date('2026-03-01T10:00:00Z'),
+        uploader: { id: 'u1', firstName: 'Mael', lastName: 'Gui', name: 'Mael Gui' },
+      },
+      {
+        id: 2, number: 2, uploadedAt: new Date('2026-02-01T10:00:00Z'), supersededAt: new Date('2026-03-01T10:00:00Z'),
+      },
+      {
+        id: 1,
+        number: 1,
+        uploadedAt: new Date('2025-01-01T10:00:00Z'),
+        supersededAt: new Date('2025-02-01T10:00:00Z'),
+        purgedAt: new Date('2026-02-02T04:00:00Z'),
+      },
+    ];
+    render(<FileDetailsDialog file={makeFile()} versions={versions} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Versions')).toBeTruthy();
+    expect(screen.getAllByText('Actuelle')).toHaveLength(1);
+    expect(screen.getByText(/1 mars 2026.*Mael Gui · 2\.0 Ko/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Télécharger la version 2' }).getAttribute('href'))
+      .toMatch(/\/api\/v1\/files\/1\/versions\/2\/download$/);
+    expect(screen.queryByRole('link', { name: 'Télécharger la version 1' })).toBeNull();
+    expect(screen.getByText('Expirée')).toBeTruthy();
   });
 });
