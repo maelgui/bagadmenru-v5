@@ -9,6 +9,10 @@ export const MIN_QUERY_LENGTH = 2;
 
 const NO_RESULTS: SearchResults = { events: [], profiles: [], files: [] };
 
+export function isLongEnough(query: string): boolean {
+  return tokens(query).join(' ').length >= MIN_QUERY_LENGTH;
+}
+
 export function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -22,7 +26,7 @@ export function useGlobalSearch(query: string) {
   const { searchApi } = useApiClient();
   const { can } = usePermissions();
   const debounced = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
-  const enabled = tokens(debounced).join(' ').length >= MIN_QUERY_LENGTH;
+  const enabled = isLongEnough(debounced);
 
   const { data, isFetching } = useQuery({
     queryKey: ['search', debounced],
@@ -34,7 +38,7 @@ export function useGlobalSearch(query: string) {
 
   const results = enabled && data ? data : NO_RESULTS;
   return {
-    pages: matchPages(query, can),
+    pages: isLongEnough(query) ? matchPages(query, can) : [],
     ...results,
     isSearching: enabled && (isFetching || debounced !== query.trim()),
   };

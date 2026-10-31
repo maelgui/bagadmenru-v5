@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 
-def test_search_returns_every_kind(client: TestClient):
+def test_search_requires_every_token_across_each_kind(client: TestClient):
     response = client.get("/api/v1/search/", params={"q": "nicolas file1 doe"})
 
     assert response.status_code == 200

@@ -18,6 +18,7 @@ import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
 import IcsExportButton from './components/ics-export';
 import DisplaySelector from './components/selector';
+import { profilesQuery } from '../profiles/queries';
 import { upcomingDoodleEventsQuery, upcomingResponsesQuery, useRespondMutation } from './queries';
 
 function sumByEvents(list: Response[]) {
@@ -53,7 +54,7 @@ export default function DoodlePage() {
   const [editing, setEditing] = useState(false);
 
   const { data: events } = useQuery(upcomingDoodleEventsQuery(eventsApi));
-  const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet() });
+  const { data: profiles } = useQuery(profilesQuery(usersApi));
   const { data: responses } = useQuery({
     ...upcomingResponsesQuery(eventsApi),
     select: responseFormat,

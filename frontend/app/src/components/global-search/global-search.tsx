@@ -21,11 +21,11 @@ import { fileViewUrl } from '../../utils/file-urls';
 import { pageTitle, type SearchablePage } from './pages';
 import { MIN_QUERY_LENGTH, useGlobalSearch } from './use-global-search';
 
-const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent);
 
 function Shortcut() {
   return (
-    <kbd className="hidden items-center gap-0.5 rounded-md border border-border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground lg:inline-flex">
+    <kbd className="inline-flex items-center gap-0.5 rounded-md border border-border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground">
       {isMac ? '⌘' : 'Ctrl'}
       K
     </kbd>
@@ -46,18 +46,17 @@ function EventItem({ event, onSelect }: { event: Event; onSelect: () => void }) 
   const category = EventCategories[event.category];
   return (
     <CommandItem value={`event:${event.id}`} onSelect={onSelect} className="items-start">
-      <span className="flex w-9 shrink-0 flex-col items-center leading-none">
+      <span className="flex w-11 shrink-0 flex-col items-center leading-none">
         <span className="font-heading text-base">{event.date.getDate()}</span>
         <span className="text-[10px] text-muted-foreground">
-          {event.date.toLocaleString('fr', { month: 'short' })}
+          {event.date.toLocaleString('fr', { month: 'short', year: '2-digit' })}
         </span>
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate">{event.title}</span>
-        <span className="truncate text-xs font-normal text-muted-foreground">
-          {event.date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
-          {event.description ? ` · ${event.description}` : ''}
-        </span>
+        {event.description ? (
+          <span className="truncate text-xs font-normal text-muted-foreground">{event.description}</span>
+        ) : null}
       </span>
       <Badge variant={category?.variant ?? 'default'} className={category?.className}>
         {category?.name ?? event.category}
@@ -121,21 +120,25 @@ export default function GlobalSearch() {
     pages, events, profiles, files, isSearching,
   } = useGlobalSearch(query);
 
+  const setOpenState = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) setQuery('');
+  };
+  const close = () => setOpenState(false);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setOpen((isOpen) => !isOpen);
+        setOpen((isOpen) => {
+          if (isOpen) setQuery('');
+          return !isOpen;
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  const close = () => {
-    setOpen(false);
-    setQuery('');
-  };
 
   const goTo = (to: string) => {
     close();
@@ -158,7 +161,7 @@ export default function GlobalSearch() {
       <Button
         type="button"
         variant="outline"
-        className="hidden w-56 justify-start text-muted-foreground lg:inline-flex"
+        className="hidden w-56 justify-start text-muted-foreground xl:inline-flex"
         onClick={() => setOpen(true)}
         aria-label="Rechercher"
         aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}
@@ -171,7 +174,7 @@ export default function GlobalSearch() {
         type="button"
         variant="ghost"
         size="icon"
-        className="lg:hidden"
+        className="xl:hidden"
         onClick={() => setOpen(true)}
         aria-label="Rechercher"
       >
@@ -180,7 +183,7 @@ export default function GlobalSearch() {
 
       <CommandDialog
         open={open}
-        onOpenChange={(isOpen) => (isOpen ? setOpen(true) : close())}
+        onOpenChange={setOpenState}
         title="Recherche"
         description="Rechercher une page, un évènement, un membre ou un fichier"
       >

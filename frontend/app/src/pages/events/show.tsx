@@ -16,6 +16,7 @@ import {
   ParticipantsBlock,
   useEventResponsesSummary,
 } from './components/responses';
+import { profilesQuery } from '../profiles/queries';
 import {
   eventQuery, eventResponsesQuery, upcomingResponsesQuery, useRespondMutation,
 } from './queries';
@@ -28,10 +29,7 @@ function longDate(date: Date): string {
 
 function EventResponses({ event, canRespond }: { event: Event; canRespond: boolean }) {
   const { eventsApi, usersApi } = useApiClient();
-  const { data: profiles } = useQuery({
-    queryKey: ['profiles'],
-    queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet(),
-  });
+  const { data: profiles } = useQuery(profilesQuery(usersApi));
   const { data: responses } = useQuery(eventResponsesQuery(eventsApi, event.id));
   // Same population as the planning page: members who take part in the
   // doodle (at least one upcoming answer), so the response rate is comparable.
@@ -74,11 +72,15 @@ function EventDetails({ event }: { event: Event }) {
   const { can } = usePermissions();
   const canSeeResponses = can('view', 'response') && can('view', 'profile');
   return (
-    <div className="surface rounded-4xl p-6">
-      <EventBadgeRow event={event} showResponse={false} />
-      <p className="mt-4 whitespace-pre-line">{event.description || 'Pas de description'}</p>
+    <div className="grid items-start gap-4 lg:grid-cols-[2fr_1fr]">
+      <div className="surface rounded-4xl p-6">
+        <EventBadgeRow event={event} showResponse={false} />
+        <p className="mt-4 whitespace-pre-line">{event.description || 'Pas de description'}</p>
+      </div>
       {canSeeResponses && event.isInDoodle ? (
-        <EventResponses event={event} canRespond={can('create', 'response')} />
+        <div className="surface rounded-4xl p-6 pt-2">
+          <EventResponses event={event} canRespond={can('create', 'response')} />
+        </div>
       ) : null}
     </div>
   );

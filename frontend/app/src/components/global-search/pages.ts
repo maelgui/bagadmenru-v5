@@ -1,30 +1,22 @@
 import {
   type LucideIcon,
-  ActivityIcon,
-  BellIcon,
   CalendarDaysIcon,
   CalendarIcon,
   CalendarPlusIcon,
   CalendarRangeIcon,
   FolderIcon,
   HouseIcon,
-  KeyIcon,
-  KeyRoundIcon,
-  LayoutDashboardIcon,
   LayoutListIcon,
-  MegaphoneIcon,
-  PaletteIcon,
-  ShieldCheckIcon,
-  ShieldIcon,
   TrophyIcon,
   UserIcon,
   UserMinusIcon,
   UserPlusIcon,
-  UserRoundCogIcon,
   UsersIcon,
-  UsersRoundIcon,
   WalletIcon,
 } from 'lucide-react';
+import type { SectionNavItem } from '../section-nav';
+import { ADMIN_BASE, ADMIN_SECTIONS } from '../../pages/admin/sections';
+import { SETTINGS_BASE, SETTINGS_SECTIONS } from '../../pages/profiles/settings/sections';
 
 export interface SearchablePage {
   label: string;
@@ -33,6 +25,40 @@ export interface SearchablePage {
   section?: string;
   keywords?: string[];
   permission?: [action: string, resource: string];
+}
+
+export const PAGE_RESULTS_LIMIT = 5;
+
+// Extra search words for section pages, keyed by route. The sections
+// themselves (label, path, icon) are owned by their layout.
+const SECTION_KEYWORDS: Record<string, string[]> = {
+  '/profile/settings/profile': ['photo', 'nom'],
+  '/profile/settings/account': ['email', 'déconnexion'],
+  '/profile/settings/appearance': ['thème', 'sombre', 'clair'],
+  '/profile/settings/membership': ['cotisation', 'helloasso'],
+  '/profile/settings/security': ['passkey', 'mot de passe', 'sessions'],
+  '/profile/settings/api': ['clé', 'ics', 'calendrier'],
+  '/profile/settings/notifications': ['push', 'email'],
+  '/admin/groups': ['pupitres'],
+  '/admin/members': ['comptes'],
+  '/admin/memberships': ['helloasso'],
+  '/admin/communication': ['mailing', 'listes'],
+  '/admin/security': ['passkeys', 'sessions'],
+  '/admin/system': ['statut', 'intégrations'],
+};
+
+function sectionPages(
+  base: string,
+  items: SectionNavItem[],
+  section: string,
+  permission?: [action: string, resource: string],
+): SearchablePage[] {
+  return items.map((item) => {
+    const to = `${base}/${item.to}`;
+    return {
+      label: item.label, to, icon: item.icon, section, keywords: SECTION_KEYWORDS[to], permission,
+    };
+  });
 }
 
 export const SEARCHABLE_PAGES: SearchablePage[] = [
@@ -49,24 +75,9 @@ export const SEARCHABLE_PAGES: SearchablePage[] = [
   { label: 'Inviter un membre', to: '/profile/invite', icon: UserPlusIcon, keywords: ['invitation', 'parrainage', 'qr'], permission: ['create', 'invitation'] },
   { label: 'Rapprochement des adhésions', to: '/profile/membership/reconciliation', icon: WalletIcon, keywords: ['helloasso', 'cotisation'], permission: ['edit', 'membership'] },
   { label: 'Mon profil', to: '/profile/me', icon: UserIcon, keywords: ['moi'] },
-  { label: 'Profil', to: '/profile/settings/profile', icon: UserIcon, section: 'Paramètres', keywords: ['photo', 'nom'] },
-  { label: 'Compte', to: '/profile/settings/account', icon: UserRoundCogIcon, section: 'Paramètres', keywords: ['email', 'déconnexion'] },
-  { label: 'Apparence', to: '/profile/settings/appearance', icon: PaletteIcon, section: 'Paramètres', keywords: ['thème', 'sombre', 'clair'] },
-  { label: 'Adhésion', to: '/profile/settings/membership', icon: WalletIcon, section: 'Paramètres', keywords: ['cotisation', 'helloasso'] },
-  { label: 'Sécurité', to: '/profile/settings/security', icon: ShieldIcon, section: 'Paramètres', keywords: ['passkey', 'mot de passe', 'sessions'] },
-  { label: 'Accès API', to: '/profile/settings/api', icon: KeyIcon, section: 'Paramètres', keywords: ['clé', 'ics', 'calendrier'] },
-  { label: 'Notifications', to: '/profile/settings/notifications', icon: BellIcon, section: 'Paramètres', keywords: ['push', 'email'] },
-  { label: "Vue d'ensemble", to: '/admin/overview', icon: LayoutDashboardIcon, section: 'Administration', permission: ['view', 'admin'] },
-  { label: 'Groupes', to: '/admin/groups', icon: UsersRoundIcon, section: 'Administration', keywords: ['pupitres'], permission: ['view', 'admin'] },
-  { label: 'Rôles et permissions', to: '/admin/roles', icon: KeyRoundIcon, section: 'Administration', permission: ['view', 'admin'] },
-  { label: 'Membres', to: '/admin/members', icon: UsersIcon, section: 'Administration', keywords: ['comptes'], permission: ['view', 'admin'] },
-  { label: 'Adhésions', to: '/admin/memberships', icon: WalletIcon, section: 'Administration', keywords: ['helloasso'], permission: ['view', 'admin'] },
-  { label: 'Communication', to: '/admin/communication', icon: MegaphoneIcon, section: 'Administration', keywords: ['mailing', 'listes'], permission: ['view', 'admin'] },
-  { label: 'Sécurité', to: '/admin/security', icon: ShieldCheckIcon, section: 'Administration', keywords: ['passkeys', 'sessions'], permission: ['view', 'admin'] },
-  { label: 'Système', to: '/admin/system', icon: ActivityIcon, section: 'Administration', keywords: ['statut', 'intégrations'], permission: ['view', 'admin'] },
+  ...sectionPages(SETTINGS_BASE, SETTINGS_SECTIONS, 'Paramètres'),
+  ...sectionPages(ADMIN_BASE, ADMIN_SECTIONS, 'Administration', ['view', 'admin']),
 ];
-
-export const PAGE_RESULTS_LIMIT = 5;
 
 export function normalize(value: string): string {
   return value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();

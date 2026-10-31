@@ -19,6 +19,7 @@ import {
 } from './components/responses';
 import DisplaySelector from './components/selector';
 import IcsExportButton from './components/ics-export';
+import { profilesQuery } from '../profiles/queries';
 import { upcomingDoodleEventsQuery, upcomingResponsesQuery, useRespondMutation } from './queries';
 
 function EventCard({
@@ -61,7 +62,7 @@ export default function PlanningPage() {
   const { usersApi, eventsApi } = useApiClient();
   const { can } = usePermissions();
   const { data: events } = useQuery(upcomingDoodleEventsQuery(eventsApi));
-  const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet() });
+  const { data: profiles } = useQuery(profilesQuery(usersApi));
   const { data: responses } = useQuery(upcomingResponsesQuery(eventsApi));
 
   const { filteredProfiles, enrichedResponses } = useMemo(() => ({

@@ -31,6 +31,7 @@ import { useApiClient, usePermissions } from '../../config/client';
 
 import { GroupTag } from './components/groupTag';
 import { MembershipStatusPill } from './components/membershipBadge';
+import { profilesQuery } from './queries';
 
 import defaultAvatar from '../../assets/default.svg';
 
@@ -333,10 +334,7 @@ export default function ProfilesPage() {
   const { usersApi } = useApiClient();
   const { can } = usePermissions();
 
-  const { data } = useQuery({
-    queryKey: ['profiles'],
-    queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet(),
-  });
+  const { data } = useQuery(profilesQuery(usersApi));
 
   const [selected, setSelected] = useState<FilterOption[]>([]);
 
