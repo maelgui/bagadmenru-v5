@@ -3,7 +3,7 @@ import type { FileOrFolder } from 'bagad-client';
 import { buttonVariants } from '@/components/ui/button';
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
-import { fileDownloadUrl } from '../file-urls';
+import { fileDownloadUrl } from '../../../utils/file-urls';
 
 const statusLabels = new Map<string, string>([
   ['pending', 'La conversion va démarrer...'],
