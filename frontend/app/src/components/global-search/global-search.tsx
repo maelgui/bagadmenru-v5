@@ -15,6 +15,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Spinner } from '@/components/ui/spinner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import EventCategories from '../../utils/event-category';
 import { fileAspect } from '../../utils/file-aspect';
 import { fileViewUrl } from '../../utils/file-urls';
@@ -22,15 +23,6 @@ import { pageTitle, type SearchablePage } from './pages';
 import { MIN_QUERY_LENGTH, useGlobalSearch } from './use-global-search';
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent);
-
-function Shortcut() {
-  return (
-    <kbd className="inline-flex items-center gap-0.5 rounded-md border border-border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground">
-      {isMac ? '⌘' : 'Ctrl'}
-      K
-    </kbd>
-  );
-}
 
 function PageItem({ page, onSelect }: { page: SearchablePage; onSelect: () => void }) {
   const Icon = page.icon;
@@ -158,28 +150,17 @@ export default function GlobalSearch() {
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        className="hidden w-56 justify-start text-muted-foreground xl:inline-flex"
-        onClick={() => setOpen(true)}
-        aria-label="Rechercher"
-        aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}
-      >
-        <SearchIcon data-icon="inline-start" aria-hidden="true" />
-        <span className="flex-1 text-left font-normal">Rechercher…</span>
-        <Shortcut />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="xl:hidden"
-        onClick={() => setOpen(true)}
-        aria-label="Rechercher"
-      >
-        <SearchIcon aria-hidden="true" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={<Button type="button" variant="ghost" size="icon" />}
+          onClick={() => setOpen(true)}
+          aria-label="Rechercher"
+          aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}
+        >
+          <SearchIcon aria-hidden="true" />
+        </TooltipTrigger>
+        <TooltipContent>{`Rechercher (${isMac ? '⌘' : 'Ctrl'} K)`}</TooltipContent>
+      </Tooltip>
 
       <CommandDialog
         open={open}
