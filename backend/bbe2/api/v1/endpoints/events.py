@@ -244,10 +244,13 @@ async def list_responses(
     date__gte: Optional[datetime] = None,
     date__lt: Optional[datetime] = None,
     user_id: Optional[str] = None,
+    event_id: Optional[int] = None,
 ):
     q = select(models.ResponseDB)
     if user_id:
         q = q.filter(models.ResponseDB.user_id == user_id)
+    if event_id is not None:
+        q = q.filter(models.ResponseDB.event_id == event_id)
     if date__gte:
         date__gte = date__gte.replace(hour=0, minute=0, second=0, microsecond=0)
         q = q.filter(models.ResponseDB.event.has(models.EventDB.date >= date__gte))

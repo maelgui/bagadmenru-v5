@@ -1,4 +1,4 @@
-import { type LucideIcon, Download, EllipsisVertical, File, FileArchive, FileAudio, FileImage, FileMusic, FileText, FileVideo, Folder, FolderArchive, FolderInput, Info, Pencil, Trash2 } from 'lucide-react';
+import { Download, EllipsisVertical, FolderInput, Info, Pencil, Trash2 } from 'lucide-react';
 import { type FileOrFolder, FileOrFolderType } from 'bagad-client';
 import { createElement, type MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -22,7 +22,8 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fileDownloadUrl, fileViewUrl } from '../file-urls';
+import { fileAspect } from '../../../utils/file-aspect';
+import { fileDownloadUrl, fileViewUrl } from '../../../utils/file-urls';
 
 interface FileItemProps {
   file: FileOrFolder
@@ -34,56 +35,6 @@ interface FileItemProps {
   detailsFn?: () => void
   noAction?: boolean
   variant?: 'default' | 'outline' | 'muted'
-}
-
-interface FileAspect {
-  icon: LucideIcon
-  color: string
-}
-
-const folderAspect: FileAspect = { icon: Folder, color: 'text-primary' };
-const containerAspect: FileAspect = { icon: FolderArchive, color: 'text-primary' };
-const defaultAspect: FileAspect = { icon: File, color: 'text-muted-foreground' };
-
-const scoreAspect: FileAspect = { icon: FileMusic, color: 'text-file-score' };
-const documentAspect: FileAspect = { icon: FileText, color: 'text-file-document' };
-const imageAspect: FileAspect = { icon: FileImage, color: 'text-file-image' };
-const audioAspect: FileAspect = { icon: FileAudio, color: 'text-file-audio' };
-const videoAspect: FileAspect = { icon: FileVideo, color: 'text-file-video' };
-const archiveAspect: FileAspect = { icon: FileArchive, color: 'text-file-archive' };
-
-const fileAspectByExtension = new Map<string, FileAspect>([
-  ['mscz', scoreAspect],
-  ['ds', scoreAspect],
-  ['pdf', documentAspect],
-  ['png', imageAspect],
-  ['jpg', imageAspect],
-  ['jpeg', imageAspect],
-  ['gif', imageAspect],
-  ['webp', imageAspect],
-  ['heic', imageAspect],
-  ['mp3', audioAspect],
-  ['wav', audioAspect],
-  ['m4a', audioAspect],
-  ['ogg', audioAspect],
-  ['flac', audioAspect],
-  ['mp4', videoAspect],
-  ['mov', videoAspect],
-  ['webm', videoAspect],
-  ['zip', archiveAspect],
-  ['rar', archiveAspect],
-  ['7z', archiveAspect],
-]);
-
-function getAspect(file: FileOrFolder): FileAspect {
-  if (file.type === FileOrFolderType.Dir) {
-    return folderAspect;
-  }
-  if (file.type === FileOrFolderType.Container) {
-    return containerAspect;
-  }
-  const extension = file.name.toLowerCase().split('.').pop();
-  return extension ? (fileAspectByExtension.get(extension) ?? defaultAspect) : defaultAspect;
 }
 
 function folderCountLabel(count: number): string {
@@ -215,7 +166,7 @@ export default function FileItem({
 }: FileItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const bind = useLongPress(() => setIsOpen(true), { detect: LongPressEventType.Touch });
-  const aspect = getAspect(file);
+  const aspect = fileAspect(file);
   const icon = createElement(aspect.icon, { 'aria-hidden': true, className: aspect.color });
   const isFile = file.type === FileOrFolderType.File;
   const isContainer = file.type === FileOrFolderType.Container;

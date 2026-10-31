@@ -12,6 +12,7 @@ import {
   ProfilesApi,
   PushNotificationsApi,
   ResponseError,
+  SearchApi,
   type SessionInfo,
   UtilsApi,
 } from 'bagad-client';
@@ -117,6 +118,7 @@ const apiClient = {
   invitationsApi: new InvitationsApi(apiConf),
   helloAssoApi: new HelloAssoApi(apiConf),
   adminApi: new AdminApi(apiConf),
+  searchApi: new SearchApi(apiConf),
 };
 
 export function useApiClient() {

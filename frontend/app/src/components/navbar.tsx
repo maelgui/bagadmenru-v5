@@ -32,6 +32,7 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
+import GlobalSearch from './global-search/global-search';
 
 interface NavigationItem {
   label: string;
@@ -247,22 +248,26 @@ export default function Navbar() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        <div className="hidden justify-end lg:flex lg:flex-1">
-          <ProfileActions onNavigate={close} />
-        </div>
+        <div className="ml-auto flex items-center gap-2 lg:flex-1 lg:justify-end">
+          <GlobalSearch />
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="mx-6 ml-auto lg:hidden"
-          aria-label={show ? 'Fermer le menu' : 'Ouvrir le menu'}
-          aria-expanded={show}
-          aria-controls="mobile-navigation"
-          onClick={() => setShow((isOpen) => !isOpen)}
-        >
-          {show ? <XIcon aria-hidden="true" /> : <MenuIcon aria-hidden="true" />}
-        </Button>
+          <div className="hidden lg:flex">
+            <ProfileActions onNavigate={close} />
+          </div>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="mr-6 lg:hidden"
+            aria-label={show ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={show}
+            aria-controls="mobile-navigation"
+            onClick={() => setShow((isOpen) => !isOpen)}
+          >
+            {show ? <XIcon aria-hidden="true" /> : <MenuIcon aria-hidden="true" />}
+          </Button>
+        </div>
       </div>
 
       <div

@@ -58,6 +58,10 @@ export default createBrowserRouter([
                 lazy: lazyPage(async () => await import('../pages/events/edit')),
               },
               {
+                path: '/events/:eventId',
+                lazy: lazyPage(async () => await import('../pages/events/show')),
+              },
+              {
                 path: '/files/:folderId?',
                 lazy: lazyPage(async () => await import('../pages/files/list')),
               },

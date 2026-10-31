@@ -84,6 +84,7 @@ export interface ListResponsesApiV1ResponsesGetRequest {
     dateGte?: Date | null;
     dateLt?: Date | null;
     userId?: string | null;
+    eventId?: number | null;
 }
 
 export interface UpdateEventApiV1EventsEventIdPutRequest {
@@ -542,6 +543,10 @@ export class EventsApi extends runtime.BaseAPI {
 
         if (requestParameters['userId'] != null) {
             queryParameters['user_id'] = requestParameters['userId'];
+        }
+
+        if (requestParameters['eventId'] != null) {
+            queryParameters['event_id'] = requestParameters['eventId'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};

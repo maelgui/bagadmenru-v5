@@ -6,7 +6,7 @@ import type { Event, Response } from 'bagad-client';
 import {
   afterEach, describe, expect, it, vi,
 } from 'vitest';
-import { MyResponseBlock, ResponsesDialog } from './planning';
+import { MyResponseBlock, ResponsesDialog } from './responses';
 
 function myResponse(value: boolean): Response {
   return {

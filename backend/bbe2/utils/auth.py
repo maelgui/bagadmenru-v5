@@ -192,6 +192,20 @@ class AuthContext:
     key_permissions: frozenset[str] | None
 
 
+def is_granted(auth: AuthContext, action: Action, resource: Resource) -> bool:
+    """Whether the request may perform ``action`` on ``resource``.
+
+    The member's roles must grant it (RBAC) and, when the request authenticated
+    via an API key, that key must also list the permission -- a key only ever
+    narrows the member's rights.
+    """
+    if not is_allowed(auth.payload.roles, action, resource):
+        return False
+    if auth.key_permissions is None:
+        return True
+    return permission_string(action, resource) in auth.key_permissions
+
+
 def credentials(
     request: Request,
     response: Response,
@@ -305,12 +319,9 @@ class Authorization:
     ) -> JwtPayload:
         """Authorize the current request, returning the member's token payload.
 
-        Two checks, read top to bottom:
-        1. the member's roles must grant ``action`` on ``resource`` (RBAC);
-        2. if the request authenticated via an API key, that key must also list
-           the permission (a key only narrows the member's rights).
-
-        Raises 403 if either check fails.
+        Raises 403 unless the member's roles grant ``action`` on ``resource``
+        and, for an API-key request, the key lists that permission too (see
+        :func:`is_granted`).
         """
         payload = auth.payload
 
@@ -326,23 +337,11 @@ class Authorization:
             }
         )
 
-        # 1. The member's roles must allow this action on this resource.
-        if not is_allowed(payload.roles, self.action, self.resource):
+        if not is_granted(auth, self.action, self.resource):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",
             )
-
-        # 2. An API key only ever narrows: the permission must also be one the
-        #    key was granted. Cookie/JWT sessions (key_permissions is None) skip
-        #    this and exercise the member's full rights.
-        if auth.key_permissions is not None:
-            required = permission_string(self.action, self.resource)
-            if required not in auth.key_permissions:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="API key not authorized for this operation",
-                )
 
         return payload
 
