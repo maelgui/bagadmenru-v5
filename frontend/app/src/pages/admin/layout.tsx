@@ -3,6 +3,7 @@ import {
   KeyRoundIcon,
   LayoutDashboardIcon,
   MegaphoneIcon,
+  ScrollTextIcon,
   ShieldCheckIcon,
   UsersIcon,
   UsersRoundIcon,
@@ -21,6 +22,7 @@ const NAV_ITEMS: SectionNavItem[] = [
   { to: 'memberships', label: 'Adhésions', icon: WalletIcon },
   { to: 'communication', label: 'Communication', icon: MegaphoneIcon },
   { to: 'security', label: 'Sécurité', icon: ShieldCheckIcon },
+  { to: 'audit', label: 'Journal', icon: ScrollTextIcon },
   { to: 'system', label: 'Système', icon: ActivityIcon },
 ];
 

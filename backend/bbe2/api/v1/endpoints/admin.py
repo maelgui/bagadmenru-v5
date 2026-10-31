@@ -8,9 +8,9 @@ modules; this one only aggregates for the admin screens.
 
 import os
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
@@ -18,6 +18,7 @@ from bbe2 import models, schemas
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
 from bbe2.models.user import user_group_association_table
 from bbe2.schemas.profile import MinimalGroup
+from bbe2.services import audit as audit_service
 from bbe2.services import membership as membership_service
 from bbe2.services.mailing import ovh_configured
 from bbe2.utils.auth import Authorization, get_current_profile
@@ -148,6 +149,34 @@ async def list_members(session: SessionDep) -> list[schemas.AdminMember]:
             )
         )
     return members
+
+
+@router.get("/audit", response_model=schemas.AuditEventPage)
+async def list_audit_events(  # pylint: disable=too-many-arguments
+    session: SessionDep,
+    user_id: Optional[str] = None,
+    kind: Optional[schemas.AuditKind] = None,
+    mutations_only: bool = False,
+    since: Optional[datetime] = None,
+    until: Optional[datetime] = None,
+    q: Optional[str] = Query(default=None, max_length=200),
+    before: Optional[int] = None,
+    limit: int = Query(
+        default=audit_service.DEFAULT_PAGE_SIZE, ge=1, le=audit_service.MAX_PAGE_SIZE
+    ),
+) -> schemas.AuditEventPage:
+    """Audit trail, newest first. ``before`` = previous page's ``next_cursor``."""
+    return audit_service.list_audit_events(
+        session,
+        user_id=user_id,
+        kind=kind,
+        mutations_only=mutations_only,
+        since=since,
+        until=until,
+        q=q,
+        before=before,
+        limit=limit,
+    )
 
 
 @router.get("/api-keys", response_model=list[schemas.AdminApiKey])

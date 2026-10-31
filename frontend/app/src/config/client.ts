@@ -2,6 +2,7 @@ import { QueryCache, QueryClient, useQuery } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react';
 import {
   AdminApi,
+  AuditApi,
   AuthenticationApi,
   Configuration, DefaultApi, EventsApi, FilesApi,
   HelloAssoApi,
@@ -105,7 +106,9 @@ const apiConf = new Configuration({
   credentials: 'include',
 });
 
-const apiClient = {
+// Exported (not only through the hook) for the few non-React modules that call
+// the API, such as the audit tracker's sender in config/audit.ts.
+export const apiClient = {
   defaultApi: new DefaultApi(apiConf),
   eventsApi: new EventsApi(apiConf),
   usersApi: new ProfilesApi(apiConf),
@@ -117,6 +120,7 @@ const apiClient = {
   invitationsApi: new InvitationsApi(apiConf),
   helloAssoApi: new HelloAssoApi(apiConf),
   adminApi: new AdminApi(apiConf),
+  auditApi: new AuditApi(apiConf),
 };
 
 export function useApiClient() {

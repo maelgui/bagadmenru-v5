@@ -23,7 +23,7 @@ just the HTTP layer.
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from bbe2 import models
 from bbe2.dependencies import SenderDep, SessionDep, SettingsDep
@@ -44,6 +44,7 @@ from bbe2.utils.auth import (
     Action,
     Authorization,
     Resource,
+    attribute_request,
     create_access_token,
     set_session_cookies,
 )
@@ -172,6 +173,7 @@ async def request_otp(
 async def accept_invitation(
     token: str,
     body: InvitationAccept,
+    request: Request,
     response: Response,
     session: SessionDep,
     settings: SettingsDep,
@@ -233,5 +235,6 @@ async def accept_invitation(
     # account, without logging out any other account in the browser (family
     # devices). The client then enrols a passkey as this (now active) member.
     access_token = create_access_token(profile_db, settings)
+    attribute_request(request, profile_db.id)
     set_session_cookies(response, profile_db.id, access_token, settings)
     return Token(access_token=access_token, token_type="bearer")

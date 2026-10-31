@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import type { AuditKind } from 'bagad-client';
 import { useApiClient } from '../../config/client';
 
 export function useAdminMembers() {
@@ -6,6 +7,31 @@ export function useAdminMembers() {
   return useQuery({
     queryKey: ['admin', 'members'],
     queryFn: async () => await adminApi.listMembersApiV1AdminMembersGet(),
+  });
+}
+
+export interface AuditFilters {
+  userId?: string;
+  kind?: AuditKind;
+  mutationsOnly?: boolean;
+  since?: Date;
+  q?: string;
+}
+
+const AUDIT_PAGE_SIZE = 50;
+
+/** Audit journal, newest first, one page per `next_cursor` hop. */
+export function useAdminAudit(filters: AuditFilters) {
+  const { adminApi } = useApiClient();
+  return useInfiniteQuery({
+    queryKey: ['admin', 'audit', { ...filters, since: filters.since?.toISOString() }],
+    queryFn: async ({ pageParam }) => await adminApi.listAuditEventsApiV1AdminAuditGet({
+      ...filters,
+      before: pageParam,
+      limit: AUDIT_PAGE_SIZE,
+    }),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
   });
 }
 

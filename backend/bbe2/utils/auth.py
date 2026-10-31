@@ -225,6 +225,7 @@ def credentials(
     api_context = _api_key_context(request, session, settings)
     if api_context is not None:
         logging.info("Authenticated from API key")
+        attribute_request(request, api_context.payload.sub)
         return api_context
 
     token = _session_token(request, response, bearer, settings)
@@ -234,8 +235,20 @@ def credentials(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized",
         )
+    attribute_request(request, payload.sub)
     # A cookie/JWT session is not narrowed: the member exercises all their rights.
     return AuthContext(payload=payload, key_permissions=None)
+
+
+def attribute_request(request: Request, user_id: str) -> None:
+    """Name the member behind ``request`` for the access-log/audit middleware.
+
+    The middleware runs outside dependency injection, so without this hand-off
+    it only ever sees an anonymous request. Called once a credential has been
+    verified (``credentials``) and when a login endpoint establishes a session
+    for a member who had none yet.
+    """
+    request.state.audit_user_id = user_id
 
 
 def _session_token(

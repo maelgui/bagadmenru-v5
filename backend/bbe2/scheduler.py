@@ -6,6 +6,7 @@ from sqlalchemy import select
 from bbe2.config import get_settings
 from bbe2.database import session_ctx
 from bbe2.models import GroupDB
+from bbe2.services import audit as audit_service
 from bbe2.services import mailing as mailing_service
 from bbe2.services import membership as membership_service
 from bbe2.utils import get_logger
@@ -62,3 +63,10 @@ async def daily_cleanup():
             ses, grace_days=settings.action_token_ttl_days
         )
         logger.info("Action token purge complete: %d deleted", tokens)
+
+        audit_rows = audit_service.purge_audit_events(
+            ses,
+            client_retention_days=settings.audit_client_retention_days,
+            api_retention_days=settings.audit_api_retention_days,
+        )
+        logger.info("Audit event purge complete: %d deleted", audit_rows)

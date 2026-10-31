@@ -15,7 +15,7 @@ export function MemberIdentity({
         {member.firstName} {member.lastName}
         {children}
       </span>
-      <span className="text-xs text-muted-foreground">{member.email}</span>
+      <span className="break-all text-xs text-muted-foreground">{member.email}</span>
     </Link>
   );
 }

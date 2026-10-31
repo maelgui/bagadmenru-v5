@@ -2,6 +2,7 @@
 
 from .action_token import ActionTokenDB
 from .api_key import ApiKeyDB
+from .audit_event import AuditEventDB
 from .base import Base
 from .event import EventDB, ResponseChangeDB, ResponseDB
 from .file import FileOrFolderDB

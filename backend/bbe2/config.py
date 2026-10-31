@@ -129,6 +129,13 @@ class Settings(BaseSettings):
     # Set to 0 to disable the sweep.
     stale_auto_api_key_ttl_hours: int = 48
 
+    # Audit trail retention (``audit_events``, see services/audit.py). Browser
+    # events (page views, clicks) are behavioural data about named members and
+    # are kept briefly; API calls are the security record and are kept longer.
+    # Both windows are stated in the privacy notice; 0 disables that purge.
+    audit_client_retention_days: int = 90
+    audit_api_retention_days: int = 365
+
     @property
     def email_from(self) -> str:
         """The RFC 5322 ``From:`` header line, e.g. ``Name <addr@host>``.
