@@ -15,9 +15,6 @@ vi.mock('../../config/client', () => ({
   useApiClient: () => ({ searchApi: { searchApiV1SearchGet: search } }),
   usePermissions: () => ({ can: () => true }),
 }));
-vi.mock('../../config/theme', () => ({
-  useTheme: () => ({ resolvedTheme: 'light' }),
-}));
 
 /* eslint-disable import/first -- imports must follow vi.mock hoisting */
 import HomeHero from '../../pages/home/components/hero';

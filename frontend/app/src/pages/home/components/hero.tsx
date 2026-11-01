@@ -1,23 +1,19 @@
 import logo from '../../../assets/logov2.svg';
 import Container from '../../../components/container';
 import { SearchField } from '../../../components/global-search/triggers';
-import { useTheme } from '../../../config/theme';
-import { brandGradient } from '../../../utils/brand-gradient';
+import { BRAND_BAND_BACKGROUND } from '../../../utils/brand-gradient';
 
 export default function HomeHero({ firstName }: { firstName?: string }) {
-  const { resolvedTheme } = useTheme();
-
   return (
     <section
       aria-labelledby="home-hero-title"
       className="relative overflow-hidden"
-      style={{ backgroundImage: brandGradient(resolvedTheme === 'dark') }}
+      style={{ backgroundImage: BRAND_BAND_BACKGROUND }}
     >
-      <img
-        src={logo}
-        alt=""
+      <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -bottom-24 w-80 opacity-[0.07] select-none lg:w-[26rem]"
+        className="pointer-events-none absolute -right-16 -bottom-24 aspect-square w-80 bg-primary opacity-[0.08] lg:w-[26rem]"
+        style={{ maskImage: `url(${logo})`, maskSize: 'contain', maskRepeat: 'no-repeat' }}
       />
       <Container className="relative py-8 lg:py-16">
         <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
