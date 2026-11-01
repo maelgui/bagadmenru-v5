@@ -13,9 +13,15 @@ import { useMutation } from '@tanstack/react-query';
 import type { AuthenticationApi, PasskeySignal } from 'bagad-client';
 import { ResponseError } from 'bagad-client';
 import { toast } from '@/components/ui/toast';
+import { auditAction } from '../config/audit';
 import { queryClient, useApiClient } from '../config/client';
 import features from './features';
 import { isPasskeySnoozed } from './passkeySnooze';
+
+/** `NotAllowedError`, `InvalidStateError`... or `unknown` for a non-Error throw. */
+function errorName(error: unknown): string {
+  return error instanceof Error ? error.name : 'unknown';
+}
 
 /**
  * Whether the browser supports the conditional (autofill) WebAuthn get.
@@ -119,6 +125,7 @@ export function useRegisterPasskey() {
       try {
         const attResp = await startRegistration({ optionsJSON: registrationOpt });
         await authApi.registerPasskeyApiV1WebauthnRegisterPost({ requestBody: attResp });
+        auditAction('passkey.register', { outcome: 'created' });
         return { status: 'created' };
       } catch (error) {
         // The browser throws InvalidStateError when the presented authenticator
@@ -130,10 +137,13 @@ export function useRegisterPasskey() {
         // would surface it as an error to react-query and, via the app's error
         // handling, to Sentry.
         if (error instanceof WebAuthnError && error.name === 'InvalidStateError') {
+          auditAction('passkey.register', { outcome: 'already-registered' });
           return { status: 'already-registered' };
         }
         // Any other failure (network, user cancelled/UV refused, etc.) is a real
-        // error: let it propagate so the caller/UI can react.
+        // error: let it propagate so the caller/UI can react. The journal keeps
+        // the outcome, which no API call would otherwise show.
+        auditAction('passkey.register', { outcome: 'failed', error: errorName(error) });
         throw error;
       }
     },
@@ -199,13 +209,17 @@ export async function attemptSilentPasskeyUpgrade(
     }
   };
   const attResp = await createCredential();
-  if (attResp === null) return;
+  if (attResp === null) {
+    auditAction('passkey.silent_upgrade', { outcome: 'declined' });
+    return;
+  }
 
   // Past this point the OS HAS created a passkey. Failing to persist it
   // server-side leaves an orphan credential in the user's keychain that will
   // 401 at the next passkey login — that must never be swallowed silently.
   try {
     await authApi.registerPasskeyApiV1WebauthnRegisterPost({ requestBody: attResp });
+    auditAction('passkey.silent_upgrade', { outcome: 'created' });
     await queryClient.invalidateQueries({ queryKey: ['passkeys'] });
     toast.add({
       title: 'Une clé d\'accès a été créée pour votre compte sur cet appareil. Vous pourrez vous connecter sans mot de passe.',
@@ -221,6 +235,7 @@ export async function attemptSilentPasskeyUpgrade(
       responseStatus = error.response.status;
       responseDetail = await error.response.clone().text().catch(() => undefined);
     }
+    auditAction('passkey.silent_upgrade', { outcome: 'orphan', status: responseStatus });
     console.error(
       'Silent passkey upgrade: the device created a credential but server registration failed (orphan passkey)',
       error,

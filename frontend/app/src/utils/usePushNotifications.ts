@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { auditAction } from '../config/audit';
 import { useApiClient } from '../config/client';
 
 export type PushNotificationStatus = 'unsupported' | 'denied' | 'granted' | 'default';
@@ -113,6 +114,8 @@ export function usePushNotifications() {
     try {
       const permission = await Notification.requestPermission();
       setStatus(permission);
+      // A refusal never reaches the API; only a grant leads to /push/subscribe.
+      auditAction('push.permission', { outcome: permission });
       if (permission !== 'granted') {
         return false;
       }

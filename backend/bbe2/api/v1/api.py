@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from bbe2.api.v1.endpoints import (
     admin,
+    audit,
     auth,
     events,
     files,
@@ -24,3 +25,4 @@ api_router.include_router(instruments.router, tags=["Instruments"])
 api_router.include_router(helloasso.router, tags=["HelloAsso"])
 api_router.include_router(push.router)
 api_router.include_router(admin.router, tags=["Admin"])
+api_router.include_router(audit.router, tags=["Audit"])

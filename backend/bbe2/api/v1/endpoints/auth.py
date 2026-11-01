@@ -80,6 +80,7 @@ from bbe2.utils.auth import (
     Action,
     Authorization,
     Resource,
+    attribute_request,
     clear_active_account_cookie,
     clear_legacy_access_token_cookie,
     clear_session_cookie,
@@ -252,6 +253,7 @@ def process_login(
     # Add this account as an additive browser session (multi-account) and make
     # it the active one. Any other signed-in accounts keep their sessions.
     AUTH_LOGINS.labels(method=data.type.value, outcome="success").inc()
+    attribute_request(request, user.id)
     access_token = create_access_token(user, settings)
     set_session_cookies(response, user.id, access_token, settings)
     return Token(access_token=access_token, token_type="bearer")
@@ -343,6 +345,22 @@ def _enumerate_sessions(
     return sessions
 
 
+def _attribute_to_active_account(
+    request: Request, settings: Settings, active_account: str | None
+) -> None:
+    """Name the active account as the actor of a session-management request.
+
+    These endpoints take no auth dependency, so the middleware would see them as
+    anonymous. The ``active_account`` cookie is the client's word: it counts
+    only when the matching session cookie carries a valid token.
+    """
+    if not active_account:
+        return
+    token = request.cookies.get(f"{SESSION_COOKIE_PREFIX}{active_account}")
+    if token and verify_token(token, settings) is not None:
+        attribute_request(request, active_account)
+
+
 @router.get("/auth/sessions", response_model=list[SessionInfo])
 def list_sessions(request: Request, settings: SettingsDep) -> list[SessionInfo]:
     """Return all accounts currently signed in this browser (multi-account).
@@ -352,6 +370,7 @@ def list_sessions(request: Request, settings: SettingsDep) -> list[SessionInfo]:
     session cookie is not present.
     """
     active_account = request.cookies.get(ACTIVE_ACCOUNT_COOKIE)
+    _attribute_to_active_account(request, settings, active_account)
     return _enumerate_sessions(request, settings, active_account)
 
 
@@ -376,6 +395,7 @@ def logout(
     revoked (tokens are stateless and carry no server-side session record).
     """
     active_account = request.cookies.get(ACTIVE_ACCOUNT_COOKIE)
+    _attribute_to_active_account(request, settings, active_account)
 
     if body and body.all:
         # Sign out of every account in this browser: delete each per-account
@@ -520,6 +540,7 @@ def _revoke_pending_recovery_grants(session: DbSession, user_id: str) -> None:
 @router.post("/auth/login_code")
 def login_with_code(
     body: LoginCode,
+    request: Request,
     session: SessionDep,
     settings: SettingsDep,
     otp: OtpDep,
@@ -579,6 +600,7 @@ def login_with_code(
     row.used_at = now
 
     LOGIN_LINKS.labels(stage=f"used_{body.via}").inc()
+    attribute_request(request, user.id)
     access_token = create_access_token(user, settings)
     set_session_cookies(response, user.id, access_token, settings)
     return Token(access_token=access_token, token_type="bearer")

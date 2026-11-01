@@ -8,14 +8,17 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
+from starlette.background import BackgroundTask
 from starlette.middleware.sessions import SessionMiddleware
 
 from bbe2 import __version__
 from bbe2.api.v1.api import api_router
 from bbe2.config import Environment, get_environment, get_settings
+from bbe2.database import session_ctx
 from bbe2.logging_config import setup_logging
 from bbe2.metrics import register_membership_gauges
 from bbe2.scheduler import scheduler
+from bbe2.services import audit as audit_service
 from bbe2.services.email import EmailSendError
 from bbe2.utils.correlation import (
     CORRELATION_ID_HEADER,
@@ -102,6 +105,16 @@ app.add_middleware(
 )
 
 
+def _resolve_settings():
+    """Settings for code that runs outside dependency injection.
+
+    Honours ``app.dependency_overrides`` so the test client's throwaway SQLite
+    is used under test while production reads ``get_settings``.
+    """
+    getter = app.dependency_overrides.get(get_settings, get_settings)
+    return getter()
+
+
 @app.middleware("http")
 async def request_context(request: Request, call_next):
     # Establish the correlation ID first so every log line emitted while
@@ -137,6 +150,10 @@ async def request_context(request: Request, call_next):
     response.headers[CORRELATION_ID_HEADER] = correlation_id
     response.headers["X-Process-Time"] = str(duration_ms / 1000)
 
+    # Set by utils.auth.attribute_request once a credential was verified or a
+    # login established a session; absent on anonymous requests.
+    user_id = getattr(request.state, "audit_user_id", None)
+
     level = logging.WARNING if response.status_code >= 500 else logging.INFO
     logger.log(
         level,
@@ -149,9 +166,59 @@ async def request_context(request: Request, call_next):
             **base_extra,
             "http_status": response.status_code,
             "duration_ms": duration_ms,
+            "user_id": user_id,
         },
     )
+    if audit_service.is_audited_request(request.method, request.url.path):
+        # Written after the response is sent, in Starlette's threadpool: the
+        # audit row never delays the response nor blocks the event loop on a
+        # busy connection pool. Any background task the handler attached runs
+        # inside the wrapped response, so this one does not displace it.
+        response.background = BackgroundTask(
+            _record_audit,
+            request,
+            user_id,
+            response.status_code,
+            duration_ms,
+            correlation_id,
+        )
     return response
+
+
+def _record_audit(
+    request: Request,
+    user_id: str | None,
+    status_code: int,
+    duration_ms: float,
+    correlation_id: str,
+) -> None:
+    """Write the API_CALL audit row for a finished request.
+
+    Runs after the handler's own session has committed, in a session of its
+    own, so a failed audit write can neither roll back the action it records
+    nor fail the response: it is logged and dropped.
+    """
+    try:
+        with session_ctx(_resolve_settings().database_url) as ses:
+            audit_service.record_api_call(
+                ses,
+                user_id=user_id,
+                method=request.method,
+                # FastAPI sets scope["route"] only when a route matched.
+                matched="route" in request.scope,
+                path=request.url.path,
+                query=request.url.query,
+                path_params=request.scope.get("path_params") or {},
+                status=status_code,
+                duration_ms=duration_ms,
+                correlation_id=correlation_id,
+                ip=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent"),
+            )
+    except Exception:  # pylint: disable=broad-exception-caught
+        logger.exception(
+            "Audit row not recorded for %s %s", request.method, request.url.path
+        )
 
 
 app.include_router(api_router, prefix="/api/v1")
@@ -167,14 +234,9 @@ Instrumentator(excluded_handlers=["/metrics"]).instrument(app).expose(
 
 
 # Point-in-time membership/credential gauges (users with a passkey, push
-# subscriptions, ...) are computed at scrape time by a custom collector. It
-# resolves settings through a getter that honours dependency_overrides, so the
-# test client scrapes its throwaway SQLite while production reads get_settings.
-def _resolve_settings():
-    getter = app.dependency_overrides.get(get_settings, get_settings)
-    return getter()
-
-
+# subscriptions, ...) are computed at scrape time by a custom collector. Like
+# the audit middleware above, it resolves settings through _resolve_settings so
+# the test client reads its throwaway SQLite while production reads get_settings.
 register_membership_gauges(_resolve_settings)
 
 

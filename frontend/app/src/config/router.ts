@@ -3,6 +3,7 @@ import { createBrowserRouter, redirect } from 'react-router-dom';
 import AdminGuard from '../guards/admin';
 import AuthGuard from '../guards/auth';
 import MainLayout from '../layout/main';
+import RootLayout from '../layout/root';
 import { SimpleLayoutWithOutlet } from '../layout/simple';
 import RoutingErrorComponent from '../pages/error/error';
 
@@ -17,6 +18,7 @@ function lazyPage(loader: () => Promise<{ default: ComponentType }>) {
 export default createBrowserRouter([
   {
     path: '/',
+    Component: RootLayout,
     ErrorBoundary: RoutingErrorComponent,
     children: [
       {
@@ -181,6 +183,10 @@ export default createBrowserRouter([
                       {
                         path: 'security',
                         lazy: lazyPage(async () => await import('../pages/admin/security')),
+                      },
+                      {
+                        path: 'audit',
+                        lazy: lazyPage(async () => await import('../pages/admin/audit')),
                       },
                       {
                         path: 'system',

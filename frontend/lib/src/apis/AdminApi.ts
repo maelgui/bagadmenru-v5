@@ -17,6 +17,8 @@ import * as runtime from '../runtime';
 import type {
   AdminApiKey,
   AdminMember,
+  AuditEventPage,
+  AuditKind,
   HTTPValidationError,
   RoleDetail,
   SystemStatus,
@@ -26,6 +28,10 @@ import {
     AdminApiKeyToJSON,
     AdminMemberFromJSON,
     AdminMemberToJSON,
+    AuditEventPageFromJSON,
+    AuditEventPageToJSON,
+    AuditKindFromJSON,
+    AuditKindToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     RoleDetailFromJSON,
@@ -33,6 +39,17 @@ import {
     SystemStatusFromJSON,
     SystemStatusToJSON,
 } from '../models/index';
+
+export interface ListAuditEventsApiV1AdminAuditGetRequest {
+    userId?: string | null;
+    kind?: AuditKind | null;
+    mutationsOnly?: boolean;
+    since?: Date | null;
+    until?: Date | null;
+    q?: string | null;
+    before?: number | null;
+    limit?: number;
+}
 
 export interface RevokeApiKeyApiV1AdminApiKeysKeyHashDeleteRequest {
     keyHash: string;
@@ -108,6 +125,74 @@ export class AdminApi extends runtime.BaseAPI {
      */
     async listApiKeysApiV1AdminApiKeysGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AdminApiKey>> {
         const response = await this.listApiKeysApiV1AdminApiKeysGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Audit trail, newest first. ``before`` = previous page\'s ``next_cursor``.
+     * List Audit Events
+     */
+    async listAuditEventsApiV1AdminAuditGetRaw(requestParameters: ListAuditEventsApiV1AdminAuditGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AuditEventPage>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['userId'] != null) {
+            queryParameters['user_id'] = requestParameters['userId'];
+        }
+
+        if (requestParameters['kind'] != null) {
+            queryParameters['kind'] = requestParameters['kind'];
+        }
+
+        if (requestParameters['mutationsOnly'] != null) {
+            queryParameters['mutations_only'] = requestParameters['mutationsOnly'];
+        }
+
+        if (requestParameters['since'] != null) {
+            queryParameters['since'] = (requestParameters['since'] as any).toISOString();
+        }
+
+        if (requestParameters['until'] != null) {
+            queryParameters['until'] = (requestParameters['until'] as any).toISOString();
+        }
+
+        if (requestParameters['q'] != null) {
+            queryParameters['q'] = requestParameters['q'];
+        }
+
+        if (requestParameters['before'] != null) {
+            queryParameters['before'] = requestParameters['before'];
+        }
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/v1/admin/audit`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AuditEventPageFromJSON(jsonValue));
+    }
+
+    /**
+     * Audit trail, newest first. ``before`` = previous page\'s ``next_cursor``.
+     * List Audit Events
+     */
+    async listAuditEventsApiV1AdminAuditGet(requestParameters: ListAuditEventsApiV1AdminAuditGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuditEventPage> {
+        const response = await this.listAuditEventsApiV1AdminAuditGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

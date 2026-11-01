@@ -3,6 +3,7 @@
 README.md
 package.json
 src/apis/AdminApi.ts
+src/apis/AuditApi.ts
 src/apis/AuthenticationApi.ts
 src/apis/DefaultApi.ts
 src/apis/EventsApi.ts
@@ -21,6 +22,12 @@ src/models/ApiKey.ts
 src/models/ApiKeyCreate.ts
 src/models/ApiKeyCreated.ts
 src/models/ApiKeyOwner.ts
+src/models/AuditActor.ts
+src/models/AuditEvent.ts
+src/models/AuditEventPage.ts
+src/models/AuditKind.ts
+src/models/ClientAuditBatch.ts
+src/models/ClientAuditEvent.ts
 src/models/Costume.ts
 src/models/CredentialDeviceType.ts
 src/models/Event.ts
