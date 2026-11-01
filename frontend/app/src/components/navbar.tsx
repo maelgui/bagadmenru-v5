@@ -32,7 +32,7 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
-import GlobalSearch from './global-search/global-search';
+import { SearchButton } from './global-search/triggers';
 
 interface NavigationItem {
   label: string;
@@ -249,7 +249,7 @@ export default function Navbar() {
         </NavigationMenu>
 
         <div className="ml-auto flex items-center gap-2 lg:flex-1 lg:justify-end">
-          <GlobalSearch />
+          <SearchButton />
 
           <div className="hidden lg:flex">
             <ProfileActions onNavigate={close} />

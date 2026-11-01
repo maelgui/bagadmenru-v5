@@ -16,8 +16,10 @@ vi.mock('../../config/client', () => ({
   usePermissions: () => ({ can: () => true }),
 }));
 
-// eslint-disable-next-line import/first -- import must follow vi.mock hoisting
-import GlobalSearch from './global-search';
+/* eslint-disable import/first -- imports must follow vi.mock hoisting */
+import { GlobalSearchProvider } from './global-search';
+import { SearchButton, SearchField } from './triggers';
+/* eslint-enable import/first */
 
 // cmdk measures its list with ResizeObserver and scrolls the selected item
 // into view; jsdom implements neither.
@@ -53,10 +55,13 @@ function renderSearch() {
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={['/']}>
-        <GlobalSearch />
-        <Routes>
-          <Route path="*" element={<Location />} />
-        </Routes>
+        <GlobalSearchProvider>
+          <SearchButton />
+          <SearchField />
+          <Routes>
+            <Route path="*" element={<Location />} />
+          </Routes>
+        </GlobalSearchProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -87,6 +92,21 @@ describe('GlobalSearch', () => {
     fireEvent.change(screen.getByPlaceholderText('Pages, évènements, membres, fichiers…'), { target: { value: 'z' } });
     await waitFor(() => expect(screen.getByText('Tapez au moins deux caractères pour rechercher.')).toBeTruthy());
     expect(search).not.toHaveBeenCalled();
+  });
+
+  it('opens the same palette from the navbar button and from the home field, with a fresh query each time', async () => {
+    renderSearch();
+    fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }));
+    const input = await screen.findByPlaceholderText('Pages, évènements, membres, fichiers…');
+    fireEvent.change(input, { target: { value: 'loudeac' } });
+    expect(screen.getAllByPlaceholderText('Pages, évènements, membres, fichiers…')).toHaveLength(1);
+
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    await waitFor(() => expect(screen.queryByPlaceholderText('Pages, évènements, membres, fichiers…')).toBeNull());
+
+    fireEvent.click(screen.getByRole('button', { name: /Rechercher une partition/ }));
+    const reopened = await screen.findByPlaceholderText('Pages, évènements, membres, fichiers…');
+    expect(reopened).toHaveProperty('value', '');
   });
 
   it('shows pages immediately and the backend results grouped by kind', async () => {

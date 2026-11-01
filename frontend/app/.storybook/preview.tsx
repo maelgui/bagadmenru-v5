@@ -2,6 +2,7 @@ import type { Preview } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 
+import { GlobalSearchProvider } from "../src/components/global-search/global-search";
 import "../src/index.css";
 
 const preview: Preview = {
@@ -39,7 +40,9 @@ const preview: Preview = {
       return (
         <QueryClientProvider client={queryClient}>
           <MemoryRouter>
-            <Story />
+            <GlobalSearchProvider>
+              <Story />
+            </GlobalSearchProvider>
           </MemoryRouter>
         </QueryClientProvider>
       );

@@ -71,11 +71,15 @@ test.describe('Global search', () => {
     await expect(page.getByText('Votre réponse')).toBeVisible();
   });
 
-  test('offers pages and members, and the keyboard shortcut opens the palette', async ({ page }) => {
+  test('opens from the home search field and from the keyboard shortcut', async ({ page }) => {
     await loginViaUI(page, E2E_ADMIN.email, E2E_ADMIN.password);
-    await expect(page.getByRole('button', { name: 'Rechercher' }).first()).toBeVisible();
-    await page.keyboard.press('ControlOrMeta+k');
+    await page.getByRole('button', { name: /Rechercher une partition/ }).click();
     const input = page.getByPlaceholder(SEARCH_PLACEHOLDER);
+    await expect(input).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(input).toBeHidden();
+
+    await page.keyboard.press('ControlOrMeta+k');
     await expect(input).toBeVisible();
 
     await input.fill('trombi');
