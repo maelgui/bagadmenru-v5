@@ -1,4 +1,4 @@
-import { type Event, type FileHit, FileOrFolderType, type Profile } from 'bagad-client';
+import type { Event, FileHit, Profile } from 'bagad-client';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,7 +15,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import EventCategories from '../../utils/event-category';
 import { fileAspect } from '../../utils/file-aspect';
-import { fileViewUrl } from '../../utils/file-urls';
+import { fileViewUrl, isViewable } from '../../utils/file-urls';
 import { pageTitle, type SearchablePage } from './pages';
 import { MIN_QUERY_LENGTH, useGlobalSearch } from './use-global-search';
 
@@ -71,7 +71,7 @@ function ProfileItem({ profile, onSelect }: { profile: Profile; onSelect: () => 
   );
 }
 
-function FileItem({ hit, onSelect }: { hit: FileHit; onSelect: () => void }) {
+function FileHitItem({ hit, onSelect }: { hit: FileHit; onSelect: () => void }) {
   const aspect = fileAspect(hit.file);
   const Icon = aspect.icon;
   return (
@@ -115,7 +115,7 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
   };
 
   const openFile = (hit: FileHit) => {
-    if (hit.file.type === FileOrFolderType.File && hit.file.fileKey) {
+    if (isViewable(hit.file)) {
       window.open(fileViewUrl(hit.file.id), '_blank', 'noopener,noreferrer');
       onClose();
       return;
@@ -152,7 +152,7 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
         ) : null}
         {files.length > 0 ? (
           <CommandGroup heading="Fichiers">
-            {files.map((hit) => <FileItem key={hit.file.id} hit={hit} onSelect={() => openFile(hit)} />)}
+            {files.map((hit) => <FileHitItem key={hit.file.id} hit={hit} onSelect={() => openFile(hit)} />)}
           </CommandGroup>
         ) : null}
       </CommandList>

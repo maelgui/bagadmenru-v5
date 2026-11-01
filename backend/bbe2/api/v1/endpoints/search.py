@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from bbe2 import schemas
-from bbe2.dependencies import get_s3_helper
 from bbe2.services.search import SearchServiceDep
 from bbe2.utils.auth import AuthContext, credentials
 
@@ -14,7 +13,6 @@ MAX_RESULTS_PER_KIND = 20
 
 @router.get(
     "/",
-    dependencies=[Depends(get_s3_helper)],
     response_model=schemas.SearchResults,
 )
 async def search(

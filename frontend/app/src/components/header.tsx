@@ -3,7 +3,7 @@ import { ChevronRightIcon, HouseIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { BRAND_BAND_BACKGROUND } from '../utils/brand-gradient';
+import { BRAND_BAND_BACKGROUND } from '../utils/brand-band';
 import Container from './container';
 
 interface BreadcrumbItem {

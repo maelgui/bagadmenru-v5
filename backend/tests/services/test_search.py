@@ -13,7 +13,9 @@ from bbe2.utils.auth import AuthContext
 DATABASE_URL = "sqlite:///tests_services_search.sqlite?check_same_thread=false"
 
 
-def _auth(roles: list[str], key_permissions: frozenset[str] | None = None) -> AuthContext:
+def _auth(
+    roles: list[str], key_permissions: frozenset[str] | None = None
+) -> AuthContext:
     now = datetime.now(tz=timezone.utc)
     payload = JwtPayload(
         sub="u1",

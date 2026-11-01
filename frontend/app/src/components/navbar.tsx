@@ -1,7 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 
 import {
-  LogOutIcon, MenuIcon, SettingsIcon, ShieldCheckIcon, UserPlusIcon, XIcon,
+  CalendarDaysIcon, LogOutIcon, MenuIcon, SettingsIcon, ShieldCheckIcon, UserPlusIcon, XIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -13,7 +13,11 @@ import {
   useSessions,
   useUserProfile,
 } from '../config/client';
+import {
+  type AppPage, FILES_PAGE, HOME_PAGE, isAllowed, MEMBERS_PAGE,
+} from '../config/navigation';
 import { useTheme } from '../config/theme';
+import { eventsHomePath } from '../pages/events/sections';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,33 +39,16 @@ import { cn } from '@/lib/utils';
 import { SearchButton, SearchField } from './global-search/triggers';
 import Mailbox from './mailbox';
 
-interface NavigationItem {
-  label: string;
-  to: string;
-}
-
 function getInitials(firstName: string, lastName: string): string {
   return `${firstName.slice(0, 1)}${lastName.slice(0, 1)}`.toUpperCase();
 }
 
-function useNavigationItems(): NavigationItem[] {
+function useNavigationItems(): AppPage[] {
   const { can } = usePermissions();
-
-  return [
-    { label: 'Accueil', to: '/' },
-    ...(can('view', 'event')
-      ? [{
-          label: 'Évènements',
-          to: `/events/${can('create', 'response') ? '' : 'calendar'}`,
-        }]
-      : []),
-    ...(can('view', 'file')
-      ? [{ label: 'Fichiers', to: '/files' }]
-      : []),
-    ...(can('view', 'profile')
-      ? [{ label: 'Trombinoscope', to: '/profile' }]
-      : []),
-  ];
+  const events: AppPage = {
+    label: 'Évènements', to: eventsHomePath(can), icon: CalendarDaysIcon, permission: ['view', 'event'],
+  };
+  return [HOME_PAGE, events, FILES_PAGE, MEMBERS_PAGE].filter((page) => isAllowed(page, can));
 }
 
 function ProfileActions({ onNavigate }: { onNavigate: () => void }) {

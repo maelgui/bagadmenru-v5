@@ -1,7 +1,7 @@
 import logo from '../../../assets/logov2.svg';
 import Container from '../../../components/container';
 import { SearchField } from '../../../components/global-search/triggers';
-import { BRAND_BAND_BACKGROUND } from '../../../utils/brand-gradient';
+import { BRAND_BAND_BACKGROUND } from '../../../utils/brand-band';
 
 export default function HomeHero({ firstName }: { firstName?: string }) {
   return (

@@ -1,76 +1,46 @@
 import {
-  type LucideIcon,
-  CalendarDaysIcon,
-  CalendarIcon,
   CalendarPlusIcon,
-  CalendarRangeIcon,
-  FolderIcon,
-  HouseIcon,
   LayoutListIcon,
   TrophyIcon,
   UserIcon,
-  UserMinusIcon,
   UserPlusIcon,
-  UsersIcon,
   WalletIcon,
 } from 'lucide-react';
+import {
+  type AppPage, type Can, FILES_PAGE, HOME_PAGE, isAllowed, MEMBERS_PAGE, type Permission,
+} from '../../config/navigation';
 import type { SectionNavItem } from '../section-nav';
 import { ADMIN_BASE, ADMIN_SECTIONS } from '../../pages/admin/sections';
+import { EVENT_VIEWS, RESPONSE_HISTORY_PAGE } from '../../pages/events/sections';
 import { SETTINGS_BASE, SETTINGS_SECTIONS } from '../../pages/profiles/settings/sections';
 
-export interface SearchablePage {
-  label: string;
-  to: string;
-  icon: LucideIcon;
+export interface SearchablePage extends AppPage {
+  // Area the page belongs to, shown as a prefix ("Paramètres · Sécurité").
   section?: string;
-  keywords?: string[];
-  permission?: [action: string, resource: string];
 }
 
 export const PAGE_RESULTS_LIMIT = 5;
 
-// Extra search words for section pages, keyed by route. The sections
-// themselves (label, path, icon) are owned by their layout.
-const SECTION_KEYWORDS: Record<string, string[]> = {
-  '/profile/settings/profile': ['photo', 'nom'],
-  '/profile/settings/account': ['email', 'déconnexion'],
-  '/profile/settings/appearance': ['thème', 'sombre', 'clair'],
-  '/profile/settings/membership': ['cotisation', 'helloasso'],
-  '/profile/settings/security': ['passkey', 'mot de passe', 'sessions'],
-  '/profile/settings/api': ['clé', 'ics', 'calendrier'],
-  '/profile/settings/notifications': ['push', 'email'],
-  '/admin/groups': ['pupitres'],
-  '/admin/members': ['comptes'],
-  '/admin/memberships': ['helloasso'],
-  '/admin/communication': ['mailing', 'listes'],
-  '/admin/security': ['passkeys', 'sessions'],
-  '/admin/system': ['statut', 'intégrations'],
-};
+function inSection(section: string, pages: AppPage[]): SearchablePage[] {
+  return pages.map((page) => ({ ...page, section }));
+}
 
-function sectionPages(
-  base: string,
-  items: SectionNavItem[],
-  section: string,
-  permission?: [action: string, resource: string],
-): SearchablePage[] {
-  return items.map((item) => {
-    const to = `${base}/${item.to}`;
-    return {
-      label: item.label, to, icon: item.icon, section, keywords: SECTION_KEYWORDS[to], permission,
-    };
-  });
+function sectionPages(base: string, items: SectionNavItem[], section: string, permission?: Permission): SearchablePage[] {
+  return items.map((item) => ({
+    label: item.label, to: `${base}/${item.to}`, icon: item.icon, keywords: item.keywords, permission, section,
+  }));
 }
 
 export const SEARCHABLE_PAGES: SearchablePage[] = [
-  { label: 'Accueil', to: '/', icon: HouseIcon, keywords: ['home', 'degemer mat'] },
-  { label: 'Doodle', to: '/events/?noRedirect=true', icon: CalendarIcon, section: 'Évènements', keywords: ['présences', 'tableau'], permission: ['create', 'response'] },
-  { label: 'Planning', to: '/events/planning', icon: CalendarRangeIcon, section: 'Évènements', keywords: ['présences'], permission: ['create', 'response'] },
-  { label: 'Calendrier', to: '/events/calendar', icon: CalendarDaysIcon, section: 'Évènements', keywords: ['mois', 'agenda'], permission: ['view', 'event'] },
-  { label: 'Gestion des évènements', to: '/events/manage', icon: LayoutListIcon, section: 'Évènements', keywords: ['gérer'], permission: ['edit', 'event'] },
-  { label: 'Ajouter un évènement', to: '/events/add', icon: CalendarPlusIcon, section: 'Évènements', keywords: ['nouveau', 'créer'], permission: ['create', 'event'] },
-  { label: 'Désinscriptions', to: '/events/desinscriptions', icon: UserMinusIcon, section: 'Évènements', keywords: ['absent', 'historique'], permission: ['view', 'response_history'] },
-  { label: 'Fichiers', to: '/files', icon: FolderIcon, keywords: ['partitions', 'documents', 'dossiers'], permission: ['view', 'file'] },
-  { label: 'Trombinoscope', to: '/profile', icon: UsersIcon, keywords: ['membres', 'liste', 'annuaire'], permission: ['view', 'profile'] },
+  HOME_PAGE,
+  ...inSection('Évènements', [
+    ...EVENT_VIEWS,
+    { label: 'Gestion des évènements', to: '/events/manage', icon: LayoutListIcon, keywords: ['gérer'], permission: ['edit', 'event'] },
+    { label: 'Ajouter un évènement', to: '/events/add', icon: CalendarPlusIcon, keywords: ['nouveau', 'créer'], permission: ['create', 'event'] },
+    RESPONSE_HISTORY_PAGE,
+  ]),
+  FILES_PAGE,
+  MEMBERS_PAGE,
   { label: 'Classements', to: '/profile/rankings', icon: TrophyIcon, keywords: ['réactivité', 'engagement'], permission: ['view', 'response'] },
   { label: 'Inviter un membre', to: '/profile/invite', icon: UserPlusIcon, keywords: ['invitation', 'parrainage', 'qr'], permission: ['create', 'invitation'] },
   { label: 'Rapprochement des adhésions', to: '/profile/membership/reconciliation', icon: WalletIcon, keywords: ['helloasso', 'cotisation'], permission: ['edit', 'membership'] },
@@ -91,15 +61,11 @@ export function pageTitle(page: SearchablePage): string {
   return page.section ? `${page.section} · ${page.label}` : page.label;
 }
 
-export function matchPages(
-  query: string,
-  can: (action: string, resource: string) => boolean,
-  limit = PAGE_RESULTS_LIMIT,
-): SearchablePage[] {
+export function matchPages(query: string, can: Can, limit = PAGE_RESULTS_LIMIT): SearchablePage[] {
   const words = tokens(query);
   if (words.length === 0) return [];
   return SEARCHABLE_PAGES
-    .filter((page) => !page.permission || can(...page.permission))
+    .filter((page) => isAllowed(page, can))
     .map((page) => {
       const haystack = normalize([page.label, page.section ?? '', ...(page.keywords ?? [])].join(' '));
       if (!words.every((word) => haystack.includes(word))) return null;

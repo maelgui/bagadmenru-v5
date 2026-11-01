@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fileAspect } from '../../../utils/file-aspect';
-import { fileDownloadUrl, fileViewUrl } from '../../../utils/file-urls';
+import { fileDownloadUrl, fileViewUrl, isViewable } from '../../../utils/file-urls';
 
 interface FileItemProps {
   file: FileOrFolder
@@ -76,7 +76,7 @@ function FileItemLink({
     onContextMenu: (event: MouseEvent) => event.preventDefault(),
     ...bind(),
   };
-  if (file.type === FileOrFolderType.File && file.fileKey) {
+  if (isViewable(file)) {
     return (
       <a
         href={fileViewUrl(file.id)}

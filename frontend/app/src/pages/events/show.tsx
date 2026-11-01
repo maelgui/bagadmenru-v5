@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Container from '../../components/container';
 import Header from '../../components/header';
 import { useApiClient, usePermissions } from '../../config/client';
+import { formatLongDate } from '../../utils/date';
 import { EventBadgeRow } from './components/event';
 import {
   enrichResponses,
@@ -20,12 +21,7 @@ import { profilesQuery } from '../profiles/queries';
 import {
   eventQuery, eventResponsesQuery, upcomingResponsesQuery, useRespondMutation,
 } from './queries';
-
-function longDate(date: Date): string {
-  return date.toLocaleDateString('fr-FR', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
-}
+import { eventsHomePath } from './sections';
 
 function EventResponses({ event, canRespond }: { event: Event; canRespond: boolean }) {
   const { eventsApi, usersApi } = useApiClient();
@@ -108,10 +104,10 @@ export default function ShowEventPage() {
     <>
       <Header
         title={event?.title ?? <Skeleton className="h-10 w-64" />}
-        subtitle={event ? longDate(event.date) : undefined}
+        subtitle={event ? formatLongDate(event.date) : undefined}
         actions={event ? [<EditAction key="edit" event={event} />] : []}
         breadcrumb={[
-          { title: 'Évènements', link: can('view', 'response') ? '/events' : '/events/calendar' },
+          { title: 'Évènements', link: eventsHomePath(can) },
           { title: event?.title ?? '…' },
         ]}
       />

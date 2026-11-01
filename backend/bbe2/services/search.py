@@ -137,16 +137,16 @@ class SearchService:
     def _path(
         parent_id: Optional[int], folders: dict[int, tuple[str, Optional[int]]]
     ) -> list[str]:
+        """Ancestor folder names from the outermost down to the direct parent,
+        root excluded (it is the only folder without a parent)."""
         names: list[str] = []
         current = parent_id
-        while current is not None and current in folders:
-            name, next_parent = folders[current]
-            if next_parent is None:
+        while current in folders:
+            name, current = folders[current]
+            if current is None:
                 break
             names.append(name)
-            current = next_parent
-        names.reverse()
-        return names
+        return names[::-1]
 
 
 SearchServiceDep = Annotated[SearchService, Depends()]
