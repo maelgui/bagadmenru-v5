@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
 import { SearchButton } from './global-search/triggers';
+import Mailbox from './mailbox';
 
 interface NavigationItem {
   label: string;
@@ -189,6 +190,7 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
 
 export default function Navbar() {
   const navigationItems = useNavigationItems();
+  const { can } = usePermissions();
   const { resolvedTheme } = useTheme();
   const [show, setShow] = useState(false);
 
@@ -248,8 +250,9 @@ export default function Navbar() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        <div className="ml-auto flex items-center gap-2 lg:flex-1 lg:justify-end">
+        <div className="ml-auto flex items-center gap-1 lg:flex-1 lg:justify-end">
           <SearchButton />
+          {can('view', 'email') ? <Mailbox /> : null}
 
           <div className="hidden lg:flex">
             <ProfileActions onNavigate={close} />

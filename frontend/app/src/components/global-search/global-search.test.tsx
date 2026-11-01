@@ -15,10 +15,14 @@ vi.mock('../../config/client', () => ({
   useApiClient: () => ({ searchApi: { searchApiV1SearchGet: search } }),
   usePermissions: () => ({ can: () => true }),
 }));
+vi.mock('../../config/theme', () => ({
+  useTheme: () => ({ resolvedTheme: 'light' }),
+}));
 
 /* eslint-disable import/first -- imports must follow vi.mock hoisting */
+import HomeHero from '../../pages/home/components/hero';
 import { GlobalSearchProvider } from './global-search';
-import { SearchButton, SearchField } from './triggers';
+import { SearchButton } from './triggers';
 /* eslint-enable import/first */
 
 // cmdk measures its list with ResizeObserver and scrolls the selected item
@@ -57,7 +61,7 @@ function renderSearch() {
       <MemoryRouter initialEntries={['/']}>
         <GlobalSearchProvider>
           <SearchButton />
-          <SearchField />
+          <HomeHero firstName="Maël" />
           <Routes>
             <Route path="*" element={<Location />} />
           </Routes>
@@ -94,7 +98,7 @@ describe('GlobalSearch', () => {
     expect(search).not.toHaveBeenCalled();
   });
 
-  it('opens the same palette from the navbar button and from the home field, with a fresh query each time', async () => {
+  it('opens the same palette from the navbar button and from the home hero, with a fresh query each time', async () => {
     renderSearch();
     fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }));
     const input = await screen.findByPlaceholderText('Pages, évènements, membres, fichiers…');
@@ -104,7 +108,7 @@ describe('GlobalSearch', () => {
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
     await waitFor(() => expect(screen.queryByPlaceholderText('Pages, évènements, membres, fichiers…')).toBeNull());
 
-    fireEvent.click(screen.getByRole('button', { name: /Rechercher une partition/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Une partition, un évènement/ }));
     const reopened = await screen.findByPlaceholderText('Pages, évènements, membres, fichiers…');
     expect(reopened).toHaveProperty('value', '');
   });

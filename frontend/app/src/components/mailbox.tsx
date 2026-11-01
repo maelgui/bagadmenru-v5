@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { useApiClient } from '../../../config/client';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useApiClient } from '../config/client';
 import { cn } from '@/lib/utils';
 
 interface EmailResponse {
@@ -44,13 +45,23 @@ export default function Mailbox() {
   const emailList = emails ?? [];
   const count = emailList.length;
 
+  const label = count > 0 ? `Boite mail : ${count} email${count > 1 ? 's' : ''} non lu${count > 1 ? 's' : ''}` : 'Boite mail';
+
   return (
     <>
-      <Button type="button" variant="outline" onClick={() => setDialogOpen(true)} aria-label={count > 0 ? `${count} mail${count > 1 ? 's' : ''} non lu${count > 1 ? 's' : ''}` : 'Boite mail'}>
-        <Inbox data-icon="inline-start" />
-        Boite mail
-        {count > 0 ? <Badge>{count}</Badge> : null}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={<Button type="button" variant="ghost" size="icon" className="relative" />}
+          onClick={() => setDialogOpen(true)}
+          aria-label={label}
+        >
+          <Inbox aria-hidden="true" />
+          {count > 0 ? (
+            <Badge className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-[10px]" aria-hidden="true">{count}</Badge>
+          ) : null}
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="text-left">
           <DialogHeader>

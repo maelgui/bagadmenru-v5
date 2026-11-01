@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { useTheme } from '../config/theme';
+import { brandGradient } from '../utils/brand-gradient';
 import Container from './container';
 
 interface BreadcrumbItem {
@@ -27,17 +28,10 @@ function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
-  // The breadcrumb keeps its signature brand gradient in both themes: the
-  // light pastel sweep for light mode, and a deep, low-lightness variant of
-  // the same hues for dark mode so the bar blends with the dark background.
-  const gradient = isDark
-    ? 'linear-gradient(to right, #3a1226, #331336, #241640, #16203f, #102a3a)'
-    : 'linear-gradient(to right, #ffe3f3, #f5e0f8, #e7dffd, #d5dfff, #c1dfff)';
-
   return (
     <div
       className="py-2 shadow-inner"
-      style={{ backgroundImage: gradient }}
+      style={{ backgroundImage: brandGradient(isDark) }}
     >
       <Container className="py-0">
         <nav aria-label="Fil d’Ariane" className={`text-sm ${isDark ? 'text-gray-100' : 'text-foreground'}`}>

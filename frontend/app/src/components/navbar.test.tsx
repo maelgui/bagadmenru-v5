@@ -31,6 +31,9 @@ vi.mock('../config/theme', () => ({
 vi.mock('./global-search/triggers', () => ({
   SearchButton: () => <div data-testid="global-search" />,
 }));
+vi.mock('./mailbox', () => ({
+  default: () => <div data-testid="mailbox" />,
+}));
 
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
 import Navbar from './navbar';

@@ -71,9 +71,9 @@ test.describe('Global search', () => {
     await expect(page.getByText('Votre réponse')).toBeVisible();
   });
 
-  test('opens from the home search field and from the keyboard shortcut', async ({ page }) => {
+  test('opens from the home hero and from the keyboard shortcut', async ({ page }) => {
     await loginViaUI(page, E2E_ADMIN.email, E2E_ADMIN.password);
-    await page.getByRole('button', { name: /Rechercher une partition/ }).click();
+    await page.getByRole('button', { name: /Une partition, un évènement/ }).click();
     const input = page.getByPlaceholder(SEARCH_PLACEHOLDER);
     await expect(input).toBeVisible();
     await page.keyboard.press('Escape');

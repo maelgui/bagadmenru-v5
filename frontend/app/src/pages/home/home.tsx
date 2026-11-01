@@ -12,8 +12,6 @@ import {
 } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import Container from '../../components/container';
-import { SearchField } from '../../components/global-search/triggers';
-import Header from '../../components/header';
 import { useApiClient, usePermissions, useUserProfile } from '../../config/client';
 import { cn } from '@/lib/utils';
 import { toIsoDate } from '../../utils/date';
@@ -21,7 +19,7 @@ import groupBy from '../../utils/groupby';
 import Calendar from '../events/components/calendar';
 import EventListItem, { EventListItemSkeleton } from '../events/components/event';
 import FileItem, { FileItemSkeleton } from '../files/components/file-item';
-import Mailbox from './components/mailbox';
+import HomeHero from './components/hero';
 
 const MAX_DISPLAYED_EVENTS = 4;
 const LATEST_FILES_COUNT = 5;
@@ -193,13 +191,8 @@ export default function HomePage() {
 
   return (
     <>
-      <Header
-        title={<span lang="br" title={`Bienvenue ${profile?.firstName}`}>{`Degemer mat ${profile?.firstName}`}</span>}
-        subtitle="Bienvenue dans votre espace membres"
-        actions={can('view', 'email') ? [<Mailbox key="mailbox" />] : []}
-      />
-      <Container>
-        <SearchField className="mb-8 lg:max-w-2xl" />
+      <HomeHero firstName={profile?.firstName} />
+      <Container className="pt-8">
         <ResponseBanner myStats={myStats} globalStats={globalStats} />
         <div className="mt-8 grid grid-cols-1 content-stretch gap-8 md:grid-cols-2 lg:grid-cols-3">
           {canViewEvents ? (
