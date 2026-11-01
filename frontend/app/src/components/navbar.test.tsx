@@ -30,6 +30,7 @@ vi.mock('../config/theme', () => ({
 // query client; stub it so these tests stay about navigation.
 vi.mock('./global-search/triggers', () => ({
   SearchButton: () => <div data-testid="global-search" />,
+  SearchField: () => <div data-testid="global-search-field" />,
 }));
 vi.mock('./mailbox', () => ({
   default: () => <div data-testid="mailbox" />,

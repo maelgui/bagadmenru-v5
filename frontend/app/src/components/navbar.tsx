@@ -32,7 +32,7 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
-import { SearchButton } from './global-search/triggers';
+import { SearchButton, SearchField } from './global-search/triggers';
 import Mailbox from './mailbox';
 
 interface NavigationItem {
@@ -83,10 +83,10 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
     <div className="flex w-full items-center px-3 pb-4 lg:w-auto lg:px-0 lg:py-0 lg:pb-0">
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="flex w-full flex-row-reverse items-center justify-end gap-3 rounded-2xl p-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:bg-muted lg:mx-4 lg:w-auto lg:flex-row"
+          className="flex w-full flex-row-reverse items-center justify-end gap-3 rounded-2xl p-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:bg-muted lg:ml-2 lg:w-auto lg:rounded-full lg:p-1"
           aria-label={`Comptes - ${profile.firstName} ${profile.lastName}`}
         >
-          <span className="flex min-w-0 flex-col text-left lg:text-right">
+          <span className="flex min-w-0 flex-col text-left lg:hidden">
             <span className="truncate font-medium">
               {profile.firstName}
               {' '}
@@ -209,23 +209,15 @@ export default function Navbar() {
 
   return (
     <header className="relative shadow-md">
-      <div className="container m-auto flex h-24 items-center">
-        <div className="flex items-center lg:flex-1">
-          <NavLink
-            to="/"
-            className="flex items-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            onClick={close}
-          >
-            <div className="mx-8 w-12">
-              <img src={resolvedTheme === 'dark' ? logoDark : logo} alt="Bagad Men Ru" />
-            </div>
-            <div>
-              <span className="font-semibold whitespace-nowrap text-foreground">Bagad Men Ru</span>
-              <br />
-              <span className="whitespace-nowrap text-muted-foreground">Espace membres</span>
-            </div>
-          </NavLink>
-        </div>
+      <div className="container m-auto flex h-20 items-center px-4">
+        <NavLink
+          to="/"
+          className="mr-6 flex items-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          onClick={close}
+          aria-label="Bagad Men Ru - Accueil"
+        >
+          <img src={resolvedTheme === 'dark' ? logoDark : logo} alt="" className="size-12" />
+        </NavLink>
 
         <NavigationMenu className="hidden lg:flex" aria-label="Navigation principale">
           <NavigationMenuList>
@@ -250,8 +242,9 @@ export default function Navbar() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        <div className="ml-auto flex items-center gap-1 lg:flex-1 lg:justify-end">
-          <SearchButton />
+        <div className="ml-auto flex items-center gap-1">
+          <SearchField className="hidden lg:flex" />
+          <span className="lg:hidden"><SearchButton /></span>
           {can('view', 'email') ? <Mailbox /> : null}
 
           <div className="hidden lg:flex">
@@ -262,7 +255,7 @@ export default function Navbar() {
             type="button"
             variant="ghost"
             size="icon"
-            className="mr-6 lg:hidden"
+            className="lg:hidden"
             aria-label={show ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={show}
             aria-controls="mobile-navigation"
