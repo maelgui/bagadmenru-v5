@@ -5,6 +5,7 @@ import { apiClient } from './client';
 const KIND: Record<TrackedEvent['kind'], AuditKind> = {
   PAGE_VIEW: AuditKind.PageView,
   CLICK: AuditKind.Click,
+  ACTION: AuditKind.Action,
 };
 
 function toClientEvent(event: TrackedEvent): ClientAuditEvent {
@@ -27,3 +28,12 @@ export const audit = createAuditTracker(async (events, keepalive) => {
     { keepalive },
   );
 });
+
+/**
+ * Report a browser-side step the API never sees on its own: the outcome of a
+ * passkey ceremony, a notification permission prompt... `name` is a stable
+ * dotted id (`passkey.register`); put the outcome in `details`.
+ */
+export function auditAction(name: string, details?: Record<string, unknown>) {
+  audit.track('ACTION', name, window.location.pathname, details);
+}

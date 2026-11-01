@@ -7,6 +7,7 @@ export const SCOPES = [
   { value: 'api', label: 'Appels API' },
   { value: 'pages', label: 'Pages vues' },
   { value: 'clicks', label: 'Clics' },
+  { value: 'actions', label: 'Actions' },
 ] as const;
 export type Scope = (typeof SCOPES)[number]['value'];
 
@@ -25,6 +26,8 @@ export function scopeParams(scope: Scope): { kind?: AuditKind; mutationsOnly?: b
       return { kind: AuditKind.PageView };
     case 'clicks':
       return { kind: AuditKind.Click };
+    case 'actions':
+      return { kind: AuditKind.Action };
     default:
       return {};
   }
@@ -60,7 +63,26 @@ export const KIND_LABELS: Record<AuditKind, string> = {
   [AuditKind.ApiCall]: 'API',
   [AuditKind.PageView]: 'Page',
   [AuditKind.Click]: 'Clic',
+  [AuditKind.Action]: 'Action',
 };
+
+/**
+ * The concrete location worth showing under the name, or null when it would
+ * only repeat it: an API row's name is `METHOD pattern`, so its path is shown
+ * when the pattern had parameters or the request had a query string; a page
+ * view's path is shown when the route had parameters; a click or action
+ * always names the page it happened on.
+ */
+export function shownPath(event: AuditEvent): string | null {
+  const pattern = event.method ? event.name.slice(event.method.length + 1) : event.name;
+  return event.path === pattern ? null : event.path;
+}
+
+/** The `outcome` an ACTION row reports, when present. */
+export function outcomeOf(event: AuditEvent): string | null {
+  const outcome: unknown = event.details?.outcome;
+  return typeof outcome === 'string' ? outcome : null;
+}
 
 export type StatusTone = 'ok' | 'client-error' | 'server-error';
 
@@ -71,8 +93,4 @@ export function statusTone(status: number): StatusTone {
   if (status >= SERVER_ERROR_MIN) return 'server-error';
   if (status >= CLIENT_ERROR_MIN) return 'client-error';
   return 'ok';
-}
-
-export function isMutation(event: AuditEvent): boolean {
-  return event.kind === AuditKind.ApiCall && event.method !== 'GET';
 }

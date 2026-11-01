@@ -1,6 +1,6 @@
 import { AuditKind, type AuditEvent } from 'bagad-client';
 import {
-  GlobeIcon, MousePointerClickIcon, ScrollTextIcon, SearchIcon, ServerIcon,
+  GlobeIcon, MousePointerClickIcon, ScrollTextIcon, SearchIcon, ServerIcon, ZapIcon,
 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
@@ -22,8 +22,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { useDebounced } from '../../../utils/useDebounced';
 import {
-  isPeriod, isScope, KIND_LABELS, PERIODS, type Period, periodSince, SCOPES,
-  type Scope, scopeParams, statusTone,
+  isPeriod, isScope, KIND_LABELS, outcomeOf, PERIODS, type Period, periodSince, SCOPES,
+  type Scope, scopeParams, shownPath, statusTone,
 } from '../auditUtils';
 import { useAdminAudit, useAdminMembers } from '../queries';
 import { MemberIdentity } from './memberIdentity';
@@ -34,6 +34,7 @@ const KIND_ICON = {
   [AuditKind.ApiCall]: ServerIcon,
   [AuditKind.PageView]: GlobeIcon,
   [AuditKind.Click]: MousePointerClickIcon,
+  [AuditKind.Action]: ZapIcon,
 } as const;
 
 const TONE_CLASS = {
@@ -60,6 +61,8 @@ function StatusBadge({ status }: { status: number }) {
 
 function EventRow({ event }: { event: AuditEvent }) {
   const at = DateTime.fromJSDate(event.at).setLocale('fr');
+  const path = shownPath(event);
+  const outcome = outcomeOf(event);
   return (
     <TableRow data-audit-id={event.id}>
       <TableCell className="whitespace-normal align-top">
@@ -89,9 +92,10 @@ function EventRow({ event }: { event: AuditEvent }) {
             {event.durationMs != null ? (
               <span className="text-xs tabular-nums text-muted-foreground">{Math.round(event.durationMs)} ms</span>
             ) : null}
+            {outcome ? <Badge variant="secondary">{outcome}</Badge> : null}
           </span>
-          {event.path !== event.name ? (
-            <span className="break-all font-mono text-xs text-muted-foreground">{event.path}</span>
+          {path ? (
+            <span className="break-all font-mono text-xs text-muted-foreground">{path}</span>
           ) : null}
         </span>
       </TableCell>
@@ -129,7 +133,8 @@ export default function AuditSection() {
         <CardTitle>Journal d&apos;activité</CardTitle>
         <CardDescription>
           Toutes les actions des membres : appels à l&apos;API (modifications incluses), pages
-          vues et clics. Les pages vues et clics sont conservés 90 jours, les appels API un an.
+          vues, clics et actions du navigateur (clé d&apos;accès, notifications). Les appels API
+          sont conservés un an, le reste 90 jours.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -174,7 +179,7 @@ export default function AuditSection() {
             <InputGroupAddon><SearchIcon /></InputGroupAddon>
             <InputGroupInput
               type="search"
-              placeholder="Rechercher une action ou un chemin"
+              placeholder="Rechercher"
               aria-label="Rechercher une action ou un chemin"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

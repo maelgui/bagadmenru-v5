@@ -8,7 +8,7 @@ from typing import Any, Optional
 from pydantic import AwareDatetime, BaseModel, Field, field_validator
 
 
-class AuditKind(str, Enum):
+class AuditKind(Enum):
     # One row per HTTP request handled by the API. A mutation is simply an
     # API_CALL whose method is not GET; it is not a separate kind.
     API_CALL = "API_CALL"
@@ -16,11 +16,16 @@ class AuditKind(str, Enum):
     PAGE_VIEW = "PAGE_VIEW"
     # Reported by the frontend: an interactive element activated.
     CLICK = "CLICK"
+    # Reported by the frontend: a browser-side step whose outcome never reaches
+    # the API on its own (a passkey ceremony the member cancelled, a
+    # notification permission refused...). Named by the reporting code.
+    ACTION = "ACTION"
 
 
 # Kinds the browser may report. API_CALL rows are only ever written by the
-# server middleware, so a client claiming one is rejected.
-CLIENT_KINDS = frozenset({AuditKind.PAGE_VIEW, AuditKind.CLICK})
+# server middleware, so a client claiming one is rejected. These are also the
+# behavioural rows the short retention window applies to.
+CLIENT_KINDS = frozenset({AuditKind.PAGE_VIEW, AuditKind.CLICK, AuditKind.ACTION})
 
 MAX_NAME_LENGTH = 200
 MAX_PATH_LENGTH = 2000
@@ -33,7 +38,8 @@ class ClientAuditEvent(BaseModel):
 
     kind: AuditKind
     # Low-cardinality label: the route pattern (``/profile/:profileId``) for a
-    # page view, the accessible name / ``data-audit`` id for a click.
+    # page view, the accessible name / ``data-audit`` id for a click, a dotted
+    # id (``passkey.register``) for an action.
     name: str = Field(min_length=1, max_length=MAX_NAME_LENGTH)
     # The concrete location the event happened on.
     path: str = Field(min_length=1, max_length=MAX_PATH_LENGTH)
@@ -46,7 +52,9 @@ class ClientAuditEvent(BaseModel):
     @classmethod
     def _client_kind_only(cls, value: AuditKind) -> AuditKind:
         if value not in CLIENT_KINDS:
-            raise ValueError("clients may only report PAGE_VIEW and CLICK events")
+            raise ValueError(
+                "clients may only report PAGE_VIEW, CLICK and ACTION events"
+            )
         return value
 
     @field_validator("details")

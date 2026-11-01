@@ -31,7 +31,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.String(length=64), nullable=True),
         sa.Column(
             "kind",
-            sa.Enum("API_CALL", "PAGE_VIEW", "CLICK", name="auditkind"),
+            sa.Enum("API_CALL", "PAGE_VIEW", "CLICK", "ACTION", name="auditkind"),
             nullable=False,
         ),
         sa.Column("name", sa.String(length=200), nullable=False),

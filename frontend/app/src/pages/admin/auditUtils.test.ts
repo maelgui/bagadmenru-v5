@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AuditKind, type AuditEvent } from 'bagad-client';
 import {
-  isMutation, isPeriod, isScope, periodSince, scopeParams, statusTone,
+  isPeriod, isScope, outcomeOf, periodSince, scopeParams, shownPath, statusTone,
 } from './auditUtils';
 
 describe('scopeParams', () => {
@@ -11,6 +11,7 @@ describe('scopeParams', () => {
     expect(scopeParams('api')).toEqual({ kind: AuditKind.ApiCall });
     expect(scopeParams('pages')).toEqual({ kind: AuditKind.PageView });
     expect(scopeParams('clicks')).toEqual({ kind: AuditKind.Click });
+    expect(scopeParams('actions')).toEqual({ kind: AuditKind.Action });
   });
 
   it('guards unknown values', () => {
@@ -43,14 +44,46 @@ describe('statusTone', () => {
   });
 });
 
-describe('isMutation', () => {
-  const base: AuditEvent = {
-    id: 1, at: new Date(), kind: AuditKind.ApiCall, name: 'x', path: '/x',
-  };
+describe('shownPath', () => {
+  const api = (name: string, path: string): AuditEvent => ({
+    id: 1, at: new Date(), kind: AuditKind.ApiCall, method: 'GET', name, path,
+  });
 
-  it('is any non-GET API call', () => {
-    expect(isMutation({ ...base, method: 'PUT' })).toBe(true);
-    expect(isMutation({ ...base, method: 'GET' })).toBe(false);
-    expect(isMutation({ ...base, kind: AuditKind.Click })).toBe(false);
+  it('hides an API path that only repeats the pattern', () => {
+    expect(shownPath(api('GET /api/v1/profiles/me', '/api/v1/profiles/me'))).toBeNull();
+  });
+
+  it('shows an API path carrying parameters or a query string', () => {
+    expect(shownPath(api('GET /api/v1/events/{event_id}', '/api/v1/events/42'))).toBe('/api/v1/events/42');
+    expect(shownPath(api('GET /api/v1/files/', '/api/v1/files/?t=FILE'))).toBe('/api/v1/files/?t=FILE');
+  });
+
+  it('shows a page path only when the route had parameters', () => {
+    const view = (name: string, path: string): AuditEvent => ({
+      id: 1, at: new Date(), kind: AuditKind.PageView, name, path,
+    });
+    expect(shownPath(view('/events', '/events'))).toBeNull();
+    expect(shownPath(view('/profile/:profileId', '/profile/abc'))).toBe('/profile/abc');
+  });
+
+  it('always names the page a click or action happened on', () => {
+    expect(shownPath({
+      id: 1, at: new Date(), kind: AuditKind.Action, name: 'passkey.register', path: '/profile/settings',
+    })).toBe('/profile/settings');
+  });
+});
+
+describe('outcomeOf', () => {
+  const action = (details?: Record<string, unknown>): AuditEvent => ({
+    id: 1, at: new Date(), kind: AuditKind.Action, name: 'passkey.register', path: '/x', details,
+  });
+
+  it('reads a string outcome from details', () => {
+    expect(outcomeOf(action({ outcome: 'failed', error: 'NotAllowedError' }))).toBe('failed');
+  });
+
+  it('is null without one', () => {
+    expect(outcomeOf(action())).toBeNull();
+    expect(outcomeOf(action({ outcome: 3 }))).toBeNull();
   });
 });

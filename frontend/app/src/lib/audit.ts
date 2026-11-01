@@ -1,6 +1,6 @@
 /**
- * Browser-side audit tracker: queues page views and clicks and ships them to
- * the backend in batches.
+ * Browser-side audit tracker: queues page views, clicks and actions and ships
+ * them to the backend in batches.
  *
  * Framework-free on purpose: it knows nothing about React, the router or the
  * API client. `src/config/audit.ts` wires it to the generated client and
@@ -9,11 +9,17 @@
  * backend hiccup never piles up requests or surfaces to the member.
  */
 
-export type ClientAuditKind = 'PAGE_VIEW' | 'CLICK';
+/**
+ * - PAGE_VIEW / CLICK: observed automatically from the router and the DOM.
+ * - ACTION: a browser-side step whose outcome never reaches the API on its own
+ *   (a passkey ceremony cancelled, a notification permission refused), reported
+ *   explicitly by the code that runs it.
+ */
+export type ClientAuditKind = 'PAGE_VIEW' | 'CLICK' | 'ACTION';
 
 export interface TrackedEvent {
   kind: ClientAuditKind;
-  /** Low-cardinality label: route pattern, accessible name or data-audit id. */
+  /** Low-cardinality label: route pattern, accessible name, data-audit id or dotted action id. */
   name: string;
   /** Concrete location the event happened on. */
   path: string;

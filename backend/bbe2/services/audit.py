@@ -17,6 +17,7 @@ first). Janitor: :func:`purge_audit_events` (daily job, two retention windows).
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Mapping, Optional
+from urllib.parse import parse_qsl, urlencode
 
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session as DbSession
@@ -24,6 +25,7 @@ from sqlalchemy.orm import selectinload
 
 from bbe2.models.audit_event import AuditEventDB
 from bbe2.schemas.audit import (
+    CLIENT_KINDS,
     AuditActor,
     AuditEvent,
     AuditEventPage,
@@ -34,9 +36,9 @@ from bbe2.utils import get_logger
 
 logger = get_logger()
 
-# Path parameters whose VALUE is a credential (email-link tokens, recovery
-# grants, API keys). They are replaced in the stored concrete path so the audit
-# table never becomes a place to harvest live secrets from.
+# Path and query parameters whose VALUE is a credential (email-link tokens,
+# recovery grants, API keys). They are replaced in the stored concrete path so
+# the audit table never becomes a place to harvest live secrets from.
 _SECRET_PARAM_RE = re.compile(r"token|code|secret|key|grant", re.IGNORECASE)
 REDACTED = "<redacted>"
 
@@ -76,6 +78,29 @@ def redact_params(path_params: Mapping[str, Any]) -> dict[str, Any]:
         name: REDACTED if _is_secret_param(name) and value else value
         for name, value in path_params.items()
     }
+
+
+def redact_query(query: str) -> str:
+    """Return the query string with secret-looking parameter values masked.
+
+    The API is neutral: what a GET returns depends on the filters the client
+    passed (``?t=FILE``, ``?flow=silent``), so the query string is part of the
+    action and is kept, minus credential-looking values.
+    """
+    pairs = parse_qsl(query, keep_blank_values=True)
+    return urlencode(
+        [
+            (name, REDACTED if _is_secret_param(name) and value else value)
+            for name, value in pairs
+        ],
+        safe="<>/:,",
+    )
+
+
+def stored_path(path: str, query: str, path_params: Mapping[str, Any]) -> str:
+    """The concrete URL to store: redacted path, plus the redacted query if any."""
+    redacted = redact_path(path, path_params)
+    return f"{redacted}?{redact_query(query)}" if query else redacted
 
 
 # A browser clock is the client's word. Its timestamp is kept only when it is
@@ -124,6 +149,7 @@ def record_api_call(  # pylint: disable=too-many-arguments
     method: str,
     matched: bool,
     path: str,
+    query: str,
     path_params: Mapping[str, Any],
     status: int,
     duration_ms: float,
@@ -136,7 +162,7 @@ def record_api_call(  # pylint: disable=too-many-arguments
     ``name`` is the route template (``GET /api/v1/events/{event_id}``). A
     request no route owns (``matched`` False: a 404 on an unknown path) is
     stored under a fixed label so probing noise does not create one distinct
-    name per URL; its concrete path is still kept.
+    name per URL; its concrete path (with query string) is still kept.
     """
     pattern = route_pattern(path, path_params) if matched else "<unmatched>"
     session.add(
@@ -144,7 +170,7 @@ def record_api_call(  # pylint: disable=too-many-arguments
             user_id=user_id,
             kind=AuditKind.API_CALL,
             name=f"{method} {pattern}",
-            path=redact_path(path, path_params),
+            path=stored_path(path, query, path_params),
             method=method,
             status=status,
             duration_ms=duration_ms,
@@ -269,13 +295,13 @@ def purge_audit_events(
 ) -> int:
     """Delete rows past their retention window; returns the number deleted.
 
-    Browser-side kinds (page views, clicks) and API calls have separate
-    windows. A window of 0 disables the purge for that family.
+    Browser-side kinds (``CLIENT_KINDS``) and API calls have separate windows.
+    A window of 0 disables the purge for that family.
     """
     now = datetime.now(tz=timezone.utc)
     deleted = 0
     for kinds, days in (
-        ((AuditKind.PAGE_VIEW, AuditKind.CLICK), client_retention_days),
+        (tuple(CLIENT_KINDS), client_retention_days),
         ((AuditKind.API_CALL,), api_retention_days),
     ):
         if days <= 0:

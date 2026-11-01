@@ -207,6 +207,7 @@ def _record_audit(
                 # FastAPI sets scope["route"] only when a route matched.
                 matched="route" in request.scope,
                 path=request.url.path,
+                query=request.url.query,
                 path_params=request.scope.get("path_params") or {},
                 status=status_code,
                 duration_ms=duration_ms,

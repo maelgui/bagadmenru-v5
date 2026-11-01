@@ -20,7 +20,8 @@
 export const AuditKind = {
     ApiCall: 'API_CALL',
     PageView: 'PAGE_VIEW',
-    Click: 'CLICK'
+    Click: 'CLICK',
+    Action: 'ACTION'
 } as const;
 export type AuditKind = typeof AuditKind[keyof typeof AuditKind];
 

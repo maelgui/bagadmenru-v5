@@ -109,6 +109,51 @@ def test_secret_path_params_never_reach_the_row(client: TestClient):
     assert row.details == {"token": "<redacted>"}
 
 
+def test_query_string_is_kept_in_the_path(client: TestClient):
+    assert (
+        client.get("/api/v1/events/", params={"ordering": "-date"}).status_code == 200
+    )
+
+    (row,) = _rows(name="GET /api/v1/events/")
+    assert row.path == "/api/v1/events/?ordering=-date"
+
+
+def test_redact_query_masks_secret_looking_params():
+    assert audit_service.redact_query("flow=silent&t=FILE") == "flow=silent&t=FILE"
+    assert (
+        audit_service.redact_query("code=123456&via=link&api_key=k&empty=")
+        == "code=<redacted>&via=link&api_key=<redacted>&empty="
+    )
+    assert audit_service.stored_path("/api/v1/files/", "", {}) == "/api/v1/files/"
+
+
+def _use_session_cookies(client: TestClient, active_account: str) -> None:
+    """Swap the bearer header for the browser's multi-account cookies."""
+    token = client.headers["Authorization"].removeprefix("Bearer ")
+    client.headers = {}
+    client.cookies.set(f"{auth_module.SESSION_COOKIE_PREFIX}{SEEDED_USER_ID}", token)
+    client.cookies.set(auth_module.ACTIVE_ACCOUNT_COOKIE, active_account)
+
+
+def test_session_endpoints_are_attributed_to_the_active_account(client: TestClient):
+    _use_session_cookies(client, SEEDED_USER_ID)
+    assert client.get("/api/v1/auth/sessions").status_code == 200
+    assert client.post("/api/v1/auth/logout").status_code == 200
+
+    (sessions,) = _rows(name="GET /api/v1/auth/sessions")
+    (logout,) = _rows(name="POST /api/v1/auth/logout")
+    assert sessions.user_id == SEEDED_USER_ID
+    assert logout.user_id == SEEDED_USER_ID
+
+
+def test_session_endpoints_ignore_an_unverified_active_account(client: TestClient):
+    _use_session_cookies(client, "someone-else")
+    assert client.get("/api/v1/auth/sessions").status_code == 200
+
+    (row,) = _rows(name="GET /api/v1/auth/sessions")
+    assert row.user_id is None
+
+
 def test_trusted_at_keeps_plausible_client_clocks_only():
     now = datetime(2026, 10, 31, 12, 0, tzinfo=timezone.utc)
     recent = now - timedelta(seconds=30)
@@ -177,6 +222,35 @@ def test_ingest_stores_events_for_the_session_member(client: TestClient):
     ]
     assert rows[1].details == {"tag": "button"}
     assert rows[0].at.replace(tzinfo=timezone.utc) == at
+
+
+def test_ingest_accepts_browser_actions(client: TestClient):
+    res = client.post(
+        "/api/v1/audit/events",
+        json={
+            "events": [
+                {
+                    "kind": "ACTION",
+                    "name": "passkey.register",
+                    "path": "/profile/settings",
+                    "at": datetime.now(tz=timezone.utc).isoformat(),
+                    "details": {"outcome": "failed", "error": "NotAllowedError"},
+                }
+            ]
+        },
+    )
+    assert res.status_code == 204
+
+    (row,) = _rows(kind=AuditKind.ACTION)
+    assert row.user_id == SEEDED_USER_ID
+    assert row.name == "passkey.register"
+    assert row.details == {"outcome": "failed", "error": "NotAllowedError"}
+    assert (
+        client.get("/api/v1/admin/audit", params={"kind": "ACTION"}).json()["items"][0][
+            "kind"
+        ]
+        == "ACTION"
+    )
 
 
 def test_ingest_overrides_an_implausible_client_clock(client: TestClient):
@@ -369,6 +443,14 @@ def test_purge_applies_a_window_per_family():
             status=None,
             at=now - timedelta(days=10),
         )
+        _seed(
+            session,
+            kind=AuditKind.ACTION,
+            name="old-action",
+            method=None,
+            status=None,
+            at=now - timedelta(days=100),
+        )
         _seed(session, name="old-call", at=now - timedelta(days=100))
         _seed(session, name="ancient-call", at=now - timedelta(days=400))
         session.commit()
@@ -378,7 +460,7 @@ def test_purge_applies_a_window_per_family():
         )
         session.commit()
 
-    assert deleted == 2
+    assert deleted == 3
     assert sorted(r.name for r in _rows()) == ["fresh-click", "old-call"]
 
 

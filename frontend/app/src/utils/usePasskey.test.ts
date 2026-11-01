@@ -9,32 +9,48 @@ let webauthnAutofillSupported = false;
 // Hoisted: these are read while the mock factories execute, before the test
 // file body runs.
 const {
-  toastAdd, invalidateQueries, sentryCapture, mockEnv,
+  toastAdd, invalidateQueries, sentryCapture, auditAction, mockEnv, mockAuthApi,
 } = vi.hoisted(() => {
   // Mutable so each test can flip the feature flag; the silent upgrade is
   // gated on VITE_FEATURE_SILENT_PASSKEY_UPGRADE (fail closed).
   const hoistedEnv: { VITE_FEATURE_SILENT_PASSKEY_UPGRADE?: string } = {
     VITE_FEATURE_SILENT_PASSKEY_UPGRADE: 'true',
   };
+  // What useApiClient() hands to useRegisterPasskey; set per test.
+  const authApiRef: { current: Record<string, unknown> } = { current: {} };
   return {
     toastAdd: vi.fn(),
     invalidateQueries: vi.fn(),
     sentryCapture: vi.fn(),
+    auditAction: vi.fn(),
     mockEnv: hoistedEnv,
+    mockAuthApi: authApiRef,
   };
 });
+
+// Hoisted with the mocks: the @simplewebauthn/browser factory returns it.
+const { WebAuthnError } = vi.hoisted(() => ({
+  WebAuthnError: class WebAuthnError extends Error {
+    constructor(name: string) {
+      super(name);
+      this.name = name;
+    }
+  },
+}));
 
 vi.mock('@simplewebauthn/browser', () => ({
   browserSupportsWebAuthn: () => webauthnSupported,
   browserSupportsWebAuthnAutofill: async () => await Promise.resolve(webauthnAutofillSupported),
   startRegistration: (...args: unknown[]) => startRegistration(...args) as unknown,
-  WebAuthnError: class WebAuthnError extends Error {},
+  WebAuthnError,
 }));
 
 vi.mock('../config/client', () => ({
   queryClient: { invalidateQueries },
-  useApiClient: () => ({}),
+  useApiClient: () => ({ authApi: mockAuthApi.current }),
 }));
+
+vi.mock('../config/audit', () => ({ auditAction }));
 
 vi.mock('@/components/ui/toast', () => ({ toast: { add: toastAdd } }));
 
@@ -43,8 +59,15 @@ vi.mock('@sentry/react', () => ({ captureException: sentryCapture }));
 vi.mock('../env', () => ({ default: mockEnv }));
 
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+// eslint-disable-next-line import/first -- import must follow vi.mock hoisting
+import { renderHook, waitFor } from '@testing-library/react';
+// eslint-disable-next-line import/first -- import must follow vi.mock hoisting
+import { createElement, type ReactNode } from 'react';
+// eslint-disable-next-line import/first -- import must follow vi.mock hoisting
 import {
   attemptSilentPasskeyUpgrade, browserSupportsConditionalGet, signalAllAcceptedPasskeys, signalUnknownPasskey,
+  useRegisterPasskey,
 } from './usePasskey';
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
 import { snoozePasskeyPrompts } from './passkeySnooze';
@@ -93,6 +116,7 @@ describe('attemptSilentPasskeyUpgrade', () => {
     expect(sentryCapture).toHaveBeenCalled();
     expect(toastAdd).not.toHaveBeenCalled();
     expect(invalidateQueries).not.toHaveBeenCalled();
+    expect(auditAction).toHaveBeenCalledWith('passkey.silent_upgrade', expect.objectContaining({ outcome: 'orphan' }));
   });
 
   it('registers silently and confirms with a toast on success', async () => {
@@ -105,6 +129,7 @@ describe('attemptSilentPasskeyUpgrade', () => {
     );
     expect(authApi.registerPasskeyApiV1WebauthnRegisterPost).toHaveBeenCalled();
     expect(toastAdd).toHaveBeenCalled();
+    expect(auditAction).toHaveBeenCalledWith('passkey.silent_upgrade', { outcome: 'created' });
   });
 
   it('does nothing when WebAuthn is unsupported', async () => {
@@ -123,12 +148,50 @@ describe('attemptSilentPasskeyUpgrade', () => {
 
   it('swallows a declined upgrade without any user-visible effect', async () => {
     // The browser declining (conditions not met / unsupported) is the normal
-    // case and must stay invisible.
+    // case and must stay invisible to the member, but the journal keeps it.
     startRegistration.mockRejectedValue(new Error('NotAllowedError'));
     const authApi = makeAuthApi();
     await expect(attemptSilentPasskeyUpgrade(asAuthApi(authApi), 'u1')).resolves.toBeUndefined();
     expect(authApi.registerPasskeyApiV1WebauthnRegisterPost).not.toHaveBeenCalled();
     expect(toastAdd).not.toHaveBeenCalled();
+    expect(auditAction).toHaveBeenCalledWith('passkey.silent_upgrade', { outcome: 'declined' });
+  });
+});
+
+describe('useRegisterPasskey', () => {
+  function renderRegister() {
+    const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client: queryClient }, children);
+    return renderHook(() => useRegisterPasskey(), { wrapper });
+  }
+
+  it('journals a created passkey', async () => {
+    const authApi = makeAuthApi();
+    mockAuthApi.current = authApi;
+    startRegistration.mockResolvedValue({ id: 'cred' });
+    const hook = renderRegister();
+    await expect(hook.result.current.mutateAsync()).resolves.toEqual({ status: 'created' });
+    expect(auditAction).toHaveBeenCalledWith('passkey.register', { outcome: 'created' });
+  });
+
+  it('journals a device that already holds a passkey as a benign outcome', async () => {
+    const authApi = makeAuthApi();
+    mockAuthApi.current = authApi;
+    startRegistration.mockRejectedValue(new WebAuthnError('InvalidStateError'));
+    const hook = renderRegister();
+    await expect(hook.result.current.mutateAsync()).resolves.toEqual({ status: 'already-registered' });
+    expect(authApi.registerPasskeyApiV1WebauthnRegisterPost).not.toHaveBeenCalled();
+    expect(auditAction).toHaveBeenCalledWith('passkey.register', { outcome: 'already-registered' });
+  });
+
+  it('journals a cancelled ceremony, which no API call would show', async () => {
+    const authApi = makeAuthApi();
+    mockAuthApi.current = authApi;
+    startRegistration.mockRejectedValue(new WebAuthnError('NotAllowedError'));
+    const hook = renderRegister();
+    await expect(hook.result.current.mutateAsync()).rejects.toThrow('NotAllowedError');
+    await waitFor(() => expect(hook.result.current.isError).toBe(true));
+    expect(auditAction).toHaveBeenCalledWith('passkey.register', { outcome: 'failed', error: 'NotAllowedError' });
   });
 });
 
