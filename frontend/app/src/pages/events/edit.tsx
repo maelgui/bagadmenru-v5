@@ -18,16 +18,14 @@ import Container from '../../components/container';
 import Header from '../../components/header';
 import { queryClient, useApiClient } from '../../config/client';
 import EventForm from './components/form';
+import { eventQuery } from './queries';
 
 export default function EditEventPage() {
   const { eventsApi } = useApiClient();
   const { eventId } = useParams<'eventId'>();
   if (!eventId) throw new Error('No event id');
   const parsedEventId = parseInt(eventId, 10);
-  const { data } = useQuery({
-    queryKey: ['events', eventId],
-    queryFn: async () => await eventsApi.getEventApiV1EventsEventIdGet({ eventId: parsedEventId }),
-  });
+  const { data } = useQuery(eventQuery(eventsApi, parsedEventId));
 
   const navigate = useNavigate();
   const { mutateAsync } = useMutation({

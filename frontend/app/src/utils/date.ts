@@ -33,3 +33,10 @@ export function fromIsoDate(value: string): Date {
 export function toUtcDate(date: Date): Date {
   return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 }
+
+/** "mardi 19 mai 2026" */
+export function formatLongDate(date: Date): string {
+  return date.toLocaleDateString('fr', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
+}

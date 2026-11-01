@@ -1,6 +1,4 @@
-import {
-  CalendarDays, ChevronDown, ListChecks, TableCellsMerge, UserMinus,
-} from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,9 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { usePermissions } from '../../../config/client';
+import { isAllowed } from '../../../config/navigation';
+import { EVENT_VIEWS, RESPONSE_HISTORY_PAGE } from '../sections';
 
 export default function DisplaySelector() {
   const { can } = usePermissions();
+  const views = EVENT_VIEWS.filter((view) => isAllowed(view, can));
 
   return (
     <DropdownMenu>
@@ -24,26 +25,20 @@ export default function DisplaySelector() {
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link to="/events/calendar" />}>
-            <CalendarDays />
-            Calendrier
-          </DropdownMenuItem>
-          <DropdownMenuItem render={<Link to="/events/planning" />}>
-            <ListChecks />
-            Planning
-          </DropdownMenuItem>
-          <DropdownMenuItem render={<Link to="/events/?noRedirect=true" />}>
-            <TableCellsMerge />
-            Doodle
-          </DropdownMenuItem>
+          {views.map(({ to, label, icon: Icon }) => (
+            <DropdownMenuItem key={to} render={<Link to={to} />}>
+              <Icon />
+              {label}
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuGroup>
-        {can('view', 'response_history') ? (
+        {isAllowed(RESPONSE_HISTORY_PAGE, can) ? (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link to="/events/desinscriptions" />}>
-                <UserMinus />
-                Désinscriptions
+              <DropdownMenuItem render={<Link to={RESPONSE_HISTORY_PAGE.to} />}>
+                <RESPONSE_HISTORY_PAGE.icon />
+                {RESPONSE_HISTORY_PAGE.label}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </>

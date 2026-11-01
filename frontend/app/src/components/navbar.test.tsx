@@ -26,6 +26,16 @@ vi.mock('../config/theme', () => ({
   useTheme: () => ({ resolvedTheme: 'light' }),
 }));
 
+// The search palette has its own tests (global-search.test.tsx) and needs a
+// query client; stub it so these tests stay about navigation.
+vi.mock('./global-search/triggers', () => ({
+  SearchButton: () => <div data-testid="global-search" />,
+  SearchField: () => <div data-testid="global-search-field" />,
+}));
+vi.mock('./mailbox', () => ({
+  default: () => <div data-testid="mailbox" />,
+}));
+
 // eslint-disable-next-line import/first -- import must follow vi.mock hoisting
 import Navbar from './navbar';
 

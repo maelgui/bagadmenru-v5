@@ -10,4 +10,5 @@ export * from './InstrumentsApi';
 export * from './InvitationsApi';
 export * from './ProfilesApi';
 export * from './PushNotificationsApi';
+export * from './SearchApi';
 export * from './UtilsApi';

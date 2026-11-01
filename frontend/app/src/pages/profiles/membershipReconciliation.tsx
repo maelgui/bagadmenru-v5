@@ -44,6 +44,7 @@ import {
   queryClient,
   useApiClient,
 } from '../../config/client';
+import { profilesQuery } from './queries';
 
 const CENTS_PER_EURO = 100;
 
@@ -286,10 +287,7 @@ function UnlinkedRow({
 export default function MembershipReconciliationPage() {
   const { usersApi } = useApiClient();
   const { data: unlinked, isPending } = useUnlinkedMemberships();
-  const { data: profiles } = useQuery({
-    queryKey: ['profiles'],
-    queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet(),
-  });
+  const { data: profiles } = useQuery(profilesQuery(usersApi));
 
   const members = useMemo<MemberOption[]>(
     () => (profiles ?? []).map((p) => ({

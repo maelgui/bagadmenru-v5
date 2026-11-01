@@ -3,9 +3,12 @@ import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 export interface SectionNavItem {
+  // Relative to the section base path.
   to: string;
   label: string;
   icon: LucideIcon;
+  // Extra words the search palette matches besides the label.
+  keywords?: string[];
 }
 
 /**

@@ -1,7 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 
 import {
-  LogOutIcon, MenuIcon, SettingsIcon, ShieldCheckIcon, UserPlusIcon, XIcon,
+  CalendarDaysIcon, LogOutIcon, MenuIcon, SettingsIcon, ShieldCheckIcon, UserPlusIcon, XIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -13,7 +13,11 @@ import {
   useSessions,
   useUserProfile,
 } from '../config/client';
+import {
+  type AppPage, FILES_PAGE, HOME_PAGE, isAllowed, MEMBERS_PAGE,
+} from '../config/navigation';
 import { useTheme } from '../config/theme';
+import { eventsHomePath } from '../pages/events/sections';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,34 +36,19 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
-
-interface NavigationItem {
-  label: string;
-  to: string;
-}
+import { SearchButton, SearchField } from './global-search/triggers';
+import Mailbox from './mailbox';
 
 function getInitials(firstName: string, lastName: string): string {
   return `${firstName.slice(0, 1)}${lastName.slice(0, 1)}`.toUpperCase();
 }
 
-function useNavigationItems(): NavigationItem[] {
+function useNavigationItems(): AppPage[] {
   const { can } = usePermissions();
-
-  return [
-    { label: 'Accueil', to: '/' },
-    ...(can('view', 'event')
-      ? [{
-          label: 'Évènements',
-          to: `/events/${can('create', 'response') ? '' : 'calendar'}`,
-        }]
-      : []),
-    ...(can('view', 'file')
-      ? [{ label: 'Fichiers', to: '/files' }]
-      : []),
-    ...(can('view', 'profile')
-      ? [{ label: 'Trombinoscope', to: '/profile' }]
-      : []),
-  ];
+  const events: AppPage = {
+    label: 'Évènements', to: eventsHomePath(can), icon: CalendarDaysIcon, permission: ['view', 'event'],
+  };
+  return [HOME_PAGE, events, FILES_PAGE, MEMBERS_PAGE].filter((page) => isAllowed(page, can));
 }
 
 function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
@@ -81,10 +70,10 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
     <div className="flex w-full items-center px-3 pb-4 lg:w-auto lg:px-0 lg:py-0 lg:pb-0">
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="flex w-full flex-row-reverse items-center justify-end gap-3 rounded-2xl p-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:bg-muted lg:mx-4 lg:w-auto lg:flex-row"
+          className="flex w-full flex-row-reverse items-center justify-end gap-3 rounded-2xl p-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:bg-muted lg:ml-2 lg:w-auto lg:rounded-full lg:p-1"
           aria-label={`Comptes - ${profile.firstName} ${profile.lastName}`}
         >
-          <span className="flex min-w-0 flex-col text-left lg:text-right">
+          <span className="flex min-w-0 flex-col text-left lg:hidden">
             <span className="truncate font-medium">
               {profile.firstName}
               {' '}
@@ -188,6 +177,7 @@ function ProfileActions({ onNavigate }: { onNavigate: () => void }) {
 
 export default function Navbar() {
   const navigationItems = useNavigationItems();
+  const { can } = usePermissions();
   const { resolvedTheme } = useTheme();
   const [show, setShow] = useState(false);
 
@@ -206,23 +196,15 @@ export default function Navbar() {
 
   return (
     <header className="relative shadow-md">
-      <div className="container m-auto flex h-24 items-center">
-        <div className="flex items-center lg:flex-1">
-          <NavLink
-            to="/"
-            className="flex items-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            onClick={close}
-          >
-            <div className="mx-8 w-12">
-              <img src={resolvedTheme === 'dark' ? logoDark : logo} alt="Bagad Men Ru" />
-            </div>
-            <div>
-              <span className="font-semibold whitespace-nowrap text-foreground">Bagad Men Ru</span>
-              <br />
-              <span className="whitespace-nowrap text-muted-foreground">Espace membres</span>
-            </div>
-          </NavLink>
-        </div>
+      <div className="container m-auto flex h-20 items-center px-4">
+        <NavLink
+          to="/"
+          className="mr-6 flex items-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          onClick={close}
+          aria-label="Bagad Men Ru - Accueil"
+        >
+          <img src={resolvedTheme === 'dark' ? logoDark : logo} alt="" className="size-12" />
+        </NavLink>
 
         <NavigationMenu className="hidden lg:flex" aria-label="Navigation principale">
           <NavigationMenuList>
@@ -247,22 +229,28 @@ export default function Navbar() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        <div className="hidden justify-end lg:flex lg:flex-1">
-          <ProfileActions onNavigate={close} />
-        </div>
+        <div className="ml-auto flex items-center gap-1">
+          <SearchField className="hidden lg:flex" />
+          <span className="lg:hidden"><SearchButton /></span>
+          {can('view', 'email') ? <Mailbox /> : null}
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="mx-6 ml-auto lg:hidden"
-          aria-label={show ? 'Fermer le menu' : 'Ouvrir le menu'}
-          aria-expanded={show}
-          aria-controls="mobile-navigation"
-          onClick={() => setShow((isOpen) => !isOpen)}
-        >
-          {show ? <XIcon aria-hidden="true" /> : <MenuIcon aria-hidden="true" />}
-        </Button>
+          <div className="hidden lg:flex">
+            <ProfileActions onNavigate={close} />
+          </div>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            aria-label={show ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={show}
+            aria-controls="mobile-navigation"
+            onClick={() => setShow((isOpen) => !isOpen)}
+          >
+            {show ? <XIcon aria-hidden="true" /> : <MenuIcon aria-hidden="true" />}
+          </Button>
+        </div>
       </div>
 
       <div

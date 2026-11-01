@@ -58,4 +58,5 @@ from .push import (
     VapidPublicKeyResponse,
 )
 from .response import Response, ResponseChange, ResponseChangeUser, ResponseCreate
+from .search import FileHit, SearchResults
 from .utils import GetUploadUrlResponse

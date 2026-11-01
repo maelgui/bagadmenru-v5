@@ -6,11 +6,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { queryClient, useApiClient } from '../../config/client';
+import { formatLongDate } from '../../utils/date';
 import EventListItem, { EventListItemSkeleton } from './components/event';
 
 function ResponseConfirmation({ event, response }: { event: Event, response: Response }) {
   const eventDate = (
-    <time dateTime={event.date.toISOString()}>{event.date.toLocaleDateString('fr', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</time>
+    <time dateTime={event.date.toISOString()}>{formatLongDate(event.date)}</time>
   );
 
   return (

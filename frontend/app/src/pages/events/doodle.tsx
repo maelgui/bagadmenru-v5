@@ -1,6 +1,6 @@
 import { CalendarPlus, Edit3, Info, Save } from 'lucide-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Costume, type Response, type ResponseCreate } from 'bagad-client';
+import { useQuery } from '@tanstack/react-query';
+import { Costume, type Response } from 'bagad-client';
 import { useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -8,20 +8,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/components/ui/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import {
-  queryClient, useApiClient, usePermissions, useUserProfile,
-} from '../../config/client';
+import { useApiClient, usePermissions, useUserProfile } from '../../config/client';
 import EventCategories from '../../utils/event-category';
 import groupby from '../../utils/groupby';
 import Checkbox from './components/checkbox';
 import IcsExportButton from './components/ics-export';
 import DisplaySelector from './components/selector';
-import { upcomingDoodleEventsQuery, upcomingResponsesQuery } from './queries';
+import { profilesQuery } from '../profiles/queries';
+import { upcomingDoodleEventsQuery, upcomingResponsesQuery, useRespondMutation } from './queries';
 
 function sumByEvents(list: Response[]) {
   const map = new Map<number, number>();
@@ -56,19 +54,13 @@ export default function DoodlePage() {
   const [editing, setEditing] = useState(false);
 
   const { data: events } = useQuery(upcomingDoodleEventsQuery(eventsApi));
-  const { data: profiles } = useQuery({ queryKey: ['profiles'], queryFn: async () => await usersApi.listProfilesApiV1ProfilesGet() });
+  const { data: profiles } = useQuery(profilesQuery(usersApi));
   const { data: responses } = useQuery({
     ...upcomingResponsesQuery(eventsApi),
     select: responseFormat,
   });
 
-  const mutation = useMutation({
-    mutationFn: async ({ eventId, response }: { eventId: number; response: ResponseCreate }) => (
-      await eventsApi.createResponseApiV1EventsEventIdResponsesPut({ eventId, responseCreate: response })
-    ),
-    onSettled: async () => await queryClient.invalidateQueries({ queryKey: ['responses'] }),
-    onSuccess: () => toast.add({ title: 'Réponse enregistrée', type: 'success' }),
-  });
+  const mutation = useRespondMutation();
 
   const { can } = usePermissions();
 
@@ -163,7 +155,7 @@ export default function DoodlePage() {
                           key={`${user.id}-${event.id}`}
                           disabled={profile?.id === user.id ? !editing : true}
                           value={value}
-                          onClick={() => mutation.mutate({ eventId: event.id, response: { value: !value } })}
+                          onClick={() => mutation.mutate({ eventId: event.id, value: !value })}
                         />
                       );
                     })}

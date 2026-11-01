@@ -1,27 +1,10 @@
-import {
-  BellIcon,
-  KeyIcon,
-  PaletteIcon,
-  ShieldIcon,
-  UserIcon,
-  UserRoundCogIcon,
-  WalletIcon,
-} from 'lucide-react';
 import { Outlet } from 'react-router-dom';
 import Container from '../../components/container';
 import Header from '../../components/header';
-import { SectionLayout, SectionNav, type SectionNavItem } from '../../components/section-nav';
+import { SectionLayout, SectionNav } from '../../components/section-nav';
 import { useUserProfile } from '../../config/client';
+import { SETTINGS_SECTIONS } from './settings/sections';
 
-const NAV_ITEMS: SectionNavItem[] = [
-  { to: 'profile', label: 'Profil', icon: UserIcon },
-  { to: 'account', label: 'Compte', icon: UserRoundCogIcon },
-  { to: 'appearance', label: 'Apparence', icon: PaletteIcon },
-  { to: 'membership', label: 'Adhésion', icon: WalletIcon },
-  { to: 'security', label: 'Sécurité', icon: ShieldIcon },
-  { to: 'api', label: 'Accès API', icon: KeyIcon },
-  { to: 'notifications', label: 'Notifications', icon: BellIcon },
-];
 
 /**
  * Layout for the account settings area: a section navigation and an <Outlet>
@@ -46,7 +29,7 @@ export default function SettingsLayout() {
       />
 
       <Container>
-        <SectionLayout nav={<SectionNav items={NAV_ITEMS} label="Sections des paramètres" />}>
+        <SectionLayout nav={<SectionNav items={SETTINGS_SECTIONS} label="Sections des paramètres" />}>
           <Outlet />
         </SectionLayout>
       </Container>

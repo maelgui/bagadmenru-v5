@@ -12,6 +12,7 @@ src/apis/InstrumentsApi.ts
 src/apis/InvitationsApi.ts
 src/apis/ProfilesApi.ts
 src/apis/PushNotificationsApi.ts
+src/apis/SearchApi.ts
 src/apis/UtilsApi.ts
 src/apis/index.ts
 src/index.ts
@@ -26,6 +27,7 @@ src/models/CredentialDeviceType.ts
 src/models/Event.ts
 src/models/EventCreate.ts
 src/models/FileAuthor.ts
+src/models/FileHit.ts
 src/models/FileOrFolder.ts
 src/models/FileOrFolderType.ts
 src/models/FileOrFolderUpdate.ts
@@ -76,6 +78,7 @@ src/models/ResponseChangeUser.ts
 src/models/ResponseCreate.ts
 src/models/Role.ts
 src/models/RoleDetail.ts
+src/models/SearchResults.ts
 src/models/SeasonRanking.ts
 src/models/SessionInfo.ts
 src/models/SetPassword.ts

@@ -46,7 +46,7 @@ function CostumeIndicator({ value }: { value: Costume }) {
   );
 }
 
-function EventBadgeRow({ event, response, showResponse }: { event: Event; response?: boolean; showResponse: boolean }) {
+export function EventBadgeRow({ event, response, showResponse }: { event: Event; response?: boolean; showResponse: boolean }) {
   const category = EventCategories[event.category];
   return (
     <div className="flex shrink-0 items-center gap-1.5">
