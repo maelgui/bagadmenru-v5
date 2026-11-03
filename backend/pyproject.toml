@@ -35,7 +35,7 @@ pywebpush = "^2.0.0"
 py-vapid = "^1.9.0"
 prometheus-fastapi-instrumentator = "^8.1.0"
 [tool.poetry.group.dev.dependencies]
-pylint = "^3.3.4"
+pylint = "^4.0.9"
 pytest = "^8.2.0"
 autopep8 = "^2.2.0"
 mypy = "^1.15.0"
